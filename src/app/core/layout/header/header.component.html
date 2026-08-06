@@ -1,0 +1,31 @@
+<header class="das-header">
+  <div class="das-header__brand">
+    <span class="das-header__logo-mark">DAS</span>
+    <span class="das-header__brand-name">D.A.S</span>
+  </div>
+
+  <nav class="das-header__nav" aria-label="Navigation principale">
+    @for (item of navItems; track item.path) {
+      @if (isVisible(item, role$ | async)) {
+<a
+          class="das-header__nav-link"
+          [routerLink]="item.path"
+          routerLinkActive="das-header__nav-link--active"
+        >
+          {{ item.labelKey | transloco }}
+        </a>
+      }
+    }
+  </nav>
+
+  <div class="das-header__actions">
+    <das-language-switcher />
+
+    <div class="das-header__user">
+      <span class="das-header__user-name">{{ fullName$ | async }}</span>
+      <button type="button" class="das-header__logout" (click)="logout()">
+        {{ 'nav.logout' | transloco }}
+      </button>
+    </div>
+  </div>
+</header>

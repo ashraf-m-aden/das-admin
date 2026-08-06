@@ -1,0 +1,43 @@
+postgres:
+  connection_string: "${DATABASE_URL}"
+  pool_size: 20
+  auto_publish: false
+
+  functions:
+    blocks_tiles:
+      schema: public
+      function: blocks_tiles
+      minzoom: 6
+      maxzoom: 18
+      bounds: [41.5, 10.9, 43.5, 12.8]
+
+    blocks_tiles_for_client:
+      schema: public
+      function: blocks_tiles_for_client
+      minzoom: 6
+      maxzoom: 18
+      bounds: [41.5, 10.9, 43.5, 12.8]
+
+    properties_tiles:
+      schema: public
+      function: properties_tiles
+      minzoom: 15
+      maxzoom: 20
+      bounds: [41.5, 10.9, 43.5, 12.8]
+
+    streets_tiles:
+      schema: public
+      function: streets_tiles
+      minzoom: 13
+      maxzoom: 20
+      bounds: [41.5, 10.9, 43.5, 12.8]
+
+    admin_units_tiles:
+      schema: public
+      function: admin_units_tiles
+      minzoom: 6
+      maxzoom: 16
+      bounds: [41.5, 10.9, 43.5, 12.8]
+
+cache_size_mb: 512
+listen_addresses: "0.0.0.0:3000"

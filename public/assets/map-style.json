@@ -1,0 +1,30 @@
+{
+  "version": 8,
+  "name": "D.A.S — Fond de carte opérationnel",
+  "sources": {
+    "admin-units": { "type": "vector", "tiles": ["__TILES_BASE_URL__/admin_units_tiles/{z}/{x}/{y}?level=quartier"], "minzoom": 6, "maxzoom": 16 },
+    "blocks": { "type": "vector", "tiles": ["__TILES_BASE_URL__/blocks_tiles/{z}/{x}/{y}"], "minzoom": 6, "maxzoom": 18 },
+    "streets": { "type": "vector", "tiles": ["__TILES_BASE_URL__/streets_tiles/{z}/{x}/{y}"], "minzoom": 13, "maxzoom": 20 },
+    "properties": { "type": "vector", "tiles": ["__TILES_BASE_URL__/properties_tiles/{z}/{x}/{y}"], "minzoom": 15, "maxzoom": 20 }
+  },
+  "layers": [
+    { "id": "background", "type": "background", "paint": { "background-color": "#f9fafb" } },
+    { "id": "admin-units-line", "type": "line", "source": "admin-units", "source-layer": "admin_units",
+      "paint": { "line-color": "#9ca3af", "line-width": 1, "line-dasharray": [2, 2] } },
+    { "id": "blocks-fill", "type": "fill", "source": "blocks", "source-layer": "blocks",
+      "paint": { "fill-color": ["match", ["get", "status"],
+        "not_assigned", "#6b7280", "assigned", "#2563eb", "in_progress", "#d97706",
+        "submitted", "#7c3aed", "approved", "#16a34a", "needs_redo", "#dc2626", "#9ca3af"],
+        "fill-opacity": 0.55 } },
+    { "id": "blocks-outline", "type": "line", "source": "blocks", "source-layer": "blocks",
+      "paint": { "line-color": "#1f2937", "line-width": 1 } },
+    { "id": "streets-line", "type": "line", "source": "streets", "source-layer": "streets",
+      "filter": ["==", ["get", "is_point"], false], "paint": { "line-color": "#374151", "line-width": 1.5 } },
+    { "id": "streets-points", "type": "circle", "source": "streets", "source-layer": "streets",
+      "filter": ["==", ["get", "is_point"], true],
+      "paint": { "circle-radius": 4, "circle-color": "#1f3864", "circle-stroke-width": 1, "circle-stroke-color": "#ffffff" } },
+    { "id": "properties-points", "type": "circle", "source": "properties", "source-layer": "properties",
+      "paint": { "circle-radius": 3, "circle-color": ["match", ["get", "status"],
+        "approved", "#16a34a", "needs_redo", "#dc2626", "#2563eb"] } }
+  ]
+}

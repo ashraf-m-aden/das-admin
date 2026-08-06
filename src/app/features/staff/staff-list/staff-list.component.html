@@ -1,0 +1,76 @@
+<div class="das-staff-list">
+  <div class="das-staff-list__header">
+    <h1>{{ 'staff.title' | transloco }}</h1>
+    <a class="das-staff-list__add" routerLink="/staff/new">{{ 'staff.addStaff' | transloco }}</a>
+  </div>
+
+  @if (lastCreatedTemporaryPassword$ | async; as tempPassword) {
+    <div class="das-staff-list__banner das-card">
+      <span>{{ 'staff.temporaryPassword' | transloco }} : <strong>{{ tempPassword }}</strong></span>
+      <button type="button" (click)="dismissTemporaryPassword()">{{ 'common.close' | transloco }}</button>
+    </div>
+  }
+
+  <form class="das-staff-list__filters" [formGroup]="filterForm">
+    <input type="text" formControlName="search" [placeholder]="'staff.searchPlaceholder' | transloco" />
+
+    <select formControlName="role">
+      <option [ngValue]="null">{{ 'staff.allRoles' | transloco }}</option>
+      @for (role of roles; track role) {
+        <option [ngValue]="role">{{ 'role.' + role | transloco }}</option>
+      }
+    </select>
+
+    <select formControlName="status">
+      <option [ngValue]="null">{{ 'staff.allStatuses' | transloco }}</option>
+      @for (status of statuses; track status) {
+        <option [ngValue]="status">{{ 'status.user.' + status | transloco }}</option>
+      }
+    </select>
+  </form>
+
+  @if (isLoading$ | async) {
+    <p>{{ 'common.loading' | transloco }}</p>
+  } @else {
+    <table class="das-staff-list__table">
+      <thead>
+        <tr>
+          <th>{{ 'staff.lastName' | transloco }}</th>
+          <th>{{ 'staff.login' | transloco }}</th>
+          <th>{{ 'staff.email' | transloco }}</th>
+          <th>{{ 'staff.role' | transloco }}</th>
+          <th>{{ 'staff.status' | transloco }}</th>
+          <th>{{ 'staff.lastLogin' | transloco }}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (member of items$ | async; track member.id) {
+          <tr>
+            <td>{{ member.firstName }} {{ member.lastName }}</td>
+            <td>{{ member.login }}</td>
+            <td>{{ member.email }}</td>
+            <td><span class="das-badge">{{ 'role.' + member.role | transloco }}</span></td>
+            <td>
+              <span class="das-badge" [class.das-badge--approved]="member.status === 'active'" [class.das-badge--needs-redo]="member.status === 'suspended'">
+                {{ 'status.user.' + member.status | transloco }}
+              </span>
+            </td>
+            <td>{{ member.lastLoginAt ? (member.lastLoginAt | dasDate: 'long') : ('staff.never' | transloco) }}</td>
+            <td class="das-staff-list__actions">
+              <a [routerLink]="['/staff', member.id, 'edit']">{{ 'common.edit' | transloco }}</a>
+              <button type="button" (click)="toggleEnabled(member.id, member.enabled)">
+                {{ (member.enabled ? 'staff.disable' : 'staff.enable') | transloco }}
+              </button>
+              <button type="button" (click)="resetPassword(member.id)">
+                {{ 'staff.resetPassword' | transloco }}
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="7">{{ 'common.noResults' | transloco }}</td></tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

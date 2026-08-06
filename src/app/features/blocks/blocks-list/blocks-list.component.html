@@ -1,0 +1,44 @@
+<div class="das-blocks-list">
+  <div class="das-blocks-list__header">
+    <h1>{{ 'blocks.title' | transloco }}</h1>
+    <a class="das-blocks-list__map-link" routerLink="/blocks/map">{{ 'blocks.viewMap' | transloco }}</a>
+  </div>
+
+  <form class="das-blocks-list__filters" [formGroup]="filterForm">
+    <input type="text" formControlName="search" [placeholder]="'blocks.searchPlaceholder' | transloco" />
+
+    <select formControlName="status">
+      <option [ngValue]="null">{{ 'blocks.allStatuses' | transloco }}</option>
+      @for (status of statuses; track status) {
+        <option [ngValue]="status">{{ 'status.block.' + status | transloco }}</option>
+      }
+    </select>
+  </form>
+
+  @if (isLoading$ | async) {
+    <p>{{ 'common.loading' | transloco }}</p>
+  } @else {
+    <table class="das-blocks-list__table">
+      <thead>
+        <tr>
+          <th>{{ 'blocks.code' | transloco }}</th>
+          <th>{{ 'blocks.area' | transloco }}</th>
+          <th>{{ 'blocks.status' | transloco }}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (block of items$ | async; track block.id) {
+          <tr>
+            <td>{{ block.code }}</td>
+            <td>{{ block.areaM2 }} m²</td>
+            <td><span [class]="statusBadgeClass(block.status)">{{ 'status.block.' + block.status | transloco }}</span></td>
+            <td><a [routerLink]="['/blocks', block.id]">{{ 'common.edit' | transloco }}</a></td>
+          </tr>
+        } @empty {
+          <tr><td colspan="4">{{ 'common.noResults' | transloco }}</td></tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

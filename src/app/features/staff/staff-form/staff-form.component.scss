@@ -1,0 +1,57 @@
+@use "styles/variables" as v;
+
+.das-staff-form {
+  padding: v.$space-6;
+  max-width: 560px;
+  margin: 0 auto;
+
+  &__form {
+    padding: v.$space-6;
+    display: flex;
+    flex-direction: column;
+    gap: v.$space-4;
+  }
+
+  &__row {
+    display: flex;
+    gap: v.$space-4;
+
+    .das-staff-form__field { flex: 1; }
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: v.$space-1;
+    font-size: v.$font-size-sm;
+    color: var(--color-text-secondary);
+
+    input, select {
+      padding: v.$space-2 v.$space-3;
+      border: 1px solid var(--color-border);
+      border-radius: v.$radius-sm;
+      font-size: v.$font-size-base;
+
+      &:disabled { background: var(--color-surface-sunken); color: var(--color-text-muted); }
+    }
+  }
+
+  &__error {
+    margin: 0;
+    font-size: v.$font-size-sm;
+    color: var(--color-danger);
+  }
+
+  &__submit {
+    padding: v.$space-3;
+    border: none;
+    border-radius: v.$radius-md;
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    font-weight: v.$font-weight-semibold;
+    cursor: pointer;
+
+    &:hover:not(:disabled) { background: var(--color-primary-hover); }
+    &:disabled { opacity: 0.6; cursor: not-allowed; }
+  }
+}

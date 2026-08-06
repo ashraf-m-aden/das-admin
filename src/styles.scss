@@ -1,0 +1,47 @@
+
+@use "styles/colors";
+@use "styles/variables" as v;
+@use "styles/mixins" as m;
+@import "maplibre-gl/dist/maplibre-gl.css";
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { height: 100%; margin: 0; padding: 0; }
+
+body {
+  font-family: v.$font-family-base;
+  font-size: v.$font-size-base;
+  line-height: v.$line-height-base;
+  color: var(--color-text-primary);
+  background: var(--color-surface-alt);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 v.$space-3;
+  font-weight: v.$font-weight-semibold;
+  line-height: v.$line-height-tight;
+  color: var(--color-text-primary);
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+  &:hover { color: var(--color-accent-hover); text-decoration: underline; }
+  @include m.focus-ring;
+}
+
+button { font-family: inherit; @include m.focus-ring; }
+
+.das-truncate { @include m.truncate; }
+.das-card { @include m.card; padding: v.$space-6; }
+.das-scroll { @include m.slim-scrollbar; overflow: auto; }
+
+.das-badge {
+  &--not-assigned { @include m.status-badge(not-assigned); }
+  &--assigned { @include m.status-badge(assigned); }
+  &--in-progress { @include m.status-badge(in-progress); }
+  &--submitted { @include m.status-badge(submitted); }
+  &--approved { @include m.status-badge(approved); }
+  &--needs-redo { @include m.status-badge(needs-redo); }
+}

@@ -1,0 +1,122 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "blocks": "Blocks & lots",
+    "review": "Data review",
+    "staff": "Staff",
+    "clients": "Clients",
+    "settings": "Settings",
+    "logout": "Log out"
+  },
+
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "search": "Search",
+    "loading": "Loading...",
+    "noResults": "No results",
+    "error": "Something went wrong",
+    "requiredField": "This field is required",
+    "yes": "Yes",
+    "no": "No",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit"
+  },
+
+  "role": {
+    "admin": "Administrator",
+    "supervisor": "Supervisor",
+    "surveyor": "Field agent"
+  },
+
+  "status": {
+    "block": { "not_assigned": "Not assigned", "assigned": "Assigned", "in_progress": "In progress", "submitted": "Submitted", "approved": "Approved", "needs_redo": "Needs redo" },
+    "submission": { "draft": "Draft", "submitted": "Submitted", "approved": "Approved", "needs_redo": "Needs redo" },
+    "task": { "not_started": "Not started", "in_progress": "In progress", "submitted": "Submitted", "completed": "Completed" },
+    "client": { "trial": "Trial", "active": "Active", "suspended": "Suspended" },
+    "user": { "active": "Active", "suspended": "Suspended", "inactive": "Inactive" }
+  },
+
+  "propertyType": {
+    "residential": "Residential",
+    "commercial": "Commercial",
+    "industrial": "Industrial",
+    "vacant": "Vacant"
+  },
+
+  "dashboard": {
+    "title": "Dashboard",
+    "totalProperties": "Properties registered",
+    "pendingReview": "Pending review",
+    "approvedRecords": "Approved records",
+    "activeStaff": "Active staff",
+    "zoneProgress": "Progress by zone",
+    "urgentAlerts": "Urgent alerts"
+  },
+
+  "alerts": {
+    "redo_overdue": "Overdue redo: {{code}}",
+    "task_overdue": "Overdue task: {{code}}",
+    "block_stalled": "Stalled block: {{code}}"
+  },
+
+  "staff": {
+    "title": "Staff",
+    "addStaff": "Add staff member",
+    "editStaff": "Edit staff member",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "phone": "Phone",
+    "login": "Login",
+    "role": "Role",
+    "status": "Status",
+    "lastLogin": "Last login",
+    "never": "Never",
+    "enable": "Enable",
+    "disable": "Disable",
+    "searchPlaceholder": "Search staff...",
+    "allRoles": "All roles",
+    "allStatuses": "All statuses",
+    "resetPassword": "Reset password",
+    "temporaryPassword": "Temporary password",
+    "loginTaken": "This login is already taken"
+  },
+
+  "blocks": {
+    "title": "Blocks & lots",
+    "code": "Block code",
+    "area": "Area",
+    "status": "Status",
+    "assignedTo": "Assigned to",
+    "lots": "Lots",
+    "addLot": "Add lot",
+    "plannedUnits": "Planned units",
+    "actualUnits": "Units recorded",
+    "viewMap": "View map",
+    "searchPlaceholder": "Search blocks...",
+    "allStatuses": "All statuses"
+  },
+
+  "review": {
+    "title": "Data review",
+    "approve": "Approve",
+    "reject": "Reject",
+    "requestPhotoRetake": "Request photo retake",
+    "requestGpsRecheck": "Request GPS recheck",
+    "rejectionReason": "Rejection reason"
+  },
+
+  "auth": {
+    "login": "Log in",
+    "email": "Email address",
+    "password": "Password",
+    "loginButton": "Log in",
+    "invalidCredentials": "Invalid credentials"
+  }
+}

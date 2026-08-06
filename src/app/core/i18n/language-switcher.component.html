@@ -1,0 +1,12 @@
+<div class="das-lang-switcher" role="group" aria-label="Langue / Language">
+  @for (lang of langs; track lang.code) {
+    <button
+      type="button"
+      class="das-lang-switcher__btn"
+      [class.das-lang-switcher__btn--active]="activeLang() === lang.code"
+      (click)="setLang(lang.code)"
+    >
+      {{ lang.label }}
+    </button>
+  }
+</div>

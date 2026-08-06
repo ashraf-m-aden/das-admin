@@ -1,0 +1,79 @@
+@use "styles/variables" as v;
+
+.das-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-alt);
+  padding: v.$space-6;
+
+  &__panel {
+    width: 100%;
+    max-width: 380px;
+    padding: v.$space-8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: v.$space-4;
+  }
+
+  &__logo { height: 48px; }
+
+  &__title { font-size: v.$font-size-xl; margin: 0; }
+
+  &__mock-hint {
+    width: 100%;
+    font-size: v.$font-size-xs;
+    color: var(--color-text-muted);
+    background: var(--color-info-bg);
+    border-radius: v.$radius-sm;
+    padding: v.$space-2 v.$space-3;
+    text-align: center;
+    margin: 0;
+  }
+
+  &__form { width: 100%; display: flex; flex-direction: column; gap: v.$space-4; }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: v.$space-1;
+    font-size: v.$font-size-sm;
+    color: var(--color-text-secondary);
+
+    input {
+      padding: v.$space-2 v.$space-3;
+      border: 1px solid var(--color-border);
+      border-radius: v.$radius-sm;
+      font-size: v.$font-size-base;
+
+      &:focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: 1px; }
+    }
+  }
+
+  &__password-wrap {
+    display: flex;
+    align-items: center;
+    gap: v.$space-2;
+    input { flex: 1; }
+  }
+
+  &__toggle { background: none; border: none; cursor: pointer; font-size: v.$font-size-base; }
+
+  &__error { margin: 0; font-size: v.$font-size-sm; color: var(--color-danger); }
+
+  &__submit {
+    padding: v.$space-3;
+    border: none;
+    border-radius: v.$radius-md;
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    font-weight: v.$font-weight-semibold;
+    cursor: pointer;
+    transition: background v.$transition-fast;
+
+    &:hover:not(:disabled) { background: var(--color-primary-hover); }
+    &:disabled { opacity: 0.6; cursor: not-allowed; }
+  }
+}

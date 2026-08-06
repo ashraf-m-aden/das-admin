@@ -1,0 +1,41 @@
+<div class="das-login">
+  <div class="das-login__panel das-card">
+    <img class="das-login__logo" src="assets/Logo.png" alt="D.A.S" />
+    <h1 class="das-login__title">{{ 'auth.login' | transloco }}</h1>
+
+    @if (isMockMode) {
+      <p class="das-login__mock-hint">
+        Mode démo — admin / superviseur / agent · mot de passe : das2026
+      </p>
+    }
+
+    <form class="das-login__form" [formGroup]="form" (ngSubmit)="submit()">
+      <label class="das-login__field">
+        <span>{{ 'auth.email' | transloco }}</span>
+        <input type="text" formControlName="login" autocomplete="username" />
+      </label>
+
+      <label class="das-login__field">
+        <span>{{ 'auth.password' | transloco }}</span>
+        <div class="das-login__password-wrap">
+          <input
+            [type]="showPassword() ? 'text' : 'password'"
+            formControlName="password"
+            autocomplete="current-password"
+          />
+          <button type="button" class="das-login__toggle" (click)="togglePasswordVisibility()">
+            {{ showPassword() ? '🙈' : '👁' }}
+          </button>
+        </div>
+      </label>
+
+      @if (errorMessageKey$ | async; as errorKey) {
+        <p class="das-login__error" role="alert">{{ errorKey | transloco }}</p>
+      }
+
+      <button type="submit" class="das-login__submit" [disabled]="(isLoading$ | async) || form.invalid">
+        {{ (isLoading$ | async) ? ('common.loading' | transloco) : ('auth.loginButton' | transloco) }}
+      </button>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,64 @@
+<div class="das-dashboard">
+  <h1 class="das-dashboard__title">{{ 'dashboard.title' | transloco }}</h1>
+
+  @if (isLoading$ | async) {
+    <p class="das-dashboard__loading">{{ 'common.loading' | transloco }}</p>
+  } @else if (summary$ | async; as summary) {
+    <div class="das-dashboard__kpis">
+      <div class="das-card das-dashboard__kpi das-dashboard__kpi--primary">
+        <span class="das-dashboard__kpi-value">{{ summary.totalProperties | dasNumber }}</span>
+        <span class="das-dashboard__kpi-label">{{ 'dashboard.totalProperties' | transloco }}</span>
+      </div>
+      <div class="das-card das-dashboard__kpi das-dashboard__kpi--warning">
+        <span class="das-dashboard__kpi-value">{{ summary.pendingReview | dasNumber }}</span>
+        <span class="das-dashboard__kpi-label">{{ 'dashboard.pendingReview' | transloco }}</span>
+      </div>
+      <div class="das-card das-dashboard__kpi das-dashboard__kpi--success">
+        <span class="das-dashboard__kpi-value">{{ summary.approvedRecords | dasNumber }}</span>
+        <span class="das-dashboard__kpi-label">{{ 'dashboard.approvedRecords' | transloco }}</span>
+      </div>
+      <div class="das-card das-dashboard__kpi das-dashboard__kpi--info">
+        <span class="das-dashboard__kpi-value">{{ summary.activeStaff | dasNumber }}</span>
+        <span class="das-dashboard__kpi-label">{{ 'dashboard.activeStaff' | transloco }}</span>
+      </div>
+    </div>
+
+    <div class="das-dashboard__row">
+      <section class="das-card das-dashboard__panel">
+        <h2>{{ 'dashboard.zoneProgress' | transloco }}</h2>
+
+        @for (zone of zoneProgress$ | async; track zone.zoneId) {
+          <div class="das-dashboard__zone">
+            <div class="das-dashboard__zone-header">
+              <span>{{ zone.zoneName }}</span>
+              <span>{{ zone.approvedCount | dasNumber }} / {{ zone.totalCount | dasNumber }}</span>
+            </div>
+            <div class="das-dashboard__zone-bar">
+              <div
+                class="das-dashboard__zone-bar-fill"
+                [style.width.%]="progressPercent(zone.approvedCount, zone.totalCount)"
+              ></div>
+            </div>
+          </div>
+        }
+      </section>
+
+      <section class="das-card das-dashboard__panel">
+        <h2>{{ 'dashboard.urgentAlerts' | transloco }}</h2>
+
+        @if ((urgentAlerts$ | async)?.length) {
+          @for (alert of urgentAlerts$ | async; track alert.id) {
+            <div class="das-dashboard__alert" [class.das-dashboard__alert--high]="alert.severity === 'high'">
+              <span class="das-dashboard__alert-message">
+                {{ alert.messageKey | transloco: alert.messageParams }}
+              </span>
+              <span class="das-dashboard__alert-date">{{ alert.createdAt | dasDate }}</span>
+            </div>
+          }
+        } @else {
+          <p class="das-dashboard__empty">{{ 'common.noResults' | transloco }}</p>
+        }
+      </section>
+    </div>
+  }
+</div>

@@ -1,0 +1,104 @@
+@use "styles/variables" as v;
+@use "styles/mixins" as m;
+
+.das-header {
+  height: v.$topbar-height;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: v.$space-6;
+  padding: 0 v.$space-6;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  position: sticky;
+  top: 0;
+  z-index: v.$z-index-sticky;
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: v.$space-2;
+    flex-shrink: 0;
+  }
+
+  &__logo-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: v.$radius-sm;
+    background: var(--color-on-primary);
+    color: var(--color-primary);
+    font-weight: v.$font-weight-bold;
+    font-size: v.$font-size-xs;
+  }
+
+  &__brand-name {
+    font-weight: v.$font-weight-semibold;
+    font-size: v.$font-size-lg;
+  }
+
+  &__nav {
+    display: flex;
+    align-items: center;
+    gap: v.$space-2;
+    flex: 1;
+    overflow-x: auto;
+    @include m.slim-scrollbar;
+  }
+
+  &__nav-link {
+    padding: v.$space-2 v.$space-3;
+    border-radius: v.$radius-sm;
+    color: var(--color-on-primary);
+    opacity: 0.75;
+    font-size: v.$font-size-sm;
+    white-space: nowrap;
+    transition: background v.$transition-fast, opacity v.$transition-fast;
+
+    &:hover {
+      opacity: 1;
+      background: rgb(255 255 255 / 10%);
+      text-decoration: none;
+    }
+
+    &--active {
+      opacity: 1;
+      background: rgb(255 255 255 / 15%);
+      font-weight: v.$font-weight-semibold;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: v.$space-4;
+    flex-shrink: 0;
+  }
+
+  &__user {
+    display: flex;
+    align-items: center;
+    gap: v.$space-3;
+  }
+
+  &__user-name {
+    font-size: v.$font-size-sm;
+    @include m.truncate;
+    max-width: 160px;
+  }
+
+  &__logout {
+    padding: v.$space-1 v.$space-3;
+    border: 1px solid rgb(255 255 255 / 30%);
+    border-radius: v.$radius-sm;
+    background: transparent;
+    color: var(--color-on-primary);
+    font-size: v.$font-size-sm;
+    cursor: pointer;
+    transition: background v.$transition-fast;
+
+    &:hover { background: rgb(255 255 255 / 10%); }
+  }
+}

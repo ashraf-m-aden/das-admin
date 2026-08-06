@@ -1,0 +1,37 @@
+<div class="das-block-detail">
+  <a class="das-block-detail__back" routerLink="/blocks">← {{ 'common.back' | transloco }}</a>
+
+  @if (isLoading$ | async) {
+    <p>{{ 'common.loading' | transloco }}</p>
+  } @else if (errorMessageKey$ | async; as errorKey) {
+    <p class="das-block-detail__error">{{ errorKey | transloco }}</p>
+  } @else if (block$ | async; as block) {
+    <h1>{{ block.code }}</h1>
+    <span class="das-badge">{{ 'status.block.' + block.status | transloco }}</span>
+
+    <div class="das-card das-block-detail__info">
+      <p>{{ 'blocks.area' | transloco }} : {{ block.areaM2 }} m²</p>
+      <p>{{ 'blocks.assignedTo' | transloco }} : {{ block.assignedUserId ?? '—' }}</p>
+    </div>
+
+    <h2>{{ 'blocks.lots' | transloco }}</h2>
+    <table class="das-block-detail__table">
+      <thead>
+        <tr>
+          <th>{{ 'blocks.lots' | transloco }}</th>
+          <th>{{ 'blocks.plannedUnits' | transloco }}</th>
+          <th>{{ 'blocks.actualUnits' | transloco }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (lot of block.lots; track lot.id) {
+          <tr>
+            <td>{{ lot.code }}</td>
+            <td>{{ lot.plannedUnitCount }}</td>
+            <td>{{ lot.actualUnitCount }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

@@ -1,0 +1,122 @@
+{
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "blocks": "Blocs & lots",
+    "review": "Revue des données",
+    "staff": "Personnel",
+    "clients": "Clients",
+    "settings": "Paramètres",
+    "logout": "Déconnexion"
+  },
+
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "close": "Fermer",
+    "search": "Rechercher",
+    "loading": "Chargement en cours...",
+    "noResults": "Aucun résultat",
+    "error": "Une erreur est survenue",
+    "requiredField": "Ce champ est obligatoire",
+    "yes": "Oui",
+    "no": "Non",
+    "back": "Retour",
+    "next": "Suivant",
+    "submit": "Soumettre"
+  },
+
+  "role": {
+    "admin": "Administrateur",
+    "supervisor": "Superviseur",
+    "surveyor": "Agent de terrain"
+  },
+
+  "status": {
+    "block": { "not_assigned": "Non assigné", "assigned": "Assigné", "in_progress": "En cours", "submitted": "Soumis", "approved": "Approuvé", "needs_redo": "À reprendre" },
+    "submission": { "draft": "Brouillon", "submitted": "Soumis", "approved": "Approuvé", "needs_redo": "À reprendre" },
+    "task": { "not_started": "Non commencée", "in_progress": "En cours", "submitted": "Soumise", "completed": "Terminée" },
+    "client": { "trial": "Essai", "active": "Actif", "suspended": "Suspendu" },
+    "user": { "active": "Actif", "suspended": "Suspendu", "inactive": "Inactif" }
+  },
+
+  "propertyType": {
+    "residential": "Résidentiel",
+    "commercial": "Commercial",
+    "industrial": "Industriel",
+    "vacant": "Vacant"
+  },
+
+  "dashboard": {
+    "title": "Tableau de bord",
+    "totalProperties": "Propriétés enregistrées",
+    "pendingReview": "En attente de revue",
+    "approvedRecords": "Dossiers approuvés",
+    "activeStaff": "Agents actifs",
+    "zoneProgress": "Progression par zone",
+    "urgentAlerts": "Alertes urgentes"
+  },
+
+  "alerts": {
+    "redo_overdue": "Reprise en retard : {{code}}",
+    "task_overdue": "Tâche en retard : {{code}}",
+    "block_stalled": "Bloc bloqué : {{code}}"
+  },
+
+  "staff": {
+    "title": "Personnel",
+    "addStaff": "Ajouter un agent",
+    "editStaff": "Modifier l'agent",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "email": "E-mail",
+    "phone": "Téléphone",
+    "login": "Identifiant",
+    "role": "Rôle",
+    "status": "Statut",
+    "lastLogin": "Dernière connexion",
+    "never": "Jamais",
+    "enable": "Activer",
+    "disable": "Désactiver",
+    "searchPlaceholder": "Rechercher un agent...",
+    "allRoles": "Tous les rôles",
+    "allStatuses": "Tous les statuts",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "temporaryPassword": "Mot de passe temporaire",
+    "loginTaken": "Cet identifiant est déjà utilisé"
+  },
+
+  "blocks": {
+    "title": "Blocs & lots",
+    "code": "Code du bloc",
+    "area": "Surface",
+    "status": "Statut",
+    "assignedTo": "Assigné à",
+    "lots": "Lots",
+    "addLot": "Ajouter un lot",
+    "plannedUnits": "Habitations prévues",
+    "actualUnits": "Habitations relevées",
+    "viewMap": "Voir la carte",
+    "searchPlaceholder": "Rechercher un bloc...",
+    "allStatuses": "Tous les statuts"
+  },
+
+  "review": {
+    "title": "Revue des données",
+    "approve": "Approuver",
+    "reject": "Rejeter",
+    "requestPhotoRetake": "Demander une reprise photo",
+    "requestGpsRecheck": "Demander une recorrection GPS",
+    "rejectionReason": "Motif du rejet"
+  },
+
+  "auth": {
+    "login": "Connexion",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "loginButton": "Se connecter",
+    "invalidCredentials": "Identifiants incorrects"
+  }
+}

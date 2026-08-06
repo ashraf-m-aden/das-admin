@@ -1,0 +1,10 @@
+<footer class="das-footer">
+  <span class="das-footer__copyright">© {{ currentYear }} D.A.S — Djibouti Address System</span>
+
+  <div class="das-footer__badges">
+    @if (isMockMode) {
+      <span class="das-footer__badge das-footer__badge--mock">Mode démo</span>
+    }
+    <span class="das-footer__badge">{{ environment }}</span>
+  </div>
+</footer>

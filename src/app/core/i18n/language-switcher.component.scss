@@ -1,0 +1,26 @@
+@use "styles/variables" as v;
+
+.das-lang-switcher {
+  display: inline-flex;
+  border: 1px solid var(--color-border);
+  border-radius: v.$radius-sm;
+  overflow: hidden;
+
+  &__btn {
+    padding: v.$space-1 v.$space-3;
+    font-size: v.$font-size-sm;
+    border: none;
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: background v.$transition-fast, color v.$transition-fast;
+
+    &:hover { background: var(--color-surface-alt); }
+
+    &--active {
+      background: var(--color-primary);
+      color: var(--color-on-primary);
+      font-weight: v.$font-weight-semibold;
+    }
+  }
+}
