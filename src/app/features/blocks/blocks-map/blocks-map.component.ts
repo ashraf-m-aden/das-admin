@@ -1,4 +1,4 @@
-import { Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import * as maplibregl from 'maplibre-gl';
 import type { FeatureCollection } from 'geojson';
@@ -34,6 +34,9 @@ export class BlocksMapComponent implements OnInit, OnDestroy {
   private resizeObserver?: ResizeObserver;
   private readonly isMockMode = this.config.get('useMockApi');
 
+  protected readonly initError = signal(false);
+  private hasFitBoundsOnce = false;
+
   ngOnInit(): void {
     this.facade.load();
 
@@ -48,11 +51,19 @@ export class BlocksMapComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.resizeObserver?.disconnect();
+    this.resizeObserver = undefined;
     this.map?.remove();
+    this.map = undefined;
+  }
+
+  private get isMapUsable(): boolean {
+    return !!this.map && !this.initError();
   }
 
   private observeContainerResize(): void {
-    this.resizeObserver = new ResizeObserver(() => this.map?.resize());
+    this.resizeObserver = new ResizeObserver(() => {
+      if (this.isMapUsable) this.map?.resize();
+    });
     this.resizeObserver.observe(this.mapContainer.nativeElement);
   }
 
@@ -66,13 +77,23 @@ export class BlocksMapComponent implements OnInit, OnDestroy {
       },
       center: [43.145, 11.595], // Djibouti-ville
       zoom: 12,
+      // Contournement d'un bug driver connu (Intel UHD + ANGLE/D3D11) : le
+      // framebuffer multi-échantillonné utilisé pour l'anti-aliasing des
+      // couches fill/line peut être silencieusement cassé sur certains
+      // pilotes intégrés, alors que le rendu simple (background) fonctionne.
+      canvasContextAttributes: { antialias: false },
+    });
+
+    this.map.on('error', (e) => {
+      console.error('[blocks-map] erreur MapLibre :', e.error);
+      this.ngZone.run(() => this.initError.set(true));
     });
 
     this.observeContainerResize();
 
     this.map.on('load', () => {
+      if (!this.isMapUsable) return;
       this.map?.resize();
-      this.map?.triggerRepaint();
 
       this.facade.blocksGeoJson$.subscribe((geojson) => {
         this.upsertMockLayer(geojson as FeatureCollection);
@@ -81,69 +102,61 @@ export class BlocksMapComponent implements OnInit, OnDestroy {
   }
 
   private upsertMockLayer(geojson: FeatureCollection): void {
-    if (!this.map) return;
-    const source = this.map.getSource('mock-blocks') as maplibregl.GeoJSONSource | undefined;
+    if (!this.isMapUsable) return;
+    const source = this.map!.getSource('mock-blocks') as maplibregl.GeoJSONSource | undefined;
 
     if (source) {
       source.setData(geojson);
-      this.map.triggerRepaint();
-      return;
+    } else {
+      this.map!.addSource('mock-blocks', { type: 'geojson', data: geojson });
+
+      this.map!.addLayer({
+        id: 'mock-blocks-fill',
+        type: 'fill',
+        source: 'mock-blocks',
+        paint: {
+          'fill-color': [
+            'match',
+            ['get', 'status'],
+            'not_assigned', STATUS_COLORS['not_assigned'],
+            'assigned', STATUS_COLORS['assigned'],
+            'in_progress', STATUS_COLORS['in_progress'],
+            'submitted', STATUS_COLORS['submitted'],
+            'approved', STATUS_COLORS['approved'],
+            'needs_redo', STATUS_COLORS['needs_redo'],
+            '#9ca3af',
+          ],
+          'fill-opacity': 0.55,
+        },
+      });
+
+      this.map!.addLayer({
+        id: 'mock-blocks-outline',
+        type: 'line',
+        source: 'mock-blocks',
+        paint: { 'line-color': '#1f2937', 'line-width': 1 },
+      });
+
+      this.map!.on('click', 'mock-blocks-fill', (e) => {
+        const id = e.features?.[0]?.properties?.['id'];
+        if (id) this.ngZone.run(() => this.router.navigate(['/blocks', id]));
+      });
+      this.map!.on('mouseenter', 'mock-blocks-fill', () => (this.map!.getCanvas().style.cursor = 'pointer'));
+      this.map!.on('mouseleave', 'mock-blocks-fill', () => (this.map!.getCanvas().style.cursor = ''));
     }
 
-    this.map.addSource('mock-blocks', { type: 'geojson', data: geojson });
-
-    this.map.addLayer({
-      id: 'mock-blocks-fill',
-      type: 'fill',
-      source: 'mock-blocks',
-      paint: {
-        'fill-color': [
-          'match',
-          ['get', 'status'],
-          'not_assigned', STATUS_COLORS['not_assigned'],
-          'assigned', STATUS_COLORS['assigned'],
-          'in_progress', STATUS_COLORS['in_progress'],
-          'submitted', STATUS_COLORS['submitted'],
-          'approved', STATUS_COLORS['approved'],
-          'needs_redo', STATUS_COLORS['needs_redo'],
-          '#9ca3af',
-        ],
-        'fill-opacity': 0.55,
-      },
-    });
-
-    this.map.addLayer({
-      id: 'mock-blocks-outline',
-      type: 'line',
-      source: 'mock-blocks',
-      paint: { 'line-color': '#1f2937', 'line-width': 1 },
-    });
-
-    this.map.on('click', 'mock-blocks-fill', (e) => {
-      const id = e.features?.[0]?.properties?.['id'];
-      if (id) {
-        this.ngZone.run(() => this.router.navigate(['/blocks', id]));
+    if (!this.hasFitBoundsOnce && geojson.features.length > 0) {
+      const bounds = new maplibregl.LngLatBounds();
+      geojson.features.forEach((f) => {
+        if (f.geometry.type === 'Polygon') {
+          (f.geometry.coordinates[0] as [number, number][]).forEach((coord) => bounds.extend(coord));
+        }
+      });
+      if (!bounds.isEmpty()) {
+        this.hasFitBoundsOnce = true;
+        this.map!.fitBounds(bounds, { padding: 60, maxZoom: 15 });
       }
-    });
-
-    this.map.on('mouseenter', 'mock-blocks-fill', () => {
-      this.map!.getCanvas().style.cursor = 'pointer';
-    });
-    this.map.on('mouseleave', 'mock-blocks-fill', () => {
-      this.map!.getCanvas().style.cursor = '';
-    });
-
-    const bounds = new maplibregl.LngLatBounds();
-    geojson.features.forEach((f) => {
-      if (f.geometry.type === 'Polygon') {
-        (f.geometry.coordinates[0] as [number, number][]).forEach((coord) => bounds.extend(coord));
-      }
-    });
-    if (!bounds.isEmpty()) {
-      this.map.fitBounds(bounds, { padding: 60, maxZoom: 15 });
     }
-
-    this.map.triggerRepaint();
   }
 
   private initRealTileMap(): void {
@@ -153,28 +166,25 @@ export class BlocksMapComponent implements OnInit, OnDestroy {
         style,
         center: [43.145, 11.595],
         zoom: 12,
+        canvasContextAttributes: { antialias: false },
+      });
+
+      this.map.on('error', (e) => {
+        console.error('[blocks-map] erreur MapLibre :', e.error);
+        this.ngZone.run(() => this.initError.set(true));
       });
 
       this.observeContainerResize();
-
       this.map.on('load', () => {
-        this.map?.resize();
-        this.map?.triggerRepaint();
+        if (this.isMapUsable) this.map?.resize();
       });
 
       this.map.on('click', 'blocks-fill', (e) => {
         const id = e.features?.[0]?.properties?.['id'];
-        if (id) {
-          this.ngZone.run(() => this.router.navigate(['/blocks', id]));
-        }
+        if (id) this.ngZone.run(() => this.router.navigate(['/blocks', id]));
       });
-
-      this.map.on('mouseenter', 'blocks-fill', () => {
-        this.map!.getCanvas().style.cursor = 'pointer';
-      });
-      this.map.on('mouseleave', 'blocks-fill', () => {
-        this.map!.getCanvas().style.cursor = '';
-      });
+      this.map.on('mouseenter', 'blocks-fill', () => (this.map!.getCanvas().style.cursor = 'pointer'));
+      this.map.on('mouseleave', 'blocks-fill', () => (this.map!.getCanvas().style.cursor = ''));
     });
   }
 }
