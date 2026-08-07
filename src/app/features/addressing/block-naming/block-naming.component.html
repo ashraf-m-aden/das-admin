@@ -1,0 +1,49 @@
+<div class="das-block-naming">
+  <form class="das-block-naming__filters" [formGroup]="filterForm">
+    <input type="text" formControlName="search" [placeholder]="'addressing.searchPlaceholder' | transloco" />
+    <label class="das-block-naming__toggle">
+      <input type="checkbox" formControlName="onlyUnnamed" />
+      {{ 'addressing.onlyUnnamed' | transloco }}
+    </label>
+  </form>
+
+  @if (isLoading$ | async) {
+  <p>{{ 'common.loading' | transloco }}</p>
+  } @else {
+  @for (block of blocks$ | async; track block.id) {
+  <div class="das-card das-block-naming__item" [formGroup]="formFor(block.id)">
+    <div class="das-block-naming__header">
+      <span class="das-badge">{{ block.code }}</span>
+
+      @if (block.name) {
+      <span class="das-block-naming__current-name">
+        {{ 'addressing.currentName' | transloco }} : "{{ block.name }}"
+      </span>
+      } @else if (block.suggestedName) {
+      <span class="das-block-naming__suggested">
+        {{ 'addressing.suggestedName' | transloco }} : "{{ block.suggestedName }}"
+      </span>
+      } @else {
+      <span class="das-block-naming__no-suggestion">{{ 'addressing.noSuggestion' | transloco }}</span>
+      }
+    </div>
+
+    <label class="das-block-naming__field">
+      <span>{{ 'addressing.officialName' | transloco }}</span>
+      <input type="text" formControlName="name" />
+    </label>
+
+    @if (errorMessageKey$ | async; as errorKey) {
+    <p class="das-block-naming__error">{{ errorKey | transloco }}</p>
+    }
+
+    <button type="button" [disabled]="isSaving$(block.id) | async" (click)="confirm(block)">
+      {{ (isSaving$(block.id) | async) ? ('common.loading' | transloco) : ((block.name ? 'addressing.renameConfirm' :
+      'addressing.confirmName') | transloco) }}
+    </button>
+  </div>
+  } @empty {
+  <p>{{ 'addressing.noBlocksToName' | transloco }}</p>
+  }
+  }
+</div>

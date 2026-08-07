@@ -1,0 +1,96 @@
+@use "styles/variables" as v;
+
+.das-road-types {
+  display: flex;
+  flex-direction: column;
+  gap: v.$space-6;
+
+  &__form-panel {
+    padding: v.$space-5;
+    max-width: 420px;
+
+    h2 {
+      font-size: v.$font-size-base;
+      margin-bottom: v.$space-3;
+    }
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: v.$space-3;
+
+    button {
+      align-self: flex-start;
+      padding: v.$space-2 v.$space-4;
+      border: none;
+      border-radius: v.$radius-md;
+      background: var(--color-primary);
+      color: var(--color-on-primary);
+      font-size: v.$font-size-sm;
+      font-weight: v.$font-weight-semibold;
+      cursor: pointer;
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      &:hover:not(:disabled) {
+        background: var(--color-primary-hover);
+      }
+    }
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: v.$space-1;
+    font-size: v.$font-size-sm;
+    color: var(--color-text-secondary);
+
+    input,
+    select {
+      padding: v.$space-2 v.$space-3;
+      border: 1px solid var(--color-border);
+      border-radius: v.$radius-sm;
+      font-size: v.$font-size-base;
+    }
+  }
+
+  &__checkbox {
+    display: flex;
+    align-items: center;
+    gap: v.$space-2;
+    font-size: v.$font-size-sm;
+    color: var(--color-text-secondary);
+  }
+
+  &__error {
+    margin: 0;
+    color: var(--color-danger);
+    font-size: v.$font-size-sm;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--color-surface);
+    border-radius: v.$radius-md;
+    overflow: hidden;
+
+    th,
+    td {
+      text-align: left;
+      padding: v.$space-3 v.$space-4;
+      border-bottom: 1px solid var(--color-border);
+      font-size: v.$font-size-sm;
+    }
+
+    th {
+      background: var(--color-surface-sunken);
+      font-weight: v.$font-weight-semibold;
+      color: var(--color-text-secondary);
+    }
+  }
+}

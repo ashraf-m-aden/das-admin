@@ -1,0 +1,19 @@
+<div class="das-addressing-shell">
+  <h1>{{ 'addressing.title' | transloco }}</h1>
+
+  <nav class="das-addressing-shell__tabs">
+    <a routerLink="block-naming" routerLinkActive="das-addressing-shell__tab--active" class="das-addressing-shell__tab">
+      {{ 'addressing.blockNaming' | transloco }}
+    </a>
+    <a routerLink="street-naming" routerLinkActive="das-addressing-shell__tab--active"
+      class="das-addressing-shell__tab">
+      {{ 'addressing.streetNaming' | transloco }}
+    </a>
+    <a routerLink="property-numbering" routerLinkActive="das-addressing-shell__tab--active"
+      class="das-addressing-shell__tab">
+      {{ 'addressing.propertyNumbering' | transloco }}
+    </a>
+  </nav>
+
+  <router-outlet />
+</div>

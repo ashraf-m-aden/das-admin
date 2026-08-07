@@ -1,0 +1,104 @@
+@use "styles/variables" as v;
+
+.das-notifications {
+  padding: v.$space-6;
+  max-width: 640px;
+  margin: 0 auto;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: v.$space-4;
+  }
+
+  &__mark-all {
+    background: none;
+    border: none;
+    color: var(--color-accent);
+    font-size: v.$font-size-sm;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: v.$space-2;
+  }
+
+  &__item {
+    display: flex;
+    align-items: flex-start;
+    gap: v.$space-3;
+    padding: v.$space-4;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: v.$radius-md;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+
+    &:hover {
+      background: var(--color-surface-alt);
+    }
+
+    &--unread {
+      border-left: 3px solid var(--color-accent);
+      background: var(--color-info-bg);
+    }
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: v.$radius-full;
+    margin-top: 6px;
+    background: var(--color-text-muted);
+
+    &[data-type="task_completed"] {
+      background: var(--color-success);
+    }
+
+    &[data-type="block_submitted"] {
+      background: var(--color-info);
+    }
+
+    &[data-type="property_approved"] {
+      background: var(--color-success);
+    }
+
+    &[data-type="property_needs_redo"] {
+      background: var(--color-danger);
+    }
+
+    &[data-type="redo_resolved"] {
+      background: var(--color-accent);
+    }
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: v.$space-1;
+  }
+
+  &__message {
+    font-size: v.$font-size-sm;
+    color: var(--color-text-primary);
+  }
+
+  &__date {
+    font-size: v.$font-size-xs;
+    color: var(--color-text-muted);
+  }
+
+  &__empty {
+    color: var(--color-text-muted);
+    font-size: v.$font-size-sm;
+  }
+}

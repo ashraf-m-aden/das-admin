@@ -3,13 +3,13 @@ import { AsyncPipe } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
 import { AuthFacade } from '../../auth/store/auth.facade';
+import { NotificationsFacade } from '../../notifications/store/notifications.facade';
 import { LanguageSwitcherComponent } from '../../i18n/language-switcher.component';
 import { UserRole } from '../../models/das.models';
 
 interface NavItem {
   labelKey: string;
   path: string;
-  /** undefined = visible pour tout utilisateur authentifié, quel que soit son rôle */
   allowedRoles?: UserRole[];
 }
 
@@ -22,13 +22,16 @@ interface NavItem {
 })
 export class HeaderComponent {
   private authFacade = inject(AuthFacade);
+  private notificationsFacade = inject(NotificationsFacade);
 
   protected readonly fullName$ = this.authFacade.fullName$;
   protected readonly role$ = this.authFacade.role$;
+  protected readonly unreadCount$ = this.notificationsFacade.unreadCount$;
 
   protected readonly navItems: NavItem[] = [
     { labelKey: 'nav.dashboard', path: '/dashboard' },
     { labelKey: 'nav.blocks', path: '/blocks' },
+    { labelKey: 'nav.addressing', path: '/addressing', allowedRoles: ['admin', 'supervisor'] },
     { labelKey: 'nav.review', path: '/review', allowedRoles: ['admin', 'supervisor'] },
     { labelKey: 'nav.staff', path: '/staff', allowedRoles: ['admin'] },
     { labelKey: 'nav.clients', path: '/clients', allowedRoles: ['admin'] },

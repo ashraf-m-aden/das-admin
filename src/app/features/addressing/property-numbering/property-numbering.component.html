@@ -1,0 +1,61 @@
+<div class="das-property-numbering">
+  @if (isLoading$ | async) {
+  <p>{{ 'common.loading' | transloco }}</p>
+  } @else {
+  <table class="das-property-numbering__table">
+    <thead>
+      <tr>
+        <th>{{ 'addressing.block' | transloco }}</th>
+        <th>{{ 'addressing.lot' | transloco }}</th>
+        <th>{{ 'addressing.houseNumber' | transloco }}</th>
+        <th>{{ 'addressing.formattedAddress' | transloco }}</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (property of properties$ | async; track property.id) {
+      <tr [formGroup]="formFor(property.id)">
+        <td>{{ property.blockCode }}</td>
+        <td>{{ property.lotCode ?? '—' }}</td>
+        <td><input type="text" formControlName="houseNumber" /></td>
+        <td class="das-property-numbering__address">{{ property.formattedAddress }}</td>
+        <td class="das-property-numbering__actions">
+          <button type="button" (click)="toggleDetails(property.id)">
+            {{ (expandedId() === property.id ? 'addressing.hideDetails' : 'addressing.viewDetails') | transloco }}
+          </button>
+          <button type="button" [disabled]="isSaving$(property.id) | async" (click)="save(property)">
+            {{ (isSaving$(property.id) | async) ? '...' : ('common.save' | transloco) }}
+          </button>
+        </td>
+      </tr>
+
+      @if (expandedId() === property.id) {
+      <tr class="das-property-numbering__details-row">
+        <td colspan="5">
+          <div class="das-property-numbering__details">
+            <span><strong>{{ 'addressing.region' | transloco }}</strong> : {{ property.adminHierarchy.region }}</span>
+            <span><strong>{{ 'addressing.commune' | transloco }}</strong> : {{ property.adminHierarchy.commune }}</span>
+            @if (property.adminHierarchy.arrondissement) {
+            <span><strong>{{ 'addressing.arrondissement' | transloco }}</strong> : {{
+              property.adminHierarchy.arrondissement }}</span>
+            }
+            <span><strong>{{ 'addressing.quartier' | transloco }}</strong> : {{ property.adminHierarchy.quartier
+              }}</span>
+            <span><strong>{{ 'addressing.addressCode' | transloco }}</strong> : {{ property.addressCode }}</span>
+          </div>
+        </td>
+      </tr>
+      }
+      } @empty {
+      <tr>
+        <td colspan="5">{{ 'addressing.noPropertiesToNumber' | transloco }}</td>
+      </tr>
+      }
+    </tbody>
+  </table>
+
+  @if (errorMessageKey$ | async; as errorKey) {
+  <p class="das-property-numbering__error">{{ errorKey | transloco }}</p>
+  }
+  }
+</div>

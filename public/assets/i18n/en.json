@@ -2,6 +2,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "blocks": "Blocks & lots",
+    "addressing": "Addressing",
     "review": "Data review",
     "staff": "Staff",
     "clients": "Clients",
@@ -9,6 +10,52 @@
     "logout": "Log out"
   },
 
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "empty": "No notifications",
+    "task_completed": "{{agent}} completed the task on {{code}}",
+    "block_submitted": "Block {{code}} was submitted for review",
+    "property_approved": "Property {{code}} was approved",
+    "property_needs_redo": "Property {{code}} needs a redo",
+    "redo_resolved": "{{agent}} resolved the redo on {{code}}"
+  },
+  "addressing": {
+    "title": "Addressing",
+    "blockNaming": "Block naming",
+    "streetNaming": "Individual streets",
+    "propertyNumbering": "Property numbering",
+    "searchPlaceholder": "Search...",
+    "onlyUnnamed": "Unnamed only",
+    "currentName": "Current name",
+    "suggestedName": "Suggested name",
+    "noSuggestion": "No name suggested by the agent",
+    "officialName": "Official name",
+    "officialNameFr": "Official name (FR)",
+    "officialNameAr": "Official name (AR)",
+    "roadType": "Road type",
+    "selectRoadType": "Select a type",
+    "signPresent": "Sign present",
+    "signAbsent": "No sign",
+    "nameVisible": "Name readable",
+    "nameNotVisible": "Name unreadable/missing",
+    "confirmName": "Confirm name",
+    "renameConfirm": "Rename",
+    "noBlocksToName": "No blocks to display",
+    "noStreetsToName": "No streets to display",
+    "block": "Block",
+    "lot": "Lot",
+    "houseNumber": "Number",
+    "formattedAddress": "Address",
+    "addressCode": "Address code",
+    "viewDetails": "Details",
+    "hideDetails": "Hide",
+    "region": "Region",
+    "commune": "Commune",
+    "arrondissement": "District",
+    "quartier": "Neighborhood",
+    "noPropertiesToNumber": "No properties pending numbering"
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
@@ -35,9 +82,26 @@
   },
 
   "status": {
-    "block": { "not_assigned": "Not assigned", "assigned": "Assigned", "in_progress": "In progress", "submitted": "Submitted", "approved": "Approved", "needs_redo": "Needs redo" },
-    "submission": { "draft": "Draft", "submitted": "Submitted", "approved": "Approved", "needs_redo": "Needs redo" },
-    "task": { "not_started": "Not started", "in_progress": "In progress", "submitted": "Submitted", "completed": "Completed" },
+    "block": {
+      "not_assigned": "Not assigned",
+      "assigned": "Assigned",
+      "in_progress": "In progress",
+      "submitted": "Submitted",
+      "approved": "Approved",
+      "needs_redo": "Needs redo"
+    },
+    "submission": {
+      "draft": "Draft",
+      "submitted": "Submitted",
+      "approved": "Approved",
+      "needs_redo": "Needs redo"
+    },
+    "task": {
+      "not_started": "Not started",
+      "in_progress": "In progress",
+      "submitted": "Submitted",
+      "completed": "Completed"
+    },
     "client": { "trial": "Trial", "active": "Active", "suspended": "Suspended" },
     "user": { "active": "Active", "suspended": "Suspended", "inactive": "Inactive" }
   },
@@ -102,16 +166,41 @@
     "searchPlaceholder": "Search blocks...",
     "allStatuses": "All statuses"
   },
-
   "review": {
     "title": "Data review",
     "approve": "Approve",
     "reject": "Reject",
     "requestPhotoRetake": "Request photo retake",
     "requestGpsRecheck": "Request GPS recheck",
-    "rejectionReason": "Rejection reason"
+    "rejectionReason": "Rejection reason",
+    "otherReason": "Other reason",
+    "allTypes": "All types",
+    "typeProperty": "Property",
+    "typeStreet": "Street",
+    "emptyQueue": "No submissions pending review"
   },
-
+  "settings": {
+    "title": "Settings",
+    "roadTypes": "Road types",
+    "mapImport": "Map import",
+    "addRoadType": "Add road type",
+    "roadTypeCode": "Code",
+    "roadTypeLabel": "Label",
+    "roadTypeIsPoint": "Point representation (intersection, roundabout...)",
+    "roadTypeCodeTaken": "This code already exists",
+    "importTarget": "Import target",
+    "importTargetBlocks": "Blocks (zone geometries)",
+    "importTargetAdminUnits": "Administrative units",
+    "importZone": "Target zone",
+    "selectZone": "Select a zone",
+    "importFile": "GeoJSON file",
+    "startImport": "Start import",
+    "importSuccess": "Import complete",
+    "importedCount": "Items imported",
+    "skippedCount": "Items skipped",
+    "importAnother": "Import another file",
+    "missingZone": "Please select a target zone"
+  },
   "auth": {
     "login": "Log in",
     "email": "Email address",

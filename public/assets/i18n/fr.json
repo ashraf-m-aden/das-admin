@@ -2,11 +2,23 @@
   "nav": {
     "dashboard": "Tableau de bord",
     "blocks": "Blocs & lots",
+    "addressing": "Adressage",
     "review": "Revue des données",
     "staff": "Personnel",
     "clients": "Clients",
     "settings": "Paramètres",
     "logout": "Déconnexion"
+  },
+
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Tout marquer comme lu",
+    "empty": "Aucune notification",
+    "task_completed": "{{agent}} a terminé la tâche sur {{code}}",
+    "block_submitted": "Le bloc {{code}} a été soumis pour revue",
+    "property_approved": "La propriété {{code}} a été approuvée",
+    "property_needs_redo": "La propriété {{code}} nécessite une reprise",
+    "redo_resolved": "{{agent}} a résolu la reprise sur {{code}}"
   },
 
   "common": {
@@ -35,9 +47,26 @@
   },
 
   "status": {
-    "block": { "not_assigned": "Non assigné", "assigned": "Assigné", "in_progress": "En cours", "submitted": "Soumis", "approved": "Approuvé", "needs_redo": "À reprendre" },
-    "submission": { "draft": "Brouillon", "submitted": "Soumis", "approved": "Approuvé", "needs_redo": "À reprendre" },
-    "task": { "not_started": "Non commencée", "in_progress": "En cours", "submitted": "Soumise", "completed": "Terminée" },
+    "block": {
+      "not_assigned": "Non assigné",
+      "assigned": "Assigné",
+      "in_progress": "En cours",
+      "submitted": "Soumis",
+      "approved": "Approuvé",
+      "needs_redo": "À reprendre"
+    },
+    "submission": {
+      "draft": "Brouillon",
+      "submitted": "Soumis",
+      "approved": "Approuvé",
+      "needs_redo": "À reprendre"
+    },
+    "task": {
+      "not_started": "Non commencée",
+      "in_progress": "En cours",
+      "submitted": "Soumise",
+      "completed": "Terminée"
+    },
     "client": { "trial": "Essai", "active": "Actif", "suspended": "Suspendu" },
     "user": { "active": "Actif", "suspended": "Suspendu", "inactive": "Inactif" }
   },
@@ -102,16 +131,77 @@
     "searchPlaceholder": "Rechercher un bloc...",
     "allStatuses": "Tous les statuts"
   },
-
   "review": {
     "title": "Revue des données",
     "approve": "Approuver",
     "reject": "Rejeter",
     "requestPhotoRetake": "Demander une reprise photo",
     "requestGpsRecheck": "Demander une recorrection GPS",
-    "rejectionReason": "Motif du rejet"
+    "rejectionReason": "Motif du rejet",
+    "otherReason": "Autre motif",
+    "allTypes": "Tous les types",
+    "typeProperty": "Propriété",
+    "typeStreet": "Rue",
+    "emptyQueue": "Aucune soumission en attente de revue"
   },
-
+  "settings": {
+    "title": "Paramètres",
+    "roadTypes": "Types de voies",
+    "mapImport": "Import cartographique",
+    "addRoadType": "Ajouter un type de voie",
+    "roadTypeCode": "Code",
+    "roadTypeLabel": "Libellé",
+    "roadTypeIsPoint": "Représentation ponctuelle (carrefour, rond-point...)",
+    "roadTypeCodeTaken": "Ce code existe déjà",
+    "importTarget": "Cible de l'import",
+    "importTargetBlocks": "Blocs (géométries de zone)",
+    "importTargetAdminUnits": "Unités administratives",
+    "importZone": "Zone cible",
+    "selectZone": "Sélectionner une zone",
+    "importFile": "Fichier GeoJSON",
+    "startImport": "Lancer l'import",
+    "importSuccess": "Import terminé",
+    "importedCount": "Éléments importés",
+    "skippedCount": "Éléments ignorés",
+    "importAnother": "Importer un autre fichier",
+    "missingZone": "Merci de sélectionner une zone cible"
+  },
+  "addressing": {
+    "title": "Adressage",
+    "blockNaming": "Nommage des blocs",
+    "streetNaming": "Rues individuelles",
+    "propertyNumbering": "Numérotation des habitations",
+    "searchPlaceholder": "Rechercher...",
+    "onlyUnnamed": "Non nommés uniquement",
+    "currentName": "Nom actuel",
+    "suggestedName": "Nom proposé",
+    "noSuggestion": "Aucun nom proposé par l'agent",
+    "officialName": "Nom officiel",
+    "officialNameFr": "Nom officiel (FR)",
+    "officialNameAr": "Nom officiel (AR)",
+    "roadType": "Type de voie",
+    "selectRoadType": "Sélectionner un type",
+    "signPresent": "Panneau présent",
+    "signAbsent": "Pas de panneau",
+    "nameVisible": "Nom lisible",
+    "nameNotVisible": "Nom illisible/absent",
+    "confirmName": "Confirmer le nom",
+    "renameConfirm": "Renommer",
+    "noBlocksToName": "Aucun bloc à afficher",
+    "noStreetsToName": "Aucune rue à afficher",
+    "block": "Bloc",
+    "lot": "Lot",
+    "houseNumber": "Numéro",
+    "formattedAddress": "Adresse",
+    "addressCode": "Code d'adresse",
+    "viewDetails": "Détails",
+    "hideDetails": "Masquer",
+    "region": "Région",
+    "commune": "Commune",
+    "arrondissement": "Arrondissement",
+    "quartier": "Quartier",
+    "noPropertiesToNumber": "Aucune propriété en attente de numérotation"
+  },
   "auth": {
     "login": "Connexion",
     "email": "Adresse e-mail",

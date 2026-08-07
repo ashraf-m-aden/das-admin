@@ -6,19 +6,25 @@
 
   <nav class="das-header__nav" aria-label="Navigation principale">
     @for (item of navItems; track item.path) {
-      @if (isVisible(item, role$ | async)) {
-<a
-          class="das-header__nav-link"
-          [routerLink]="item.path"
-          routerLinkActive="das-header__nav-link--active"
-        >
-          {{ item.labelKey | transloco }}
-        </a>
-      }
+    @if (isVisible(item, role$ | async)) {
+    <a class="das-header__nav-link" [routerLink]="item.path" routerLinkActive="das-header__nav-link--active">
+      {{ item.labelKey | transloco }}
+    </a>
+    }
     }
   </nav>
 
   <div class="das-header__actions">
+    <a class="das-header__notifications" routerLink="/notifications"
+      routerLinkActive="das-header__notifications--active">
+      🔔
+      @if ((unreadCount$ | async); as count) {
+      @if (count > 0) {
+      <span class="das-header__badge">{{ count }}</span>
+      }
+      }
+    </a>
+
     <das-language-switcher />
 
     <div class="das-header__user">

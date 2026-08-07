@@ -77,6 +77,48 @@
     flex-shrink: 0;
   }
 
+  &__notifications {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: v.$radius-sm;
+    color: var(--color-on-primary);
+    opacity: 0.85;
+    font-size: v.$font-size-lg;
+
+    &:hover {
+      opacity: 1;
+      background: rgb(255 255 255 / 10%);
+      text-decoration: none;
+    }
+
+    &--active {
+      opacity: 1;
+      background: rgb(255 255 255 / 15%);
+    }
+  }
+
+  &__badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: v.$radius-full;
+    background: var(--color-danger);
+    color: var(--color-on-primary);
+    font-size: 10px;
+    font-weight: v.$font-weight-bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
   &__user {
     display: flex;
     align-items: center;
@@ -99,6 +141,8 @@
     cursor: pointer;
     transition: background v.$transition-fast;
 
-    &:hover { background: rgb(255 255 255 / 10%); }
+    &:hover {
+      background: rgb(255 255 255 / 10%);
+    }
   }
 }

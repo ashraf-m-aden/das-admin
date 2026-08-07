@@ -1,0 +1,33 @@
+<div class="das-notifications">
+  <div class="das-notifications__header">
+    <h1>{{ 'notifications.title' | transloco }}</h1>
+    @if ((unreadCount$ | async); as count) {
+    @if (count > 0) {
+    <button type="button" class="das-notifications__mark-all" (click)="markAllAsRead()">
+      {{ 'notifications.markAllRead' | transloco }}
+    </button>
+    }
+    }
+  </div>
+
+  @if (isLoading$ | async) {
+  <p>{{ 'common.loading' | transloco }}</p>
+  } @else {
+  <div class="das-notifications__list">
+    @for (notification of items$ | async; track notification.id) {
+    <button type="button" class="das-notifications__item" [class.das-notifications__item--unread]="!notification.readAt"
+      (click)="open(notification)">
+      <span class="das-notifications__icon" [attr.data-type]="notification.type"></span>
+      <span class="das-notifications__content">
+        <span class="das-notifications__message">
+          {{ notification.messageKey | transloco: notification.messageParams }}
+        </span>
+        <span class="das-notifications__date">{{ notification.createdAt | dasDate: 'long' }}</span>
+      </span>
+    </button>
+    } @empty {
+    <p class="das-notifications__empty">{{ 'notifications.empty' | transloco }}</p>
+    }
+  </div>
+  }
+</div>

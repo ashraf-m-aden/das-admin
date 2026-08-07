@@ -20,6 +20,18 @@ import { StaffEffects } from './core/staff/store/staff.effects';
 import { provideBlocksApi } from './core/blocks/services/blocks-api.provider';
 import { blocksFeature } from './core/blocks/store/blocks.reducer';
 import { BlocksEffects } from './core/blocks/store/blocks.effects';
+import { provideReviewApi } from './core/review/services/review-api.provider';
+import { reviewFeature } from './core/review/store/review.reducer';
+import { ReviewEffects } from './core/review/store/review.effects';
+import { provideNotificationsApi } from './core/notifications/services/notifications-api.provider';
+import { notificationsFeature } from './core/notifications/store/notifications.reducer';
+import { NotificationsEffects } from './core/notifications/store/notifications.effects';
+import { provideSettingsApi } from './core/settings/services/settings-api.provider';
+import { settingsFeature } from './core/settings/store/settings.reducer';
+import { SettingsEffects } from './core/settings/store/settings.effects';
+import { provideAddressingApi } from './core/addressing/services/addressing-api.provider';
+import { addressingFeature } from './core/addressing/store/addressing.reducer';
+import { AddressingEffects } from './core/addressing/store/addressing.effects';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -31,14 +43,31 @@ export const appConfig: ApplicationConfig = {
     provideDashboardApi(),
     provideStaffApi(),
     provideBlocksApi(),
+    provideReviewApi(),
+    provideNotificationsApi(),
+    provideSettingsApi(),
+    provideAddressingApi(),
 
     provideStore({
       [authFeature.name]: authFeature.reducer,
       [dashboardFeature.name]: dashboardFeature.reducer,
       [staffFeature.name]: staffFeature.reducer,
       [blocksFeature.name]: blocksFeature.reducer,
+      [reviewFeature.name]: reviewFeature.reducer,
+      [notificationsFeature.name]: notificationsFeature.reducer,
+      [settingsFeature.name]: settingsFeature.reducer,
+      [addressingFeature.name]: addressingFeature.reducer,
     }),
-    provideEffects([AuthEffects, DashboardEffects, StaffEffects, BlocksEffects]),
+    provideEffects([
+      AuthEffects,
+      DashboardEffects,
+      StaffEffects,
+      BlocksEffects,
+      ReviewEffects,
+      NotificationsEffects,
+      SettingsEffects,
+      AddressingEffects,
+    ]),
 
     provideStoreDevtools({ maxAge: 25, logOnly: false }),
   ],
