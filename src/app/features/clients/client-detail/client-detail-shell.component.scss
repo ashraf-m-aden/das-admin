@@ -1,0 +1,44 @@
+@use "styles/variables" as v;
+
+.das-client-detail-shell {
+  padding: v.$space-6;
+  max-width: v.$content-max-width;
+  margin: 0 auto;
+
+  &__back {
+    display: inline-block;
+    margin-bottom: v.$space-4;
+    font-size: v.$font-size-sm;
+  }
+
+  &__meta {
+    color: var(--color-text-muted);
+    font-size: v.$font-size-sm;
+    margin: v.$space-1 0 v.$space-6;
+  }
+
+  &__tabs {
+    display: flex;
+    gap: v.$space-2;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: v.$space-6;
+  }
+
+  &__tab {
+    padding: v.$space-3 v.$space-4;
+    font-size: v.$font-size-sm;
+    color: var(--color-text-secondary);
+    border-bottom: 2px solid transparent;
+
+    &:hover {
+      text-decoration: none;
+      color: var(--color-text-primary);
+    }
+
+    &--active {
+      color: var(--color-primary);
+      border-bottom-color: var(--color-primary);
+      font-weight: v.$font-weight-semibold;
+    }
+  }
+}

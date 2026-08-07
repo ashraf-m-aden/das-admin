@@ -1,0 +1,48 @@
+<div class="das-client-form">
+  <h1>{{ (editingId ? 'clients.editClient' : 'clients.addClient') | transloco }}</h1>
+
+  <form class="das-client-form__form das-card" [formGroup]="form" (ngSubmit)="submit()">
+    <label class="das-client-form__field">
+      <span>{{ 'clients.login' | transloco }}</span>
+      <input type="text" formControlName="login" />
+    </label>
+
+    <label class="das-client-form__field">
+      <span>{{ 'clients.companyName' | transloco }}</span>
+      <input type="text" formControlName="companyName" />
+    </label>
+
+    <label class="das-client-form__field">
+      <span>{{ 'clients.contactName' | transloco }}</span>
+      <input type="text" formControlName="contactName" />
+    </label>
+
+    <label class="das-client-form__field">
+      <span>{{ 'clients.email' | transloco }}</span>
+      <input type="email" formControlName="email" />
+    </label>
+
+    <label class="das-client-form__field">
+      <span>{{ 'clients.phone' | transloco }}</span>
+      <input type="tel" formControlName="phone" />
+    </label>
+
+    <label class="das-client-form__field">
+      <span>{{ 'clients.plan' | transloco }}</span>
+      <select formControlName="planId">
+        <option value="" disabled>{{ 'clients.selectPlan' | transloco }}</option>
+        @for (plan of plans$ | async; track plan.id) {
+        <option [value]="plan.id">{{ plan.name }}</option>
+        }
+      </select>
+    </label>
+
+    @if (errorMessageKey$ | async; as errorKey) {
+    <p class="das-client-form__error">{{ errorKey | transloco }}</p>
+    }
+
+    <button type="submit" class="das-client-form__submit" [disabled]="(isSaving$ | async) || form.invalid">
+      {{ (isSaving$ | async) ? ('common.loading' | transloco) : ('common.save' | transloco) }}
+    </button>
+  </form>
+</div>

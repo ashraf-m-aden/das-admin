@@ -1,0 +1,65 @@
+<div class="das-clients-list">
+  <div class="das-clients-list__header">
+    <h1>{{ 'clients.title' | transloco }}</h1>
+    <a class="das-clients-list__add" routerLink="/clients/new">{{ 'clients.addClient' | transloco }}</a>
+  </div>
+
+  @if (lastCreatedTemporaryPassword$ | async; as tempPassword) {
+  <div class="das-clients-list__banner das-card">
+    <span>{{ 'clients.temporaryPassword' | transloco }} : <strong>{{ tempPassword }}</strong></span>
+    <button type="button" (click)="dismissTemporaryPassword()">{{ 'common.close' | transloco }}</button>
+  </div>
+  }
+
+  <form class="das-clients-list__filters" [formGroup]="filterForm">
+    <input type="text" formControlName="search" [placeholder]="'clients.searchPlaceholder' | transloco" />
+    <select formControlName="status">
+      <option [ngValue]="null">{{ 'clients.allStatuses' | transloco }}</option>
+      @for (status of statuses; track status) {
+      <option [ngValue]="status">{{ 'status.client.' + status | transloco }}</option>
+      }
+    </select>
+  </form>
+
+  @if (isLoading$ | async) {
+  <p>{{ 'common.loading' | transloco }}</p>
+  } @else {
+  <table class="das-clients-list__table">
+    <thead>
+      <tr>
+        <th>{{ 'clients.companyName' | transloco }}</th>
+        <th>{{ 'clients.contactName' | transloco }}</th>
+        <th>{{ 'clients.plan' | transloco }}</th>
+        <th>{{ 'clients.status' | transloco }}</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (client of items$ | async; track client.id) {
+      <tr>
+        <td>{{ client.companyName }}</td>
+        <td>{{ client.contactName }}</td>
+        <td>{{ client.planName }}</td>
+        <td>
+          <span class="das-badge" [class.das-badge--approved]="client.status === 'active'"
+            [class.das-badge--needs-redo]="client.status === 'suspended'">
+            {{ 'status.client.' + client.status | transloco }}
+          </span>
+        </td>
+        <td class="das-clients-list__actions">
+          <a [routerLink]="['/clients', client.id]">{{ 'clients.viewAccess' | transloco }}</a>
+          <a [routerLink]="['/clients', client.id, 'edit']">{{ 'common.edit' | transloco }}</a>
+          <button type="button" (click)="toggleEnabled(client.id, client.enabled)">
+            {{ (client.enabled ? 'clients.suspend' : 'clients.reactivate') | transloco }}
+          </button>
+        </td>
+      </tr>
+      } @empty {
+      <tr>
+        <td colspan="5">{{ 'common.noResults' | transloco }}</td>
+      </tr>
+      }
+    </tbody>
+  </table>
+  }
+</div>

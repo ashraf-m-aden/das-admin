@@ -1,0 +1,59 @@
+<div class="das-api-tokens">
+  @if (lastCreatedRawToken$ | async; as rawToken) {
+  <div class="das-card das-api-tokens__raw-token">
+    <p>{{ 'clients.tokenCreatedWarning' | transloco }}</p>
+    <code>{{ rawToken }}</code>
+    <button type="button" (click)="dismissRawToken()">{{ 'common.close' | transloco }}</button>
+  </div>
+  } @else if (isLoading$ | async) {
+  <p>{{ 'common.loading' | transloco }}</p>
+  } @else if (token$ | async; as token) {
+  <div class="das-card das-api-tokens__current">
+    <div class="das-api-tokens__current-header">
+      <h2>{{ token.name }}</h2>
+      <span class="das-badge das-badge--approved">{{ 'clients.tokenActive' | transloco }}</span>
+    </div>
+    <p class="das-api-tokens__current-scopes">{{ token.scopes.join(', ') }}</p>
+    <p class="das-api-tokens__current-meta">
+      {{ 'clients.tokenCreatedAt' | transloco }} : {{ token.createdAt | date: 'dd/MM/yyyy' }}
+    </p>
+
+    <div class="das-api-tokens__current-actions">
+      <button type="button" class="das-api-tokens__revoke" [disabled]="isSaving$ | async" (click)="revoke()">
+        {{ 'clients.revoke' | transloco }}
+      </button>
+    </div>
+  </div>
+
+  <p class="das-api-tokens__regenerate-hint">{{ 'clients.regenerateHint' | transloco }}</p>
+  }
+
+  @if (!(lastCreatedRawToken$ | async) && !(isLoading$ | async)) {
+  <form class="das-api-tokens__create das-card" [formGroup]="form" (ngSubmit)="regenerate()">
+    <h2>{{ ((token$ | async) ? 'clients.regenerateToken' : 'clients.createToken') | transloco }}</h2>
+
+    <label>
+      <span>{{ 'clients.tokenName' | transloco }}</span>
+      <input type="text" formControlName="name" [placeholder]="'clients.tokenNamePlaceholder' | transloco" />
+    </label>
+
+    <div class="das-api-tokens__scopes">
+      <span>{{ 'clients.scopes' | transloco }}</span>
+      @for (scope of scopes; track scope) {
+      <label class="das-api-tokens__scope-checkbox">
+        <input type="checkbox" [checked]="form.value.scopes?.includes(scope)" (change)="toggleScope(scope)" />
+        {{ scope }}
+      </label>
+      }
+    </div>
+
+    @if (errorMessageKey$ | async; as errorKey) {
+    <p class="das-api-tokens__error">{{ errorKey | transloco }}</p>
+    }
+
+    <button type="submit" [disabled]="(isSaving$ | async) || form.invalid || form.value.scopes?.length === 0">
+      {{ ((token$ | async) ? 'clients.regenerateToken' : 'clients.createToken') | transloco }}
+    </button>
+  </form>
+  }
+</div>

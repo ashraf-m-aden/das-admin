@@ -35,6 +35,11 @@ export const routes: Routes = [
         loadChildren: () => import('./features/staff/staff.routes').then((m) => m.staffRoutes),
       },
       {
+        path: 'clients',
+        canActivate: [roleGuard(['admin'])],
+        loadChildren: () => import('./features/clients/clients.routes').then((m) => m.clientsRoutes),
+      },
+      {
         path: 'notifications',
         loadChildren: () =>
           import('./features/notifications/notifications.routes').then((m) => m.notificationsRoutes),

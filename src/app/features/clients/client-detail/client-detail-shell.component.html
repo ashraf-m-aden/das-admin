@@ -1,0 +1,21 @@
+<div class="das-client-detail-shell">
+  <a class="das-client-detail-shell__back" routerLink="/clients">← {{ 'common.back' | transloco }}</a>
+
+  @if (client$ | async; as client) {
+  <h1>{{ client.companyName }}</h1>
+  <p class="das-client-detail-shell__meta">{{ client.contactName }} — {{ client.email }}</p>
+  }
+
+  <nav class="das-client-detail-shell__tabs">
+    <a routerLink="zone-access" routerLinkActive="das-client-detail-shell__tab--active"
+      class="das-client-detail-shell__tab">
+      {{ 'clients.zoneAccess' | transloco }}
+    </a>
+    <a routerLink="api-tokens" routerLinkActive="das-client-detail-shell__tab--active"
+      class="das-client-detail-shell__tab">
+      {{ 'clients.apiTokens' | transloco }}
+    </a>
+  </nav>
+
+  <router-outlet />
+</div>

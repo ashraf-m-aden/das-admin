@@ -32,6 +32,9 @@ import { SettingsEffects } from './core/settings/store/settings.effects';
 import { provideAddressingApi } from './core/addressing/services/addressing-api.provider';
 import { addressingFeature } from './core/addressing/store/addressing.reducer';
 import { AddressingEffects } from './core/addressing/store/addressing.effects';
+import { provideClientsApi } from './core/clients/services/clients-api.provider';
+import { clientsFeature } from './core/clients/store/clients.reducer';
+import { ClientsEffects } from './core/clients/store/clients.effects';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -47,6 +50,7 @@ export const appConfig: ApplicationConfig = {
     provideNotificationsApi(),
     provideSettingsApi(),
     provideAddressingApi(),
+    provideClientsApi(),
 
     provideStore({
       [authFeature.name]: authFeature.reducer,
@@ -57,6 +61,7 @@ export const appConfig: ApplicationConfig = {
       [notificationsFeature.name]: notificationsFeature.reducer,
       [settingsFeature.name]: settingsFeature.reducer,
       [addressingFeature.name]: addressingFeature.reducer,
+      [clientsFeature.name]: clientsFeature.reducer,
     }),
     provideEffects([
       AuthEffects,
@@ -67,6 +72,7 @@ export const appConfig: ApplicationConfig = {
       NotificationsEffects,
       SettingsEffects,
       AddressingEffects,
+      ClientsEffects,
     ]),
 
     provideStoreDevtools({ maxAge: 25, logOnly: false }),
