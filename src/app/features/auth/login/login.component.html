@@ -1,6 +1,5 @@
 <div class="das-login">
   <div class="das-login__panel das-card">
-    <img class="das-login__logo" src="assets/Logo.png" alt="D.A.S" />
     <h1 class="das-login__title">{{ 'auth.login' | transloco }}</h1>
 
     @if (isMockMode) {
@@ -12,7 +11,7 @@
     <form class="das-login__form" [formGroup]="form" (ngSubmit)="submit()">
       <label class="das-login__field">
         <span>{{ 'auth.email' | transloco }}</span>
-        <input type="text" formControlName="login" autocomplete="username" />
+        <input type="text" formControlName="username" autocomplete="username" />
       </label>
 
       <label class="das-login__field">

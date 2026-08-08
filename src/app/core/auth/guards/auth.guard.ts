@@ -2,6 +2,7 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { map, take } from 'rxjs';
 import { AuthFacade } from '../store/auth.facade';
+import { UserRole } from '../../models/das.models';
 
 export const authGuard: CanActivateFn = (route, state) => {
   const facade = inject(AuthFacade);
@@ -15,14 +16,14 @@ export const authGuard: CanActivateFn = (route, state) => {
   );
 };
 
-export const roleGuard = (allowedRoles: Array<'admin' | 'supervisor' | 'surveyor'>): CanActivateFn => {
+export const roleGuard = (allowedRoles: UserRole[]): CanActivateFn => {
   return () => {
     const facade = inject(AuthFacade);
     const router = inject(Router);
 
-    return facade.role$.pipe(
+    return facade.roles$.pipe(
       take(1),
-      map((role) => (role && allowedRoles.includes(role) ? true : router.createUrlTree(['/dashboard']))),
+      map((roles) => (roles.some((r) => allowedRoles.includes(r)) ? true : router.createUrlTree(['/dashboard']))),
     );
   };
 };

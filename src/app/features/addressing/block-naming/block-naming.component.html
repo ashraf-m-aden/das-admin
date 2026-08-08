@@ -8,69 +8,64 @@
   </form>
 
   @if (isLoading$ | async) {
-  <p>{{ 'common.loading' | transloco }}</p>
+    <p>{{ 'common.loading' | transloco }}</p>
   } @else {
-  @for (block of blocks$ | async; track block.id) {
-  <div class="das-card das-block-naming__item">
-    <div class="das-block-naming__header">
-      <span class="das-badge">{{ block.code }}</span>
-      @if (block.name) {
-      <span class="das-block-naming__current-name">{{ 'addressing.currentName' | transloco }} : "{{ block.name
-        }}"</span>
-      }
-    </div>
-
-    @if (block.pendingSuggestion; as suggestion) {
-    <div class="das-block-naming__suggestion">
-      <p>
-        <strong>"{{ suggestion.suggestedName }}"</strong>
-        — {{ 'addressing.proposedBy' | transloco }} {{ suggestion.proposedByName }}, {{ suggestion.proposedAt | dasDate:
-        'long' }}
-      </p>
-      @if (suggestion.comment) {
-      <p class="das-block-naming__comment">{{ suggestion.comment }}</p>
-      }
-
-      @if (errorMessageKey$ | async; as errorKey) {
-      <p class="das-block-naming__error">{{ errorKey | transloco }}</p>
-      }
-
-      @if (openRejectId() === block.id) {
-      <div class="das-block-naming__reject-panel" [formGroup]="rejectFormFor(block.id)">
-        <textarea formControlName="reason" rows="2"
-          [placeholder]="'addressing.rejectionReasonPlaceholder' | transloco"></textarea>
-        <div class="das-block-naming__reject-actions">
-          <button type="button" (click)="closeReject()">{{ 'common.cancel' | transloco }}</button>
-          <button type="button" class="das-block-naming__confirm-reject" [disabled]="isSaving$(block.id) | async"
-            (click)="confirmReject(block)">
-            {{ 'addressing.reject' | transloco }}
-          </button>
+    @for (block of blocks$ | async; track block.id) {
+      <div class="das-card das-block-naming__item">
+        <div class="das-block-naming__header">
+          <span class="das-block-naming__name" [class.das-block-naming__name--empty]="!block.name">
+            {{ block.name ?? ('addressing.unnamedBlock' | transloco) }}
+          </span>
+          <span class="das-block-naming__code">{{ block.code }}</span>
         </div>
+
+        @if (block.pendingSuggestion; as suggestion) {
+          <div class="das-block-naming__suggestion">
+            <p>
+              <strong>"{{ suggestion.suggestedName }}"</strong>
+              — {{ 'addressing.proposedBy' | transloco }} {{ suggestion.proposedByName }}, {{ suggestion.proposedAt | dasDate: 'long' }}
+            </p>
+            @if (suggestion.comment) {
+              <p class="das-block-naming__comment">{{ suggestion.comment }}</p>
+            }
+
+            @if (errorMessageKey$ | async; as errorKey) {
+              <p class="das-block-naming__error">{{ errorKey | transloco }}</p>
+            }
+
+            @if (openRejectId() === block.id) {
+              <div class="das-block-naming__reject-panel" [formGroup]="rejectFormFor(block.id)">
+                <textarea formControlName="reason" rows="2" [placeholder]="'addressing.rejectionReasonPlaceholder' | transloco"></textarea>
+                <div class="das-block-naming__reject-actions">
+                  <button type="button" (click)="closeReject()">{{ 'common.cancel' | transloco }}</button>
+                  <button type="button" class="das-block-naming__confirm-reject" [disabled]="isSaving$(block.id) | async" (click)="confirmReject(block)">
+                    {{ 'addressing.reject' | transloco }}
+                  </button>
+                </div>
+              </div>
+            } @else {
+              <div class="das-block-naming__suggestion-actions">
+                <button type="button" class="das-block-naming__approve" [disabled]="isSaving$(block.id) | async" (click)="approve(block)">
+                  {{ 'addressing.approve' | transloco }}
+                </button>
+                <button type="button" [disabled]="isSaving$(block.id) | async" (click)="openReject(block.id)">
+                  {{ 'addressing.reject' | transloco }}
+                </button>
+              </div>
+            }
+          </div>
+        } @else if (!block.name) {
+          <div class="das-block-naming__direct-form" [formGroup]="nameFormFor(block.id)">
+            <p class="das-block-naming__no-suggestion">{{ 'addressing.noSuggestion' | transloco }}</p>
+            <input type="text" formControlName="name" [placeholder]="'addressing.officialName' | transloco" />
+            <button type="button" [disabled]="isSaving$(block.id) | async" (click)="submitDirectName(block)">
+              {{ 'addressing.confirmName' | transloco }}
+            </button>
+          </div>
+        }
       </div>
-      } @else {
-      <div class="das-block-naming__suggestion-actions">
-        <button type="button" class="das-block-naming__approve" [disabled]="isSaving$(block.id) | async"
-          (click)="approve(block)">
-          {{ 'addressing.approve' | transloco }}
-        </button>
-        <button type="button" [disabled]="isSaving$(block.id) | async" (click)="openReject(block.id)">
-          {{ 'addressing.reject' | transloco }}
-        </button>
-      </div>
-      }
-    </div>
-    } @else if (!block.name) {
-    <div class="das-block-naming__direct-form" [formGroup]="nameFormFor(block.id)">
-      <p class="das-block-naming__no-suggestion">{{ 'addressing.noSuggestion' | transloco }}</p>
-      <input type="text" formControlName="name" [placeholder]="'addressing.officialName' | transloco" />
-      <button type="button" [disabled]="isSaving$(block.id) | async" (click)="submitDirectName(block)">
-        {{ 'addressing.confirmName' | transloco }}
-      </button>
-    </div>
+    } @empty {
+      <p>{{ 'addressing.noBlocksToName' | transloco }}</p>
     }
-  </div>
-  } @empty {
-  <p>{{ 'addressing.noBlocksToName' | transloco }}</p>
-  }
   }
 </div>

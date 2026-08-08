@@ -20,9 +20,19 @@ export interface RoadType { id: UUID; code: RoadTypeCode; labelFr: string; isPoi
 
 export type BlockStatus = 'not_assigned' | 'assigned' | 'in_progress' | 'submitted' | 'approved' | 'needs_redo';
 export interface Block {
-  id: UUID; adminUnitId: UUID; code: string; geomPolygon: GeoJSONPolygon; areaM2: number;
-  status: BlockStatus; assignedUserId: UUID | null; sourceFile: string | null;
-  importedBy: UUID | null; importedAt: ISODateTime; updatedAt: ISODateTime;
+  id: UUID;
+  adminUnitId: UUID;
+  code: string;
+  /** Nom officiel utilisé dans les adresses (ex: "Avenue Nasser"). Fixé via le module Adressage ou la page détail. */
+  name: string | null;
+  geomPolygon: GeoJSONPolygon;
+  areaM2: number;
+  status: BlockStatus;
+  assignedUserId: UUID | null;
+  sourceFile: string | null;
+  importedBy: UUID | null;
+  importedAt: ISODateTime;
+  updatedAt: ISODateTime;
 }
 
 export type LotPlannedType = 'residential' | 'commercial' | 'mixed';
@@ -76,12 +86,14 @@ export interface RedoRequest {
   createdAt: ISODateTime; resolvedAt: ISODateTime | null;
 }
 
-export type UserRole = 'admin' | 'supervisor' | 'surveyor';
-export type UserStatus = 'active' | 'suspended' | 'inactive';
+export type UserRole = 'Admin' | 'Gestionnaire' | 'Superviseur' | 'AgentTerrain';
+
 export interface User {
-  id: UUID; login: string; passwordHash: string; email: string; phone: string | null;
-  firstName: string; lastName: string; role: UserRole; status: UserStatus; enabled: boolean;
-  profilePhotoUrl: string | null; lastLoginAt: ISODateTime | null; createdAt: ISODateTime; updatedAt: ISODateTime;
+  id: UUID;
+  fullName: string;
+  username: string;
+  roles: UserRole[];
+  isActive: boolean;
 }
 
 export interface AuditLogEntry {

@@ -7,16 +7,10 @@ import { Block, UUID } from '../../models/das.models';
 import { BlockListQuery, BlockWithLots } from '../models/blocks.models';
 
 /**
- * Implémentation réelle. Endpoints attendus côté API .NET :
- *   GET   /blocks?search=&status=&adminUnitId=  -> Block[]
- *   GET   /blocks/{id}                          -> BlockWithLots
- *   PATCH /blocks/{id}/assign                   -> Block
- *
- * Note : la LISTE de blocs (utilisée pour l'écran liste + filtres) passe par
- * ici, mais la CARTE en mode réel ne passe jamais par cet endpoint — elle
- * consomme directement les tuiles vectorielles Martin (voir
- * blocks-map.component.ts + map-style.service.ts), pour rester performante
- * à l'échelle nationale.
+ * NOTE : list/getById/assign ci-dessous utilisent des chemins provisoires
+ * (/blocks) posés avant réception de la spec API réelle (dasApi_v1.json,
+ * qui utilise /api/blocs) — à corriger dans une passe dédiée. setName()
+ * ci-dessous, en revanche, est déjà aligné sur l'endpoint réel confirmé.
  */
 @Injectable({ providedIn: 'root' })
 export class BlocksApiService extends BlocksApiPort {
@@ -32,7 +26,6 @@ export class BlocksApiService extends BlocksApiPort {
     if (query.search) params['search'] = query.search;
     if (query.status) params['status'] = query.status;
     if (query.adminUnitId) params['adminUnitId'] = query.adminUnitId;
-
     return this.http.get<Block[]>(this.baseUrl, { params });
   }
 
@@ -43,4 +36,28 @@ export class BlocksApiService extends BlocksApiPort {
   override assign(id: UUID, userId: UUID): Observable<Block> {
     return this.http.patch<Block>(`${this.baseUrl}/${id}/assign`, { userId });
   }
+
+  /**
+   * Endpoint réel : PATCH /api/blocs/{id} (BlocBody), qui exige code + name +
+   * boundaryWkt TOUS renseignés (remplacement complet, pas un merge partiel).
+   * On renvoie ici le code déjà connu côté client, mais boundaryWkt n'existe
+   * pas dans notre modèle frontend — risque réel de l'écraser à null tant
+   * que ce point n'est pas confirmé avec le backend (voir demande envoyée).
+   */
+  override setName(id: UUID, name: string): Observable<Block> {
+    return this.getById(id).pipe(
+      // On récupère d'abord le bloc pour connaître son code actuel, puisque
+      // le PATCH exige de le renvoyer intact.
+      switchMapToPatch(this.http, `${this.config.get('apiBaseUrl')}/blocs/${id}`, name),
+    );
+  }
+}
+
+// Petit utilitaire local pour enchaîner GET (code actuel) -> PATCH (nouveau nom).
+import { HttpClient as _HttpClient } from '@angular/common/http';
+import { switchMap } from 'rxjs';
+function switchMapToPatch(http: _HttpClient, url: string, name: string) {
+  return switchMap((current: BlockWithLots) =>
+    http.patch<Block>(url, { code: current.code, name, boundaryWkt: null }),
+  );
 }

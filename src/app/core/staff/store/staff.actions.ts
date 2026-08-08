@@ -1,7 +1,6 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
-import { CreateStaffPayload, StaffMember, UpdateStaffPayload } from '../models/staff.models';
-import { UUID } from '../../models/das.models';
-import { StaffFilters } from './staff.state';
+import { CreateStaffPayload, SetRolesPayload, StaffMember } from '../models/staff.models';
+import { UUID, UserRole } from '../../models/das.models';
 
 export const StaffActions = createActionGroup({
   source: 'Staff',
@@ -10,24 +9,18 @@ export const StaffActions = createActionGroup({
     'Load Staff Success': props<{ items: StaffMember[] }>(),
     'Load Staff Failure': props<{ errorMessageKey: string }>(),
 
-    'Set Filters': props<{ filters: Partial<StaffFilters> }>(),
+    'Set Filters': props<{ search: string; role: UserRole | null }>(),
 
     'Create Staff': props<{ payload: CreateStaffPayload }>(),
-    'Create Staff Success': props<{ user: StaffMember; temporaryPassword: string }>(),
+    'Create Staff Success': props<{ user: StaffMember }>(),
     'Create Staff Failure': props<{ errorMessageKey: string }>(),
 
-    'Update Staff': props<{ id: UUID; payload: UpdateStaffPayload }>(),
-    'Update Staff Success': props<{ user: StaffMember }>(),
-    'Update Staff Failure': props<{ errorMessageKey: string }>(),
+    'Set Roles': props<{ id: UUID; payload: SetRolesPayload }>(),
+    'Set Roles Success': props<{ id: UUID; roles: UserRole[] }>(),
+    'Set Roles Failure': props<{ errorMessageKey: string }>(),
 
-    'Set Enabled': props<{ id: UUID; enabled: boolean }>(),
-    'Set Enabled Success': props<{ user: StaffMember }>(),
-    'Set Enabled Failure': props<{ errorMessageKey: string }>(),
-
-    'Reset Password': props<{ id: UUID }>(),
-    'Reset Password Success': props<{ temporaryPassword: string }>(),
-    'Reset Password Failure': props<{ errorMessageKey: string }>(),
-
-    'Clear Temporary Password': emptyProps(),
+    'Set Active': props<{ id: UUID; isActive: boolean }>(),
+    'Set Active Success': props<{ id: UUID; isActive: boolean }>(),
+    'Set Active Failure': props<{ errorMessageKey: string }>(),
   },
 });

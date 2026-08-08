@@ -9,15 +9,15 @@ export class MockAuthApiService extends AuthApiPort {
   private static readonly SIMULATED_LATENCY_MS = 650;
   private static readonly MOCK_PASSWORD = 'das2026';
 
-  private static readonly MOCK_ACCOUNTS: AuthenticatedUser[] = [
-    { id: 'mock-admin-0001', login: 'admin', email: 'admin@das.dj', firstName: 'Ashraf', lastName: 'Admin', role: 'admin', profilePhotoUrl: null },
-    { id: 'mock-supervisor-0001', login: 'superviseur', email: 'superviseur@das.dj', firstName: 'Fatouma', lastName: 'Superviseur', role: 'supervisor', profilePhotoUrl: null },
-    { id: 'mock-surveyor-0001', login: 'agent', email: 'agent@das.dj', firstName: 'Idriss', lastName: 'Agent', role: 'surveyor', profilePhotoUrl: null },
+  private static readonly MOCK_ACCOUNTS: Array<AuthenticatedUser & { username: string }> = [
+    { id: 'mock-admin-0001', username: 'admin', fullName: 'Ashraf Admin', roles: ['Admin'] },
+    { id: 'mock-supervisor-0001', username: 'superviseur', fullName: 'Fatouma Superviseur', roles: ['Superviseur'] },
+    { id: 'mock-surveyor-0001', username: 'agent', fullName: 'Idriss Agent', roles: ['AgentTerrain'] },
   ];
 
   override login(credentials: LoginCredentials): Observable<AuthResponse> {
     const account = MockAuthApiService.MOCK_ACCOUNTS.find(
-      (a) => a.login.toLowerCase() === credentials.login.trim().toLowerCase(),
+      (a) => a.username.toLowerCase() === credentials.username.trim().toLowerCase(),
     );
 
     if (!account || credentials.password !== MockAuthApiService.MOCK_PASSWORD) {
@@ -26,8 +26,9 @@ export class MockAuthApiService extends AuthApiPort {
       );
     }
 
+    const { username, ...user } = account;
     const response: AuthResponse = {
-      user: account,
+      user,
       tokens: {
         accessToken: `mock.${account.id}.${Date.now()}`,
         refreshToken: `mock-refresh.${account.id}`,
@@ -44,13 +45,12 @@ export class MockAuthApiService extends AuthApiPort {
 
   override refresh(refreshToken: string): Observable<AuthResponse> {
     const account = MockAuthApiService.MOCK_ACCOUNTS.find((a) => `mock-refresh.${a.id}` === refreshToken);
-
     if (!account) {
       return throwError(() => ({ code: 'invalid_credentials' as const, message: 'Session expirée' }));
     }
-
+    const { username, ...user } = account;
     return of({
-      user: account,
+      user,
       tokens: {
         accessToken: `mock.${account.id}.${Date.now()}`,
         refreshToken,

@@ -8,8 +8,7 @@
     border-radius: v.$radius-md;
     overflow: hidden;
 
-    th,
-    td {
+    th, td {
       text-align: left;
       padding: v.$space-3 v.$space-4;
       border-bottom: 1px solid var(--color-border);
@@ -30,15 +29,6 @@
       border-radius: v.$radius-sm;
       font-size: v.$font-size-sm;
     }
-  }
-
-  &__address {
-    color: var(--color-text-primary);
-  }
-
-  &__actions {
-    display: flex;
-    gap: v.$space-2;
 
     button {
       padding: v.$space-1 v.$space-3;
@@ -47,36 +37,38 @@
       background: var(--color-surface);
       font-size: v.$font-size-xs;
       cursor: pointer;
-      white-space: nowrap;
-
-      &:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
-
-      &:hover:not(:disabled) {
-        background: var(--color-surface-alt);
-      }
+      &:disabled { opacity: 0.6; cursor: not-allowed; }
+      &:hover:not(:disabled) { background: var(--color-surface-alt); }
     }
   }
 
-  &__details-row td {
-    padding: 0;
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  &__details {
+  &__block-cell {
     display: flex;
-    flex-wrap: wrap;
-    gap: v.$space-4;
-    padding: v.$space-3 v.$space-4;
-    background: var(--color-surface-alt);
-    font-size: v.$font-size-xs;
-    color: var(--color-text-secondary);
+    flex-direction: column;
+    gap: 2px;
+  }
 
-    strong {
-      color: var(--color-text-primary);
+  &__block-name {
+    font-weight: v.$font-weight-semibold;
+    color: var(--color-text-primary);
+
+    &--empty {
+      font-style: italic;
+      font-weight: v.$font-weight-medium;
+      color: var(--color-text-muted);
     }
+  }
+
+  &__block-code {
+    font-size: v.$font-size-xs;
+    color: var(--color-text-muted);
+    font-family: v.$font-family-mono;
+  }
+
+  &__address {
+    font-family: v.$font-family-mono;
+    font-size: v.$font-size-xs;
+    color: var(--color-text-muted);
   }
 
   &__error {

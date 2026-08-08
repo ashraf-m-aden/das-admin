@@ -21,6 +21,9 @@ export interface BlocksState {
   detailErrorMessageKey: string | null;
 
   isAssigning: boolean;
+
+  isSavingName: boolean;
+  nameErrorMessageKey: string | null;
 }
 
 export const initialBlocksState: BlocksState = {
@@ -34,4 +37,7 @@ export const initialBlocksState: BlocksState = {
   detailErrorMessageKey: null,
 
   isAssigning: false,
+
+  isSavingName: false,
+  nameErrorMessageKey: null,
 };

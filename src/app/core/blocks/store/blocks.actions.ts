@@ -20,5 +20,9 @@ export const BlocksActions = createActionGroup({
     'Assign Block': props<{ id: UUID; userId: UUID }>(),
     'Assign Block Success': props<{ block: Block }>(),
     'Assign Block Failure': props<{ errorMessageKey: string }>(),
+
+    'Set Block Name': props<{ id: UUID; name: string }>(),
+    'Set Block Name Success': props<{ block: Block }>(),
+    'Set Block Name Failure': props<{ errorMessageKey: string }>(),
   },
 });

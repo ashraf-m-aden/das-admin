@@ -38,6 +38,29 @@
     input { flex: 1; }
   }
 
+  &__block-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__block-name {
+    font-weight: v.$font-weight-semibold;
+    color: var(--color-text-primary);
+
+    &--empty {
+      font-weight: v.$font-weight-medium;
+      font-style: italic;
+      color: var(--color-text-muted);
+    }
+  }
+
+  &__block-code {
+    font-size: v.$font-size-xs;
+    color: var(--color-text-muted);
+    font-family: v.$font-family-mono;
+  }
+
   &__table {
     width: 100%;
     border-collapse: collapse;

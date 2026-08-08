@@ -5,24 +5,15 @@ import { BlocksApiPort } from './blocks-api.port';
 import { Block, GeoJSONPolygon, UUID } from '../../models/das.models';
 import { BlockListQuery, BlockWithLots } from '../models/blocks.models';
 
-/**
- * Géométries factices centrées sur Djibouti-ville (bbox ~[41.5,10.9,43.5,12.8],
- * cohérente avec docker/martin/config.yaml). Suffisant pour tester la carte
- * en overlay GeoJSON sans Martin/Postgres.
- */
 function square(centerLng: number, centerLat: number, sizeDeg: number): GeoJSONPolygon {
   const h = sizeDeg / 2;
   return {
     type: 'Polygon',
-    coordinates: [
-      [
-        [centerLng - h, centerLat - h],
-        [centerLng + h, centerLat - h],
-        [centerLng + h, centerLat + h],
-        [centerLng - h, centerLat + h],
-        [centerLng - h, centerLat - h],
-      ],
-    ],
+    coordinates: [[
+      [centerLng - h, centerLat - h], [centerLng + h, centerLat - h],
+      [centerLng + h, centerLat + h], [centerLng - h, centerLat + h],
+      [centerLng - h, centerLat - h],
+    ]],
   };
 }
 
@@ -35,6 +26,7 @@ export class MockBlocksApiService extends BlocksApiPort {
       id: 'block-0001',
       adminUnitId: 'zone-q7',
       code: 'DJ-BOU-ARR2-Q7-B012',
+      name: null, // volontairement sans nom — pour tester l'assignation depuis cette page
       geomPolygon: square(43.148, 11.595, 0.004),
       areaM2: 12500,
       status: 'approved',
@@ -48,6 +40,7 @@ export class MockBlocksApiService extends BlocksApiPort {
       id: 'block-0002',
       adminUnitId: 'zone-q3',
       code: 'BLK-Q3-014',
+      name: null,
       geomPolygon: square(43.132, 11.545, 0.005),
       areaM2: 18700,
       status: 'in_progress',
@@ -61,6 +54,7 @@ export class MockBlocksApiService extends BlocksApiPort {
       id: 'block-0003',
       adminUnitId: 'zone-rasdika',
       code: 'BLK-RD-002',
+      name: null,
       geomPolygon: square(43.158, 11.605, 0.003),
       areaM2: 9800,
       status: 'submitted',
@@ -74,6 +68,7 @@ export class MockBlocksApiService extends BlocksApiPort {
       id: 'block-0004',
       adminUnitId: 'zone-einguela',
       code: 'BLK-EIN-007',
+      name: 'Rue des Palmiers', // déjà nommé — pour tester le mode "renommer"
       geomPolygon: square(43.140, 11.615, 0.004),
       areaM2: 15200,
       status: 'needs_redo',
@@ -87,6 +82,7 @@ export class MockBlocksApiService extends BlocksApiPort {
       id: 'block-0005',
       adminUnitId: 'zone-q7',
       code: 'BLK-Q7-021',
+      name: null,
       geomPolygon: square(43.150, 11.585, 0.0035),
       areaM2: 11000,
       status: 'not_assigned',
@@ -100,14 +96,12 @@ export class MockBlocksApiService extends BlocksApiPort {
 
   override list(query: BlockListQuery): Observable<Block[]> {
     const search = query.search.trim().toLowerCase();
-
     const filtered = this.blocks.filter((b) => {
-      const matchesSearch = !search || b.code.toLowerCase().includes(search);
+      const matchesSearch = !search || b.code.toLowerCase().includes(search) || (b.name ?? '').toLowerCase().includes(search);
       const matchesStatus = !query.status || b.status === query.status;
       const matchesZone = !query.adminUnitId || b.adminUnitId === query.adminUnitId;
       return matchesSearch && matchesStatus && matchesZone;
     });
-
     return of(filtered).pipe(delay(MockBlocksApiService.SIMULATED_LATENCY_MS));
   }
 
@@ -116,7 +110,6 @@ export class MockBlocksApiService extends BlocksApiPort {
     if (!block) {
       return throwError(() => ({ code: 'not_found', message: 'common.error' }));
     }
-
     const withLots: BlockWithLots = {
       ...block,
       lots: [
@@ -132,7 +125,6 @@ export class MockBlocksApiService extends BlocksApiPort {
         },
       ],
     };
-
     return of(withLots).pipe(delay(MockBlocksApiService.SIMULATED_LATENCY_MS));
   }
 
@@ -141,7 +133,6 @@ export class MockBlocksApiService extends BlocksApiPort {
     if (!existing) {
       return throwError(() => ({ code: 'not_found', message: 'common.error' }));
     }
-
     const updated: Block = {
       ...existing,
       assignedUserId: userId,
@@ -149,7 +140,16 @@ export class MockBlocksApiService extends BlocksApiPort {
       updatedAt: new Date().toISOString(),
     };
     this.blocks = this.blocks.map((b) => (b.id === id ? updated : b));
+    return of(updated).pipe(delay(300));
+  }
 
+  override setName(id: UUID, name: string): Observable<Block> {
+    const existing = this.blocks.find((b) => b.id === id);
+    if (!existing) {
+      return throwError(() => ({ code: 'not_found', message: 'common.error' }));
+    }
+    const updated: Block = { ...existing, name, updatedAt: new Date().toISOString() };
+    this.blocks = this.blocks.map((b) => (b.id === id ? updated : b));
     return of(updated).pipe(delay(300));
   }
 }

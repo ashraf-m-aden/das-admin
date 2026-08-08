@@ -45,6 +45,8 @@
     "noStreetsToName": "No streets to display",
     "block": "Block",
     "lot": "Lot",
+"unnamedBlock": "Unnamed block",
+    "unnamedStreet": "Unnamed street",
     "houseNumber": "Number",
     "formattedAddress": "Address",
     "addressCode": "Address code",
@@ -212,7 +214,12 @@
     "actualUnits": "Units recorded",
     "viewMap": "View map",
     "searchPlaceholder": "Search blocks...",
-    "allStatuses": "All statuses"
+    "allStatuses": "All statuses",
+    "namePlaceholder": "Block name",
+    "unnamed": "Unnamed block",
+    "assignName": "Assign name",
+    "renameBlock": "Rename",
+    "blockColumn": "Block"
   },
   "review": {
     "title": "Data review",

@@ -15,7 +15,6 @@ export class BlocksFacade {
   isListLoading$ = this.store.select(selectIsBlocksListLoading);
   listErrorMessageKey$ = this.store.select(blocksFeature.selectListErrorMessageKey);
 
-  /** Utilisée uniquement par la carte en mode mock — voir blocks-map.component.ts */
   blocksGeoJson$ = this.store.select(selectBlocksAsGeoJson);
 
   selected$ = this.store.select(blocksFeature.selectSelected);
@@ -23,23 +22,13 @@ export class BlocksFacade {
   detailErrorMessageKey$ = this.store.select(blocksFeature.selectDetailErrorMessageKey);
   isAssigning$ = this.store.select(blocksFeature.selectIsAssigning);
 
-  load(): void {
-    this.store.dispatch(BlocksActions.loadBlocks());
-  }
+  isSavingName$ = this.store.select(blocksFeature.selectIsSavingName);
+  nameErrorMessageKey$ = this.store.select(blocksFeature.selectNameErrorMessageKey);
 
-  setFilters(filters: Partial<BlocksFilters>): void {
-    this.store.dispatch(BlocksActions.setFilters({ filters }));
-  }
-
-  loadDetail(id: UUID): void {
-    this.store.dispatch(BlocksActions.loadBlockDetail({ id }));
-  }
-
-  clearDetail(): void {
-    this.store.dispatch(BlocksActions.clearBlockDetail());
-  }
-
-  assign(id: UUID, userId: UUID): void {
-    this.store.dispatch(BlocksActions.assignBlock({ id, userId }));
-  }
+  load(): void { this.store.dispatch(BlocksActions.loadBlocks()); }
+  setFilters(filters: Partial<BlocksFilters>): void { this.store.dispatch(BlocksActions.setFilters({ filters })); }
+  loadDetail(id: UUID): void { this.store.dispatch(BlocksActions.loadBlockDetail({ id })); }
+  clearDetail(): void { this.store.dispatch(BlocksActions.clearBlockDetail()); }
+  assign(id: UUID, userId: UUID): void { this.store.dispatch(BlocksActions.assignBlock({ id, userId })); }
+  setName(id: UUID, name: string): void { this.store.dispatch(BlocksActions.setBlockName({ id, name })); }
 }

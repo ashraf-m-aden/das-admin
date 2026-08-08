@@ -10,50 +10,31 @@ export const staffFeature = createFeature({
     on(StaffActions.loadStaff, (state) => ({ ...state, listStatus: 'loading' as const, listErrorMessageKey: null })),
     on(StaffActions.loadStaffSuccess, (state, { items }) => ({ ...state, items, listStatus: 'loaded' as const })),
     on(StaffActions.loadStaffFailure, (state, { errorMessageKey }) => ({
-      ...state,
-      listStatus: 'error' as const,
-      listErrorMessageKey: errorMessageKey,
+      ...state, listStatus: 'error' as const, listErrorMessageKey: errorMessageKey,
     })),
 
-    on(StaffActions.setFilters, (state, { filters }) => ({ ...state, filters: { ...state.filters, ...filters } })),
+    on(StaffActions.setFilters, (state, { search, role }) => ({ ...state, filters: { search, role } })),
 
-    on(StaffActions.createStaff, StaffActions.updateStaff, (state) => ({
-      ...state,
-      formStatus: 'saving' as const,
-      formErrorMessageKey: null,
+    on(StaffActions.createStaff, (state) => ({ ...state, formStatus: 'saving' as const, formErrorMessageKey: null })),
+    on(StaffActions.createStaffSuccess, (state, { user }) => ({
+      ...state, items: [...state.items, user], formStatus: 'idle' as const,
+    })),
+    on(StaffActions.createStaffFailure, (state, { errorMessageKey }) => ({
+      ...state, formStatus: 'error' as const, formErrorMessageKey: errorMessageKey,
     })),
 
-    on(StaffActions.createStaffSuccess, (state, { user, temporaryPassword }) => ({
-      ...state,
-      items: [...state.items, user],
-      formStatus: 'idle' as const,
-      lastCreatedTemporaryPassword: temporaryPassword,
+    on(StaffActions.setRolesSuccess, (state, { id, roles }) => ({
+      ...state, items: state.items.map((s) => (s.id === id ? { ...s, roles } : s)),
     })),
-
-    on(StaffActions.updateStaffSuccess, StaffActions.setEnabledSuccess, (state, { user }) => ({
-      ...state,
-      items: state.items.map((s) => (s.id === user.id ? user : s)),
-      formStatus: 'idle' as const,
+    on(StaffActions.setActiveSuccess, (state, { id, isActive }) => ({
+      ...state, items: state.items.map((s) => (s.id === id ? { ...s, isActive } : s)),
     })),
-
-    on(StaffActions.createStaffFailure, StaffActions.updateStaffFailure, (state, { errorMessageKey }) => ({
-      ...state,
-      formStatus: 'error' as const,
-      formErrorMessageKey: errorMessageKey,
-    })),
-
-    on(StaffActions.clearTemporaryPassword, (state) => ({ ...state, lastCreatedTemporaryPassword: null })),
   ),
 });
 
 export const {
   name: staffFeatureKey,
   reducer: staffReducer,
-  selectItems,
-  selectListStatus,
-  selectListErrorMessageKey,
-  selectFilters,
-  selectFormStatus,
-  selectFormErrorMessageKey,
-  selectLastCreatedTemporaryPassword,
+  selectItems, selectListStatus, selectListErrorMessageKey, selectFilters,
+  selectFormStatus, selectFormErrorMessageKey,
 } = staffFeature;

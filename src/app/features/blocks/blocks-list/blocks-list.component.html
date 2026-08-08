@@ -21,7 +21,7 @@
     <table class="das-blocks-list__table">
       <thead>
         <tr>
-          <th>{{ 'blocks.code' | transloco }}</th>
+          <th>{{ 'blocks.blockColumn' | transloco }}</th>
           <th>{{ 'blocks.area' | transloco }}</th>
           <th>{{ 'blocks.status' | transloco }}</th>
           <th></th>
@@ -30,7 +30,14 @@
       <tbody>
         @for (block of items$ | async; track block.id) {
           <tr>
-            <td>{{ block.code }}</td>
+            <td>
+              <div class="das-blocks-list__block-cell">
+                <span class="das-blocks-list__block-name" [class.das-blocks-list__block-name--empty]="!block.name">
+                  {{ block.name ?? ('blocks.unnamed' | transloco) }}
+                </span>
+                <span class="das-blocks-list__block-code">{{ block.code }}</span>
+              </div>
+            </td>
             <td>{{ block.areaM2 }} m²</td>
             <td><span [class]="statusBadgeClass(block.status)">{{ 'status.block.' + block.status | transloco }}</span></td>
             <td><a [routerLink]="['/blocks', block.id]">{{ 'common.edit' | transloco }}</a></td>

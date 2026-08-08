@@ -2,40 +2,66 @@
   <a class="das-block-detail__back" routerLink="/blocks">← {{ 'common.back' | transloco }}</a>
 
   @if (isLoading$ | async) {
-  <p>{{ 'common.loading' | transloco }}</p>
+    <p>{{ 'common.loading' | transloco }}</p>
   } @else if (errorMessageKey$ | async; as errorKey) {
-  <p class="das-block-detail__error">{{ errorKey | transloco }}</p>
+    <p class="das-block-detail__error">{{ errorKey | transloco }}</p>
   } @else if (block$ | async; as block) {
-  <h1>{{ block.code }}</h1>
-  <span class="das-badge">{{ 'status.block.' + block.status | transloco }}</span>
-
-  <div class="das-card das-block-detail__info">
-    <p>{{ 'blocks.area' | transloco }} : {{ block.areaM2 }} m²</p>
-    <p>{{ 'blocks.assignedTo' | transloco }} : {{ block.assignedUserId ?? '—' }}</p>
-  </div>
-
-  <div class="das-block-detail__map-wrapper das-card">
-    <div #mapContainer class="das-block-detail__map"></div>
-  </div>
-
-  <h2>{{ 'blocks.lots' | transloco }}</h2>
-  <table class="das-block-detail__table">
-    <thead>
-      <tr>
-        <th>{{ 'blocks.lots' | transloco }}</th>
-        <th>{{ 'blocks.plannedUnits' | transloco }}</th>
-        <th>{{ 'blocks.actualUnits' | transloco }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (lot of block.lots; track lot.id) {
-      <tr>
-        <td>{{ lot.code }}</td>
-        <td>{{ lot.plannedUnitCount }}</td>
-        <td>{{ lot.actualUnitCount }}</td>
-      </tr>
+    <div class="das-block-detail__header">
+      @if (isEditingName()) {
+        <form class="das-block-detail__name-form" [formGroup]="nameForm" (ngSubmit)="confirmName(block.id)">
+          <input type="text" formControlName="name" [placeholder]="'blocks.namePlaceholder' | transloco" autofocus />
+          <button type="submit" [disabled]="isSavingName$ | async">{{ 'common.save' | transloco }}</button>
+          <button type="button" (click)="cancelEditName()">{{ 'common.cancel' | transloco }}</button>
+        </form>
+      } @else {
+        <div class="das-block-detail__title-row">
+          <h1 [class.das-block-detail__title--empty]="!block.name">
+            {{ block.name ?? ('blocks.unnamed' | transloco) }}
+          </h1>
+          <button type="button" class="das-block-detail__edit-name" (click)="startEditName(block.name)">
+            {{ (block.name ? 'blocks.renameBlock' : 'blocks.assignName') | transloco }}
+          </button>
+        </div>
       }
-    </tbody>
-  </table>
+
+      @if (nameErrorMessageKey$ | async; as errorKey) {
+        <p class="das-block-detail__error">{{ errorKey | transloco }}</p>
+      }
+
+      <p class="das-block-detail__subtitle">{{ 'blocks.code' | transloco }} : {{ block.code }}</p>
+      <span class="das-badge">{{ 'status.block.' + block.status | transloco }}</span>
+    </div>
+
+    <div class="das-card das-block-detail__info">
+      <p>{{ 'blocks.area' | transloco }} : {{ block.areaM2 }} m²</p>
+      <p>{{ 'blocks.assignedTo' | transloco }} : {{ block.assignedUserId ?? '—' }}</p>
+    </div>
+
+    <div class="das-block-detail__map-wrapper das-card">
+      @if (mapInitError()) {
+        <p class="das-block-detail__error">{{ 'common.mapError' | transloco }}</p>
+      }
+      <div #mapContainer class="das-block-detail__map"></div>
+    </div>
+
+    <h2>{{ 'blocks.lots' | transloco }}</h2>
+    <table class="das-block-detail__table">
+      <thead>
+        <tr>
+          <th>{{ 'blocks.lots' | transloco }}</th>
+          <th>{{ 'blocks.plannedUnits' | transloco }}</th>
+          <th>{{ 'blocks.actualUnits' | transloco }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (lot of block.lots; track lot.id) {
+          <tr>
+            <td>{{ lot.code }}</td>
+            <td>{{ lot.plannedUnitCount }}</td>
+            <td>{{ lot.actualUnitCount }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
   }
 </div>

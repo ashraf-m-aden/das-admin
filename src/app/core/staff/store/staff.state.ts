@@ -1,30 +1,28 @@
+import { UserRole } from '../../models/das.models';
 import { StaffMember } from '../models/staff.models';
 
-export type StaffListStatus = 'idle' | 'loading' | 'loaded' | 'error';
-export type StaffFormStatus = 'idle' | 'saving' | 'error';
+export type ListStatus = 'idle' | 'loading' | 'loaded' | 'error';
+export type FormStatus = 'idle' | 'saving' | 'error';
 
 export interface StaffFilters {
   search: string;
-  role: 'admin' | 'supervisor' | 'surveyor' | null;
-  status: 'active' | 'suspended' | 'inactive' | null;
+  role: UserRole | null;
 }
 
 export interface StaffState {
   items: StaffMember[];
-  listStatus: StaffListStatus;
+  listStatus: ListStatus;
   listErrorMessageKey: string | null;
   filters: StaffFilters;
-  formStatus: StaffFormStatus;
+  formStatus: FormStatus;
   formErrorMessageKey: string | null;
-  lastCreatedTemporaryPassword: string | null;
 }
 
 export const initialStaffState: StaffState = {
   items: [],
   listStatus: 'idle',
   listErrorMessageKey: null,
-  filters: { search: '', role: null, status: null },
+  filters: { search: '', role: null },
   formStatus: 'idle',
   formErrorMessageKey: null,
-  lastCreatedTemporaryPassword: null,
 };

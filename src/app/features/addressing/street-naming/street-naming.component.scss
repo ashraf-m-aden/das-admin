@@ -5,176 +5,57 @@
   flex-direction: column;
   gap: v.$space-4;
 
-  &__filters {
-    display: flex;
-    align-items: center;
-    gap: v.$space-4;
-  }
+  &__filters { display: flex; align-items: center; gap: v.$space-4; }
+  &__filters input[type="text"] { flex: 1; padding: v.$space-2 v.$space-3; border: 1px solid var(--color-border); border-radius: v.$radius-sm; font-size: v.$font-size-sm; }
+  &__toggle { display: flex; align-items: center; gap: v.$space-2; font-size: v.$font-size-sm; color: var(--color-text-secondary); white-space: nowrap; }
 
-  &__filters input[type="text"] {
-    flex: 1;
-    padding: v.$space-2 v.$space-3;
-    border: 1px solid var(--color-border);
-    border-radius: v.$radius-sm;
-    font-size: v.$font-size-sm;
-  }
+  &__item { padding: v.$space-5; display: flex; flex-direction: column; gap: v.$space-3; }
 
-  &__toggle {
-    display: flex;
-    align-items: center;
-    gap: v.$space-2;
-    font-size: v.$font-size-sm;
-    color: var(--color-text-secondary);
-    white-space: nowrap;
-  }
+  &__header { display: flex; flex-direction: column; gap: 2px; }
 
-  &__item {
-    padding: v.$space-5;
-    display: flex;
-    flex-direction: column;
-    gap: v.$space-3;
-  }
-
-  &__header {
-    display: flex;
-    align-items: center;
-    gap: v.$space-3;
-  }
-
-  &__type {
-    font-size: v.$font-size-xs;
-    color: var(--color-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-  }
-
-  &__current-name {
-    font-size: v.$font-size-sm;
-    color: var(--color-success);
-    font-weight: v.$font-weight-medium;
-  }
-
-  &__suggestion {
-    padding: v.$space-3;
-    background: var(--color-info-bg);
-    border-radius: v.$radius-sm;
-    display: flex;
-    flex-direction: column;
-    gap: v.$space-2;
-  }
-
-  &__suggestion p {
-    margin: 0;
-    font-size: v.$font-size-sm;
-  }
-
-  &__comment {
-    color: var(--color-text-muted);
-    font-style: italic;
-    font-size: v.$font-size-xs !important;
-  }
-
-  &__suggestion-actions,
-  &__reject-actions {
-    display: flex;
-    gap: v.$space-2;
-  }
-
-  &__approve,
-  &__confirm-reject {
-    padding: v.$space-2 v.$space-4;
-    border: none;
-    border-radius: v.$radius-sm;
-    font-size: v.$font-size-sm;
+  &__name {
+    font-size: v.$font-size-lg;
     font-weight: v.$font-weight-semibold;
-    cursor: pointer;
+    color: var(--color-text-primary);
 
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
+    &--empty {
+      font-style: italic;
+      font-weight: v.$font-weight-medium;
+      color: var(--color-text-muted);
     }
   }
 
-  &__approve {
-    background: var(--color-success);
-    color: var(--color-on-primary);
-  }
-
-  &__confirm-reject {
-    background: var(--color-danger);
-    color: var(--color-on-primary);
-  }
-
-  &__suggestion-actions button:not(&__approve) {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: v.$radius-sm;
-    padding: v.$space-2 v.$space-4;
-    font-size: v.$font-size-sm;
-    cursor: pointer;
-  }
-
-  &__reject-panel {
-    display: flex;
-    flex-direction: column;
-    gap: v.$space-2;
-  }
-
-  &__reject-panel textarea {
-    padding: v.$space-2 v.$space-3;
-    border: 1px solid var(--color-border);
-    border-radius: v.$radius-sm;
-    font-family: inherit;
-    font-size: v.$font-size-sm;
-    resize: vertical;
-  }
-
-  &__reject-actions button {
-    padding: v.$space-1 v.$space-3;
-    border-radius: v.$radius-sm;
-    font-size: v.$font-size-sm;
-    cursor: pointer;
-  }
-
-  &__no-suggestion {
-    font-size: v.$font-size-sm;
+  &__code {
+    font-size: v.$font-size-xs;
     color: var(--color-text-muted);
-    margin: 0;
+    font-family: v.$font-family-mono;
   }
 
-  &__direct-form {
-    display: flex;
-    gap: v.$space-2;
-    align-items: center;
-  }
+  &__suggestion { padding: v.$space-3; background: var(--color-info-bg); border-radius: v.$radius-sm; display: flex; flex-direction: column; gap: v.$space-2; }
+  &__suggestion p { margin: 0; font-size: v.$font-size-sm; }
+  &__comment { color: var(--color-text-muted); font-style: italic; font-size: v.$font-size-xs !important; }
 
-  &__direct-form input {
-    flex: 1;
-    padding: v.$space-2 v.$space-3;
-    border: 1px solid var(--color-border);
-    border-radius: v.$radius-sm;
-    font-size: v.$font-size-base;
-  }
+  &__suggestion-actions, &__reject-actions { display: flex; gap: v.$space-2; }
 
+  &__approve, &__confirm-reject {
+    padding: v.$space-2 v.$space-4; border: none; border-radius: v.$radius-sm; font-size: v.$font-size-sm; font-weight: v.$font-weight-semibold; cursor: pointer;
+    &:disabled { opacity: 0.6; cursor: not-allowed; }
+  }
+  &__approve { background: var(--color-success); color: var(--color-on-primary); }
+  &__confirm-reject { background: var(--color-danger); color: var(--color-on-primary); }
+  &__suggestion-actions button:not(&__approve) { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: v.$radius-sm; padding: v.$space-2 v.$space-4; font-size: v.$font-size-sm; cursor: pointer; }
+
+  &__reject-panel { display: flex; flex-direction: column; gap: v.$space-2; }
+  &__reject-panel textarea { padding: v.$space-2 v.$space-3; border: 1px solid var(--color-border); border-radius: v.$radius-sm; font-family: inherit; font-size: v.$font-size-sm; resize: vertical; }
+  &__reject-actions button { padding: v.$space-1 v.$space-3; border-radius: v.$radius-sm; font-size: v.$font-size-sm; cursor: pointer; }
+
+  &__no-suggestion { font-size: v.$font-size-sm; color: var(--color-text-muted); margin: 0; }
+  &__direct-form { display: flex; gap: v.$space-2; align-items: center; }
+  &__direct-form input { flex: 1; padding: v.$space-2 v.$space-3; border: 1px solid var(--color-border); border-radius: v.$radius-sm; font-size: v.$font-size-base; }
   &__direct-form button {
-    padding: v.$space-2 v.$space-4;
-    border: none;
-    border-radius: v.$radius-sm;
-    background: var(--color-primary);
-    color: var(--color-on-primary);
-    font-size: v.$font-size-sm;
-    font-weight: v.$font-weight-semibold;
-    cursor: pointer;
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
+    padding: v.$space-2 v.$space-4; border: none; border-radius: v.$radius-sm; background: var(--color-primary); color: var(--color-on-primary); font-size: v.$font-size-sm; font-weight: v.$font-weight-semibold; cursor: pointer;
+    &:disabled { opacity: 0.6; cursor: not-allowed; }
   }
 
-  &__error {
-    margin: 0;
-    color: var(--color-danger);
-    font-size: v.$font-size-xs;
-  }
+  &__error { margin: 0; color: var(--color-danger); font-size: v.$font-size-xs; }
 }

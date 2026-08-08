@@ -1,24 +1,20 @@
 import { UUID, ISODateTime, UserRole } from '../../models/das.models';
 
 export interface LoginCredentials {
-  login: string;
+  username: string;
   password: string;
 }
 
 export interface AuthTokens {
   accessToken: string;
-  refreshToken: string | null;
+  refreshToken: string;
   expiresAt: ISODateTime;
 }
 
 export interface AuthenticatedUser {
   id: UUID;
-  login: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: UserRole;
-  profilePhotoUrl: string | null;
+  fullName: string;
+  roles: UserRole[];
 }
 
 export interface AuthResponse {

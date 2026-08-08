@@ -171,7 +171,12 @@
     "actualUnits": "Habitations relevées",
     "viewMap": "Voir la carte",
     "searchPlaceholder": "Rechercher un bloc...",
-    "allStatuses": "Tous les statuts"
+    "allStatuses": "Tous les statuts",
+    "namePlaceholder": "Nom du bloc",
+    "unnamed": "Bloc sans nom",
+    "assignName": "Attribuer un nom",
+    "renameBlock": "Renommer",
+    "blockColumn": "Bloc"
   },
   "review": {
     "title": "Revue des données",
@@ -246,7 +251,9 @@
     "proposedBy": "Proposé par",
     "approve": "Approuver",
     "reject": "Rejeter",
-    "rejectionReasonPlaceholder": "Motif du rejet..."
+    "rejectionReasonPlaceholder": "Motif du rejet...",
+    "unnamedBlock": "Bloc sans nom",
+    "unnamedStreet": "Rue sans nom"
   },
   "auth": {
     "login": "Connexion",

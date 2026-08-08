@@ -25,21 +25,21 @@ export class HeaderComponent {
   private notificationsFacade = inject(NotificationsFacade);
 
   protected readonly fullName$ = this.authFacade.fullName$;
-  protected readonly role$ = this.authFacade.role$;
+  protected readonly roles$ = this.authFacade.roles$;
   protected readonly unreadCount$ = this.notificationsFacade.unreadCount$;
 
   protected readonly navItems: NavItem[] = [
     { labelKey: 'nav.dashboard', path: '/dashboard' },
     { labelKey: 'nav.blocks', path: '/blocks' },
-    { labelKey: 'nav.addressing', path: '/addressing', allowedRoles: ['admin', 'supervisor'] },
-    { labelKey: 'nav.review', path: '/review', allowedRoles: ['admin', 'supervisor'] },
-    { labelKey: 'nav.staff', path: '/staff', allowedRoles: ['admin'] },
-    { labelKey: 'nav.clients', path: '/clients', allowedRoles: ['admin'] },
-    { labelKey: 'nav.settings', path: '/settings', allowedRoles: ['admin'] },
+    { labelKey: 'nav.addressing', path: '/addressing', allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
+    { labelKey: 'nav.review', path: '/review', allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
+    { labelKey: 'nav.staff', path: '/staff', allowedRoles: ['Admin'] },
+    { labelKey: 'nav.clients', path: '/clients', allowedRoles: ['Admin'] },
+    { labelKey: 'nav.settings', path: '/settings', allowedRoles: ['Admin'] },
   ];
 
-  isVisible(item: NavItem, role: UserRole | null): boolean {
-    return !item.allowedRoles || (role !== null && item.allowedRoles.includes(role));
+  isVisible(item: NavItem, roles: UserRole[]): boolean {
+    return !item.allowedRoles || item.allowedRoles.some((r) => roles.includes(r));
   }
 
   logout(): void {

@@ -6,4 +6,5 @@ export abstract class BlocksApiPort {
   abstract list(query: BlockListQuery): Observable<Block[]>;
   abstract getById(id: UUID): Observable<BlockWithLots>;
   abstract assign(id: UUID, userId: UUID): Observable<Block>;
+  abstract setName(id: UUID, name: string): Observable<Block>;
 }

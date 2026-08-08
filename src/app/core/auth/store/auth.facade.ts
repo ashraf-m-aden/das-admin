@@ -1,8 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
+import { map } from 'rxjs';
 import { AuthActions } from './auth.actions';
 import { authFeature } from './auth.reducer';
-import { selectIsAuthenticated, selectIsAuthLoading, selectUserFullName, selectUserRole } from './auth.selectors';
+import { selectIsAuthenticated, selectIsAuthLoading, selectUserRoles } from './auth.selectors';
 import { LoginCredentials } from '../models/auth.models';
 
 @Injectable({ providedIn: 'root' })
@@ -10,8 +11,8 @@ export class AuthFacade {
   private store = inject(Store);
 
   user$ = this.store.select(authFeature.selectUser);
-  role$ = this.store.select(selectUserRole);
-  fullName$ = this.store.select(selectUserFullName);
+  fullName$ = this.store.select(authFeature.selectUser).pipe(map((user) => user?.fullName ?? ''));
+  roles$ = this.store.select(selectUserRoles);
   isAuthenticated$ = this.store.select(selectIsAuthenticated);
   isLoading$ = this.store.select(selectIsAuthLoading);
   errorMessageKey$ = this.store.select(authFeature.selectErrorMessageKey);

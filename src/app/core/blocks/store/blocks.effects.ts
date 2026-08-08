@@ -26,11 +26,7 @@ export class BlocksEffects {
   );
 
   reloadOnFilterChange$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(BlocksActions.setFilters),
-      debounceTime(300),
-      map(() => BlocksActions.loadBlocks()),
-    ),
+    this.actions$.pipe(ofType(BlocksActions.setFilters), debounceTime(300), map(() => BlocksActions.loadBlocks())),
   );
 
   loadBlockDetail$ = createEffect(() =>
@@ -52,6 +48,18 @@ export class BlocksEffects {
         this.blocksApi.assign(id, userId).pipe(
           map((block) => BlocksActions.assignBlockSuccess({ block })),
           catchError(() => of(BlocksActions.assignBlockFailure({ errorMessageKey: 'common.error' }))),
+        ),
+      ),
+    ),
+  );
+
+  setBlockName$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(BlocksActions.setBlockName),
+      exhaustMap(({ id, name }) =>
+        this.blocksApi.setName(id, name).pipe(
+          map((block) => BlocksActions.setBlockNameSuccess({ block })),
+          catchError(() => of(BlocksActions.setBlockNameFailure({ errorMessageKey: 'common.error' }))),
         ),
       ),
     ),

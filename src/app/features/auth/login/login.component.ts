@@ -23,7 +23,7 @@ export class LoginComponent {
   protected readonly isMockMode = this.config.get('useMockApi');
 
   protected readonly form = this.fb.nonNullable.group({
-    login: ['', [Validators.required]],
+    username: ['', [Validators.required]],
     password: ['', [Validators.required]],
   });
 

@@ -6,7 +6,7 @@ const STORAGE_KEY = 'das-auth-session';
 interface StoredSession {
   user: AuthResponse['user'];
   accessToken: string;
-  refreshToken: string | null;
+  refreshToken: string;
   expiresAt: string;
 }
 

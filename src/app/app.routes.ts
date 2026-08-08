@@ -21,22 +21,22 @@ export const routes: Routes = [
       },
       {
         path: 'addressing',
-        canActivate: [roleGuard(['admin', 'supervisor'])],
+        canActivate: [roleGuard(['Admin', 'Superviseur', 'Gestionnaire'])],
         loadChildren: () => import('./features/addressing/addressing.routes').then((m) => m.addressingRoutes),
       },
       {
         path: 'review',
-        canActivate: [roleGuard(['admin', 'supervisor'])],
+        canActivate: [roleGuard(['Admin', 'Superviseur', 'Gestionnaire'])],
         loadChildren: () => import('./features/review/review.routes').then((m) => m.reviewRoutes),
       },
       {
         path: 'staff',
-        canActivate: [roleGuard(['admin'])],
+        canActivate: [roleGuard(['Admin'])],
         loadChildren: () => import('./features/staff/staff.routes').then((m) => m.staffRoutes),
       },
       {
         path: 'clients',
-        canActivate: [roleGuard(['admin'])],
+        canActivate: [roleGuard(['Admin'])],
         loadChildren: () => import('./features/clients/clients.routes').then((m) => m.clientsRoutes),
       },
       {
@@ -46,7 +46,7 @@ export const routes: Routes = [
       },
       {
         path: 'settings',
-        canActivate: [roleGuard(['admin'])],
+        canActivate: [roleGuard(['Admin'])],
         loadChildren: () => import('./features/settings/settings.routes').then((m) => m.settingsRoutes),
       },
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },

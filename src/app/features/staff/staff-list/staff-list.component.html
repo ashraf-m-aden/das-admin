@@ -1,76 +1,91 @@
 <div class="das-staff-list">
   <div class="das-staff-list__header">
     <h1>{{ 'staff.title' | transloco }}</h1>
-    <a class="das-staff-list__add" routerLink="/staff/new">{{ 'staff.addStaff' | transloco }}</a>
+    <button type="button" class="das-staff-list__add" (click)="showCreateForm.set(!showCreateForm())">
+      {{ 'staff.addStaff' | transloco }}
+    </button>
   </div>
 
-  @if (lastCreatedTemporaryPassword$ | async; as tempPassword) {
-    <div class="das-staff-list__banner das-card">
-      <span>{{ 'staff.temporaryPassword' | transloco }} : <strong>{{ tempPassword }}</strong></span>
-      <button type="button" (click)="dismissTemporaryPassword()">{{ 'common.close' | transloco }}</button>
-    </div>
+  @if (showCreateForm()) {
+    <form class="das-card das-staff-list__create-form" [formGroup]="createForm" (ngSubmit)="submitCreate()">
+      <div class="das-staff-list__create-row">
+        <input type="text" formControlName="fullName" [placeholder]="'staff.fullName' | transloco" />
+        <input type="text" formControlName="username" [placeholder]="'staff.username' | transloco" />
+        <input type="password" formControlName="password" [placeholder]="'staff.password' | transloco" />
+      </div>
+
+      <div class="das-staff-list__roles-picker">
+        @for (role of allRoles; track role) {
+          <label>
+            <input type="checkbox" [checked]="createForm.value.roles?.includes(role)" (change)="toggleCreateRole(role)" />
+            {{ role }}
+          </label>
+        }
+      </div>
+
+      @if (formErrorMessageKey$ | async; as errorKey) {
+        <p class="das-staff-list__error">{{ errorKey | transloco }}</p>
+      }
+
+      <button type="submit" [disabled]="isFormSaving$ | async">{{ 'common.save' | transloco }}</button>
+    </form>
   }
 
   <form class="das-staff-list__filters" [formGroup]="filterForm">
     <input type="text" formControlName="search" [placeholder]="'staff.searchPlaceholder' | transloco" />
-
-    <select formControlName="role">
-      <option [ngValue]="null">{{ 'staff.allRoles' | transloco }}</option>
-      @for (role of roles; track role) {
-        <option [ngValue]="role">{{ 'role.' + role | transloco }}</option>
-      }
-    </select>
-
-    <select formControlName="status">
-      <option [ngValue]="null">{{ 'staff.allStatuses' | transloco }}</option>
-      @for (status of statuses; track status) {
-        <option [ngValue]="status">{{ 'status.user.' + status | transloco }}</option>
-      }
-    </select>
   </form>
 
-  @if (isLoading$ | async) {
-    <p>{{ 'common.loading' | transloco }}</p>
-  } @else {
-    <table class="das-staff-list__table">
-      <thead>
+  <table class="das-staff-list__table">
+    <thead>
+      <tr>
+        <th>{{ 'staff.fullName' | transloco }}</th>
+        <th>{{ 'staff.username' | transloco }}</th>
+        <th>{{ 'staff.role' | transloco }}</th>
+        <th>{{ 'staff.status' | transloco }}</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (member of items$ | async; track member.id) {
         <tr>
-          <th>{{ 'staff.lastName' | transloco }}</th>
-          <th>{{ 'staff.login' | transloco }}</th>
-          <th>{{ 'staff.email' | transloco }}</th>
-          <th>{{ 'staff.role' | transloco }}</th>
-          <th>{{ 'staff.status' | transloco }}</th>
-          <th>{{ 'staff.lastLogin' | transloco }}</th>
-          <th></th>
+          <td>{{ member.fullName }}</td>
+          <td>{{ member.username }}</td>
+          <td>
+            @if (editingRolesId() === member.id) {
+              <div class="das-staff-list__roles-picker">
+                @for (role of allRoles; track role) {
+                  <label>
+                    <input type="checkbox" [checked]="editingRolesDraft().includes(role)" (change)="toggleDraftRole(role)" />
+                    {{ role }}
+                  </label>
+                }
+              </div>
+            } @else {
+              @for (role of member.roles; track role) {
+                <span class="das-badge">{{ role }}</span>
+              }
+            }
+          </td>
+          <td>
+            <span class="das-badge" [class.das-badge--approved]="member.isActive" [class.das-badge--needs-redo]="!member.isActive">
+              {{ (member.isActive ? 'staff.active' : 'staff.inactive') | transloco }}
+            </span>
+          </td>
+          <td class="das-staff-list__actions">
+            @if (editingRolesId() === member.id) {
+              <button type="button" (click)="saveRoles(member)">{{ 'common.save' | transloco }}</button>
+              <button type="button" (click)="cancelEditRoles()">{{ 'common.cancel' | transloco }}</button>
+            } @else {
+              <button type="button" (click)="startEditRoles(member)">{{ 'staff.editRoles' | transloco }}</button>
+              <button type="button" (click)="toggleActive(member)">
+                {{ (member.isActive ? 'staff.disable' : 'staff.enable') | transloco }}
+              </button>
+            }
+          </td>
         </tr>
-      </thead>
-      <tbody>
-        @for (member of items$ | async; track member.id) {
-          <tr>
-            <td>{{ member.firstName }} {{ member.lastName }}</td>
-            <td>{{ member.login }}</td>
-            <td>{{ member.email }}</td>
-            <td><span class="das-badge">{{ 'role.' + member.role | transloco }}</span></td>
-            <td>
-              <span class="das-badge" [class.das-badge--approved]="member.status === 'active'" [class.das-badge--needs-redo]="member.status === 'suspended'">
-                {{ 'status.user.' + member.status | transloco }}
-              </span>
-            </td>
-            <td>{{ member.lastLoginAt ? (member.lastLoginAt | dasDate: 'long') : ('staff.never' | transloco) }}</td>
-            <td class="das-staff-list__actions">
-              <a [routerLink]="['/staff', member.id, 'edit']">{{ 'common.edit' | transloco }}</a>
-              <button type="button" (click)="toggleEnabled(member.id, member.enabled)">
-                {{ (member.enabled ? 'staff.disable' : 'staff.enable') | transloco }}
-              </button>
-              <button type="button" (click)="resetPassword(member.id)">
-                {{ 'staff.resetPassword' | transloco }}
-              </button>
-            </td>
-          </tr>
-        } @empty {
-          <tr><td colspan="7">{{ 'common.noResults' | transloco }}</td></tr>
-        }
-      </tbody>
-    </table>
-  }
+      } @empty {
+        <tr><td colspan="5">{{ 'common.noResults' | transloco }}</td></tr>
+      }
+    </tbody>
+  </table>
 </div>
