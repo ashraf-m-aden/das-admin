@@ -7,9 +7,7 @@ export const selectIsPropertiesLoading = createSelector(addressingFeature.select
 
 export const selectIsSavingBlock = (id: string) =>
   createSelector(addressingFeature.selectSavingBlockId, (savingId) => savingId === id);
-
 export const selectIsSavingStreet = (id: string) =>
   createSelector(addressingFeature.selectSavingStreetId, (savingId) => savingId === id);
-
 export const selectIsSavingProperty = (id: string) =>
   createSelector(addressingFeature.selectSavingPropertyId, (savingId) => savingId === id);

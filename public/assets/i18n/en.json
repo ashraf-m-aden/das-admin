@@ -54,7 +54,11 @@
     "commune": "Commune",
     "arrondissement": "District",
     "quartier": "Neighborhood",
-    "noPropertiesToNumber": "No properties pending numbering"
+    "noPropertiesToNumber": "No properties pending numbering",
+    "proposedBy": "Proposed by",
+    "approve": "Approve",
+    "reject": "Reject",
+    "rejectionReasonPlaceholder": "Rejection reason..."
   },
   "clients": {
     "title": "Clients",

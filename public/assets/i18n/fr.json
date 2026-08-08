@@ -242,7 +242,11 @@
     "commune": "Commune",
     "arrondissement": "Arrondissement",
     "quartier": "Quartier",
-    "noPropertiesToNumber": "Aucune propriété en attente de numérotation"
+    "noPropertiesToNumber": "Aucune propriété en attente de numérotation",
+    "proposedBy": "Proposé par",
+    "approve": "Approuver",
+    "reject": "Rejeter",
+    "rejectionReasonPlaceholder": "Motif du rejet..."
   },
   "auth": {
     "login": "Connexion",

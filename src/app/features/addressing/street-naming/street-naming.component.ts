@@ -1,88 +1,77 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoModule } from '@jsverse/transloco';
 import { AddressingFacade } from '../../../core/addressing/store/addressing.facade';
-import { SettingsFacade } from '../../../core/settings/store/settings.facade';
-import { StreetToName } from '../../../core/addressing/models/addressing.models';
+import { DasDatePipe } from '../../../core/i18n/das-locale.pipes';
+import { StreetToName, StreetType } from '../../../core/addressing/models/addressing.models';
 
-type StreetNameForm = FormGroup<{
-  nameFr: FormControl<string>;
-  nameAr: FormControl<string>;
-  roadTypeId: FormControl<string>;
-}>;
+type NameForm = FormGroup<{ name: FormControl<string> }>;
+type RejectForm = FormGroup<{ reason: FormControl<string> }>;
+
+/** Enum fixe côté backend (Streets.Type) — pas une table pilotable. */
+const STREET_TYPES: StreetType[] = ['Rue', 'Avenue', 'Boulevard', 'Piste', 'Impasse', 'Route'];
 
 @Component({
   selector: 'das-street-naming',
   standalone: true,
-  imports: [AsyncPipe, ReactiveFormsModule, TranslocoModule],
+  imports: [AsyncPipe, ReactiveFormsModule, TranslocoModule, DasDatePipe],
   templateUrl: './street-naming.component.html',
   styleUrl: './street-naming.component.scss',
 })
 export class StreetNamingComponent implements OnInit {
   private fb = inject(FormBuilder);
   private facade = inject(AddressingFacade);
-  private settingsFacade = inject(SettingsFacade);
 
   protected readonly streets$ = this.facade.streets$;
   protected readonly isLoading$ = this.facade.isStreetsLoading$;
-  protected readonly errorMessageKey$ = this.facade.streetSaveErrorMessageKey$;
+  protected readonly errorMessageKey$ = this.facade.streetActionErrorMessageKey$;
+  protected readonly streetTypes = STREET_TYPES;
 
-  /** Alimente le <select> de type de voie — même référentiel que l'écran Paramètres. */
-  protected readonly roadTypes$ = this.settingsFacade.roadTypes$;
+  protected readonly filterForm = this.fb.nonNullable.group({ search: [''], onlyUnnamed: [true] });
 
-  protected readonly filterForm = this.fb.nonNullable.group({
-    search: [''],
-    onlyUnnamed: [true],
-  });
-
-  protected readonly forms = new Map<string, StreetNameForm>();
+  protected readonly nameForms = new Map<string, NameForm>();
+  protected readonly rejectForms = new Map<string, RejectForm>();
+  protected readonly openRejectId = signal<string | null>(null);
 
   ngOnInit(): void {
     this.facade.loadStreetsToName();
-    this.settingsFacade.loadRoadTypes();
-
-    this.filterForm.valueChanges.subscribe((value) => {
-      this.facade.setStreetFilters({ search: value.search ?? '', onlyUnnamed: value.onlyUnnamed ?? true });
-    });
-
-    this.facade.streets$.subscribe((streets) => this.rebuildForms(streets));
-  }
-
-  private buildForm(street: StreetToName): StreetNameForm {
-    return this.fb.nonNullable.group({
-      nameFr: [street.nameFr ?? street.suggestedName ?? '', [Validators.required]],
-      nameAr: [street.nameAr ?? ''],
-      roadTypeId: [street.roadTypeId ?? ''],
+    this.filterForm.valueChanges.subscribe((v) =>
+      this.facade.setStreetFilters({ search: v.search ?? '', onlyUnnamed: v.onlyUnnamed ?? true }),
+    );
+    this.facade.streets$.subscribe((streets) => {
+      this.nameForms.clear();
+      this.rejectForms.clear();
+      for (const s of streets) {
+        this.nameForms.set(s.id, this.fb.nonNullable.group({ name: ['', [Validators.required]] }));
+        this.rejectForms.set(s.id, this.fb.nonNullable.group({ reason: ['', [Validators.required]] }));
+      }
     });
   }
 
-  private rebuildForms(streets: StreetToName[]): void {
-    this.forms.clear();
-    for (const street of streets) {
-      this.forms.set(street.id, this.buildForm(street));
-    }
+  nameFormFor(id: string): NameForm { return this.nameForms.get(id)!; }
+  rejectFormFor(id: string): RejectForm { return this.rejectForms.get(id)!; }
+  isSaving$(id: string) { return this.facade.isSavingStreet$(id); }
+
+  submitDirectName(street: StreetToName): void {
+    const form = this.nameFormFor(street.id);
+    if (form.invalid) { form.markAllAsTouched(); return; }
+    this.facade.setStreetName(street.id, form.getRawValue().name);
   }
 
-  formFor(id: string): StreetNameForm {
-    return this.forms.get(id)!;
+  approve(street: StreetToName): void {
+    if (!street.pendingSuggestion) return;
+    this.facade.approveStreetSuggestion(street.id, street.pendingSuggestion.id);
   }
 
-  isSaving$(id: string) {
-    return this.facade.isSavingStreet$(id);
-  }
+  openReject(id: string): void { this.openRejectId.set(id); }
+  closeReject(): void { this.openRejectId.set(null); }
 
-  confirm(street: StreetToName): void {
-    const form = this.formFor(street.id);
-    if (form.invalid) {
-      form.markAllAsTouched();
-      return;
-    }
-    const { nameFr, nameAr, roadTypeId } = form.getRawValue();
-    this.facade.assignStreetName(street.id, {
-      nameFr,
-      nameAr: nameAr || null,
-      roadTypeId: roadTypeId || null,
-    });
+  confirmReject(street: StreetToName): void {
+    if (!street.pendingSuggestion) return;
+    const form = this.rejectFormFor(street.id);
+    if (form.invalid) { form.markAllAsTouched(); return; }
+    this.facade.rejectStreetSuggestion(street.id, street.pendingSuggestion.id, form.getRawValue().reason);
+    this.openRejectId.set(null);
   }
 }

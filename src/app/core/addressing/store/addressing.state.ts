@@ -1,10 +1,4 @@
-import {
-  BlockNamingQuery,
-  BlockToName,
-  PropertyToNumber,
-  StreetNamingQuery,
-  StreetToName,
-} from '../models/addressing.models';
+import { BlockNamingQuery, BlockToName, PropertyToNumber, StreetNamingQuery, StreetToName } from '../models/addressing.models';
 
 export type ListStatus = 'idle' | 'loading' | 'loaded' | 'error';
 
@@ -14,14 +8,14 @@ export interface AddressingState {
   blocksErrorMessageKey: string | null;
   blockFilters: BlockNamingQuery;
   savingBlockId: string | null;
-  blockSaveErrorMessageKey: string | null;
+  blockActionErrorMessageKey: string | null;
 
   streets: StreetToName[];
   streetsStatus: ListStatus;
   streetsErrorMessageKey: string | null;
   streetFilters: StreetNamingQuery;
   savingStreetId: string | null;
-  streetSaveErrorMessageKey: string | null;
+  streetActionErrorMessageKey: string | null;
 
   properties: PropertyToNumber[];
   propertiesStatus: ListStatus;
@@ -36,14 +30,14 @@ export const initialAddressingState: AddressingState = {
   blocksErrorMessageKey: null,
   blockFilters: { search: '', onlyUnnamed: true },
   savingBlockId: null,
-  blockSaveErrorMessageKey: null,
+  blockActionErrorMessageKey: null,
 
   streets: [],
   streetsStatus: 'idle',
   streetsErrorMessageKey: null,
   streetFilters: { search: '', onlyUnnamed: true },
   savingStreetId: null,
-  streetSaveErrorMessageKey: null,
+  streetActionErrorMessageKey: null,
 
   properties: [],
   propertiesStatus: 'idle',

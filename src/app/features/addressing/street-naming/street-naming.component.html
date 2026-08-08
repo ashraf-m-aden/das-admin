@@ -11,60 +11,64 @@
   <p>{{ 'common.loading' | transloco }}</p>
   } @else {
   @for (street of streets$ | async; track street.id) {
-  <div class="das-card das-street-naming__item" [formGroup]="formFor(street.id)">
+  <div class="das-card das-street-naming__item">
     <div class="das-street-naming__header">
-      <span class="das-badge">{{ street.blockCode }}</span>
-
-      @if (street.nameFr) {
-      <span class="das-street-naming__current-name">
-        {{ 'addressing.currentName' | transloco }} : "{{ street.nameFr }}"
-      </span>
-      } @else if (street.suggestedName) {
-      <span class="das-street-naming__suggested">
-        {{ 'addressing.suggestedName' | transloco }} : "{{ street.suggestedName }}"
-      </span>
-      } @else {
-      <span class="das-street-naming__no-suggestion">{{ 'addressing.noSuggestion' | transloco }}</span>
+      <span class="das-badge">{{ street.code }}</span>
+      <span class="das-street-naming__type">{{ street.type }}</span>
+      @if (street.name) {
+      <span class="das-street-naming__current-name">{{ 'addressing.currentName' | transloco }} : "{{ street.name
+        }}"</span>
       }
     </div>
 
-    <div class="das-street-naming__flags">
-      <span [class.das-street-naming__flag--ok]="street.signPresent">
-        {{ (street.signPresent ? 'addressing.signPresent' : 'addressing.signAbsent') | transloco }}
-      </span>
-      <span [class.das-street-naming__flag--ok]="street.nameVisible">
-        {{ (street.nameVisible ? 'addressing.nameVisible' : 'addressing.nameNotVisible') | transloco }}
-      </span>
-    </div>
+    @if (street.pendingSuggestion; as suggestion) {
+    <div class="das-street-naming__suggestion">
+      <p>
+        <strong>"{{ suggestion.suggestedName }}"</strong>
+        — {{ 'addressing.proposedBy' | transloco }} {{ suggestion.proposedByName }}, {{ suggestion.proposedAt | dasDate:
+        'long' }}
+      </p>
+      @if (suggestion.comment) {
+      <p class="das-street-naming__comment">{{ suggestion.comment }}</p>
+      }
 
-    <div class="das-street-naming__form-row">
-      <label>
-        <span>{{ 'addressing.officialNameFr' | transloco }}</span>
-        <input type="text" formControlName="nameFr" />
-      </label>
-      <label>
-        <span>{{ 'addressing.officialNameAr' | transloco }}</span>
-        <input type="text" formControlName="nameAr" dir="rtl" />
-      </label>
-      <label>
-        <span>{{ 'addressing.roadType' | transloco }}</span>
-        <select formControlName="roadTypeId">
-          <option value="">{{ 'addressing.selectRoadType' | transloco }}</option>
-          @for (roadType of roadTypes$ | async; track roadType.id) {
-          <option [value]="roadType.id">{{ roadType.labelFr }}</option>
-          }
-        </select>
-      </label>
-    </div>
+      @if (errorMessageKey$ | async; as errorKey) {
+      <p class="das-street-naming__error">{{ errorKey | transloco }}</p>
+      }
 
-    @if (errorMessageKey$ | async; as errorKey) {
-    <p class="das-street-naming__error">{{ errorKey | transloco }}</p>
+      @if (openRejectId() === street.id) {
+      <div class="das-street-naming__reject-panel" [formGroup]="rejectFormFor(street.id)">
+        <textarea formControlName="reason" rows="2"
+          [placeholder]="'addressing.rejectionReasonPlaceholder' | transloco"></textarea>
+        <div class="das-street-naming__reject-actions">
+          <button type="button" (click)="closeReject()">{{ 'common.cancel' | transloco }}</button>
+          <button type="button" class="das-street-naming__confirm-reject" [disabled]="isSaving$(street.id) | async"
+            (click)="confirmReject(street)">
+            {{ 'addressing.reject' | transloco }}
+          </button>
+        </div>
+      </div>
+      } @else {
+      <div class="das-street-naming__suggestion-actions">
+        <button type="button" class="das-street-naming__approve" [disabled]="isSaving$(street.id) | async"
+          (click)="approve(street)">
+          {{ 'addressing.approve' | transloco }}
+        </button>
+        <button type="button" [disabled]="isSaving$(street.id) | async" (click)="openReject(street.id)">
+          {{ 'addressing.reject' | transloco }}
+        </button>
+      </div>
+      }
+    </div>
+    } @else if (!street.name) {
+    <div class="das-street-naming__direct-form" [formGroup]="nameFormFor(street.id)">
+      <p class="das-street-naming__no-suggestion">{{ 'addressing.noSuggestion' | transloco }}</p>
+      <input type="text" formControlName="name" [placeholder]="'addressing.officialName' | transloco" />
+      <button type="button" [disabled]="isSaving$(street.id) | async" (click)="submitDirectName(street)">
+        {{ 'addressing.confirmName' | transloco }}
+      </button>
+    </div>
     }
-
-    <button type="button" [disabled]="isSaving$(street.id) | async" (click)="confirm(street)">
-      {{ (isSaving$(street.id) | async) ? ('common.loading' | transloco) : ((street.nameFr ? 'addressing.renameConfirm'
-      : 'addressing.confirmName') | transloco) }}
-    </button>
   </div>
   } @empty {
   <p>{{ 'addressing.noStreetsToName' | transloco }}</p>

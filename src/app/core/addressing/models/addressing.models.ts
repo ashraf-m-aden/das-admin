@@ -1,15 +1,27 @@
-import { UUID, BlockStatus, SubmissionStatus } from '../../models/das.models';
+import { UUID, ISODateTime, BlockStatus } from '../../models/das.models';
+
+export type SuggestionStatus = 'pending' | 'approved' | 'rejected';
+
+/** Une proposition de nom (agent terrain), en attente ou déjà traitée par un superviseur/admin. */
+export interface NameSuggestion {
+  id: UUID;
+  suggestedName: string;
+  comment: string | null;
+  status: SuggestionStatus;
+  proposedByName: string;
+  proposedAt: ISODateTime;
+  reviewedByName: string | null;
+  reviewedAt: ISODateTime | null;
+  rejectionReason: string | null;
+}
 
 export interface BlockToName {
   id: UUID;
   code: string;
-  suggestedName: string | null;
   name: string | null;
+  /** Suggestion en attente de traitement, s'il y en a une — au plus une à la fois (contrainte backend). */
+  pendingSuggestion: NameSuggestion | null;
   status: BlockStatus;
-}
-
-export interface AssignBlockNamePayload {
-  name: string;
 }
 
 export interface BlockNamingQuery {
@@ -17,23 +29,15 @@ export interface BlockNamingQuery {
   onlyUnnamed: boolean;
 }
 
+/** Reprend exactement l'enum backend (Streets.Type) — pas une table pilotable, contrairement à ROAD_TYPES initialement prévu. */
+export type StreetType = 'Rue' | 'Avenue' | 'Boulevard' | 'Piste' | 'Impasse' | 'Route';
+
 export interface StreetToName {
   id: UUID;
-  blockCode: string;
-  suggestedName: string | null;
-  nameFr: string | null;
-  nameAr: string | null;
-  /** Référence ROAD_TYPES (créés dans Paramètres) — null tant qu'aucun type n'a été choisi. */
-  roadTypeId: UUID | null;
-  signPresent: boolean;
-  nameVisible: boolean;
-  status: SubmissionStatus;
-}
-
-export interface AssignStreetNamePayload {
-  nameFr: string;
-  nameAr: string | null;
-  roadTypeId: UUID | null;
+  code: string;
+  name: string | null;
+  type: StreetType;
+  pendingSuggestion: NameSuggestion | null;
 }
 
 export interface StreetNamingQuery {
@@ -60,8 +64,9 @@ export interface PropertyToNumber {
   adminHierarchy: AdminHierarchy;
 
   addressCode: string;
+  /** Calculé côté API (EF Core, jointure Adresses→Lots→Blocs→Quartiers→Communes) — jamais recalculé ni stocké côté frontend. */
   formattedAddress: string;
-  status: SubmissionStatus;
+  status: 'draft' | 'submitted' | 'approved' | 'needs_redo';
 }
 
 export interface AssignHouseNumberPayload {

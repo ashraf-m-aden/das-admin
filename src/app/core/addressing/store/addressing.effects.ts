@@ -26,20 +26,40 @@ export class AddressingEffects {
   );
 
   reloadBlocksOnFilterChange$ = createEffect(() =>
+    this.actions$.pipe(ofType(AddressingActions.setBlockFilters), debounceTime(300), map(() => AddressingActions.loadBlocksToName())),
+  );
+
+  setBlockName$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(AddressingActions.setBlockFilters),
-      debounceTime(300),
-      map(() => AddressingActions.loadBlocksToName()),
+      ofType(AddressingActions.setBlockName),
+      mergeMap(({ id, name }) =>
+        this.addressingApi.setBlockName(id, name).pipe(
+          map((item) => AddressingActions.blockNameActionSuccess({ item })),
+          catchError(() => of(AddressingActions.blockNameActionFailure({ errorMessageKey: 'common.error' }))),
+        ),
+      ),
     ),
   );
 
-  assignBlockName$ = createEffect(() =>
+  approveBlockSuggestion$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(AddressingActions.assignBlockName),
-      mergeMap(({ id, payload }) =>
-        this.addressingApi.assignBlockName(id, payload).pipe(
-          map((item) => AddressingActions.assignBlockNameSuccess({ item })),
-          catchError(() => of(AddressingActions.assignBlockNameFailure({ errorMessageKey: 'common.error' }))),
+      ofType(AddressingActions.approveBlockSuggestion),
+      mergeMap(({ id, suggestionId }) =>
+        this.addressingApi.approveBlockSuggestion(id, suggestionId).pipe(
+          map((item) => AddressingActions.blockNameActionSuccess({ item })),
+          catchError(() => of(AddressingActions.blockNameActionFailure({ errorMessageKey: 'common.error' }))),
+        ),
+      ),
+    ),
+  );
+
+  rejectBlockSuggestion$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AddressingActions.rejectBlockSuggestion),
+      mergeMap(({ id, suggestionId, reason }) =>
+        this.addressingApi.rejectBlockSuggestion(id, suggestionId, reason).pipe(
+          map((item) => AddressingActions.blockNameActionSuccess({ item })),
+          catchError(() => of(AddressingActions.blockNameActionFailure({ errorMessageKey: 'common.error' }))),
         ),
       ),
     ),
@@ -59,20 +79,40 @@ export class AddressingEffects {
   );
 
   reloadStreetsOnFilterChange$ = createEffect(() =>
+    this.actions$.pipe(ofType(AddressingActions.setStreetFilters), debounceTime(300), map(() => AddressingActions.loadStreetsToName())),
+  );
+
+  setStreetName$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(AddressingActions.setStreetFilters),
-      debounceTime(300),
-      map(() => AddressingActions.loadStreetsToName()),
+      ofType(AddressingActions.setStreetName),
+      mergeMap(({ id, name }) =>
+        this.addressingApi.setStreetName(id, name).pipe(
+          map((item) => AddressingActions.streetNameActionSuccess({ item })),
+          catchError(() => of(AddressingActions.streetNameActionFailure({ errorMessageKey: 'common.error' }))),
+        ),
+      ),
     ),
   );
 
-  assignStreetName$ = createEffect(() =>
+  approveStreetSuggestion$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(AddressingActions.assignStreetName),
-      mergeMap(({ id, payload }) =>
-        this.addressingApi.assignStreetName(id, payload).pipe(
-          map((item) => AddressingActions.assignStreetNameSuccess({ item })),
-          catchError(() => of(AddressingActions.assignStreetNameFailure({ errorMessageKey: 'common.error' }))),
+      ofType(AddressingActions.approveStreetSuggestion),
+      mergeMap(({ id, suggestionId }) =>
+        this.addressingApi.approveStreetSuggestion(id, suggestionId).pipe(
+          map((item) => AddressingActions.streetNameActionSuccess({ item })),
+          catchError(() => of(AddressingActions.streetNameActionFailure({ errorMessageKey: 'common.error' }))),
+        ),
+      ),
+    ),
+  );
+
+  rejectStreetSuggestion$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AddressingActions.rejectStreetSuggestion),
+      mergeMap(({ id, suggestionId, reason }) =>
+        this.addressingApi.rejectStreetSuggestion(id, suggestionId, reason).pipe(
+          map((item) => AddressingActions.streetNameActionSuccess({ item })),
+          catchError(() => of(AddressingActions.streetNameActionFailure({ errorMessageKey: 'common.error' }))),
         ),
       ),
     ),
