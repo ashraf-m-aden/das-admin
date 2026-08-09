@@ -1,78 +1,89 @@
 <das-page-header [eyebrow]="block()?.code ?? ''" [title]="block()?.name ?? ('blocks.unnamed' | transloco)">
-  <a actions routerLink="/blocks" class="detail-back"><i class="ti ti-arrow-left" aria-hidden="true"></i>{{ 'blocks.backToList' | transloco }}</a>
+  <a actions routerLink="/blocks" class="detail-back"><i class="ti ti-arrow-left" aria-hidden="true"></i>{{
+    'blocks.backToList' | transloco }}</a>
 </das-page-header>
 
 <div class="detail">
   @if (block(); as b) {
-    <div class="detail__grid">
-      <section class="das-card detail__map">
-        <svg viewBox="0 0 340 300" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" role="img" [attr.aria-label]="'blocks.mapPreview' | transloco">
-          <rect width="340" height="300" fill="#eef1f6" />
-          <path d="M0 100 H340 M0 200 H340 M120 0 V300 M240 0 V300" stroke="#dde3ec" stroke-width="8" />
-          <rect x="16" y="16" width="92" height="70" rx="3" fill="#4f46e5" fill-opacity="0.16" stroke="#4f46e5" stroke-width="2" />
-          <rect x="136" y="16" width="92" height="70" rx="3" fill="#fff" stroke="#c7cede" stroke-width="1.4" />
-          <rect x="252" y="16" width="72" height="70" rx="3" fill="#fff" stroke="#c7cede" stroke-width="1.4" />
-          <rect x="16" y="116" width="92" height="66" rx="3" fill="#fff" stroke="#c7cede" stroke-width="1.4" />
-          <rect x="136" y="116" width="92" height="66" rx="3" fill="#fff" stroke="#c7cede" stroke-width="1.4" />
-          <circle cx="62" cy="51" r="6" fill="#4f46e5" stroke="#fff" stroke-width="2.5" />
-        </svg>
-        <span class="detail__map-note">{{ 'blocks.mapNote' | transloco }}</span>
-      </section>
+  <div class="detail__grid">
+    <section class="das-card detail__map">
+      <das-block-map [geometry]="b.geomPolygon" [status]="b.status" />
+    </section>
 
-      <section class="das-card detail__fiche">
-        <div class="fiche__head">
-          <div>
-            <div class="fiche__name">{{ b.name ?? ('blocks.unnamed' | transloco) }}</div>
-            <div class="fiche__code">{{ b.code }}</div>
-          </div>
-          <span [class]="statusBadgeClass(b.status)">{{ statusLabelKey(b.status) | transloco }}</span>
+    <section class="das-card detail__fiche">
+      <div class="fiche__head">
+        <div>
+          <div class="fiche__name">{{ b.name ?? ('blocks.unnamed' | transloco) }}</div>
+          <div class="fiche__code">{{ b.code }}</div>
         </div>
+        <span [class]="statusBadgeClass(b.status)">{{ statusLabelKey(b.status) | transloco }}</span>
+      </div>
 
-        <div class="fiche__agent">
-          @if (assignedName(); as name) {
-            <span class="fiche__avatar"><i class="ti ti-user" aria-hidden="true"></i></span>
-            <div><div class="fiche__muted">{{ 'blocks.assignedTo' | transloco }}</div><div class="fiche__val">{{ name }}</div></div>
-          } @else if (b.assignedUserId) {
-            <span class="fiche__avatar"><i class="ti ti-user" aria-hidden="true"></i></span>
-            <div><div class="fiche__muted">{{ 'blocks.assignedTo' | transloco }}</div><div class="fiche__val">{{ 'blocks.agentAssigned' | transloco }}</div></div>
-          } @else {
-            <span class="fiche__avatar fiche__avatar--empty"><i class="ti ti-user-off" aria-hidden="true"></i></span>
-            <div><div class="fiche__muted">{{ 'blocks.assignedTo' | transloco }}</div><div class="fiche__val">{{ 'status.block.not_assigned' | transloco }}</div></div>
-          }
+      <div class="fiche__agent">
+        @if (assignedName(); as name) {
+        <span class="fiche__avatar"><i class="ti ti-user" aria-hidden="true"></i></span>
+        <div>
+          <div class="fiche__muted">{{ 'blocks.assignedTo' | transloco }}</div>
+          <div class="fiche__val">{{ name }}</div>
         </div>
+        } @else if (b.assignedUserId) {
+        <span class="fiche__avatar"><i class="ti ti-user" aria-hidden="true"></i></span>
+        <div>
+          <div class="fiche__muted">{{ 'blocks.assignedTo' | transloco }}</div>
+          <div class="fiche__val">{{ 'blocks.agentAssigned' | transloco }}</div>
+        </div>
+        } @else {
+        <span class="fiche__avatar fiche__avatar--empty"><i class="ti ti-user-off" aria-hidden="true"></i></span>
+        <div>
+          <div class="fiche__muted">{{ 'blocks.assignedTo' | transloco }}</div>
+          <div class="fiche__val">{{ 'status.block.not_assigned' | transloco }}</div>
+        </div>
+        }
+      </div>
 
-        <form class="fiche__assign" [formGroup]="assignForm" (ngSubmit)="assign()">
-          <select formControlName="userId">
-            <option value="">{{ 'blocks.selectAgent' | transloco }}</option>
-            @for (a of agents(); track a.id) { <option [value]="a.id">{{ a.fullName }}</option> }
-          </select>
-          <button type="submit" class="btn btn--ghost" [disabled]="assignForm.invalid || (isAssigning$ | async)">
-            <i class="ti ti-user-plus" aria-hidden="true"></i>{{ 'blocks.assign' | transloco }}
+      <form class="fiche__assign" [formGroup]="assignForm" (ngSubmit)="assign()">
+        <select formControlName="userId">
+          <option value="">{{ 'blocks.selectAgent' | transloco }}</option>
+          @for (a of agents(); track a.id) { <option [value]="a.id">{{ a.fullName }}</option> }
+        </select>
+        <button type="submit" class="btn btn--ghost" [disabled]="assignForm.invalid || (isAssigning$ | async)">
+          <i class="ti ti-user-plus" aria-hidden="true"></i>{{ 'blocks.assign' | transloco }}
+        </button>
+      </form>
+
+      <div class="fiche__progress">
+        <div class="fiche__progress-head"><span>{{ 'blocks.lotsProgress' | transloco }}</span><span>{{ lotsCompleted()
+            }} / {{ lotsPlanned() }}</span></div>
+        <div class="fiche__track">
+          <div class="fiche__fill" [style.width.%]="lotsProgress()"></div>
+        </div>
+      </div>
+
+      <div class="fiche__stats">
+        <div class="stat">
+          <div class="stat__label">{{ 'blocks.colArea' | transloco }}</div>
+          <div class="stat__val">{{ hectares(b.areaM2) | dasNumber: 2 }} ha</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">{{ 'blocks.lots' | transloco }}</div>
+          <div class="stat__val">{{ b.lots.length }}</div>
+        </div>
+      </div>
+
+      <form class="fiche__name-form" [formGroup]="nameForm" (ngSubmit)="saveName()">
+        <label class="fiche__muted" for="block-name">{{ 'blocks.nameLabel' | transloco }}</label>
+        <div class="fiche__name-row">
+          <input id="block-name" type="text" formControlName="name"
+            [attr.placeholder]="'blocks.namePlaceholder' | transloco" />
+          <button type="submit" [disabled]="nameForm.invalid || (isSavingName$ | async)">
+            @if (isSavingName$ | async) { {{ 'common.saving' | transloco }} } @else { {{ 'blocks.saveName' | transloco
+            }} }
           </button>
-        </form>
-
-        <div class="fiche__progress">
-          <div class="fiche__progress-head"><span>{{ 'blocks.lotsProgress' | transloco }}</span><span>{{ lotsCompleted() }} / {{ lotsPlanned() }}</span></div>
-          <div class="fiche__track"><div class="fiche__fill" [style.width.%]="lotsProgress()"></div></div>
         </div>
-
-        <div class="fiche__stats">
-          <div class="stat"><div class="stat__label">{{ 'blocks.colArea' | transloco }}</div><div class="stat__val">{{ hectares(b.areaM2) | dasNumber: 2 }} ha</div></div>
-          <div class="stat"><div class="stat__label">{{ 'blocks.lots' | transloco }}</div><div class="stat__val">{{ b.lots.length }}</div></div>
-        </div>
-
-        <form class="fiche__name-form" [formGroup]="nameForm" (ngSubmit)="saveName()">
-          <label class="fiche__muted" for="block-name">{{ 'blocks.nameLabel' | transloco }}</label>
-          <div class="fiche__name-row">
-            <input id="block-name" type="text" formControlName="name" [attr.placeholder]="'blocks.namePlaceholder' | transloco" />
-            <button type="submit" [disabled]="nameForm.invalid || (isSavingName$ | async)">
-              @if (isSavingName$ | async) { {{ 'common.saving' | transloco }} } @else { {{ 'blocks.saveName' | transloco }} }
-            </button>
-          </div>
-        </form>
-      </section>
-    </div>
+      </form>
+    </section>
+  </div>
   } @else if (isLoading$ | async) {
-    <div class="detail__loading">{{ 'common.loading' | transloco }}</div>
+  <div class="detail__loading">{{ 'common.loading' | transloco }}</div>
   }
 </div>

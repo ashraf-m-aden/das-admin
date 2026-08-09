@@ -8,13 +8,14 @@ import { BlocksFacade } from '../../../core/blocks/store/blocks.facade';
 import { StaffFacade } from '../../../core/staff/store/staff.facade';
 import { DasNumberPipe } from '../../../core/i18n/das-locale.pipes';
 import { PageHeaderComponent } from '../../../core/layout/page-header/page-header.component';
+import { BlockMapComponent } from '../block-map/block-map.component';
 import { BlockStatus } from '../../../core/models/das.models';
 import { StaffMember } from '../../../core/staff/models/staff.models';
 
 @Component({
   selector: 'das-block-detail',
   standalone: true,
-  imports: [AsyncPipe, ReactiveFormsModule, RouterLink, TranslocoModule, DasNumberPipe, PageHeaderComponent],
+  imports: [AsyncPipe, ReactiveFormsModule, RouterLink, TranslocoModule, DasNumberPipe, PageHeaderComponent, BlockMapComponent],
   templateUrl: './block-detail.component.html',
   styleUrl: './block-detail.component.scss',
 })

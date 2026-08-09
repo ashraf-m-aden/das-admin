@@ -35,7 +35,7 @@ import { AddressingEffects } from './core/addressing/store/addressing.effects';
 import { provideClientsApi } from './core/clients/services/clients-api.provider';
 import { clientsFeature } from './core/clients/store/clients.reducer';
 import { ClientsEffects } from './core/clients/store/clients.effects';
-
+import { FeedbackEffects } from './core/ui/feedback.effects';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideHttpClient(withInterceptors([authInterceptor])),
@@ -73,6 +73,7 @@ export const appConfig: ApplicationConfig = {
       SettingsEffects,
       AddressingEffects,
       ClientsEffects,
+      FeedbackEffects
     ]),
 
     provideStoreDevtools({ maxAge: 25, logOnly: false }),

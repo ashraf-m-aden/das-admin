@@ -1,1 +1,31 @@
-<div #mapContainer class="das-blocks-map"></div>
+<das-page-header [eyebrow]="'blocks.eyebrow' | transloco" [title]="'nav.blocks' | transloco">
+  <div actions class="view-toggle">
+    <a class="view-toggle__btn" routerLink="/blocks"><i class="ti ti-list" aria-hidden="true"></i>{{ 'blocks.viewList' |
+      transloco }}</a>
+    <span class="view-toggle__btn view-toggle__btn--active"><i class="ti ti-map-2" aria-hidden="true"></i>{{
+      'blocks.viewMap' | transloco }}</span>
+  </div>
+</das-page-header>
+
+<div class="map-wrap">
+  <div #mapContainer class="das-blocks-map"></div>
+
+  @if (!ready() && !initError()) {
+  <div class="map-overlay">{{ 'common.loading' | transloco }}</div>
+  }
+
+  @if (initError()) {
+  <div class="map-overlay map-overlay--error"><i class="ti ti-map-off" aria-hidden="true"></i>{{ 'blocks.mapError' |
+    transloco }}</div>
+  }
+
+  @if (ready()) {
+  <div class="map-legend">
+    @for (st of legend; track st) {
+    <span class="map-legend__item">
+      <span class="map-legend__dot" [style.background]="legendColor(st)"></span>{{ statusLabelKey(st) | transloco }}
+    </span>
+    }
+  </div>
+  }
+</div>

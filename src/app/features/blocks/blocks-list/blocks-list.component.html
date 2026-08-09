@@ -1,86 +1,14 @@
-<das-page-header [eyebrow]="'blocks.eyebrow' | transloco" [title]="'nav.blocks' | transloco">
-  <div actions class="blocks-actions" [formGroup]="filterForm">
-    <label class="blocks-search">
-      <i class="ti ti-search" aria-hidden="true"></i>
-      <input type="text" formControlName="search" [attr.placeholder]="'common.search' | transloco" />
-    </label>
-    <button type="button" class="blocks-new"><i class="ti ti-plus" aria-hidden="true"></i>{{ 'common.new' | transloco }}</button>
+<div actions class="blocks-actions" [formGroup]="filterForm">
+  <div class="view-toggle">
+    <span class="view-toggle__btn view-toggle__btn--active"><i class="ti ti-list" aria-hidden="true"></i>{{
+      'blocks.viewList' | transloco }}</span>
+    <a class="view-toggle__btn" routerLink="/blocks/map"><i class="ti ti-map-2" aria-hidden="true"></i>{{
+      'blocks.viewMap' | transloco }}</a>
   </div>
-</das-page-header>
-
-<div class="blocks">
-  <div class="blocks__filters">
-    <button type="button" class="chip" [class.chip--active]="filterForm.controls.status.value === null" (click)="setStatusFilter(null)">
-      {{ 'blocks.filterAll' | transloco }} <span class="chip__count">{{ totalCount() }}</span>
-    </button>
-    @for (st of statuses; track st) {
-      <button type="button" class="chip" [class.chip--active]="filterForm.controls.status.value === st" (click)="setStatusFilter(st)">
-        {{ statusLabelKey(st) | transloco }}
-      </button>
-    }
-  </div>
-
-  <div class="blocks__row">
-    <section class="das-card blocks__table">
-      <div class="tbl__head">
-        <span>{{ 'blocks.colBlock' | transloco }}</span>
-        <span>{{ 'blocks.colStatus' | transloco }}</span>
-        <span>{{ 'blocks.colAgent' | transloco }}</span>
-        <span>{{ 'blocks.colProgress' | transloco }}</span>
-      </div>
-
-      @for (b of items(); track b.id) {
-        <a class="tbl__row" [routerLink]="['/blocks', b.id]">
-          <span class="tbl__block">
-            <span class="tbl__name">{{ b.name ?? ('blocks.unnamed' | transloco) }}</span>
-            <span class="tbl__code">{{ b.code }}</span>
-          </span>
-          <span><span [class]="statusBadgeClass(b.status)">{{ statusLabelKey(b.status) | transloco }}</span></span>
-          <span class="tbl__agent">
-            @if (b.assignedUserName) {
-              <span class="tbl__avatar">{{ initials(b.assignedUserName) }}</span>
-              <span class="tbl__agent-name">{{ b.assignedUserName }}</span>
-            } @else {
-              <span class="tbl__muted">—</span>
-            }
-          </span>
-          <span class="tbl__prog">
-            <span class="tbl__track"><span class="tbl__fill" [style.width.%]="progressPercent(b)"></span></span>
-            <span class="tbl__prog-val">{{ progressPercent(b) }}</span>
-          </span>
-        </a>
-      } @empty {
-        <div class="tbl__empty">
-          @if (isLoading$ | async) { {{ 'common.loading' | transloco }} } @else { {{ 'blocks.empty' | transloco }} }
-        </div>
-      }
-    </section>
-
-    <aside class="blocks__side">
-      <section class="das-card panel">
-        <div class="panel__title">{{ 'blocks.distribution' | transloco }}</div>
-        <div class="dist">
-          @for (d of distribution(); track d.status) {
-            <span class="dist__seg" [style.width.%]="d.percent" [style.background]="d.color"></span>
-          }
-        </div>
-        <div class="dist__legend">
-          @for (d of distribution(); track d.status) {
-            <div class="dist__row">
-              <span class="dist__dot" [style.background]="d.color"></span>
-              <span class="dist__label">{{ statusLabelKey(d.status) | transloco }}</span>
-              <span class="dist__count">{{ d.count }}</span>
-            </div>
-          }
-        </div>
-      </section>
-
-      <section class="das-card panel">
-        <div class="panel__title">{{ 'blocks.globalProgress' | transloco }}</div>
-        <div class="prog__head"><span>{{ 'status.block.approved' | transloco }}</span><span>{{ globalProgress() }} %</span></div>
-        <div class="prog__track"><div class="prog__fill" [style.width.%]="globalProgress()"></div></div>
-        <div class="prog__meta">{{ approvedCount() }} / {{ totalCount() }}</div>
-      </section>
-    </aside>
-  </div>
+  <label class="blocks-search">
+    <i class="ti ti-search" aria-hidden="true"></i>
+    <input type="text" formControlName="search" [attr.placeholder]="'common.search' | transloco" />
+  </label>
+  <button type="button" class="blocks-new"><i class="ti ti-plus" aria-hidden="true"></i>{{ 'common.new' | transloco
+    }}</button>
 </div>

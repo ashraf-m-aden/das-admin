@@ -53,7 +53,7 @@ export class SidebarComponent {
     { labelKey: 'nav.review', path: '/review', icon: 'ti-checkup-list', allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
     { labelKey: 'nav.staff', path: '/staff', icon: 'ti-users', allowedRoles: ['Admin'] },
     { labelKey: 'nav.clients', path: '/clients', icon: 'ti-briefcase', allowedRoles: ['Admin'] },
-    { labelKey: 'nav.settings', path: '/settings', icon: 'ti-settings', allowedRoles: ['Admin'] },
+    // { labelKey: 'nav.settings', path: '/settings', icon: 'ti-settings', allowedRoles: ['Admin'] },
   ];
 
   isVisible(item: NavItem, roles: UserRole[]): boolean {

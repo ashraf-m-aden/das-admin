@@ -1,40 +1,68 @@
-<div class="das-login">
-  <div class="das-login__panel das-card">
-    <h1 class="das-login__title">{{ 'auth.login' | transloco }}</h1>
+<div class="login">
+  <aside class="login__brand">
+    <svg class="login__motif" viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <path d="M0 170 H400 M0 330 H400 M150 0 V500 M280 0 V500" stroke="#4f46e5" stroke-opacity="0.25"
+        stroke-width="6" />
+      <rect x="24" y="24" width="110" height="120" rx="4" fill="#4f46e5" fill-opacity="0.14" stroke="#6366f1"
+        stroke-opacity="0.4" stroke-width="1.5" />
+      <rect x="166" y="24" width="96" height="120" rx="4" fill="#4f46e5" fill-opacity="0.10" stroke="#6366f1"
+        stroke-opacity="0.35" stroke-width="1.5" />
+      <rect x="296" y="24" width="80" height="120" rx="4" fill="#4f46e5" fill-opacity="0.18" stroke="#6366f1"
+        stroke-opacity="0.4" stroke-width="1.5" />
+      <rect x="24" y="186" width="110" height="120" rx="4" fill="#4f46e5" fill-opacity="0.12" stroke="#6366f1"
+        stroke-opacity="0.35" stroke-width="1.5" />
+      <rect x="296" y="186" width="80" height="120" rx="4" fill="#4f46e5" fill-opacity="0.10" stroke="#6366f1"
+        stroke-opacity="0.35" stroke-width="1.5" />
+    </svg>
 
-    @if (isMockMode) {
-      <p class="das-login__mock-hint">
-        Mode démo — admin / superviseur / agent · mot de passe : das2026
-      </p>
-    }
+    <div class="login__brand-content">
+      <div class="login__mark">DAS</div>
+      <h1 class="login__name">Djibouti Address System</h1>
+      <p class="login__tagline">{{ 'auth.tagline' | transloco }}</p>
+    </div>
+  </aside>
 
-    <form class="das-login__form" [formGroup]="form" (ngSubmit)="submit()">
-      <label class="das-login__field">
-        <span>{{ 'auth.email' | transloco }}</span>
-        <input type="text" formControlName="username" autocomplete="username" />
+  <main class="login__panel">
+    <form class="login__form" [formGroup]="form" (ngSubmit)="submit()">
+      <h2 class="login__title">{{ 'auth.title' | transloco }}</h2>
+      <p class="login__subtitle">{{ 'auth.subtitle' | transloco }}</p>
+
+      <label class="field">
+        <span class="field__label">{{ 'auth.username' | transloco }}</span>
+        <span class="field__control">
+          <i class="ti ti-user" aria-hidden="true"></i>
+          <input type="text" formControlName="username" autocomplete="username"
+            [attr.placeholder]="'auth.username' | transloco" />
+        </span>
       </label>
 
-      <label class="das-login__field">
-        <span>{{ 'auth.password' | transloco }}</span>
-        <div class="das-login__password-wrap">
-          <input
-            [type]="showPassword() ? 'text' : 'password'"
-            formControlName="password"
-            autocomplete="current-password"
-          />
-          <button type="button" class="das-login__toggle" (click)="togglePasswordVisibility()">
-            {{ showPassword() ? '🙈' : '👁' }}
+      <label class="field">
+        <span class="field__label">{{ 'auth.password' | transloco }}</span>
+        <span class="field__control">
+          <i class="ti ti-lock" aria-hidden="true"></i>
+          <input [type]="showPassword() ? 'text' : 'password'" formControlName="password"
+            autocomplete="current-password" [attr.placeholder]="'auth.password' | transloco" />
+          <button type="button" class="field__toggle" (click)="togglePasswordVisibility()"
+            [attr.aria-label]="'auth.togglePassword' | transloco">
+            <i class="ti" [class.ti-eye]="!showPassword()" [class.ti-eye-off]="showPassword()" aria-hidden="true"></i>
           </button>
-        </div>
+        </span>
       </label>
 
-      @if (errorMessageKey$ | async; as errorKey) {
-        <p class="das-login__error" role="alert">{{ errorKey | transloco }}</p>
+      @if (errorMessageKey$ | async; as err) {
+      <div class="login__error"><i class="ti ti-alert-circle" aria-hidden="true"></i>{{ err | transloco }}</div>
       }
 
-      <button type="submit" class="das-login__submit" [disabled]="(isLoading$ | async) || form.invalid">
-        {{ (isLoading$ | async) ? ('common.loading' | transloco) : ('auth.loginButton' | transloco) }}
+      <button type="submit" class="login__submit" [disabled]="(isLoading$ | async)">
+        @if (isLoading$ | async) { {{ 'auth.signingIn' | transloco }} } @else { {{ 'auth.signIn' | transloco }} }
       </button>
+
+      @if (isMockMode) {
+      <div class="login__hint">
+        <i class="ti ti-flask" aria-hidden="true"></i>
+        <span>{{ 'auth.mockHint' | transloco }}</span>
+      </div>
+      }
     </form>
-  </div>
+  </main>
 </div>

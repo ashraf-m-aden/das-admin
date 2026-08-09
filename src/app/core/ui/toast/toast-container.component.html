@@ -1,0 +1,11 @@
+<div class="toasts" role="status" aria-live="polite">
+  @for (t of toasts(); track t.id) {
+  <div class="toast toast--{{ t.kind }}">
+    <i class="ti {{ icons[t.kind] }} toast__icon" aria-hidden="true"></i>
+    <span class="toast__msg">{{ t.messageKey | transloco: t.params }}</span>
+    <button type="button" class="toast__close" (click)="dismiss(t.id)" aria-label="Fermer">
+      <i class="ti ti-x" aria-hidden="true"></i>
+    </button>
+  </div>
+  }
+</div>

@@ -21,6 +21,18 @@
     "back": "Back",
     "error": "Something went wrong"
   },
+  "auth": {
+    "title": "Sign in",
+    "subtitle": "Access the D.A.S admin console",
+    "tagline": "The national address system of the Republic of Djibouti.",
+    "username": "Username",
+    "password": "Password",
+    "togglePassword": "Show / hide password",
+    "signIn": "Sign in",
+    "signingIn": "Signing in…",
+    "mockHint": "Demo: admin / superviseur / agent — password das2026",
+    "invalidCredentials": "Invalid username or password"
+  },
   "roles": {
     "Admin": "Admin",
     "Gestionnaire": "Manager",
@@ -95,14 +107,15 @@
     "namePlaceholder": "e.g. Corail Avenue",
     "saveName": "Save",
     "mapPreview": "Close preview",
-    "mapNote": "MapLibre map to integrate"
+    "mapNote": "MapLibre map to integrate",
+    "mapError": "Map unavailable"
   },
   "addressing": {
     "title": "Addressing",
     "eyebrow": "Djibouti City · Boulaos",
     "blockNaming": "Close naming",
     "streetNaming": "Street naming",
-    "propertyNumbering": "Property numbering",
+    "propertyNumbering": "Numbering",
     "onlyUnnamed": "Unnamed only",
     "proposedBy": "Proposed by {{name}}",
     "rejectReason": "Rejection reason…",
@@ -201,7 +214,7 @@
     "password": "Password",
     "create": "Create",
     "editRoles": "Edit roles",
-    "toggleActive": "Enable/Suspend",
+    "toggleActive": "Enable / Suspend",
     "empty": "No members"
   },
   "notifications": {
@@ -244,5 +257,11 @@
       "intersection": "Intersection",
       "roundabout": "Roundabout"
     }
+  },
+  "feedback": {
+    "blockAssigned": "Close assigned",
+    "blockNamed": "Close name saved",
+    "saved": "Saved",
+    "error": "Action failed"
   }
 }

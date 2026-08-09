@@ -10,15 +10,18 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { TranslocoModule } from '@jsverse/transloco';
 import type { FeatureCollection, Geometry } from 'geojson';
 import * as maplibregl from 'maplibre-gl';
 import { AppConfigService } from '../../../core/config/app-config.service';
 import { MapStyleService } from '../../../core/map/map-style.service';
 import { BlocksFacade } from '../../../core/blocks/store/blocks.facade';
+import { PageHeaderComponent } from '../../../core/layout/page-header/page-header.component';
+import { BlockStatus } from '../../../core/models/das.models';
 
-const STATUS_COLORS: Record<string, string> = {
-  not_assigned: '#6b7280',
+const STATUS_COLORS: Record<BlockStatus, string> = {
+  not_assigned: '#9aa3b5',
   assigned: '#2563eb',
   in_progress: '#d97706',
   submitted: '#7c3aed',
@@ -31,11 +34,11 @@ const MOCK_BASEMAP_STYLE_URL = 'https://basemaps.cartocdn.com/gl/positron-gl-sty
 @Component({
   selector: 'das-blocks-map',
   standalone: true,
+  imports: [RouterLink, TranslocoModule, PageHeaderComponent],
   templateUrl: './blocks-map.component.html',
   styleUrl: './blocks-map.component.scss',
 })
 export class BlocksMapComponent implements OnInit, OnDestroy {
-  // Using modern viewChild signal
   private readonly mapContainer = viewChild.required<ElementRef<HTMLDivElement>>('mapContainer');
 
   private readonly facade = inject(BlocksFacade);
@@ -48,9 +51,14 @@ export class BlocksMapComponent implements OnInit, OnDestroy {
   private map?: maplibregl.Map;
   private resizeObserver?: ResizeObserver;
   private readonly isMockMode = this.config.get('useMockApi');
+  private hasFitBoundsOnce = false;
 
   protected readonly initError = signal(false);
-  private hasFitBoundsOnce = false;
+  protected readonly ready = signal(false);
+
+  protected readonly legend: BlockStatus[] = [
+    'approved', 'in_progress', 'submitted', 'assigned', 'not_assigned', 'needs_redo',
+  ];
 
   ngOnInit(): void {
     this.facade.load();
@@ -71,6 +79,14 @@ export class BlocksMapComponent implements OnInit, OnDestroy {
     this.map = undefined;
   }
 
+  legendColor(status: BlockStatus): string {
+    return STATUS_COLORS[status];
+  }
+
+  statusLabelKey(status: BlockStatus): string {
+    return `status.block.${status}`;
+  }
+
   private get isMapUsable(): boolean {
     return !!this.map && !this.initError();
   }
@@ -89,47 +105,18 @@ export class BlocksMapComponent implements OnInit, OnDestroy {
 
     this.map.on('load', () => {
       if (!this.isMapUsable) return;
+      this.ngZone.run(() => this.ready.set(true));
       this.map?.resize();
 
-      // Automatically unsubscribes on component destroy
       this.facade.blocksGeoJson$
         .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe((geojson) => {
-          this.upsertMockLayer(geojson as FeatureCollection);
-        });
+        .subscribe((geojson) => this.upsertMockLayer(geojson as FeatureCollection));
     });
   }
 
-  // private initRealTileMap(): void {
-  //   this.mapStyle.getStyle()
-  //     .pipe(takeUntilDestroyed(this.destroyRef))
-  //     .subscribe((style) => {
-  //       this.map = this.createMapInstance(style);
-  //       this.observeContainerResize();
-
-  //       this.map.on('load', () => {
-  //         if (!this.isMapUsable) return;
-  //         this.map?.resize();
-
-  //         this.map.on('click', 'blocks-fill', (e) => {
-  //           const id = e.features?.[0]?.properties?.['id'];
-  //           if (id) {
-  //             this.ngZone.run(() => this.router.navigate(['/blocks', id]));
-  //           }
-  //         });
-
-  //         this.map.on('mouseenter', 'blocks-fill', () => {
-  //           if (this.map) this.map.getCanvas().style.cursor = 'pointer';
-  //         });
-
-  //         this.map.on('mouseleave', 'blocks-fill', () => {
-  //           if (this.map) this.map.getCanvas().style.cursor = '';
-  //         });
-  //       });
-  //     });
-  // }
-private initRealTileMap(): void {
-    this.mapStyle.getStyle()
+  private initRealTileMap(): void {
+    this.mapStyle
+      .getStyle()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((style) => {
         const map = this.createMapInstance(style);
@@ -138,30 +125,24 @@ private initRealTileMap(): void {
 
         map.on('load', () => {
           if (!this.isMapUsable) return;
+          this.ngZone.run(() => this.ready.set(true));
           map.resize();
 
           map.on('click', 'blocks-fill', (e) => {
             const id = e.features?.[0]?.properties?.['id'];
-            if (id) {
-              this.ngZone.run(() => this.router.navigate(['/blocks', id]));
-            }
+            if (id) this.ngZone.run(() => this.router.navigate(['/blocks', id]));
           });
-
-          map.on('mouseenter', 'blocks-fill', () => {
-            map.getCanvas().style.cursor = 'pointer';
-          });
-
-          map.on('mouseleave', 'blocks-fill', () => {
-            map.getCanvas().style.cursor = '';
-          });
+          map.on('mouseenter', 'blocks-fill', () => { map.getCanvas().style.cursor = 'pointer'; });
+          map.on('mouseleave', 'blocks-fill', () => { map.getCanvas().style.cursor = ''; });
         });
       });
   }
+
   private createMapInstance(style: maplibregl.StyleSpecification | string): maplibregl.Map {
     const map = new maplibregl.Map({
       container: this.mapContainer().nativeElement,
       style,
-      center: [43.145, 11.595], // Djibouti-ville
+      center: [43.145, 11.595],
       zoom: 12,
     });
 
@@ -188,8 +169,7 @@ private initRealTileMap(): void {
         source: 'mock-blocks',
         paint: {
           'fill-color': [
-            'match',
-            ['get', 'status'],
+            'match', ['get', 'status'],
             'not_assigned', STATUS_COLORS['not_assigned'],
             'assigned', STATUS_COLORS['assigned'],
             'in_progress', STATUS_COLORS['in_progress'],
@@ -211,15 +191,11 @@ private initRealTileMap(): void {
 
       this.map!.on('click', 'mock-blocks-fill', (e) => {
         const id = e.features?.[0]?.properties?.['id'];
-        if (id) {
-          this.ngZone.run(() => this.router.navigate(['/blocks', id]));
-        }
+        if (id) this.ngZone.run(() => this.router.navigate(['/blocks', id]));
       });
-
       this.map!.on('mouseenter', 'mock-blocks-fill', () => {
         if (this.map) this.map.getCanvas().style.cursor = 'pointer';
       });
-
       this.map!.on('mouseleave', 'mock-blocks-fill', () => {
         if (this.map) this.map.getCanvas().style.cursor = '';
       });
@@ -232,11 +208,7 @@ private initRealTileMap(): void {
 
   private fitMapToBounds(geojson: FeatureCollection): void {
     const bounds = new maplibregl.LngLatBounds();
-
-    geojson.features.forEach((f) => {
-      this.extendBoundsFromGeometry(bounds, f.geometry);
-    });
-
+    geojson.features.forEach((f) => this.extendBoundsFromGeometry(bounds, f.geometry));
     if (!bounds.isEmpty()) {
       this.hasFitBoundsOnce = true;
       this.map!.fitBounds(bounds, { padding: 60, maxZoom: 15 });
@@ -247,9 +219,7 @@ private initRealTileMap(): void {
     if (geometry.type === 'Polygon') {
       geometry.coordinates[0].forEach((coord) => bounds.extend(coord as [number, number]));
     } else if (geometry.type === 'MultiPolygon') {
-      geometry.coordinates.forEach((poly) => {
-        poly[0].forEach((coord) => bounds.extend(coord as [number, number]));
-      });
+      geometry.coordinates.forEach((poly) => poly[0].forEach((coord) => bounds.extend(coord as [number, number])));
     }
   }
 }
