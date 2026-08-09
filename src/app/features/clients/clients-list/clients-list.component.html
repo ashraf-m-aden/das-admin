@@ -1,65 +1,52 @@
-<div class="das-clients-list">
-  <div class="das-clients-list__header">
-    <h1>{{ 'clients.title' | transloco }}</h1>
-    <a class="das-clients-list__add" routerLink="/clients/new">{{ 'clients.addClient' | transloco }}</a>
+<das-page-header [eyebrow]="'clients.eyebrow' | transloco" [title]="'nav.clients' | transloco">
+  <div actions class="cl-actions" [formGroup]="filterForm">
+    <label class="cl-search">
+      <i class="ti ti-search" aria-hidden="true"></i>
+      <input type="text" formControlName="search" [attr.placeholder]="'common.search' | transloco" />
+    </label>
+    <a class="cl-new" routerLink="/clients/new"><i class="ti ti-plus" aria-hidden="true"></i>{{ 'clients.add' | transloco }}</a>
   </div>
+</das-page-header>
 
-  @if (lastCreatedTemporaryPassword$ | async; as tempPassword) {
-  <div class="das-clients-list__banner das-card">
-    <span>{{ 'clients.temporaryPassword' | transloco }} : <strong>{{ tempPassword }}</strong></span>
-    <button type="button" (click)="dismissTemporaryPassword()">{{ 'common.close' | transloco }}</button>
-  </div>
+<div class="clients">
+  @if (lastCreatedTemporaryPassword$ | async; as pwd) {
+    <div class="clients__banner">
+      <span>{{ 'clients.tempPassword' | transloco }} <strong>{{ pwd }}</strong></span>
+      <button type="button" (click)="dismissTemporaryPassword()"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>
   }
 
-  <form class="das-clients-list__filters" [formGroup]="filterForm">
-    <input type="text" formControlName="search" [placeholder]="'clients.searchPlaceholder' | transloco" />
-    <select formControlName="status">
-      <option [ngValue]="null">{{ 'clients.allStatuses' | transloco }}</option>
-      @for (status of statuses; track status) {
-      <option [ngValue]="status">{{ 'status.client.' + status | transloco }}</option>
-      }
-    </select>
-  </form>
+  <section class="das-card clients__table">
+    <div class="tbl__head">
+      <span>{{ 'clients.company' | transloco }}</span>
+      <span>{{ 'clients.contact' | transloco }}</span>
+      <span>{{ 'clients.plan' | transloco }}</span>
+      <span>{{ 'clients.enabled' | transloco }}</span>
+    </div>
 
-  @if (isLoading$ | async) {
-  <p>{{ 'common.loading' | transloco }}</p>
-  } @else {
-  <table class="das-clients-list__table">
-    <thead>
-      <tr>
-        <th>{{ 'clients.companyName' | transloco }}</th>
-        <th>{{ 'clients.contactName' | transloco }}</th>
-        <th>{{ 'clients.plan' | transloco }}</th>
-        <th>{{ 'clients.status' | transloco }}</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (client of items$ | async; track client.id) {
-      <tr>
-        <td>{{ client.companyName }}</td>
-        <td>{{ client.contactName }}</td>
-        <td>{{ client.planName }}</td>
-        <td>
-          <span class="das-badge" [class.das-badge--approved]="client.status === 'active'"
-            [class.das-badge--needs-redo]="client.status === 'suspended'">
-            {{ 'status.client.' + client.status | transloco }}
+    @for (c of (items$ | async) ?? []; track c.id) {
+      <div class="tbl__row">
+        <a class="tbl__company" [routerLink]="['/clients', c.id]">
+          <span class="tbl__avatar">{{ initials(c.companyName) }}</span>
+          <span class="tbl__company-text">
+            <span class="tbl__name">{{ c.companyName }}</span>
+            <span class="tbl__status" [style.color]="statusColor(c.status)">
+              <span class="tbl__dot" [style.background]="statusColor(c.status)"></span>{{ statusLabelKey(c.status) | transloco }}
+            </span>
           </span>
-        </td>
-        <td class="das-clients-list__actions">
-          <a [routerLink]="['/clients', client.id]">{{ 'clients.viewAccess' | transloco }}</a>
-          <a [routerLink]="['/clients', client.id, 'edit']">{{ 'common.edit' | transloco }}</a>
-          <button type="button" (click)="toggleEnabled(client.id, client.enabled)">
-            {{ (client.enabled ? 'clients.suspend' : 'clients.reactivate') | transloco }}
+        </a>
+        <span class="tbl__contact">{{ c.contactName }}</span>
+        <span class="tbl__plan">{{ c.planName }}</span>
+        <span>
+          <button type="button" class="toggle" [class.toggle--on]="c.enabled" (click)="toggleEnabled(c.id, c.enabled)" [attr.aria-label]="'clients.enabled' | transloco">
+            <span class="toggle__knob"></span>
           </button>
-        </td>
-      </tr>
-      } @empty {
-      <tr>
-        <td colspan="5">{{ 'common.noResults' | transloco }}</td>
-      </tr>
-      }
-    </tbody>
-  </table>
-  }
+        </span>
+      </div>
+    } @empty {
+      <div class="tbl__empty">
+        @if (isLoading$ | async) { {{ 'common.loading' | transloco }} } @else { {{ 'clients.empty' | transloco }} }
+      </div>
+    }
+  </section>
 </div>

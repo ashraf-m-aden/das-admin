@@ -1,20 +1,16 @@
-<div class="das-client-detail-shell">
-  <a class="das-client-detail-shell__back" routerLink="/clients">← {{ 'common.back' | transloco }}</a>
+@if (client$ | async; as client) {
+  <das-page-header [eyebrow]="client.contactName + ' · ' + client.email" [title]="client.companyName">
+    <div actions class="cd-actions">
+      <a class="cd-btn" [routerLink]="['/clients', clientId, 'edit']"><i class="ti ti-pencil" aria-hidden="true"></i>{{ 'clients.edit' | transloco }}</a>
+      <a class="cd-btn cd-btn--ghost" routerLink="/clients"><i class="ti ti-arrow-left" aria-hidden="true"></i>{{ 'common.back' | transloco }}</a>
+    </div>
+  </das-page-header>
+}
 
-  @if (client$ | async; as client) {
-  <h1>{{ client.companyName }}</h1>
-  <p class="das-client-detail-shell__meta">{{ client.contactName }} — {{ client.email }}</p>
-  }
-
-  <nav class="das-client-detail-shell__tabs">
-    <a routerLink="zone-access" routerLinkActive="das-client-detail-shell__tab--active"
-      class="das-client-detail-shell__tab">
-      {{ 'clients.zoneAccess' | transloco }}
-    </a>
-    <a routerLink="api-tokens" routerLinkActive="das-client-detail-shell__tab--active"
-      class="das-client-detail-shell__tab">
-      {{ 'clients.apiTokens' | transloco }}
-    </a>
+<div class="cd">
+  <nav class="cd__tabs">
+    <a class="cd__tab" routerLink="zone-access" routerLinkActive="cd__tab--active">{{ 'clients.zoneAccess' | transloco }}</a>
+    <a class="cd__tab" routerLink="api-tokens" routerLinkActive="cd__tab--active">{{ 'clients.apiTokens' | transloco }}</a>
   </nav>
 
   <router-outlet />

@@ -5,6 +5,7 @@ import { TranslocoModule } from '@jsverse/transloco';
 import { AddressingFacade } from '../../../core/addressing/store/addressing.facade';
 import { DasDatePipe } from '../../../core/i18n/das-locale.pipes';
 import { BlockToName } from '../../../core/addressing/models/addressing.models';
+import { BlockStatus } from '../../../core/models/das.models';
 
 type NameForm = FormGroup<{ name: FormControl<string> }>;
 type RejectForm = FormGroup<{ reason: FormControl<string> }>;
@@ -28,7 +29,6 @@ export class BlockNamingComponent implements OnInit {
 
   protected readonly nameForms = new Map<string, NameForm>();
   protected readonly rejectForms = new Map<string, RejectForm>();
-  /** id du bloc dont le panneau "motif de rejet" est ouvert */
   protected readonly openRejectId = signal<string | null>(null);
 
   ngOnInit(): void {
@@ -71,4 +71,7 @@ export class BlockNamingComponent implements OnInit {
     this.facade.rejectBlockSuggestion(block.id, block.pendingSuggestion.id, form.getRawValue().reason);
     this.openRejectId.set(null);
   }
+
+  statusBadgeClass(status: BlockStatus): string { return `das-badge das-badge--${status.replace('_', '-')}`; }
+  statusLabelKey(status: BlockStatus): string { return `status.block.${status}`; }
 }

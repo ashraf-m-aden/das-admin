@@ -1,10 +1,14 @@
 :root {
-  --das-navy-900: #1f3864;
-  --das-navy-700: #2a4a80;
-  --das-navy-500: #3d63a3;
+  --das-indigo-900: #312e81;
+  --das-indigo-800: #3730a3;
+  --das-indigo-700: #4338ca;
+  --das-indigo-600: #4f46e5;
+  --das-indigo-500: #6366f1;
+  --das-indigo-100: #e0e7ff;
+  --das-indigo-50:  #eef0ff;
 
   --das-blue-600: #2563eb;
-  --das-blue-100: #e8f0fe;
+  --das-blue-100: #dbeafe;
 
   --das-purple-600: #7c3aed;
   --das-purple-100: #f3e8fd;
@@ -18,34 +22,37 @@
   --das-red-600: #dc2626;
   --das-red-100: #fee2e2;
 
-  --das-gray-900: #1f2937;
-  --das-gray-700: #374151;
-  --das-gray-500: #6b7280;
-  --das-gray-300: #d1d5db;
-  --das-gray-100: #f3f4f6;
-  --das-gray-50:  #f9fafb;
-  --das-white:    #ffffff;
+  --das-ink-900: #1b2137;
+  --das-ink-700: #3f4658;
+  --das-ink-600: #5a6274;
+  --das-ink-500: #9099ab;
+  --das-ink-300: #c2c8d4;
 
-  --das-orange-600: #ff9900;
+  --das-line:        #eaedf3;
+  --das-line-strong: #dde1ea;
+  --das-surface:        #ffffff;
+  --das-surface-alt:    #f6f8fb;
+  --das-surface-sunken: #f1f3f7;
+  --das-white:          #ffffff;
 
-  --color-primary: var(--das-navy-900);
-  --color-primary-hover: var(--das-navy-700);
+  --color-primary: var(--das-indigo-900);
+  --color-primary-hover: var(--das-indigo-800);
   --color-on-primary: var(--das-white);
 
-  --color-accent: var(--das-blue-600);
-  --color-accent-hover: #1d4ed8;
+  --color-accent: var(--das-indigo-600);
+  --color-accent-hover: var(--das-indigo-700);
   --color-on-accent: var(--das-white);
 
-  --color-surface: var(--das-white);
-  --color-surface-alt: var(--das-gray-50);
-  --color-surface-sunken: var(--das-gray-100);
-  --color-border: var(--das-gray-300);
-  --color-border-strong: var(--das-gray-500);
+  --color-surface: var(--das-surface);
+  --color-surface-alt: var(--das-surface-alt);
+  --color-surface-sunken: var(--das-surface-sunken);
+  --color-border: var(--das-line);
+  --color-border-strong: var(--das-line-strong);
 
-  --color-text-primary: var(--das-gray-900);
-  --color-text-secondary: var(--das-gray-700);
-  --color-text-muted: var(--das-gray-500);
-  --color-text-disabled: var(--das-gray-300);
+  --color-text-primary: var(--das-ink-900);
+  --color-text-secondary: var(--das-ink-700);
+  --color-text-muted: var(--das-ink-500);
+  --color-text-disabled: var(--das-ink-300);
   --color-text-inverse: var(--das-white);
 
   --color-success: var(--das-green-600);
@@ -54,45 +61,34 @@
   --color-warning-bg: var(--das-amber-100);
   --color-danger: var(--das-red-600);
   --color-danger-bg: var(--das-red-100);
-  --color-info: var(--das-blue-600);
-  --color-info-bg: var(--das-blue-100);
+  --color-info: var(--das-indigo-600);
+  --color-info-bg: var(--das-indigo-100);
 
-  --color-status-not-assigned: var(--das-gray-500);
-  --color-status-not-assigned-bg: var(--das-gray-100);
+  --color-status-not-assigned: var(--das-ink-600);
+  --color-status-not-assigned-bg: var(--das-surface-sunken);
   --color-status-assigned: var(--das-blue-600);
   --color-status-assigned-bg: var(--das-blue-100);
-  --color-status-in-progress: var(--das-amber-600);
+  --color-status-in-progress: #b45309;
   --color-status-in-progress-bg: var(--das-amber-100);
-  --color-status-submitted: var(--das-purple-600);
+  --color-status-submitted: #6d28d9;
   --color-status-submitted-bg: var(--das-purple-100);
-  --color-status-approved: var(--das-green-600);
+  --color-status-approved: #15803d;
   --color-status-approved-bg: var(--das-green-100);
-  --color-status-needs-redo: var(--das-red-600);
+  --color-status-needs-redo: #b91c1c;
   --color-status-needs-redo-bg: var(--das-red-100);
 
-  --color-focus-ring: var(--das-blue-600);
-  --color-overlay: rgb(31 41 55 / 55%);
-}
-
-[data-theme="dark"] {
-  --color-surface: var(--das-gray-900);
-  --color-surface-alt: #16202e;
-  --color-surface-sunken: #10151d;
-  --color-border: var(--das-gray-700);
-  --color-text-primary: var(--das-gray-50);
-  --color-text-secondary: var(--das-gray-300);
-  --color-text-muted: var(--das-gray-500);
-  --color-overlay: rgb(0 0 0 / 65%);
+  --color-focus-ring: var(--das-indigo-600);
+  --color-overlay: rgb(27 33 55 / 55%);
 }
 
 $das-palette: (
-  "navy-900": #1f3864,
+  "indigo-900": #312e81,
+  "indigo-600": #4f46e5,
   "blue-600": #2563eb,
   "purple-600": #7c3aed,
   "amber-600": #d97706,
   "green-600": #16a34a,
   "red-600": #dc2626,
-  "gray-900": #1f2937,
-  "gray-500": #6b7280,
-  "gray-100": #f3f4f6,
+  "ink-900": #1b2137,
+  "ink-500": #9099ab,
 );

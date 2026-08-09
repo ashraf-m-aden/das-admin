@@ -1,48 +1,48 @@
-<div class="das-client-form">
-  <h1>{{ (editingId ? 'clients.editClient' : 'clients.addClient') | transloco }}</h1>
+<das-page-header
+  [eyebrow]="'nav.clients' | transloco"
+  [title]="(editingId ? 'clients.editTitle' : 'clients.newTitle') | transloco">
+  <a actions class="cf-back" routerLink="/clients"><i class="ti ti-arrow-left" aria-hidden="true"></i>{{ 'common.back' | transloco }}</a>
+</das-page-header>
 
-  <form class="das-client-form__form das-card" [formGroup]="form" (ngSubmit)="submit()">
-    <label class="das-client-form__field">
-      <span>{{ 'clients.login' | transloco }}</span>
-      <input type="text" formControlName="login" />
-    </label>
-
-    <label class="das-client-form__field">
-      <span>{{ 'clients.companyName' | transloco }}</span>
-      <input type="text" formControlName="companyName" />
-    </label>
-
-    <label class="das-client-form__field">
-      <span>{{ 'clients.contactName' | transloco }}</span>
-      <input type="text" formControlName="contactName" />
-    </label>
-
-    <label class="das-client-form__field">
-      <span>{{ 'clients.email' | transloco }}</span>
-      <input type="email" formControlName="email" />
-    </label>
-
-    <label class="das-client-form__field">
-      <span>{{ 'clients.phone' | transloco }}</span>
-      <input type="tel" formControlName="phone" />
-    </label>
-
-    <label class="das-client-form__field">
-      <span>{{ 'clients.plan' | transloco }}</span>
-      <select formControlName="planId">
-        <option value="" disabled>{{ 'clients.selectPlan' | transloco }}</option>
-        @for (plan of plans$ | async; track plan.id) {
-        <option [value]="plan.id">{{ plan.name }}</option>
-        }
+<div class="cf">
+  <form class="das-card cf__form" [formGroup]="form" (ngSubmit)="submit()">
+    <div class="cf__field">
+      <label for="cf-login">{{ 'clients.login' | transloco }}</label>
+      <input id="cf-login" type="text" formControlName="login" [attr.placeholder]="'clients.login' | transloco" />
+    </div>
+    <div class="cf__field">
+      <label for="cf-company">{{ 'clients.companyName' | transloco }}</label>
+      <input id="cf-company" type="text" formControlName="companyName" />
+    </div>
+    <div class="cf__field">
+      <label for="cf-contact">{{ 'clients.contactName' | transloco }}</label>
+      <input id="cf-contact" type="text" formControlName="contactName" />
+    </div>
+    <div class="cf__row">
+      <div class="cf__field">
+        <label for="cf-email">{{ 'clients.email' | transloco }}</label>
+        <input id="cf-email" type="email" formControlName="email" />
+      </div>
+      <div class="cf__field">
+        <label for="cf-phone">{{ 'clients.phone' | transloco }}</label>
+        <input id="cf-phone" type="text" formControlName="phone" />
+      </div>
+    </div>
+    <div class="cf__field">
+      <label for="cf-plan">{{ 'clients.plan' | transloco }}</label>
+      <select id="cf-plan" formControlName="planId">
+        <option value="">{{ 'clients.selectPlan' | transloco }}</option>
+        @for (p of (plans$ | async) ?? []; track p.id) { <option [value]="p.id">{{ p.name }}</option> }
       </select>
-    </label>
+    </div>
 
-    @if (errorMessageKey$ | async; as errorKey) {
-    <p class="das-client-form__error">{{ errorKey | transloco }}</p>
-    }
+    @if (errorMessageKey$ | async; as err) { <div class="cf__error">{{ err | transloco }}</div> }
 
-    <button type="submit" class="das-client-form__submit" [disabled]="(isSaving$ | async) || form.invalid">
-      {{ (isSaving$ | async) ? ('common.loading' | transloco) : ('common.save' | transloco) }}
-    </button>
+    <div class="cf__actions">
+      <button type="submit" class="btn btn--primary" [disabled]="(isSaving$ | async)">
+        @if (isSaving$ | async) { {{ 'common.saving' | transloco }} } @else { {{ 'common.save' | transloco }} }
+      </button>
+      <a class="btn btn--ghost" routerLink="/clients">{{ 'common.cancel' | transloco }}</a>
+    </div>
   </form>
 </div>

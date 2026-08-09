@@ -1,33 +1,24 @@
-<div class="das-notifications">
-  <div class="das-notifications__header">
-    <h1>{{ 'notifications.title' | transloco }}</h1>
-    @if ((unreadCount$ | async); as count) {
-    @if (count > 0) {
-    <button type="button" class="das-notifications__mark-all" (click)="markAllAsRead()">
-      {{ 'notifications.markAllRead' | transloco }}
-    </button>
-    }
-    }
-  </div>
+<das-page-header [eyebrow]="(('notifications.unreadCount' | transloco: { count: ((unreadCount$ | async) ?? 0) }))" [title]="'nav.notifications' | transloco">
+  <button actions type="button" class="nt-mark" (click)="markAllAsRead()"><i class="ti ti-checks" aria-hidden="true"></i>{{ 'notifications.markAll' | transloco }}</button>
+</das-page-header>
 
-  @if (isLoading$ | async) {
-  <p>{{ 'common.loading' | transloco }}</p>
-  } @else {
-  <div class="das-notifications__list">
-    @for (notification of items$ | async; track notification.id) {
-    <button type="button" class="das-notifications__item" [class.das-notifications__item--unread]="!notification.readAt"
-      (click)="open(notification)">
-      <span class="das-notifications__icon" [attr.data-type]="notification.type"></span>
-      <span class="das-notifications__content">
-        <span class="das-notifications__message">
-          {{ notification.messageKey | transloco: notification.messageParams }}
+<div class="notifs">
+  <section class="das-card notifs__list">
+    @for (n of (items$ | async) ?? []; track n.id) {
+      <button type="button" class="notif" [class.notif--unread]="!n.readAt" (click)="open(n)">
+        <span class="notif__icon" [style.background]="iconFor(n.type).bg" [style.color]="iconFor(n.type).color">
+          <i class="ti {{ iconFor(n.type).icon }}" aria-hidden="true"></i>
         </span>
-        <span class="das-notifications__date">{{ notification.createdAt | dasDate: 'long' }}</span>
-      </span>
-    </button>
+        <div class="notif__body">
+          <div class="notif__text">{{ n.messageKey | transloco: n.messageParams }}</div>
+          <div class="notif__meta">{{ n.createdAt | dasDate: 'long' }}</div>
+        </div>
+        @if (!n.readAt) { <span class="notif__unread-dot"></span> }
+      </button>
     } @empty {
-    <p class="das-notifications__empty">{{ 'notifications.empty' | transloco }}</p>
+      <div class="notifs__empty">
+        @if (isLoading$ | async) { {{ 'common.loading' | transloco }} } @else { {{ 'notifications.empty' | transloco }} }
+      </div>
     }
-  </div>
-  }
+  </section>
 </div>

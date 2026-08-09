@@ -1,9 +1,15 @@
-.das-shell {
+@use "styles/mixins" as m;
+
+.shell {
   display: flex;
-  flex-direction: column;
   min-height: 100vh;
 
-  &__content {
+  &__main {
     flex: 1;
+    min-width: 0;
+    height: 100vh;
+    overflow: auto;
+    background: var(--color-surface-alt);
+    @include m.slim-scrollbar;
   }
 }

@@ -3,6 +3,7 @@ import { AsyncPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoModule } from '@jsverse/transloco';
 import { StaffFacade } from '../../../core/staff/store/staff.facade';
+import { PageHeaderComponent } from '../../../core/layout/page-header/page-header.component';
 import { UserRole } from '../../../core/models/das.models';
 import { StaffMember } from '../../../core/staff/models/staff.models';
 
@@ -11,7 +12,7 @@ const ALL_ROLES: UserRole[] = ['Admin', 'Gestionnaire', 'Superviseur', 'AgentTer
 @Component({
   selector: 'das-staff-list',
   standalone: true,
-  imports: [AsyncPipe, ReactiveFormsModule, TranslocoModule],
+  imports: [AsyncPipe, ReactiveFormsModule, TranslocoModule, PageHeaderComponent],
   templateUrl: './staff-list.component.html',
   styleUrl: './staff-list.component.scss',
 })
@@ -42,9 +43,17 @@ export class StaffListComponent implements OnInit {
     this.filterForm.valueChanges.subscribe((v) => this.facade.setFilters(v.search ?? '', null));
   }
 
+  toggleCreateForm(): void {
+    this.showCreateForm.set(!this.showCreateForm());
+  }
+
   toggleCreateRole(role: UserRole): void {
     const current = this.createForm.controls.roles.value;
     this.createForm.controls.roles.setValue(current.includes(role) ? current.filter((r) => r !== role) : [...current, role]);
+  }
+
+  hasCreateRole(role: UserRole): boolean {
+    return this.createForm.controls.roles.value.includes(role);
   }
 
   submitCreate(): void {
@@ -67,6 +76,10 @@ export class StaffListComponent implements OnInit {
     this.editingRolesDraft.set(current.includes(role) ? current.filter((r) => r !== role) : [...current, role]);
   }
 
+  hasDraftRole(role: UserRole): boolean {
+    return this.editingRolesDraft().includes(role);
+  }
+
   saveRoles(member: StaffMember): void {
     this.facade.setRoles(member.id, { roles: this.editingRolesDraft() });
     this.editingRolesId.set(null);
@@ -78,5 +91,14 @@ export class StaffListComponent implements OnInit {
 
   toggleActive(member: StaffMember): void {
     this.facade.setActive(member.id, !member.isActive);
+  }
+
+  initials(name: string): string {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || '?';
+  }
+
+  roleLabelKey(role: UserRole): string {
+    return `roles.${role}`;
   }
 }

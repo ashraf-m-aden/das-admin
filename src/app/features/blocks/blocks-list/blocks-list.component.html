@@ -1,51 +1,86 @@
-<div class="das-blocks-list">
-  <div class="das-blocks-list__header">
-    <h1>{{ 'blocks.title' | transloco }}</h1>
-    <a class="das-blocks-list__map-link" routerLink="/blocks/map">{{ 'blocks.viewMap' | transloco }}</a>
+<das-page-header [eyebrow]="'blocks.eyebrow' | transloco" [title]="'nav.blocks' | transloco">
+  <div actions class="blocks-actions" [formGroup]="filterForm">
+    <label class="blocks-search">
+      <i class="ti ti-search" aria-hidden="true"></i>
+      <input type="text" formControlName="search" [attr.placeholder]="'common.search' | transloco" />
+    </label>
+    <button type="button" class="blocks-new"><i class="ti ti-plus" aria-hidden="true"></i>{{ 'common.new' | transloco }}</button>
+  </div>
+</das-page-header>
+
+<div class="blocks">
+  <div class="blocks__filters">
+    <button type="button" class="chip" [class.chip--active]="filterForm.controls.status.value === null" (click)="setStatusFilter(null)">
+      {{ 'blocks.filterAll' | transloco }} <span class="chip__count">{{ totalCount() }}</span>
+    </button>
+    @for (st of statuses; track st) {
+      <button type="button" class="chip" [class.chip--active]="filterForm.controls.status.value === st" (click)="setStatusFilter(st)">
+        {{ statusLabelKey(st) | transloco }}
+      </button>
+    }
   </div>
 
-  <form class="das-blocks-list__filters" [formGroup]="filterForm">
-    <input type="text" formControlName="search" [placeholder]="'blocks.searchPlaceholder' | transloco" />
+  <div class="blocks__row">
+    <section class="das-card blocks__table">
+      <div class="tbl__head">
+        <span>{{ 'blocks.colBlock' | transloco }}</span>
+        <span>{{ 'blocks.colStatus' | transloco }}</span>
+        <span>{{ 'blocks.colAgent' | transloco }}</span>
+        <span>{{ 'blocks.colProgress' | transloco }}</span>
+      </div>
 
-    <select formControlName="status">
-      <option [ngValue]="null">{{ 'blocks.allStatuses' | transloco }}</option>
-      @for (status of statuses; track status) {
-        <option [ngValue]="status">{{ 'status.block.' + status | transloco }}</option>
+      @for (b of items(); track b.id) {
+        <a class="tbl__row" [routerLink]="['/blocks', b.id]">
+          <span class="tbl__block">
+            <span class="tbl__name">{{ b.name ?? ('blocks.unnamed' | transloco) }}</span>
+            <span class="tbl__code">{{ b.code }}</span>
+          </span>
+          <span><span [class]="statusBadgeClass(b.status)">{{ statusLabelKey(b.status) | transloco }}</span></span>
+          <span class="tbl__agent">
+            @if (b.assignedUserName) {
+              <span class="tbl__avatar">{{ initials(b.assignedUserName) }}</span>
+              <span class="tbl__agent-name">{{ b.assignedUserName }}</span>
+            } @else {
+              <span class="tbl__muted">—</span>
+            }
+          </span>
+          <span class="tbl__prog">
+            <span class="tbl__track"><span class="tbl__fill" [style.width.%]="progressPercent(b)"></span></span>
+            <span class="tbl__prog-val">{{ progressPercent(b) }}</span>
+          </span>
+        </a>
+      } @empty {
+        <div class="tbl__empty">
+          @if (isLoading$ | async) { {{ 'common.loading' | transloco }} } @else { {{ 'blocks.empty' | transloco }} }
+        </div>
       }
-    </select>
-  </form>
+    </section>
 
-  @if (isLoading$ | async) {
-    <p>{{ 'common.loading' | transloco }}</p>
-  } @else {
-    <table class="das-blocks-list__table">
-      <thead>
-        <tr>
-          <th>{{ 'blocks.blockColumn' | transloco }}</th>
-          <th>{{ 'blocks.area' | transloco }}</th>
-          <th>{{ 'blocks.status' | transloco }}</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (block of items$ | async; track block.id) {
-          <tr>
-            <td>
-              <div class="das-blocks-list__block-cell">
-                <span class="das-blocks-list__block-name" [class.das-blocks-list__block-name--empty]="!block.name">
-                  {{ block.name ?? ('blocks.unnamed' | transloco) }}
-                </span>
-                <span class="das-blocks-list__block-code">{{ block.code }}</span>
-              </div>
-            </td>
-            <td>{{ block.areaM2 }} m²</td>
-            <td><span [class]="statusBadgeClass(block.status)">{{ 'status.block.' + block.status | transloco }}</span></td>
-            <td><a [routerLink]="['/blocks', block.id]">{{ 'common.edit' | transloco }}</a></td>
-          </tr>
-        } @empty {
-          <tr><td colspan="4">{{ 'common.noResults' | transloco }}</td></tr>
-        }
-      </tbody>
-    </table>
-  }
+    <aside class="blocks__side">
+      <section class="das-card panel">
+        <div class="panel__title">{{ 'blocks.distribution' | transloco }}</div>
+        <div class="dist">
+          @for (d of distribution(); track d.status) {
+            <span class="dist__seg" [style.width.%]="d.percent" [style.background]="d.color"></span>
+          }
+        </div>
+        <div class="dist__legend">
+          @for (d of distribution(); track d.status) {
+            <div class="dist__row">
+              <span class="dist__dot" [style.background]="d.color"></span>
+              <span class="dist__label">{{ statusLabelKey(d.status) | transloco }}</span>
+              <span class="dist__count">{{ d.count }}</span>
+            </div>
+          }
+        </div>
+      </section>
+
+      <section class="das-card panel">
+        <div class="panel__title">{{ 'blocks.globalProgress' | transloco }}</div>
+        <div class="prog__head"><span>{{ 'status.block.approved' | transloco }}</span><span>{{ globalProgress() }} %</span></div>
+        <div class="prog__track"><div class="prog__fill" [style.width.%]="globalProgress()"></div></div>
+        <div class="prog__meta">{{ approvedCount() }} / {{ totalCount() }}</div>
+      </section>
+    </aside>
+  </div>
 </div>

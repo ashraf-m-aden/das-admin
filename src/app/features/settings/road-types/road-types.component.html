@@ -1,57 +1,31 @@
-<div class="das-road-types">
-  <section class="das-card das-road-types__form-panel">
-    <h2>{{ 'settings.addRoadType' | transloco }}</h2>
+<section class="das-card panel">
+  <div class="panel__head">
+    <span class="panel__title">{{ 'settings.roadTypes' | transloco }}</span>
+  </div>
 
-    <form class="das-road-types__form" [formGroup]="form" (ngSubmit)="submit()">
-      <label class="das-road-types__field">
-        <span>{{ 'settings.roadTypeCode' | transloco }}</span>
-        <select formControlName="code">
-          @for (code of codes; track code) {
-          <option [value]="code">{{ code }}</option>
-          }
-        </select>
-      </label>
+  <form class="rt-form" [formGroup]="form" (ngSubmit)="submit()">
+    <select formControlName="code">
+      @for (c of codes; track c) { <option [value]="c">{{ ('settings.roadCode.' + c) | transloco }}</option> }
+    </select>
+    <input type="text" formControlName="labelFr" [attr.placeholder]="'settings.label' | transloco" />
+    <label class="rt-form__point"><input type="checkbox" formControlName="isPoint" />{{ 'settings.isPoint' | transloco }}</label>
+    <button type="submit" class="btn btn--primary" [disabled]="(isSaving$ | async)"><i class="ti ti-plus" aria-hidden="true"></i>{{ 'common.add' | transloco }}</button>
+  </form>
 
-      <label class="das-road-types__field">
-        <span>{{ 'settings.roadTypeLabel' | transloco }}</span>
-        <input type="text" formControlName="labelFr" />
-      </label>
+  @if (errorMessageKey$ | async; as err) { <div class="panel__error">{{ err | transloco }}</div> }
 
-      <label class="das-road-types__checkbox">
-        <input type="checkbox" formControlName="isPoint" />
-        {{ 'settings.roadTypeIsPoint' | transloco }}
-      </label>
-
-      @if (errorMessageKey$ | async; as errorKey) {
-      <p class="das-road-types__error">{{ errorKey | transloco }}</p>
-      }
-
-      <button type="submit" [disabled]="(isSaving$ | async) || form.invalid">
-        {{ (isSaving$ | async) ? ('common.loading' | transloco) : ('common.save' | transloco) }}
-      </button>
-    </form>
-  </section>
-
-  @if (isLoading$ | async) {
-  <p>{{ 'common.loading' | transloco }}</p>
-  } @else {
-  <table class="das-road-types__table">
-    <thead>
-      <tr>
-        <th>{{ 'settings.roadTypeCode' | transloco }}</th>
-        <th>{{ 'settings.roadTypeLabel' | transloco }}</th>
-        <th>{{ 'settings.roadTypeIsPoint' | transloco }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (rt of items$ | async; track rt.id) {
-      <tr>
-        <td>{{ rt.code }}</td>
-        <td>{{ rt.labelFr }}</td>
-        <td>{{ (rt.isPoint ? 'common.yes' : 'common.no') | transloco }}</td>
-      </tr>
-      }
-    </tbody>
-  </table>
-  }
-</div>
+  <div class="rt">
+    <div class="rt__head"><span>{{ 'settings.label' | transloco }}</span><span>{{ 'settings.code' | transloco }}</span><span>{{ 'settings.isPoint' | transloco }}</span></div>
+    @for (t of (items$ | async) ?? []; track t.id) {
+      <div class="rt__row">
+        <span class="rt__label">{{ t.labelFr }}</span>
+        <span class="rt__code">{{ t.code }}</span>
+        <span>@if (t.isPoint) { <i class="ti ti-point" aria-hidden="true"></i> } @else { <i class="ti ti-line" aria-hidden="true"></i> }</span>
+      </div>
+    } @empty {
+      <div class="rt__empty">
+        @if (isLoading$ | async) { {{ 'common.loading' | transloco }} } @else { {{ 'settings.emptyRoadTypes' | transloco }} }
+      </div>
+    }
+  </div>
+</section>

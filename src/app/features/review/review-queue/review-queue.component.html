@@ -1,94 +1,80 @@
-<div class="das-review-queue">
-  <h1>{{ 'review.title' | transloco }}</h1>
+<das-page-header [eyebrow]="'review.eyebrow' | transloco" [title]="'nav.review' | transloco">
+  <div actions class="rev-filters">
+    <button type="button" class="chip" [class.chip--active]="typeFilter() === null" (click)="setTypeFilter(null)">{{ 'review.all' | transloco }}</button>
+    <button type="button" class="chip" [class.chip--active]="typeFilter() === 'property'" (click)="setTypeFilter('property')">{{ 'review.properties' | transloco }}</button>
+    <button type="button" class="chip" [class.chip--active]="typeFilter() === 'street'" (click)="setTypeFilter('street')">{{ 'review.streets' | transloco }}</button>
+  </div>
+</das-page-header>
 
-  <form class="das-review-queue__filters" [formGroup]="filterForm">
-    <select formControlName="submissionType">
-      <option [ngValue]="null">{{ 'review.allTypes' | transloco }}</option>
-      <option value="property">{{ 'review.typeProperty' | transloco }}</option>
-      <option value="street">{{ 'review.typeStreet' | transloco }}</option>
-    </select>
-  </form>
+<div class="review">
+  @if (errorMessageKey$ | async; as err) {
+    <div class="review__error">{{ err | transloco }}</div>
+  }
 
-  @if (isLoading$ | async) {
-  <p>{{ 'common.loading' | transloco }}</p>
-  } @else {
-  <div class="das-review-queue__list">
-    @for (item of items$ | async; track item.id) {
-    <div class="das-card das-review-item">
-      <div class="das-review-item__header">
-        <div>
-          <span class="das-badge">{{ ('review.type' + (item.submissionType === 'property' ? 'Property' : 'Street')) |
-            transloco }}</span>
-          <h3>{{ item.code }}</h3>
-          <p class="das-review-item__meta">
-            {{ item.submittedByName }} — {{ item.submittedAt | dasDate: 'long' }}
-          </p>
-        </div>
-        @if (item.gpsAccuracy !== null) {
-        <span class="das-review-item__gps" [class.das-review-item__gps--bad]="item.gpsAccuracy > 10">
-          GPS : ±{{ item.gpsAccuracy }} m
-        </span>
-        }
-      </div>
-
-      @if (item.notes) {
-      <p class="das-review-item__notes">{{ item.notes }}</p>
-      }
-
-      <div class="das-review-item__photos">
-        @for (photo of item.photos; track photo.id) {
-        <div class="das-review-item__photo-placeholder">
-          <span>{{ photo.photoType }}</span>
-        </div>
-        }
-      </div>
-
-      @if (openRejectPanelId() === item.id) {
-      <div class="das-review-item__reject-panel" [formGroup]="rejectForm">
-        <label>
-          <input type="radio" value="photo_retake" formControlName="preset" (change)="onPresetChange('photo_retake')" />
-          {{ 'review.requestPhotoRetake' | transloco }}
-        </label>
-        <label>
-          <input type="radio" value="gps_recheck" formControlName="preset" (change)="onPresetChange('gps_recheck')" />
-          {{ 'review.requestGpsRecheck' | transloco }}
-        </label>
-        <label>
-          <input type="radio" value="other" formControlName="preset" (change)="onPresetChange('other')" />
-          {{ 'review.otherReason' | transloco }}
-        </label>
-
-        <textarea formControlName="reason" rows="3" [placeholder]="'review.rejectionReason' | transloco"></textarea>
-
-        @if (decisionErrorMessageKey$ | async; as errorKey) {
-        <p class="das-review-item__error">{{ errorKey | transloco }}</p>
-        }
-
-        <div class="das-review-item__reject-actions">
-          <button type="button" (click)="closeRejectPanel()">{{ 'common.cancel' | transloco }}</button>
-          <button type="button" class="das-review-item__confirm-reject"
-            [disabled]="(isDeciding$(item.id) | async) || !rejectForm.value.reason?.trim()"
-            (click)="confirmReject(item)">
-            {{ 'review.reject' | transloco }}
-          </button>
-        </div>
-      </div>
-      } @else {
-      <div class="das-review-item__actions">
-        <button type="button" class="das-review-item__approve" [disabled]="isDeciding$(item.id) | async"
-          (click)="approve(item)">
-          {{ 'review.approve' | transloco }}
+  <div class="review__grid">
+    <section class="das-card review__queue">
+      <div class="queue__head">{{ 'review.queue' | transloco }}</div>
+      @for (it of items(); track it.id) {
+        <button type="button" class="queue__item" [class.queue__item--active]="selected()?.id === it.id" (click)="select(it)">
+          <div class="queue__top">
+            <span class="queue__code">{{ it.code }}</span>
+            <span class="queue__dot" [style.background]="statusColor(it.status)"></span>
+          </div>
+          <div class="queue__meta">{{ it.submittedByName }} · {{ it.submittedAt | dasDate }}</div>
         </button>
-        <button type="button" class="das-review-item__reject" [disabled]="isDeciding$(item.id) | async"
-          (click)="openRejectPanel(item)">
-          {{ 'review.reject' | transloco }}
-        </button>
-      </div>
+      } @empty {
+        <div class="review__empty">
+          @if (isLoading$ | async) { {{ 'common.loading' | transloco }} } @else { {{ 'review.empty' | transloco }} }
+        </div>
       }
-    </div>
-    } @empty {
-    <p>{{ 'review.emptyQueue' | transloco }}</p>
+    </section>
+
+    @if (selected(); as sel) {
+      <section class="das-card review__detail">
+        <div class="detail__head">
+          <div>
+            <div class="detail__code">{{ sel.code }}</div>
+            <div class="detail__sub">{{ ('review.type.' + sel.submissionType) | transloco }} · {{ sel.submittedByName }}</div>
+          </div>
+          <span class="detail__status" [style.color]="statusColor(sel.status)">
+            <span class="detail__status-dot" [style.background]="statusColor(sel.status)"></span>
+            {{ statusLabelKey(sel.status) | transloco }}
+          </span>
+        </div>
+
+        <div class="detail__facts">
+          <div class="fact"><span class="fact__label">{{ 'review.gps' | transloco }}</span><span class="fact__val">{{ sel.gpsAccuracy !== null ? (sel.gpsAccuracy + ' m') : '—' }}</span></div>
+          <div class="fact"><span class="fact__label">{{ 'review.photos' | transloco }}</span><span class="fact__val">{{ sel.photos.length }}</span></div>
+        </div>
+
+        @if (sel.notes) {
+          <div class="detail__notes">{{ sel.notes }}</div>
+        }
+
+        @if (rejectOpen()) {
+          <form class="reject" [formGroup]="rejectForm" (ngSubmit)="confirmReject(sel)">
+            <select formControlName="preset" class="reject__preset">
+              @for (p of presets; track p) {
+                <option [value]="p">{{ ('review.preset.' + p) | transloco }}</option>
+              }
+            </select>
+            <input type="text" formControlName="reason" [attr.placeholder]="'review.rejectReason' | transloco" />
+            <div class="reject__actions">
+              <button type="submit" class="btn btn--danger">{{ 'review.confirmReject' | transloco }}</button>
+              <button type="button" class="btn btn--ghost" (click)="cancelReject()">{{ 'common.cancel' | transloco }}</button>
+            </div>
+          </form>
+        } @else {
+          <div class="detail__actions">
+            <button type="button" class="btn btn--approve" (click)="approve(sel)" [disabled]="(isDeciding$(sel.id) | async)">
+              <i class="ti ti-check" aria-hidden="true"></i>{{ 'review.approve' | transloco }}
+            </button>
+            <button type="button" class="btn btn--danger-ghost" (click)="openReject()">
+              <i class="ti ti-rotate" aria-hidden="true"></i>{{ 'review.redo' | transloco }}
+            </button>
+          </div>
+        }
+      </section>
     }
   </div>
-  }
 </div>

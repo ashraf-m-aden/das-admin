@@ -1,0 +1,148 @@
+@use "styles/variables" as v;
+@use "styles/mixins" as m;
+
+.rail {
+  width: v.$sidebar-width;
+  flex-shrink: 0;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  background: var(--color-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+  padding: v.$space-3 v.$space-2;
+  transition: width v.$transition-base;
+
+  &--collapsed { width: v.$sidebar-width-collapsed; }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: v.$space-2;
+    padding: 0 v.$space-1;
+    margin-bottom: v.$space-3;
+  }
+
+  &__brand {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border-radius: v.$radius-md;
+    background: var(--color-on-primary);
+    color: var(--color-primary);
+    font-weight: v.$font-weight-medium;
+    font-size: v.$font-size-xs;
+    letter-spacing: 0.4px;
+    @include m.flex-center;
+    &:hover { text-decoration: none; }
+  }
+
+  &__wordmark {
+    flex: 1;
+    min-width: 0;
+    color: var(--color-on-primary);
+    font-weight: v.$font-weight-semibold;
+    font-size: v.$font-size-base;
+  }
+
+  &__toggle {
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    border: none;
+    background: transparent;
+    color: #c7d2fe;
+    font-size: 18px;
+    border-radius: v.$radius-sm;
+    @include m.flex-center;
+    cursor: pointer;
+    transition: background v.$transition-fast, color v.$transition-fast;
+    &:hover { background: rgb(255 255 255 / 10%); color: var(--color-on-primary); }
+  }
+
+  &__nav,
+  &__bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    width: 100%;
+  }
+
+  &__item {
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    gap: v.$space-3;
+    padding: 0 v.$space-3;
+    border: none;
+    background: transparent;
+    border-radius: v.$radius-md;
+    color: #c7d2fe;
+    font-family: inherit;
+    font-size: v.$font-size-sm;
+    text-align: left;
+    cursor: pointer;
+    transition: background v.$transition-fast, color v.$transition-fast;
+
+    &:hover { background: rgb(255 255 255 / 10%); color: var(--color-on-primary); text-decoration: none; }
+    &--active { background: var(--color-accent); color: var(--color-on-primary); }
+  }
+
+  &__icon {
+    position: relative;
+    width: 26px;
+    flex-shrink: 0;
+    font-size: 19px;
+    @include m.flex-center;
+  }
+
+  &__label {
+    @include m.truncate;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__badge {
+    position: absolute;
+    top: -5px;
+    right: -6px;
+    min-width: 15px;
+    height: 15px;
+    padding: 0 4px;
+    border-radius: v.$radius-full;
+    background: var(--color-danger);
+    color: var(--color-on-primary);
+    font-size: 9.5px;
+    font-weight: v.$font-weight-medium;
+    line-height: 1;
+    @include m.flex-center;
+  }
+
+  &__avatar {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    border-radius: v.$radius-full;
+    background: var(--das-indigo-100);
+    color: var(--das-indigo-700);
+    font-size: 10px;
+    font-weight: v.$font-weight-medium;
+    @include m.flex-center;
+  }
+
+  &__user { cursor: default; &:hover { background: transparent; color: #c7d2fe; } }
+
+  &__spacer { margin-top: auto; }
+
+  &--collapsed {
+    .rail__head { flex-direction: column; gap: v.$space-2; padding: 0; }
+    .rail__wordmark { display: none; }
+    .rail__item { width: 42px; height: 37px; padding: 0; gap: 0; justify-content: center; }
+    .rail__label { display: none; }
+    .rail__icon { width: auto; }
+  }
+}

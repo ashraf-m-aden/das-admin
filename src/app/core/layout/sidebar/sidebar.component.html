@@ -1,0 +1,76 @@
+<aside class="rail" [class.rail--collapsed]="collapsed()">
+  <div class="rail__head">
+    <a class="rail__brand" routerLink="/dashboard" aria-label="D.A.S — accueil">DAS</a>
+    <span class="rail__wordmark">D.A.S</span>
+    <button
+      type="button"
+      class="rail__toggle"
+      (click)="toggle()"
+      [attr.aria-label]="collapsed() ? 'Déplier le menu' : 'Replier le menu'"
+    >
+      <i class="ti" [class.ti-chevrons-right]="collapsed()" [class.ti-chevrons-left]="!collapsed()" aria-hidden="true"></i>
+    </button>
+  </div>
+
+  <nav class="rail__nav" aria-label="Navigation principale">
+    @for (item of navItems; track item.path) {
+      @if (isVisible(item, (roles$ | async) ?? [])) {
+<a
+          class="rail__item"
+          [routerLink]="item.path"
+          routerLinkActive="rail__item--active"
+          [attr.title]="collapsed() ? (item.labelKey | transloco) : null"
+        >
+          <span class="rail__icon"><i class="ti {{ item.icon }}" aria-hidden="true"></i></span>
+          <span class="rail__label">{{ item.labelKey | transloco }}</span>
+        </a>
+      }
+    }
+  </nav>
+
+  <div class="rail__spacer"></div>
+
+  <div class="rail__bottom">
+<a
+      class="rail__item"
+      routerLink="/notifications"
+      routerLinkActive="rail__item--active"
+      [attr.title]="collapsed() ? ('nav.notifications' | transloco) : null"
+    >
+      <span class="rail__icon">
+        <i class="ti ti-bell" aria-hidden="true"></i>
+        @if ((unreadCount$ | async); as count) {
+          @if (count > 0) {
+            <span class="rail__badge">{{ count }}</span>
+          }
+        }
+      </span>
+      <span class="rail__label">{{ 'nav.notifications' | transloco }}</span>
+    </a>
+
+    <button
+      type="button"
+      class="rail__item"
+      (click)="toggleLang()"
+      [attr.title]="collapsed() ? langLabel(activeLang()) : null"
+    >
+      <span class="rail__icon"><i class="ti ti-language" aria-hidden="true"></i></span>
+      <span class="rail__label">{{ langLabel(activeLang()) }}</span>
+    </button>
+
+    <div class="rail__item rail__user" [attr.title]="collapsed() ? (fullName$ | async) : null">
+      <span class="rail__avatar">{{ initials$ | async }}</span>
+      <span class="rail__label">{{ fullName$ | async }}</span>
+    </div>
+
+    <button
+      type="button"
+      class="rail__item"
+      (click)="logout()"
+      [attr.title]="collapsed() ? ('nav.logout' | transloco) : null"
+    >
+      <span class="rail__icon"><i class="ti ti-logout" aria-hidden="true"></i></span>
+      <span class="rail__label">{{ 'nav.logout' | transloco }}</span>
+    </button>
+  </div>
+</aside>

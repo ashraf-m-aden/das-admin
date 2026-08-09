@@ -1,14 +1,16 @@
-<div class="das-settings-shell">
-  <h1>{{ 'settings.title' | transloco }}</h1>
+<das-page-header [eyebrow]="'settings.eyebrow' | transloco" [title]="'nav.settings' | transloco" />
 
-  <nav class="das-settings-shell__tabs">
-    <a routerLink="road-types" routerLinkActive="das-settings-shell__tab--active" class="das-settings-shell__tab">
-      {{ 'settings.roadTypes' | transloco }}
+<div class="settings">
+  <nav class="settings__nav">
+    <a class="settings__link" routerLink="road-types" routerLinkActive="settings__link--active">
+      <i class="ti ti-signpost" aria-hidden="true"></i>{{ 'settings.roadTypes' | transloco }}
     </a>
-    <a routerLink="map-import" routerLinkActive="das-settings-shell__tab--active" class="das-settings-shell__tab">
-      {{ 'settings.mapImport' | transloco }}
+    <a class="settings__link" routerLink="map-import" routerLinkActive="settings__link--active">
+      <i class="ti ti-database-import" aria-hidden="true"></i>{{ 'settings.mapImport' | transloco }}
     </a>
   </nav>
 
-  <router-outlet />
+  <div class="settings__content">
+    <router-outlet />
+  </div>
 </div>

@@ -1,71 +1,68 @@
-<div class="das-street-naming">
-  <form class="das-street-naming__filters" [formGroup]="filterForm">
-    <input type="text" formControlName="search" [placeholder]="'addressing.searchPlaceholder' | transloco" />
-    <label class="das-street-naming__toggle">
-      <input type="checkbox" formControlName="onlyUnnamed" />
-      {{ 'addressing.onlyUnnamed' | transloco }}
+<div class="naming">
+  <div class="naming__filters" [formGroup]="filterForm">
+    <label class="naming__search">
+      <i class="ti ti-search" aria-hidden="true"></i>
+      <input type="text" formControlName="search" [attr.placeholder]="'common.search' | transloco" />
     </label>
-  </form>
+    <label class="naming__toggle">
+      <input type="checkbox" formControlName="onlyUnnamed" />
+      <span>{{ 'addressing.onlyUnnamed' | transloco }}</span>
+    </label>
+  </div>
 
-  @if (isLoading$ | async) {
-    <p>{{ 'common.loading' | transloco }}</p>
-  } @else {
-    @for (street of streets$ | async; track street.id) {
-      <div class="das-card das-street-naming__item">
-        <div class="das-street-naming__header">
-          <span class="das-street-naming__name" [class.das-street-naming__name--empty]="!street.name">
-            {{ street.name ?? ('addressing.unnamedStreet' | transloco) }}
-          </span>
-          <span class="das-street-naming__code">{{ street.code }} · {{ street.type }}</span>
+  @if (errorMessageKey$ | async; as err) {
+    <div class="naming__error">{{ err | transloco }}</div>
+  }
+
+  @for (s of (streets$ | async) ?? []; track s.id) {
+    <section class="das-card item">
+      <div class="item__head">
+        <div class="item__id">
+          <span class="item__code">{{ s.code }}</span>
+          @if (s.name) { <span class="item__name">{{ s.name }}</span> }
         </div>
-
-        @if (street.pendingSuggestion; as suggestion) {
-          <div class="das-street-naming__suggestion">
-            <p>
-              <strong>"{{ suggestion.suggestedName }}"</strong>
-              — {{ 'addressing.proposedBy' | transloco }} {{ suggestion.proposedByName }}, {{ suggestion.proposedAt | dasDate: 'long' }}
-            </p>
-            @if (suggestion.comment) {
-              <p class="das-street-naming__comment">{{ suggestion.comment }}</p>
-            }
-
-            @if (errorMessageKey$ | async; as errorKey) {
-              <p class="das-street-naming__error">{{ errorKey | transloco }}</p>
-            }
-
-            @if (openRejectId() === street.id) {
-              <div class="das-street-naming__reject-panel" [formGroup]="rejectFormFor(street.id)">
-                <textarea formControlName="reason" rows="2" [placeholder]="'addressing.rejectionReasonPlaceholder' | transloco"></textarea>
-                <div class="das-street-naming__reject-actions">
-                  <button type="button" (click)="closeReject()">{{ 'common.cancel' | transloco }}</button>
-                  <button type="button" class="das-street-naming__confirm-reject" [disabled]="isSaving$(street.id) | async" (click)="confirmReject(street)">
-                    {{ 'addressing.reject' | transloco }}
-                  </button>
-                </div>
-              </div>
-            } @else {
-              <div class="das-street-naming__suggestion-actions">
-                <button type="button" class="das-street-naming__approve" [disabled]="isSaving$(street.id) | async" (click)="approve(street)">
-                  {{ 'addressing.approve' | transloco }}
-                </button>
-                <button type="button" [disabled]="isSaving$(street.id) | async" (click)="openReject(street.id)">
-                  {{ 'addressing.reject' | transloco }}
-                </button>
-              </div>
-            }
-          </div>
-        } @else if (!street.name) {
-          <div class="das-street-naming__direct-form" [formGroup]="nameFormFor(street.id)">
-            <p class="das-street-naming__no-suggestion">{{ 'addressing.noSuggestion' | transloco }}</p>
-            <input type="text" formControlName="name" [placeholder]="'addressing.officialName' | transloco" />
-            <button type="button" [disabled]="isSaving$(street.id) | async" (click)="submitDirectName(street)">
-              {{ 'addressing.confirmName' | transloco }}
-            </button>
-          </div>
-        }
+        <span class="item__type">{{ s.type }}</span>
       </div>
-    } @empty {
-      <p>{{ 'addressing.noStreetsToName' | transloco }}</p>
-    }
+
+      @if (s.pendingSuggestion; as sug) {
+        <div class="suggestion">
+          <div class="suggestion__main">
+            <span class="suggestion__icon"><i class="ti ti-bulb" aria-hidden="true"></i></span>
+            <div class="suggestion__text">
+              <div class="suggestion__name">{{ sug.suggestedName }}</div>
+              <div class="suggestion__meta">{{ 'addressing.proposedBy' | transloco: { name: sug.proposedByName } }} · {{ sug.proposedAt | dasDate }}</div>
+            </div>
+          </div>
+
+          @if (openRejectId() === s.id) {
+            <form class="reject" [formGroup]="rejectFormFor(s.id)" (ngSubmit)="confirmReject(s)">
+              <input type="text" formControlName="reason" [attr.placeholder]="'addressing.rejectReason' | transloco" />
+              <button type="submit" class="btn btn--danger">{{ 'addressing.confirmReject' | transloco }}</button>
+              <button type="button" class="btn btn--ghost" (click)="closeReject()">{{ 'common.cancel' | transloco }}</button>
+            </form>
+          } @else {
+            <div class="suggestion__actions">
+              <button type="button" class="btn btn--approve" (click)="approve(s)" [disabled]="(isSaving$(s.id) | async)">
+                <i class="ti ti-check" aria-hidden="true"></i>{{ 'addressing.approve' | transloco }}
+              </button>
+              <button type="button" class="btn btn--ghost" (click)="openReject(s.id)">
+                <i class="ti ti-x" aria-hidden="true"></i>{{ 'addressing.reject' | transloco }}
+              </button>
+            </div>
+          }
+        </div>
+      } @else {
+        <form class="direct" [formGroup]="nameFormFor(s.id)" (ngSubmit)="submitDirectName(s)">
+          <input type="text" formControlName="name" [attr.placeholder]="'addressing.namePlaceholder' | transloco" />
+          <button type="submit" class="btn btn--primary" [disabled]="(isSaving$(s.id) | async)">
+            @if (isSaving$(s.id) | async) { {{ 'common.saving' | transloco }} } @else { {{ 'addressing.assignName' | transloco }} }
+          </button>
+        </form>
+      }
+    </section>
+  } @empty {
+    <div class="naming__empty">
+      @if (isLoading$ | async) { {{ 'common.loading' | transloco }} } @else { {{ 'addressing.emptyStreets' | transloco }} }
+    </div>
   }
 </div>

@@ -1,14 +1,15 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
 import { ClientsFacade } from '../../../core/clients/store/clients.facade';
+import { PageHeaderComponent } from '../../../core/layout/page-header/page-header.component';
 
 @Component({
   selector: 'das-client-form',
   standalone: true,
-  imports: [AsyncPipe, ReactiveFormsModule, TranslocoModule],
+  imports: [AsyncPipe, ReactiveFormsModule, TranslocoModule, RouterLink, PageHeaderComponent],
   templateUrl: './client-form.component.html',
   styleUrl: './client-form.component.scss',
 })

@@ -1,49 +1,57 @@
-<div class="das-property-numbering">
-  @if (isLoading$ | async) {
-    <p>{{ 'common.loading' | transloco }}</p>
-  } @else {
-    <table class="das-property-numbering__table">
-      <thead>
-        <tr>
-          <th>{{ 'blocks.blockColumn' | transloco }}</th>
-          <th>{{ 'addressing.lot' | transloco }}</th>
-          <th>{{ 'addressing.houseNumber' | transloco }}</th>
-          <th>{{ 'addressing.formattedAddress' | transloco }}</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (property of properties$ | async; track property.id) {
-          <tr [formGroup]="formFor(property.id)">
-            <td>
-              <div class="das-property-numbering__block-cell">
-                <span class="das-property-numbering__block-name" [class.das-property-numbering__block-name--empty]="!property.blockName">
-                  {{ property.blockName ?? ('addressing.unnamedBlock' | transloco) }}
-                </span>
-                <span class="das-property-numbering__block-code">{{ property.blockCode }}</span>
-              </div>
-            </td>
-            <td>{{ property.lotCode ?? '—' }}</td>
-            <td><input type="text" formControlName="houseNumber" /></td>
-            <td class="das-property-numbering__address">{{ property.formattedAddress }}</td>
-            <td>
-              <button
-                type="button"
-                [disabled]="isSaving$(property.id) | async"
-                (click)="save(property)"
-              >
-                {{ (isSaving$(property.id) | async) ? '...' : ('common.save' | transloco) }}
-              </button>
-            </td>
-          </tr>
-        } @empty {
-          <tr><td colspan="5">{{ 'addressing.noPropertiesToNumber' | transloco }}</td></tr>
-        }
-      </tbody>
-    </table>
+<div class="numbering">
+  @if (errorMessageKey$ | async; as err) {
+    <div class="numbering__error">{{ err | transloco }}</div>
+  }
 
-    @if (errorMessageKey$ | async; as errorKey) {
-      <p class="das-property-numbering__error">{{ errorKey | transloco }}</p>
-    }
+  @for (p of (properties$ | async) ?? []; track p.id) {
+    <section class="das-card item">
+      <div class="item__row">
+        <div class="item__info">
+          <div class="item__address">{{ p.formattedAddress }}</div>
+          <div class="item__meta">
+            <span class="item__code">{{ p.blockCode }}</span>
+            @if (p.lotCode) { <span class="item__lot">· {{ 'addressing.lot' | transloco }} {{ p.lotCode }}</span> }
+          </div>
+        </div>
+
+        <form class="num" [formGroup]="formFor(p.id)" (ngSubmit)="save(p)">
+          <input type="text" formControlName="houseNumber" [attr.placeholder]="'addressing.houseNumberPlaceholder' | transloco" />
+          <button type="submit" class="btn btn--primary" [disabled]="(isSaving$(p.id) | async)">
+            @if (isSaving$(p.id) | async) { {{ 'common.saving' | transloco }} } @else { {{ 'addressing.saveNumber' | transloco }} }
+          </button>
+        </form>
+
+        <button type="button" class="item__toggle" (click)="toggleDetails(p.id)" [attr.aria-expanded]="expandedId() === p.id" [attr.aria-label]="'addressing.details' | transloco">
+          <i class="ti" [class.ti-chevron-down]="expandedId() !== p.id" [class.ti-chevron-up]="expandedId() === p.id" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      @if (expandedId() === p.id) {
+        <div class="hierarchy">
+          <div class="hierarchy__cell">
+            <span class="hierarchy__label">{{ 'addressing.region' | transloco }}</span>
+            <span class="hierarchy__value">{{ p.adminHierarchy.region }}</span>
+          </div>
+          <div class="hierarchy__cell">
+            <span class="hierarchy__label">{{ 'addressing.commune' | transloco }}</span>
+            <span class="hierarchy__value">{{ p.adminHierarchy.commune }}</span>
+          </div>
+          @if (p.adminHierarchy.arrondissement) {
+            <div class="hierarchy__cell">
+              <span class="hierarchy__label">{{ 'addressing.arrondissement' | transloco }}</span>
+              <span class="hierarchy__value">{{ p.adminHierarchy.arrondissement }}</span>
+            </div>
+          }
+          <div class="hierarchy__cell">
+            <span class="hierarchy__label">{{ 'addressing.quartier' | transloco }}</span>
+            <span class="hierarchy__value">{{ p.adminHierarchy.quartier }}</span>
+          </div>
+        </div>
+      }
+    </section>
+  } @empty {
+    <div class="numbering__empty">
+      @if (isLoading$ | async) { {{ 'common.loading' | transloco }} } @else { {{ 'addressing.emptyProperties' | transloco }} }
+    </div>
   }
 </div>

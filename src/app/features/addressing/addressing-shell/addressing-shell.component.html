@@ -1,18 +1,10 @@
-<div class="das-addressing-shell">
-  <h1>{{ 'addressing.title' | transloco }}</h1>
+<das-page-header [eyebrow]="'addressing.eyebrow' | transloco" [title]="'addressing.title' | transloco" />
 
-  <nav class="das-addressing-shell__tabs">
-    <a routerLink="block-naming" routerLinkActive="das-addressing-shell__tab--active" class="das-addressing-shell__tab">
-      {{ 'addressing.blockNaming' | transloco }}
-    </a>
-    <a routerLink="street-naming" routerLinkActive="das-addressing-shell__tab--active"
-      class="das-addressing-shell__tab">
-      {{ 'addressing.streetNaming' | transloco }}
-    </a>
-    <a routerLink="property-numbering" routerLinkActive="das-addressing-shell__tab--active"
-      class="das-addressing-shell__tab">
-      {{ 'addressing.propertyNumbering' | transloco }}
-    </a>
+<div class="addr">
+  <nav class="addr__tabs">
+    <a class="addr__tab" routerLink="block-naming" routerLinkActive="addr__tab--active">{{ 'addressing.blockNaming' | transloco }}</a>
+    <a class="addr__tab" routerLink="street-naming" routerLinkActive="addr__tab--active">{{ 'addressing.streetNaming' | transloco }}</a>
+    <a class="addr__tab" routerLink="property-numbering" routerLinkActive="addr__tab--active">{{ 'addressing.propertyNumbering' | transloco }}</a>
   </nav>
 
   <router-outlet />

@@ -1,186 +1,69 @@
 @use "styles/variables" as v;
+@use "styles/mixins" as m;
 
-.das-review-queue {
-  padding: v.$space-6;
-  max-width: 720px;
-  margin: 0 auto;
+.rev-filters { display: flex; gap: v.$space-2; }
 
-  &__filters {
-    margin-bottom: v.$space-4;
-
-    select {
-      padding: v.$space-2 v.$space-3;
-      border: 1px solid var(--color-border);
-      border-radius: v.$radius-sm;
-      font-size: v.$font-size-sm;
-    }
-  }
-
-  &__list {
-    display: flex;
-    flex-direction: column;
-    gap: v.$space-4;
-  }
+.chip {
+  height: 28px; padding: 0 v.$space-3;
+  border: 1px solid var(--color-border); border-radius: v.$radius-full;
+  background: var(--color-surface); color: var(--color-text-secondary);
+  font-size: v.$font-size-xs; cursor: pointer;
+  &--active { background: var(--color-accent); color: var(--color-on-accent); border-color: var(--color-accent); }
 }
 
-.das-review-item {
-  padding: v.$space-5;
+.review {
+  padding: v.$space-4 v.$space-5;
 
-  &__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: v.$space-3;
+  &__error { margin-bottom: v.$space-3; padding: v.$space-3 v.$space-4; background: var(--color-danger-bg); color: var(--color-danger); border-radius: v.$radius-md; font-size: v.$font-size-sm; }
+  &__grid { display: grid; grid-template-columns: 1fr; gap: v.$space-3; @include m.respond-above(lg) { grid-template-columns: 1fr 1.3fr; } }
+  &__queue { padding: 0; overflow: hidden; align-self: start; }
+  &__detail { padding: v.$space-4; }
+  &__empty { padding: v.$space-8; text-align: center; color: var(--color-text-muted); }
+}
 
-    h3 {
-      margin: v.$space-1 0 0;
-      font-size: v.$font-size-base;
-    }
+.queue {
+  &__head { padding: v.$space-2 v.$space-3; font-size: v.$font-size-xs; color: var(--color-text-muted); border-bottom: 1px solid var(--color-border); }
+  &__item {
+    display: block; width: 100%; text-align: left;
+    padding: v.$space-3; border: none; background: transparent;
+    border-bottom: 1px solid var(--color-surface-sunken); cursor: pointer;
+    &:hover { background: var(--color-surface-alt); }
+    &--active { background: var(--color-info-bg); box-shadow: inset 2px 0 0 var(--color-accent); }
   }
+  &__top { @include m.flex-between; }
+  &__code { font-family: v.$font-family-mono; font-size: v.$font-size-sm; color: var(--color-text-primary); }
+  &__dot { width: 8px; height: 8px; border-radius: 50%; }
+  &__meta { margin-top: 2px; font-size: v.$font-size-xs; color: var(--color-text-muted); }
+}
 
-  &__meta {
-    margin: v.$space-1 0 0;
-    font-size: v.$font-size-xs;
-    color: var(--color-text-muted);
-  }
+.detail {
+  &__head { @include m.flex-between; align-items: flex-start; }
+  &__code { font-size: v.$font-size-lg; font-weight: v.$font-weight-medium; color: var(--color-text-primary); }
+  &__sub { font-size: v.$font-size-xs; color: var(--color-text-muted); margin-top: 2px; }
+  &__status { display: inline-flex; align-items: center; gap: v.$space-1; font-size: v.$font-size-xs; }
+  &__status-dot { width: 7px; height: 7px; border-radius: 50%; }
+  &__facts { display: grid; grid-template-columns: 1fr 1fr; gap: v.$space-2; margin-top: v.$space-4; }
+  &__notes { margin-top: v.$space-3; padding: v.$space-3; background: var(--color-surface-alt); border-radius: v.$radius-sm; font-size: v.$font-size-sm; color: var(--color-text-secondary); }
+  &__actions { display: flex; gap: v.$space-2; margin-top: v.$space-4; }
+}
 
-  &__gps {
-    font-size: v.$font-size-xs;
-    color: var(--color-text-secondary);
-    white-space: nowrap;
+.fact { background: var(--color-surface-alt); border-radius: v.$radius-sm; padding: v.$space-2 v.$space-3;
+  &__label { display: block; font-size: v.$font-size-xs; color: var(--color-text-muted); }
+  &__val { font-size: v.$font-size-sm; color: var(--color-text-primary); }
+}
 
-    &--bad {
-      color: var(--color-danger);
-      font-weight: v.$font-weight-semibold;
-    }
-  }
+.reject { margin-top: v.$space-4; display: flex; flex-direction: column; gap: v.$space-2;
+  &__preset, input { height: 36px; padding: 0 v.$space-3; border: 1px solid var(--color-border); border-radius: v.$radius-sm; font: inherit; font-size: v.$font-size-sm; color: var(--color-text-primary); outline: none; &:focus { border-color: var(--color-accent); } }
+  &__actions { display: flex; gap: v.$space-2; }
+}
 
-  &__notes {
-    margin: v.$space-3 0 0;
-    padding: v.$space-2 v.$space-3;
-    background: var(--color-surface-alt);
-    border-radius: v.$radius-sm;
-    font-size: v.$font-size-sm;
-    color: var(--color-text-secondary);
-  }
-
-  &__photos {
-    display: flex;
-    gap: v.$space-2;
-    margin-top: v.$space-3;
-    flex-wrap: wrap;
-  }
-
-  &__photo-placeholder {
-    width: 90px;
-    height: 70px;
-    border-radius: v.$radius-sm;
-    background: var(--color-surface-sunken);
-    border: 1px dashed var(--color-border-strong);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    color: var(--color-text-muted);
-    text-align: center;
-    padding: v.$space-1;
-  }
-
-  &__actions {
-    display: flex;
-    gap: v.$space-3;
-    margin-top: v.$space-4;
-  }
-
-  &__approve,
-  &__reject {
-    flex: 1;
-    padding: v.$space-2 v.$space-4;
-    border-radius: v.$radius-md;
-    font-size: v.$font-size-sm;
-    font-weight: v.$font-weight-semibold;
-    cursor: pointer;
-    border: none;
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-  }
-
-  &__approve {
-    background: var(--color-success);
-    color: var(--color-on-primary);
-
-    &:hover:not(:disabled) {
-      background: #128a3e;
-    }
-  }
-
-  &__reject {
-    background: var(--color-surface);
-    color: var(--color-danger);
-    border: 1px solid var(--color-danger);
-
-    &:hover:not(:disabled) {
-      background: var(--color-danger-bg);
-    }
-  }
-
-  &__reject-panel {
-    margin-top: v.$space-4;
-    padding: v.$space-4;
-    background: var(--color-surface-alt);
-    border-radius: v.$radius-md;
-    display: flex;
-    flex-direction: column;
-    gap: v.$space-2;
-    font-size: v.$font-size-sm;
-
-    label {
-      display: flex;
-      align-items: center;
-      gap: v.$space-2;
-    }
-
-    textarea {
-      padding: v.$space-2 v.$space-3;
-      border: 1px solid var(--color-border);
-      border-radius: v.$radius-sm;
-      font-family: inherit;
-      font-size: v.$font-size-sm;
-      resize: vertical;
-    }
-  }
-
-  &__error {
-    margin: 0;
-    color: var(--color-danger);
-    font-size: v.$font-size-xs;
-  }
-
-  &__reject-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: v.$space-2;
-
-    button {
-      padding: v.$space-2 v.$space-4;
-      border-radius: v.$radius-sm;
-      font-size: v.$font-size-sm;
-      cursor: pointer;
-    }
-  }
-
-  &__confirm-reject {
-    background: var(--color-danger);
-    color: var(--color-on-primary);
-    border: none;
-    font-weight: v.$font-weight-semibold;
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-  }
+.btn {
+  height: 38px; padding: 0 v.$space-4; flex: 1;
+  display: inline-flex; align-items: center; justify-content: center; gap: v.$space-1;
+  border: none; border-radius: v.$radius-sm; font: inherit; font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; cursor: pointer;
+  &:disabled { opacity: 0.55; cursor: default; }
+  &--approve { background: var(--color-success); color: #fff; }
+  &--danger { background: var(--color-danger); color: #fff; }
+  &--danger-ghost { background: var(--color-surface); border: 1px solid #f0c2c2; color: var(--color-danger); }
+  &--ghost { background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text-secondary); }
 }

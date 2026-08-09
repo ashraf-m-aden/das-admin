@@ -1,60 +1,26 @@
 @use "styles/variables" as v;
 
-.das-client-form {
-  padding: v.$space-6;
-  max-width: 560px;
-  margin: 0 auto;
+.cf-back {
+  display: inline-flex; align-items: center; gap: v.$space-1; height: 32px; padding: 0 v.$space-3;
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: v.$radius-sm;
+  color: var(--color-text-secondary); font-size: v.$font-size-sm; text-decoration: none; &:hover { text-decoration: none; }
+}
 
-  &__form {
-    padding: v.$space-6;
-    display: flex;
-    flex-direction: column;
-    gap: v.$space-4;
+.cf {
+  padding: v.$space-4 v.$space-5;
+  &__form { padding: v.$space-4; max-width: 560px; display: flex; flex-direction: column; gap: v.$space-3; }
+  &__row { display: grid; grid-template-columns: 1fr 1fr; gap: v.$space-3; }
+  &__field { display: flex; flex-direction: column; gap: v.$space-1;
+    label { font-size: v.$font-size-xs; color: var(--color-text-muted); }
+    input, select { height: 36px; padding: 0 v.$space-3; border: 1px solid var(--color-border); border-radius: v.$radius-sm; font: inherit; font-size: v.$font-size-sm; color: var(--color-text-primary); outline: none;
+      &:focus { border-color: var(--color-accent); }
+      &:disabled { background: var(--color-surface-sunken); color: var(--color-text-muted); } }
   }
+  &__error { color: var(--color-danger); font-size: v.$font-size-sm; }
+  &__actions { display: flex; gap: v.$space-2; margin-top: v.$space-2; }
+}
 
-  &__field {
-    display: flex;
-    flex-direction: column;
-    gap: v.$space-1;
-    font-size: v.$font-size-sm;
-    color: var(--color-text-secondary);
-
-    input,
-    select {
-      padding: v.$space-2 v.$space-3;
-      border: 1px solid var(--color-border);
-      border-radius: v.$radius-sm;
-      font-size: v.$font-size-base;
-
-      &:disabled {
-        background: var(--color-surface-sunken);
-        color: var(--color-text-muted);
-      }
-    }
-  }
-
-  &__error {
-    margin: 0;
-    font-size: v.$font-size-sm;
-    color: var(--color-danger);
-  }
-
-  &__submit {
-    padding: v.$space-3;
-    border: none;
-    border-radius: v.$radius-md;
-    background: var(--color-primary);
-    color: var(--color-on-primary);
-    font-weight: v.$font-weight-semibold;
-    cursor: pointer;
-
-    &:hover:not(:disabled) {
-      background: var(--color-primary-hover);
-    }
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-  }
+.btn { height: 36px; padding: 0 v.$space-4; display: inline-flex; align-items: center; border: none; border-radius: v.$radius-sm; font: inherit; font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; cursor: pointer; text-decoration: none; &:disabled { opacity: 0.55; }
+  &--primary { background: var(--color-accent); color: var(--color-on-accent); }
+  &--ghost { background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text-secondary); &:hover { text-decoration: none; } }
 }

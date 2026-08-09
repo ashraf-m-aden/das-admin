@@ -1,7 +1,7 @@
 $space-1: 4px; $space-2: 8px; $space-3: 12px; $space-4: 16px; $space-5: 20px;
 $space-6: 24px; $space-8: 32px; $space-10: 40px; $space-12: 48px; $space-16: 64px; $space-20: 80px;
 
-$font-family-base: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+$font-family-base: "Outfit", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
 $font-family-mono: "JetBrains Mono", "Consolas", monospace;
 
 $font-size-xs: 0.75rem;
@@ -16,12 +16,12 @@ $font-weight-regular: 400; $font-weight-medium: 500; $font-weight-semibold: 600;
 
 $line-height-tight: 1.2; $line-height-base: 1.5; $line-height-relaxed: 1.7;
 
-$radius-sm: 4px; $radius-md: 8px; $radius-lg: 12px; $radius-full: 9999px;
+$radius-sm: 6px; $radius-md: 8px; $radius-lg: 11px; $radius-full: 9999px;
 
-$shadow-1: 0 1px 2px rgb(31 41 55 / 6%);
-$shadow-2: 0 2px 6px rgb(31 41 55 / 8%);
-$shadow-3: 0 4px 12px rgb(31 41 55 / 12%);
-$shadow-4: 0 8px 24px rgb(31 41 55 / 16%);
+$shadow-1: 0 1px 2px rgb(27 33 55 / 5%);
+$shadow-2: 0 2px 6px rgb(27 33 55 / 7%);
+$shadow-3: 0 4px 12px rgb(27 33 55 / 10%);
+$shadow-4: 0 8px 24px rgb(27 33 55 / 14%);
 
 $breakpoint-sm: 576px; $breakpoint-md: 768px; $breakpoint-lg: 1024px; $breakpoint-xl: 1280px; $breakpoint-2xl: 1536px;
 
@@ -29,4 +29,4 @@ $z-index-dropdown: 1000; $z-index-sticky: 1100; $z-index-overlay: 1200; $z-index
 
 $transition-fast: 120ms ease-in-out; $transition-base: 200ms ease-in-out; $transition-slow: 320ms ease-in-out;
 
-$sidebar-width: 264px; $sidebar-width-collapsed: 72px; $topbar-height: 64px; $content-max-width: 1440px;
+$sidebar-width: 232px; $sidebar-width-collapsed: 60px; $topbar-height: 57px; $content-max-width: 1440px;

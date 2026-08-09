@@ -1,5 +1,5 @@
-import { Block, BlockStatus, UUID } from '../../models/das.models';
-import { BlockWithLots } from '../models/blocks.models';
+import { BlockStatus, UUID } from '../../models/das.models';
+import { BlockListItem, BlockWithLots } from '../models/blocks.models';
 
 export type BlocksListStatus = 'idle' | 'loading' | 'loaded' | 'error';
 export type BlockDetailStatus = 'idle' | 'loading' | 'loaded' | 'error';
@@ -11,7 +11,7 @@ export interface BlocksFilters {
 }
 
 export interface BlocksState {
-  items: Block[];
+  items: BlockListItem[];
   listStatus: BlocksListStatus;
   listErrorMessageKey: string | null;
   filters: BlocksFilters;

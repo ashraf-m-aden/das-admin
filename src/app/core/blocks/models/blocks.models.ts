@@ -6,6 +6,16 @@ export interface BlockListQuery {
   adminUnitId: UUID | null;
 }
 
+/**
+ * Bloc enrichi pour l'affichage en liste : nom d'agent lisible + compteurs de
+ * lots. Fourni par l'endpoint liste enrichi (voir demande backend §3).
+ */
+export interface BlockListItem extends Block {
+  assignedUserName: string | null;
+  lotsCompleted: number;
+  lotsTotal: number;
+}
+
 export interface BlockWithLots extends Block {
   lots: Lot[];
 }

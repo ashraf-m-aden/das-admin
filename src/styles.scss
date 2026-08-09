@@ -1,8 +1,8 @@
-
 @use "styles/colors";
 @use "styles/variables" as v;
 @use "styles/mixins" as m;
 @import "maplibre-gl/dist/maplibre-gl.css";
+@import "@tabler/icons-webfont/dist/tabler-icons.min.css";
 
 *, *::before, *::after { box-sizing: border-box; }
 

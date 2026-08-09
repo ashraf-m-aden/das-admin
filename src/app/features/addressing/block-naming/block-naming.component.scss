@@ -1,61 +1,78 @@
 @use "styles/variables" as v;
+@use "styles/mixins" as m;
 
-.das-block-naming {
+.naming {
   display: flex;
   flex-direction: column;
-  gap: v.$space-4;
+  gap: v.$space-3;
 
   &__filters { display: flex; align-items: center; gap: v.$space-4; }
-  &__filters input[type="text"] { flex: 1; padding: v.$space-2 v.$space-3; border: 1px solid var(--color-border); border-radius: v.$radius-sm; font-size: v.$font-size-sm; }
-  &__toggle { display: flex; align-items: center; gap: v.$space-2; font-size: v.$font-size-sm; color: var(--color-text-secondary); white-space: nowrap; }
 
-  &__item { padding: v.$space-5; display: flex; flex-direction: column; gap: v.$space-3; }
-
-  &__header { display: flex; flex-direction: column; gap: 2px; }
-
-  &__name {
-    font-size: v.$font-size-lg;
-    font-weight: v.$font-weight-semibold;
-    color: var(--color-text-primary);
-
-    &--empty {
-      font-style: italic;
-      font-weight: v.$font-weight-medium;
-      color: var(--color-text-muted);
-    }
-  }
-
-  &__code {
-    font-size: v.$font-size-xs;
+  &__search {
+    display: flex; align-items: center; gap: v.$space-2;
+    height: 34px; padding: 0 v.$space-3; width: 240px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: v.$radius-sm;
     color: var(--color-text-muted);
-    font-family: v.$font-family-mono;
+    input { border: none; background: transparent; outline: none; width: 100%; font: inherit; font-size: v.$font-size-sm; color: var(--color-text-primary); }
   }
 
-  &__suggestion { padding: v.$space-3; background: var(--color-info-bg); border-radius: v.$radius-sm; display: flex; flex-direction: column; gap: v.$space-2; }
-  &__suggestion p { margin: 0; font-size: v.$font-size-sm; }
-  &__comment { color: var(--color-text-muted); font-style: italic; font-size: v.$font-size-xs !important; }
-
-  &__suggestion-actions, &__reject-actions { display: flex; gap: v.$space-2; }
-
-  &__approve, &__confirm-reject {
-    padding: v.$space-2 v.$space-4; border: none; border-radius: v.$radius-sm; font-size: v.$font-size-sm; font-weight: v.$font-weight-semibold; cursor: pointer;
-    &:disabled { opacity: 0.6; cursor: not-allowed; }
-  }
-  &__approve { background: var(--color-success); color: var(--color-on-primary); }
-  &__confirm-reject { background: var(--color-danger); color: var(--color-on-primary); }
-  &__suggestion-actions button:not(&__approve) { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: v.$radius-sm; padding: v.$space-2 v.$space-4; font-size: v.$font-size-sm; cursor: pointer; }
-
-  &__reject-panel { display: flex; flex-direction: column; gap: v.$space-2; }
-  &__reject-panel textarea { padding: v.$space-2 v.$space-3; border: 1px solid var(--color-border); border-radius: v.$radius-sm; font-family: inherit; font-size: v.$font-size-sm; resize: vertical; }
-  &__reject-actions button { padding: v.$space-1 v.$space-3; border-radius: v.$radius-sm; font-size: v.$font-size-sm; cursor: pointer; }
-
-  &__no-suggestion { font-size: v.$font-size-sm; color: var(--color-text-muted); margin: 0; }
-  &__direct-form { display: flex; gap: v.$space-2; align-items: center; }
-  &__direct-form input { flex: 1; padding: v.$space-2 v.$space-3; border: 1px solid var(--color-border); border-radius: v.$radius-sm; font-size: v.$font-size-base; }
-  &__direct-form button {
-    padding: v.$space-2 v.$space-4; border: none; border-radius: v.$radius-sm; background: var(--color-primary); color: var(--color-on-primary); font-size: v.$font-size-sm; font-weight: v.$font-weight-semibold; cursor: pointer;
-    &:disabled { opacity: 0.6; cursor: not-allowed; }
+  &__toggle {
+    display: inline-flex; align-items: center; gap: v.$space-2;
+    font-size: v.$font-size-sm; color: var(--color-text-secondary); cursor: pointer;
+    input { accent-color: var(--color-accent); }
   }
 
-  &__error { margin: 0; color: var(--color-danger); font-size: v.$font-size-xs; }
+  &__error { padding: v.$space-3 v.$space-4; background: var(--color-danger-bg); color: var(--color-danger); border-radius: v.$radius-md; font-size: v.$font-size-sm; }
+  &__empty { padding: v.$space-10; text-align: center; color: var(--color-text-muted); }
+}
+
+.item {
+  padding: v.$space-3 v.$space-4;
+
+  &__head { @include m.flex-between; align-items: flex-start; margin-bottom: v.$space-3; }
+  &__id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  &__code { font-family: v.$font-family-mono; font-size: v.$font-size-sm; color: var(--color-text-primary); }
+  &__name { font-size: v.$font-size-xs; color: var(--color-text-muted); }
+}
+
+.suggestion {
+  display: flex; align-items: center; justify-content: space-between; gap: v.$space-3;
+  padding: v.$space-3;
+  background: var(--color-info-bg);
+  border-radius: v.$radius-md;
+
+  &__main { display: flex; align-items: center; gap: v.$space-2; min-width: 0; }
+  &__icon {
+    width: 30px; height: 30px; flex-shrink: 0; border-radius: v.$radius-sm;
+    background: var(--das-indigo-100); color: var(--das-indigo-700);
+    @include m.flex-center; font-size: 16px;
+  }
+  &__name { font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; color: var(--color-text-primary); }
+  &__meta { font-size: v.$font-size-xs; color: var(--color-text-muted); }
+  &__actions { display: flex; gap: v.$space-2; flex-shrink: 0; }
+}
+
+.direct, .reject { display: flex; gap: v.$space-2; }
+
+.direct input, .reject input {
+  flex: 1; height: 34px; padding: 0 v.$space-3;
+  border: 1px solid var(--color-border); border-radius: v.$radius-sm;
+  font: inherit; font-size: v.$font-size-sm; color: var(--color-text-primary); outline: none;
+  &:focus { border-color: var(--color-accent); }
+}
+
+.btn {
+  height: 34px; padding: 0 v.$space-3;
+  display: inline-flex; align-items: center; gap: v.$space-1;
+  border: none; border-radius: v.$radius-sm;
+  font: inherit; font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; cursor: pointer;
+  white-space: nowrap;
+  &:disabled { opacity: 0.55; cursor: default; }
+
+  &--primary, &--approve { background: var(--color-accent); color: var(--color-on-accent); }
+  &--approve { background: var(--color-success); }
+  &--danger { background: var(--color-danger); color: #fff; }
+  &--ghost { background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text-secondary); }
 }

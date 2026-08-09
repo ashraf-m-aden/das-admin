@@ -1,91 +1,80 @@
-<div class="das-staff-list">
-  <div class="das-staff-list__header">
-    <h1>{{ 'staff.title' | transloco }}</h1>
-    <button type="button" class="das-staff-list__add" (click)="showCreateForm.set(!showCreateForm())">
-      {{ 'staff.addStaff' | transloco }}
-    </button>
+<das-page-header [eyebrow]="'staff.eyebrow' | transloco" [title]="'nav.staff' | transloco">
+  <div actions class="st-actions" [formGroup]="filterForm">
+    <label class="st-search">
+      <i class="ti ti-search" aria-hidden="true"></i>
+      <input type="text" formControlName="search" [attr.placeholder]="'common.search' | transloco" />
+    </label>
+    <button type="button" class="st-new" (click)="toggleCreateForm()"><i class="ti ti-plus" aria-hidden="true"></i>{{ 'staff.add' | transloco }}</button>
   </div>
+</das-page-header>
 
+<div class="staff">
   @if (showCreateForm()) {
-    <form class="das-card das-staff-list__create-form" [formGroup]="createForm" (ngSubmit)="submitCreate()">
-      <div class="das-staff-list__create-row">
-        <input type="text" formControlName="fullName" [placeholder]="'staff.fullName' | transloco" />
-        <input type="text" formControlName="username" [placeholder]="'staff.username' | transloco" />
-        <input type="password" formControlName="password" [placeholder]="'staff.password' | transloco" />
+    <section class="das-card create" [formGroup]="createForm">
+      <div class="create__grid">
+        <input type="text" formControlName="fullName" [attr.placeholder]="'staff.fullName' | transloco" />
+        <input type="text" formControlName="username" [attr.placeholder]="'staff.username' | transloco" />
+        <input type="password" formControlName="password" [attr.placeholder]="'staff.password' | transloco" />
       </div>
-
-      <div class="das-staff-list__roles-picker">
-        @for (role of allRoles; track role) {
-          <label>
-            <input type="checkbox" [checked]="createForm.value.roles?.includes(role)" (change)="toggleCreateRole(role)" />
-            {{ role }}
-          </label>
+      <div class="create__roles">
+        @for (r of allRoles; track r) {
+          <button type="button" class="rolechip" [class.rolechip--on]="hasCreateRole(r)" (click)="toggleCreateRole(r)">{{ roleLabelKey(r) | transloco }}</button>
         }
       </div>
-
-      @if (formErrorMessageKey$ | async; as errorKey) {
-        <p class="das-staff-list__error">{{ errorKey | transloco }}</p>
-      }
-
-      <button type="submit" [disabled]="isFormSaving$ | async">{{ 'common.save' | transloco }}</button>
-    </form>
+      @if (formErrorMessageKey$ | async; as err) { <div class="create__error">{{ err | transloco }}</div> }
+      <div class="create__actions">
+        <button type="button" class="btn btn--primary" (click)="submitCreate()" [disabled]="(isFormSaving$ | async)">{{ 'staff.create' | transloco }}</button>
+        <button type="button" class="btn btn--ghost" (click)="toggleCreateForm()">{{ 'common.cancel' | transloco }}</button>
+      </div>
+    </section>
   }
 
-  <form class="das-staff-list__filters" [formGroup]="filterForm">
-    <input type="text" formControlName="search" [placeholder]="'staff.searchPlaceholder' | transloco" />
-  </form>
+  <section class="das-card staff__table">
+    <div class="tbl__head">
+      <span>{{ 'staff.member' | transloco }}</span>
+      <span>{{ 'staff.roles' | transloco }}</span>
+      <span>{{ 'staff.status' | transloco }}</span>
+      <span></span>
+    </div>
 
-  <table class="das-staff-list__table">
-    <thead>
-      <tr>
-        <th>{{ 'staff.fullName' | transloco }}</th>
-        <th>{{ 'staff.username' | transloco }}</th>
-        <th>{{ 'staff.role' | transloco }}</th>
-        <th>{{ 'staff.status' | transloco }}</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (member of items$ | async; track member.id) {
-        <tr>
-          <td>{{ member.fullName }}</td>
-          <td>{{ member.username }}</td>
-          <td>
-            @if (editingRolesId() === member.id) {
-              <div class="das-staff-list__roles-picker">
-                @for (role of allRoles; track role) {
-                  <label>
-                    <input type="checkbox" [checked]="editingRolesDraft().includes(role)" (change)="toggleDraftRole(role)" />
-                    {{ role }}
-                  </label>
-                }
-              </div>
-            } @else {
-              @for (role of member.roles; track role) {
-                <span class="das-badge">{{ role }}</span>
-              }
+    @for (m of (items$ | async) ?? []; track m.id) {
+      <div class="tbl__row">
+        <div class="tbl__member">
+          <span class="tbl__avatar">{{ initials(m.fullName) }}</span>
+          <div class="tbl__member-text">
+            <span class="tbl__name">{{ m.fullName }}</span>
+            <span class="tbl__username">{{ m.username }}</span>
+          </div>
+        </div>
+
+        <div class="tbl__roles">
+          @if (editingRolesId() === m.id) {
+            @for (r of allRoles; track r) {
+              <button type="button" class="rolechip rolechip--sm" [class.rolechip--on]="hasDraftRole(r)" (click)="toggleDraftRole(r)">{{ roleLabelKey(r) | transloco }}</button>
             }
-          </td>
-          <td>
-            <span class="das-badge" [class.das-badge--approved]="member.isActive" [class.das-badge--needs-redo]="!member.isActive">
-              {{ (member.isActive ? 'staff.active' : 'staff.inactive') | transloco }}
-            </span>
-          </td>
-          <td class="das-staff-list__actions">
-            @if (editingRolesId() === member.id) {
-              <button type="button" (click)="saveRoles(member)">{{ 'common.save' | transloco }}</button>
-              <button type="button" (click)="cancelEditRoles()">{{ 'common.cancel' | transloco }}</button>
-            } @else {
-              <button type="button" (click)="startEditRoles(member)">{{ 'staff.editRoles' | transloco }}</button>
-              <button type="button" (click)="toggleActive(member)">
-                {{ (member.isActive ? 'staff.disable' : 'staff.enable') | transloco }}
-              </button>
+          } @else {
+            @for (r of m.roles; track r) {
+              <span class="rolechip rolechip--static">{{ roleLabelKey(r) | transloco }}</span>
             }
-          </td>
-        </tr>
-      } @empty {
-        <tr><td colspan="5">{{ 'common.noResults' | transloco }}</td></tr>
-      }
-    </tbody>
-  </table>
+          }
+        </div>
+
+        <span class="tbl__status" [class.tbl__status--off]="!m.isActive">
+          <span class="tbl__dot"></span>{{ (m.isActive ? 'staff.active' : 'staff.suspended') | transloco }}
+        </span>
+
+        <div class="tbl__row-actions">
+          @if (editingRolesId() === m.id) {
+            <button type="button" class="icon-btn" (click)="saveRoles(m)" [attr.aria-label]="'common.save' | transloco"><i class="ti ti-check" aria-hidden="true"></i></button>
+            <button type="button" class="icon-btn" (click)="cancelEditRoles()" [attr.aria-label]="'common.cancel' | transloco"><i class="ti ti-x" aria-hidden="true"></i></button>
+          } @else {
+            <button type="button" class="icon-btn" (click)="startEditRoles(m)" [attr.aria-label]="'staff.editRoles' | transloco"><i class="ti ti-user-cog" aria-hidden="true"></i></button>
+            <button type="button" class="icon-btn" (click)="toggleActive(m)" [attr.aria-label]="'staff.toggleActive' | transloco"><i class="ti" [class.ti-lock]="m.isActive" [class.ti-lock-open]="!m.isActive" aria-hidden="true"></i></button>
+          }
+        </div>
+      </div>
+    } @empty {
+      <div class="tbl__empty">{{ 'staff.empty' | transloco }}</div>
+    }
+  </section>
 </div>

@@ -26,7 +26,7 @@ export const blocksFeature = createFeature({
     on(BlocksActions.assignBlockSuccess, (state, { block }) => ({
       ...state,
       isAssigning: false,
-      items: state.items.map((b) => (b.id === block.id ? block : b)),
+      items: state.items.map((b) => (b.id === block.id ? { ...b, ...block } : b)),
       selected: state.selected && state.selected.id === block.id ? { ...state.selected, ...block } : state.selected,
     })),
     on(BlocksActions.assignBlockFailure, (state) => ({ ...state, isAssigning: false })),
@@ -35,7 +35,7 @@ export const blocksFeature = createFeature({
     on(BlocksActions.setBlockNameSuccess, (state, { block }) => ({
       ...state,
       isSavingName: false,
-      items: state.items.map((b) => (b.id === block.id ? block : b)),
+      items: state.items.map((b) => (b.id === block.id ? { ...b, ...block } : b)),
       selected: state.selected && state.selected.id === block.id ? { ...state.selected, ...block } : state.selected,
     })),
     on(BlocksActions.setBlockNameFailure, (state, { errorMessageKey }) => ({

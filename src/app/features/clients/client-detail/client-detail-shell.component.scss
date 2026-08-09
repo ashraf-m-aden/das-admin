@@ -1,44 +1,22 @@
 @use "styles/variables" as v;
 
-.das-client-detail-shell {
-  padding: v.$space-6;
-  max-width: v.$content-max-width;
-  margin: 0 auto;
+.cd-actions { display: flex; gap: v.$space-2; }
+.cd-btn {
+  display: inline-flex; align-items: center; gap: v.$space-1; height: 32px; padding: 0 v.$space-3;
+  background: var(--color-accent); color: var(--color-on-accent); border-radius: v.$radius-sm;
+  font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; text-decoration: none;
+  &:hover { text-decoration: none; }
+  &--ghost { background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text-secondary); }
+}
 
-  &__back {
-    display: inline-block;
-    margin-bottom: v.$space-4;
-    font-size: v.$font-size-sm;
-  }
-
-  &__meta {
-    color: var(--color-text-muted);
-    font-size: v.$font-size-sm;
-    margin: v.$space-1 0 v.$space-6;
-  }
-
-  &__tabs {
-    display: flex;
-    gap: v.$space-2;
-    border-bottom: 1px solid var(--color-border);
-    margin-bottom: v.$space-6;
-  }
-
+.cd {
+  padding: v.$space-4 v.$space-5;
+  &__tabs { display: flex; gap: v.$space-5; border-bottom: 1px solid var(--color-border); margin-bottom: v.$space-4; }
   &__tab {
-    padding: v.$space-3 v.$space-4;
-    font-size: v.$font-size-sm;
-    color: var(--color-text-secondary);
+    padding: 0 0 v.$space-2; margin-bottom: -1px;
+    color: var(--color-text-muted); font-size: v.$font-size-sm; text-decoration: none;
     border-bottom: 2px solid transparent;
-
-    &:hover {
-      text-decoration: none;
-      color: var(--color-text-primary);
-    }
-
-    &--active {
-      color: var(--color-primary);
-      border-bottom-color: var(--color-primary);
-      font-weight: v.$font-weight-semibold;
-    }
+    &:hover { color: var(--color-text-primary); text-decoration: none; }
+    &--active { color: var(--color-accent); border-bottom-color: var(--color-accent); font-weight: v.$font-weight-medium; }
   }
 }

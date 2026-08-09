@@ -3,12 +3,21 @@ import { AsyncPipe } from '@angular/common';
 import { TranslocoModule } from '@jsverse/transloco';
 import { NotificationsFacade } from '../../../core/notifications/store/notifications.facade';
 import { DasDatePipe } from '../../../core/i18n/das-locale.pipes';
-import { Notification } from '../../../core/notifications/models/notifications.models';
+import { PageHeaderComponent } from '../../../core/layout/page-header/page-header.component';
+import { Notification, NotificationType } from '../../../core/notifications/models/notifications.models';
+
+const ICON: Record<NotificationType, { icon: string; color: string; bg: string }> = {
+  task_completed: { icon: 'ti-circle-check', color: '#15803d', bg: '#dcfce7' },
+  block_submitted: { icon: 'ti-file-upload', color: '#6d28d9', bg: '#f3e8fd' },
+  property_approved: { icon: 'ti-circle-check', color: '#15803d', bg: '#dcfce7' },
+  property_needs_redo: { icon: 'ti-rotate', color: '#b91c1c', bg: '#fee2e2' },
+  redo_resolved: { icon: 'ti-check', color: '#4338ca', bg: '#e0e7ff' },
+};
 
 @Component({
   selector: 'das-notification-list',
   standalone: true,
-  imports: [AsyncPipe, TranslocoModule, DasDatePipe],
+  imports: [AsyncPipe, TranslocoModule, DasDatePipe, PageHeaderComponent],
   templateUrl: './notification-list.component.html',
   styleUrl: './notification-list.component.scss',
 })
@@ -27,11 +36,13 @@ export class NotificationListComponent implements OnInit {
     if (!notification.readAt) {
       this.facade.markAsRead(notification.id);
     }
-    // Pas de navigation vers l'entité liée pour l'instant (routes blocks/:id,
-    // review, etc. existent déjà si on veut brancher ça plus tard).
   }
 
   markAllAsRead(): void {
     this.facade.markAllAsRead();
+  }
+
+  iconFor(type: NotificationType) {
+    return ICON[type];
   }
 }

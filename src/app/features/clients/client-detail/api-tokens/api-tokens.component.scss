@@ -1,165 +1,38 @@
 @use "styles/variables" as v;
 
-.das-api-tokens {
-  &__raw-token {
-    padding: v.$space-5;
-    margin-bottom: v.$space-4;
-    background: var(--color-warning-bg);
-    border-color: var(--color-warning);
+.tok {
+  display: flex; flex-direction: column; gap: v.$space-3; max-width: 640px;
 
-    p {
-      margin: 0 0 v.$space-2;
-      font-size: v.$font-size-sm;
-    }
-
-    code {
-      display: block;
-      padding: v.$space-2 v.$space-3;
-      background: var(--color-surface);
-      border-radius: v.$radius-sm;
-      font-family: v.$font-family-mono;
-      font-size: v.$font-size-sm;
-      word-break: break-all;
-      margin-bottom: v.$space-3;
-    }
-
-    button {
-      background: none;
-      border: 1px solid var(--color-border);
-      border-radius: v.$radius-sm;
-      padding: v.$space-1 v.$space-3;
-      cursor: pointer;
-      font-size: v.$font-size-sm;
-    }
+  &__reveal {
+    padding: v.$space-3 v.$space-4; border-radius: v.$radius-md;
+    background: var(--color-warning-bg); display: flex; flex-direction: column; gap: v.$space-2;
+    &-head { display: flex; align-items: center; gap: v.$space-2; font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; color: #92400e; }
   }
+  &__raw { font-family: v.$font-family-mono; font-size: v.$font-size-sm; background: var(--color-surface); padding: v.$space-2 v.$space-3; border-radius: v.$radius-sm; word-break: break-all; color: var(--color-text-primary); }
+  &__error { color: var(--color-danger); font-size: v.$font-size-sm; }
 
-  &__current {
-    padding: v.$space-5;
-    margin-bottom: v.$space-3;
-  }
+  &__current { padding: v.$space-4; }
+  &__row { display: flex; align-items: flex-start; justify-content: space-between; gap: v.$space-3; }
+  &__name { font-size: v.$font-size-base; font-weight: v.$font-weight-medium; color: var(--color-text-primary); }
+  &__meta { font-size: v.$font-size-xs; color: var(--color-text-muted); margin-top: 2px; }
+  &__scopes { display: flex; flex-wrap: wrap; gap: v.$space-1; margin-top: v.$space-2; }
+  &__scope { font-size: v.$font-size-xs; padding: 2px v.$space-2; border-radius: v.$radius-sm; background: var(--das-indigo-50); color: var(--das-indigo-700); }
+  &__none { text-align: center; color: var(--color-text-muted); padding: v.$space-4; }
 
-  &__current-header {
-    display: flex;
-    align-items: center;
-    gap: v.$space-3;
-    margin-bottom: v.$space-2;
+  &__form { padding: v.$space-4; display: flex; flex-direction: column; gap: v.$space-3;
+    &-title { font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; color: var(--color-text-primary); }
+    input { height: 36px; padding: 0 v.$space-3; border: 1px solid var(--color-border); border-radius: v.$radius-sm; font: inherit; font-size: v.$font-size-sm; outline: none; &:focus { border-color: var(--color-accent); } } }
+  &__scope-picker { display: flex; flex-wrap: wrap; gap: v.$space-2; }
+}
 
-    h2 {
-      font-size: v.$font-size-base;
-      margin: 0;
-    }
-  }
+.scope-chip {
+  padding: 4px v.$space-3; border-radius: v.$radius-full; border: 1px solid var(--color-border);
+  background: var(--color-surface); color: var(--color-text-secondary); font-size: v.$font-size-xs; cursor: pointer;
+  &--on { background: var(--color-accent); color: var(--color-on-accent); border-color: var(--color-accent); }
+}
 
-  &__current-scopes {
-    font-family: v.$font-family-mono;
-    font-size: v.$font-size-sm;
-    color: var(--color-text-secondary);
-    margin: 0 0 v.$space-1;
-  }
-
-  &__current-meta {
-    font-size: v.$font-size-xs;
-    color: var(--color-text-muted);
-    margin: 0 0 v.$space-4;
-  }
-
-  &__current-actions {
-    display: flex;
-    gap: v.$space-2;
-  }
-
-  &__revoke {
-    padding: v.$space-2 v.$space-4;
-    border: 1px solid var(--color-danger);
-    color: var(--color-danger);
-    background: none;
-    border-radius: v.$radius-sm;
-    font-size: v.$font-size-sm;
-    cursor: pointer;
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    &:hover:not(:disabled) {
-      background: var(--color-danger-bg);
-    }
-  }
-
-  &__regenerate-hint {
-    font-size: v.$font-size-xs;
-    color: var(--color-text-muted);
-    margin: 0 0 v.$space-4;
-  }
-
-  &__create {
-    padding: v.$space-5;
-    display: flex;
-    flex-direction: column;
-    gap: v.$space-3;
-
-    h2 {
-      font-size: v.$font-size-base;
-      margin: 0 0 v.$space-1;
-    }
-
-    label {
-      display: flex;
-      flex-direction: column;
-      gap: v.$space-1;
-      font-size: v.$font-size-sm;
-      color: var(--color-text-secondary);
-
-      input {
-        padding: v.$space-2 v.$space-3;
-        border: 1px solid var(--color-border);
-        border-radius: v.$radius-sm;
-        font-size: v.$font-size-base;
-      }
-    }
-
-    button {
-      align-self: flex-start;
-      padding: v.$space-2 v.$space-4;
-      border: none;
-      border-radius: v.$radius-md;
-      background: var(--color-primary);
-      color: var(--color-on-primary);
-      font-size: v.$font-size-sm;
-      font-weight: v.$font-weight-semibold;
-      cursor: pointer;
-
-      &:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
-
-      &:hover:not(:disabled) {
-        background: var(--color-primary-hover);
-      }
-    }
-  }
-
-  &__scopes {
-    display: flex;
-    flex-direction: column;
-    gap: v.$space-2;
-    font-size: v.$font-size-sm;
-    color: var(--color-text-secondary);
-  }
-
-  &__scope-checkbox {
-    display: flex;
-    align-items: center;
-    gap: v.$space-2;
-    font-size: v.$font-size-sm;
-    font-family: v.$font-family-mono;
-  }
-
-  &__error {
-    margin: 0;
-    color: var(--color-danger);
-    font-size: v.$font-size-sm;
-  }
+.btn { height: 36px; padding: 0 v.$space-4; display: inline-flex; align-items: center; gap: v.$space-1; align-self: flex-start; border: none; border-radius: v.$radius-sm; font: inherit; font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; cursor: pointer; &:disabled { opacity: 0.55; }
+  &--primary { background: var(--color-accent); color: var(--color-on-accent); }
+  &--danger-ghost { background: var(--color-surface); border: 1px solid #f0c2c2; color: var(--color-danger); }
+  &--ghost { background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text-secondary); }
 }

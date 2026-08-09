@@ -1,0 +1,33 @@
+@use "styles/variables" as v;
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: v.$space-3;
+  padding: v.$space-3 v.$space-5;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+
+  &__titles { flex: 1; min-width: 0; }
+
+  &__eyebrow {
+    display: block;
+    font-size: 10.5px;
+    color: var(--color-text-muted);
+    letter-spacing: 0.2px;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: v.$font-size-lg;
+    font-weight: v.$font-weight-medium;
+    color: var(--color-text-primary);
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: v.$space-2;
+    flex-shrink: 0;
+  }
+}

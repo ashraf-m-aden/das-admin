@@ -1,91 +1,66 @@
 @use "styles/variables" as v;
+@use "styles/mixins" as m;
 
-.das-blocks-list {
-  padding: v.$space-6;
-  max-width: v.$content-max-width;
-  margin: 0 auto;
+.blocks-actions { display: flex; align-items: center; gap: v.$space-2; }
+.blocks-search {
+  display: flex; align-items: center; gap: v.$space-2; height: 32px; padding: 0 v.$space-3; width: 180px;
+  background: var(--color-surface-alt); border: 1px solid var(--color-border); border-radius: v.$radius-sm; color: var(--color-text-muted);
+  input { border: none; background: transparent; outline: none; width: 100%; font: inherit; font-size: v.$font-size-sm; color: var(--color-text-primary); }
+}
+.blocks-new {
+  display: inline-flex; align-items: center; gap: v.$space-1; height: 32px; padding: 0 v.$space-3;
+  background: var(--color-accent); color: var(--color-on-accent); border: none; border-radius: v.$radius-sm;
+  font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; cursor: pointer;
+}
 
-  &__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: v.$space-4;
-  }
+.blocks {
+  padding: v.$space-4 v.$space-5; display: flex; flex-direction: column; gap: v.$space-3;
+  &__filters { display: flex; flex-wrap: wrap; gap: v.$space-2; }
+  &__row { display: grid; grid-template-columns: 1fr; gap: v.$space-3; @include m.respond-above(lg) { grid-template-columns: 1.55fr 1fr; } }
+  &__side { display: flex; flex-direction: column; gap: v.$space-3; }
+  &__table { padding: 0; overflow: hidden; }
+}
 
-  &__map-link {
-    padding: v.$space-2 v.$space-4;
-    border-radius: v.$radius-md;
-    background: var(--color-primary);
-    color: var(--color-on-primary);
-    font-size: v.$font-size-sm;
-    font-weight: v.$font-weight-semibold;
+.chip {
+  height: 28px; padding: 0 v.$space-3; border: 1px solid var(--color-border); border-radius: v.$radius-full;
+  background: var(--color-surface); color: var(--color-text-secondary); font-size: v.$font-size-xs; cursor: pointer;
+  &--active { background: var(--color-accent); color: var(--color-on-accent); border-color: var(--color-accent); }
+  &__count { opacity: 0.75; }
+}
 
-    &:hover { background: var(--color-primary-hover); text-decoration: none; }
-  }
+.tbl {
+  &__head, &__row { display: grid; grid-template-columns: 1.5fr 1fr 1.1fr 1.1fr; gap: v.$space-2; align-items: center; padding: v.$space-2 v.$space-4; }
+  &__head { font-size: v.$font-size-xs; color: var(--color-text-muted); border-bottom: 1px solid var(--color-border); }
+  &__row { border-bottom: 1px solid var(--color-surface-sunken); text-decoration: none; color: inherit;
+    &:hover { background: var(--color-surface-alt); text-decoration: none; } &:last-child { border-bottom: none; } }
+  &__block { display: flex; flex-direction: column; min-width: 0; }
+  &__name { font-size: v.$font-size-sm; color: var(--color-text-primary); @include m.truncate; }
+  &__code { font-family: v.$font-family-mono; font-size: v.$font-size-xs; color: var(--color-text-muted); }
+  &__agent { display: flex; align-items: center; gap: v.$space-2; min-width: 0; }
+  &__avatar { width: 22px; height: 22px; flex-shrink: 0; border-radius: 50%; background: var(--das-indigo-100); color: var(--das-indigo-700); font-size: 9px; font-weight: v.$font-weight-medium; @include m.flex-center; }
+  &__agent-name { font-size: v.$font-size-xs; color: var(--color-text-secondary); @include m.truncate; }
+  &__muted { color: var(--color-text-disabled); }
+  &__prog { display: flex; align-items: center; gap: v.$space-2; }
+  &__track { flex: 1; height: 4px; border-radius: v.$radius-full; background: var(--color-surface-sunken); overflow: hidden; }
+  &__fill { display: block; height: 100%; background: var(--color-accent); }
+  &__prog-val { font-size: v.$font-size-xs; color: var(--color-text-muted); min-width: 22px; text-align: right; }
+  &__empty { padding: v.$space-10; text-align: center; color: var(--color-text-muted); }
+}
 
-  &__filters {
-    display: flex;
-    gap: v.$space-3;
-    margin-bottom: v.$space-4;
+.panel { padding: v.$space-3 v.$space-4; &__title { font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; color: var(--color-text-primary); margin-bottom: v.$space-3; } }
 
-    input, select {
-      padding: v.$space-2 v.$space-3;
-      border: 1px solid var(--color-border);
-      border-radius: v.$radius-sm;
-      font-size: v.$font-size-sm;
-    }
+.dist {
+  display: flex; height: 9px; border-radius: v.$radius-full; overflow: hidden; margin-bottom: v.$space-3;
+  &__seg { display: block; height: 100%; }
+  &__legend { display: grid; grid-template-columns: 1fr 1fr; gap: v.$space-1 v.$space-3; }
+  &__row { display: flex; align-items: center; gap: v.$space-2; font-size: v.$font-size-xs; color: var(--color-text-secondary); }
+  &__dot { width: 7px; height: 7px; border-radius: 2px; }
+  &__count { margin-left: auto; color: var(--color-text-muted); }
+}
 
-    input { flex: 1; }
-  }
-
-  &__block-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  &__block-name {
-    font-weight: v.$font-weight-semibold;
-    color: var(--color-text-primary);
-
-    &--empty {
-      font-weight: v.$font-weight-medium;
-      font-style: italic;
-      color: var(--color-text-muted);
-    }
-  }
-
-  &__block-code {
-    font-size: v.$font-size-xs;
-    color: var(--color-text-muted);
-    font-family: v.$font-family-mono;
-  }
-
-  &__table {
-    width: 100%;
-    border-collapse: collapse;
-    background: var(--color-surface);
-    border-radius: v.$radius-md;
-    overflow: hidden;
-
-    th, td {
-      text-align: left;
-      padding: v.$space-3 v.$space-4;
-      border-bottom: 1px solid var(--color-border);
-      font-size: v.$font-size-sm;
-    }
-
-    th {
-      background: var(--color-surface-sunken);
-      font-weight: v.$font-weight-semibold;
-      color: var(--color-text-secondary);
-    }
-
-    a {
-      font-size: v.$font-size-xs;
-      border: 1px solid var(--color-border);
-      border-radius: v.$radius-sm;
-      padding: v.$space-1 v.$space-2;
-    }
-  }
+.prog {
+  &__head { @include m.flex-between; font-size: v.$font-size-xs; color: var(--color-text-secondary); margin-bottom: v.$space-1; }
+  &__track { height: 6px; border-radius: v.$radius-full; background: var(--color-surface-sunken); overflow: hidden; }
+  &__fill { height: 100%; background: var(--color-accent); }
+  &__meta { margin-top: v.$space-1; font-size: v.$font-size-xs; color: var(--color-text-muted); }
 }

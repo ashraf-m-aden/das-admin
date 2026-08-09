@@ -7,9 +7,9 @@
     "staff": "Personnel",
     "clients": "Clients",
     "settings": "Paramètres",
+    "notifications": "Notifications",
     "logout": "Déconnexion"
   },
-
   "notifications": {
     "title": "Notifications",
     "markAllRead": "Tout marquer comme lu",
@@ -20,7 +20,6 @@
     "property_needs_redo": "La propriété {{code}} nécessite une reprise",
     "redo_resolved": "{{agent}} a résolu la reprise sur {{code}}"
   },
-
   "common": {
     "save": "Enregistrer",
     "cancel": "Annuler",
@@ -37,15 +36,20 @@
     "no": "Non",
     "back": "Retour",
     "next": "Suivant",
-    "submit": "Soumettre"
+    "submit": "Soumettre",
+    "add": "Ajouter"
   },
-
   "role": {
     "admin": "Administrateur",
     "supervisor": "Superviseur",
     "surveyor": "Agent de terrain"
   },
-
+  "roles": {
+    "Admin": "Admin",
+    "Gestionnaire": "Gestionnaire",
+    "Superviseur": "Superviseur",
+    "AgentTerrain": "Agent terrain"
+  },
   "status": {
     "block": {
       "not_assigned": "Non assigné",
@@ -55,29 +59,24 @@
       "approved": "Approuvé",
       "needs_redo": "À reprendre"
     },
+    "client": {
+      "active": "Actif",
+      "trial": "Essai",
+      "suspended": "Suspendu"
+    },
     "submission": {
       "draft": "Brouillon",
       "submitted": "Soumis",
       "approved": "Approuvé",
       "needs_redo": "À reprendre"
-    },
-    "task": {
-      "not_started": "Non commencée",
-      "in_progress": "En cours",
-      "submitted": "Soumise",
-      "completed": "Terminée"
-    },
-    "client": { "trial": "Essai", "active": "Actif", "suspended": "Suspendu" },
-    "user": { "active": "Actif", "suspended": "Suspendu", "inactive": "Inactif" }
+    }
   },
-
   "propertyType": {
     "residential": "Résidentiel",
     "commercial": "Commercial",
     "industrial": "Industriel",
     "vacant": "Vacant"
   },
-
   "dashboard": {
     "title": "Tableau de bord",
     "totalProperties": "Propriétés enregistrées",
@@ -85,39 +84,46 @@
     "approvedRecords": "Dossiers approuvés",
     "activeStaff": "Agents actifs",
     "zoneProgress": "Progression par zone",
-    "urgentAlerts": "Alertes urgentes"
+    "urgentAlerts": "Alertes urgentes",
+    "eyebrow": "République de Djibouti · vue nationale",
+    "range30d": "30 derniers jours",
+    "blocksTotal": "Blocs cartographiés",
+    "streetsRegistered": "Rues enregistrées",
+    "areaCovered": "Superficie couverte",
+    "addresses": "Adresses enregistrées",
+    "activeClients": "Clients actifs",
+    "apiCalls30d": "Appels API · 30 j",
+    "trialCount": "{{count}} en essai",
+    "collectionsTitle": "Collectes soumises · 12 semaines",
+    "blocksByStatus": "Blocs par statut",
+    "blocksUnit": "blocs",
+    "apiByClient": "Consommation API par client",
+    "callsTotal": "{{count}} appels"
   },
-
   "alerts": {
     "redo_overdue": "Reprise en retard : {{code}}",
     "task_overdue": "Tâche en retard : {{code}}",
     "block_stalled": "Bloc bloqué : {{code}}"
   },
-
   "staff": {
-    "title": "Personnel",
-    "addStaff": "Ajouter un agent",
-    "editStaff": "Modifier l'agent",
-    "firstName": "Prénom",
-    "lastName": "Nom",
-    "email": "E-mail",
-    "phone": "Téléphone",
-    "login": "Identifiant",
-    "role": "Rôle",
+    "eyebrow": "Équipe D.A.S",
+    "add": "Ajouter",
+    "member": "Membre",
+    "roles": "Rôles",
     "status": "Statut",
-    "lastLogin": "Dernière connexion",
-    "never": "Jamais",
-    "enable": "Activer",
-    "disable": "Désactiver",
-    "searchPlaceholder": "Rechercher un agent...",
-    "allRoles": "Tous les rôles",
-    "allStatuses": "Tous les statuts",
-    "resetPassword": "Réinitialiser le mot de passe",
-    "temporaryPassword": "Mot de passe temporaire",
-    "loginTaken": "Cet identifiant est déjà utilisé"
+    "active": "Actif",
+    "suspended": "Suspendu",
+    "fullName": "Nom complet",
+    "username": "Identifiant",
+    "password": "Mot de passe",
+    "create": "Créer",
+    "editRoles": "Modifier les rôles",
+    "toggleActive": "Activer/Suspendre",
+    "empty": "Aucun membre"
   },
   "clients": {
     "title": "Clients",
+    "eyebrow": "Module commercial",
     "addClient": "Ajouter un client",
     "editClient": "Modifier le client",
     "login": "Identifiant",
@@ -126,6 +132,32 @@
     "email": "E-mail",
     "phone": "Téléphone",
     "plan": "Forfait",
+    "edit": "Modifier",
+"newTitle": "Nouveau client",
+"editTitle": "Modifier le client",
+"login": "Identifiant",
+"companyName": "Société",
+"contactName": "Contact",
+"email": "E-mail",
+"phone": "Téléphone",
+"selectPlan": "Choisir un forfait…",
+"zone": "Zone",
+"zoneStatus": "Statut",
+"granted": "Autorisé",
+"blocked": "Bloqué",
+"grantZone": "Autoriser",
+"revoke": "Révoquer",
+"zoneEmpty": "Aucune zone autorisée",
+"tokenName": "Nom du jeton",
+"regenerate": "Régénérer le jeton",
+"revokeToken": "Révoquer",
+"noToken": "Aucun jeton généré",
+"rawTokenWarning": "Copiez ce jeton maintenant — il ne sera plus affiché.",
+"dismiss": "J'ai copié",
+"lastUsed": "Dernière utilisation",
+"createdAt": "Créé le",
+"never": "Jamais",
+"scope": { "address:lookup": "Recherche d'adresse", "address:route": "Itinéraire", "address:zone_full": "Accès zone complet" },
     "selectPlan": "Sélectionner un forfait",
     "status": "Statut",
     "searchPlaceholder": "Rechercher un client...",
@@ -134,6 +166,7 @@
     "reactivate": "Réactiver",
     "temporaryPassword": "Mot de passe temporaire",
     "emailTaken": "Cette adresse e-mail est déjà utilisée",
+    "empty": "Aucun client",
     "viewAccess": "Accès",
     "zoneAccess": "Accès par zone",
     "apiTokens": "Jetons API",
@@ -160,23 +193,26 @@
     "tokenCreatedAt": "Créé le"
   },
   "blocks": {
-    "title": "Blocs & lots",
-    "code": "Code du bloc",
-    "area": "Surface",
-    "status": "Statut",
+    "eyebrow": "Djibouti-ville · Boulaos",
+    "filterAll": "Tous",
+    "colBlock": "Bloc",
+    "colStatus": "Statut",
+    "colArea": "Superficie",
+    "colUpdated": "Mis à jour",
+    "unnamed": "Sans nom",
+    "empty": "Aucun bloc",
+    "distribution": "Répartition par statut",
+    "globalProgress": "Progression globale",
+    "backToList": "Retour",
     "assignedTo": "Assigné à",
+    "agentAssigned": "Agent assigné",
+    "lotsProgress": "Progression des lots",
     "lots": "Lots",
-    "addLot": "Ajouter un lot",
-    "plannedUnits": "Habitations prévues",
-    "actualUnits": "Habitations relevées",
-    "viewMap": "Voir la carte",
-    "searchPlaceholder": "Rechercher un bloc...",
-    "allStatuses": "Tous les statuts",
-    "namePlaceholder": "Nom du bloc",
-    "unnamed": "Bloc sans nom",
-    "assignName": "Attribuer un nom",
-    "renameBlock": "Renommer",
-    "blockColumn": "Bloc"
+    "nameLabel": "Nom du bloc",
+    "namePlaceholder": "ex. Avenue du Corail",
+    "saveName": "Enregistrer",
+    "mapPreview": "Aperçu du bloc",
+    "mapNote": "Carte MapLibre à intégrer"
   },
   "review": {
     "title": "Revue des données",
@@ -193,25 +229,14 @@
   },
   "settings": {
     "title": "Paramètres",
+    "eyebrow": "Configuration du système",
     "roadTypes": "Types de voies",
-    "mapImport": "Import cartographique",
     "addRoadType": "Ajouter un type de voie",
     "roadTypeCode": "Code",
     "roadTypeLabel": "Libellé",
     "roadTypeIsPoint": "Représentation ponctuelle (carrefour, rond-point...)",
     "roadTypeCodeTaken": "Ce code existe déjà",
-    "importTarget": "Cible de l'import",
-    "importTargetBlocks": "Blocs (géométries de zone)",
-    "importTargetAdminUnits": "Unités administratives",
-    "importZone": "Zone cible",
-    "selectZone": "Sélectionner une zone",
-    "importFile": "Fichier GeoJSON",
-    "startImport": "Lancer l'import",
-    "importSuccess": "Import terminé",
-    "importedCount": "Éléments importés",
-    "skippedCount": "Éléments ignorés",
-    "importAnother": "Importer un autre fichier",
-    "missingZone": "Merci de sélectionner une zone cible"
+    "emptyRoadTypes": "Aucun type"
   },
   "addressing": {
     "title": "Adressage",
@@ -237,8 +262,19 @@
     "noBlocksToName": "Aucun bloc à afficher",
     "noStreetsToName": "Aucune rue à afficher",
     "block": "Bloc",
+    "emptyStreets": "Aucune rue à nommer",
+    "emptyProperties": "Aucune propriété à numéroter",
     "lot": "Lot",
+    "houseNumberPlaceholder": "N°",
+    "saveNumber": "Enregistrer",
+    "details": "Détails",
     "houseNumber": "Numéro",
+    "eyebrow": "Djibouti-ville · Boulaos",
+    "rejectReason": "Motif du rejet…",
+    "confirmReject": "Confirmer le rejet",
+    "namePlaceholder": "ex. Avenue du Corail",
+    "assignName": "Attribuer le nom",
+    "emptyBlocks": "Aucun bloc à nommer",
     "formattedAddress": "Adresse",
     "addressCode": "Code d'adresse",
     "viewDetails": "Détails",

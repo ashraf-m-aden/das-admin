@@ -1,79 +1,65 @@
 @use "styles/variables" as v;
+@use "styles/mixins" as m;
 
-.das-property-numbering {
-  &__table {
-    width: 100%;
-    border-collapse: collapse;
-    background: var(--color-surface);
-    border-radius: v.$radius-md;
-    overflow: hidden;
+.numbering {
+  display: flex;
+  flex-direction: column;
+  gap: v.$space-3;
 
-    th, td {
-      text-align: left;
-      padding: v.$space-3 v.$space-4;
-      border-bottom: 1px solid var(--color-border);
-      font-size: v.$font-size-sm;
-      vertical-align: middle;
-    }
+  &__error { padding: v.$space-3 v.$space-4; background: var(--color-danger-bg); color: var(--color-danger); border-radius: v.$radius-md; font-size: v.$font-size-sm; }
+  &__empty { padding: v.$space-10; text-align: center; color: var(--color-text-muted); }
+}
 
-    th {
-      background: var(--color-surface-sunken);
-      font-weight: v.$font-weight-semibold;
-      color: var(--color-text-secondary);
-    }
+.item {
+  padding: v.$space-3 v.$space-4;
 
-    input {
-      width: 80px;
-      padding: v.$space-1 v.$space-2;
-      border: 1px solid var(--color-border);
-      border-radius: v.$radius-sm;
-      font-size: v.$font-size-sm;
-    }
+  &__row { display: flex; align-items: center; gap: v.$space-3; }
 
-    button {
-      padding: v.$space-1 v.$space-3;
-      border: 1px solid var(--color-border);
-      border-radius: v.$radius-sm;
-      background: var(--color-surface);
-      font-size: v.$font-size-xs;
-      cursor: pointer;
-      &:disabled { opacity: 0.6; cursor: not-allowed; }
-      &:hover:not(:disabled) { background: var(--color-surface-alt); }
-    }
+  &__info { flex: 1; min-width: 0; }
+  &__address { font-size: v.$font-size-sm; color: var(--color-text-primary); @include m.truncate; }
+  &__meta { font-size: v.$font-size-xs; color: var(--color-text-muted); margin-top: 2px; }
+  &__code { font-family: v.$font-family-mono; }
+
+  &__toggle {
+    width: 34px; height: 34px; flex-shrink: 0;
+    border: 1px solid var(--color-border); background: var(--color-surface);
+    border-radius: v.$radius-sm; color: var(--color-text-muted);
+    @include m.flex-center; cursor: pointer; font-size: 16px;
+    &:hover { background: var(--color-surface-alt); }
   }
+}
 
-  &__block-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+.num {
+  display: flex; gap: v.$space-2; flex-shrink: 0;
+
+  input {
+    width: 110px; height: 34px; padding: 0 v.$space-3;
+    border: 1px solid var(--color-border); border-radius: v.$radius-sm;
+    font: inherit; font-size: v.$font-size-sm; color: var(--color-text-primary); outline: none;
+    &:focus { border-color: var(--color-accent); }
   }
+}
 
-  &__block-name {
-    font-weight: v.$font-weight-semibold;
-    color: var(--color-text-primary);
+.hierarchy {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: v.$space-2;
+  margin-top: v.$space-3;
+  padding-top: v.$space-3;
+  border-top: 1px solid var(--color-surface-sunken);
 
-    &--empty {
-      font-style: italic;
-      font-weight: v.$font-weight-medium;
-      color: var(--color-text-muted);
-    }
-  }
+  &__cell { background: var(--color-surface-alt); border-radius: v.$radius-sm; padding: v.$space-2 v.$space-3; }
+  &__label { display: block; font-size: v.$font-size-xs; color: var(--color-text-muted); }
+  &__value { font-size: v.$font-size-sm; color: var(--color-text-primary); }
+}
 
-  &__block-code {
-    font-size: v.$font-size-xs;
-    color: var(--color-text-muted);
-    font-family: v.$font-family-mono;
-  }
+.btn {
+  height: 34px; padding: 0 v.$space-3;
+  display: inline-flex; align-items: center; gap: v.$space-1;
+  border: none; border-radius: v.$radius-sm;
+  font: inherit; font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; cursor: pointer;
+  white-space: nowrap;
+  &:disabled { opacity: 0.55; cursor: default; }
 
-  &__address {
-    font-family: v.$font-family-mono;
-    font-size: v.$font-size-xs;
-    color: var(--color-text-muted);
-  }
-
-  &__error {
-    margin-top: v.$space-3;
-    color: var(--color-danger);
-    font-size: v.$font-size-sm;
-  }
+  &--primary { background: var(--color-accent); color: var(--color-on-accent); }
 }

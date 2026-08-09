@@ -1,64 +1,120 @@
-<div class="das-dashboard">
-  <h1 class="das-dashboard__title">{{ 'dashboard.title' | transloco }}</h1>
+<das-page-header [eyebrow]="'dashboard.eyebrow' | transloco" [title]="'dashboard.title' | transloco">
+  <button actions type="button" class="das-dashboard__range">
+    <i class="ti ti-calendar" aria-hidden="true"></i>
+    <span>{{ 'dashboard.range30d' | transloco }}</span>
+    <i class="ti ti-chevron-down" aria-hidden="true"></i>
+  </button>
+</das-page-header>
 
-  @if (isLoading$ | async) {
-    <p class="das-dashboard__loading">{{ 'common.loading' | transloco }}</p>
-  } @else if (summary$ | async; as summary) {
+<div class="das-dashboard">
+  @if (summary(); as s) {
     <div class="das-dashboard__kpis">
-      <div class="das-card das-dashboard__kpi das-dashboard__kpi--primary">
-        <span class="das-dashboard__kpi-value">{{ summary.totalProperties | dasNumber }}</span>
-        <span class="das-dashboard__kpi-label">{{ 'dashboard.totalProperties' | transloco }}</span>
+      <div class="kpi">
+        <div class="kpi__head"><span class="kpi__label">{{ 'dashboard.blocksTotal' | transloco }}</span><i class="ti ti-map-2 kpi__icon" aria-hidden="true"></i></div>
+        <div class="kpi__value">{{ s.blocksTotal | dasNumber }}</div>
       </div>
-      <div class="das-card das-dashboard__kpi das-dashboard__kpi--warning">
-        <span class="das-dashboard__kpi-value">{{ summary.pendingReview | dasNumber }}</span>
-        <span class="das-dashboard__kpi-label">{{ 'dashboard.pendingReview' | transloco }}</span>
+      <div class="kpi">
+        <div class="kpi__head"><span class="kpi__label">{{ 'dashboard.streetsRegistered' | transloco }}</span><i class="ti ti-route kpi__icon" aria-hidden="true"></i></div>
+        <div class="kpi__value">{{ s.streetsRegistered | dasNumber }}</div>
       </div>
-      <div class="das-card das-dashboard__kpi das-dashboard__kpi--success">
-        <span class="das-dashboard__kpi-value">{{ summary.approvedRecords | dasNumber }}</span>
-        <span class="das-dashboard__kpi-label">{{ 'dashboard.approvedRecords' | transloco }}</span>
+      <div class="kpi">
+        <div class="kpi__head"><span class="kpi__label">{{ 'dashboard.areaCovered' | transloco }}</span><i class="ti ti-vector kpi__icon" aria-hidden="true"></i></div>
+        <div class="kpi__value">{{ s.areaCoveredKm2 | dasNumber: 1 }} <span class="kpi__unit">km²</span></div>
       </div>
-      <div class="das-card das-dashboard__kpi das-dashboard__kpi--info">
-        <span class="das-dashboard__kpi-value">{{ summary.activeStaff | dasNumber }}</span>
-        <span class="das-dashboard__kpi-label">{{ 'dashboard.activeStaff' | transloco }}</span>
+      <div class="kpi">
+        <div class="kpi__head"><span class="kpi__label">{{ 'dashboard.addresses' | transloco }}</span><i class="ti ti-map-pin kpi__icon" aria-hidden="true"></i></div>
+        <div class="kpi__value">{{ s.addressesRegistered | dasNumber }}</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi__head"><span class="kpi__label">{{ 'dashboard.activeClients' | transloco }}</span><i class="ti ti-building-store kpi__icon" aria-hidden="true"></i></div>
+        <div class="kpi__value">{{ s.activeClients | dasNumber }} <span class="kpi__unit">{{ 'dashboard.trialCount' | transloco: { count: s.trialClients } }}</span></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi__head"><span class="kpi__label">{{ 'dashboard.apiCalls30d' | transloco }}</span><i class="ti ti-api kpi__icon" aria-hidden="true"></i></div>
+        <div class="kpi__value">{{ s.apiCalls30d | dasNumber }}</div>
       </div>
     </div>
 
     <div class="das-dashboard__row">
-      <section class="das-card das-dashboard__panel">
-        <h2>{{ 'dashboard.zoneProgress' | transloco }}</h2>
-
-        @for (zone of zoneProgress$ | async; track zone.zoneId) {
-          <div class="das-dashboard__zone">
-            <div class="das-dashboard__zone-header">
-              <span>{{ zone.zoneName }}</span>
-              <span>{{ zone.approvedCount | dasNumber }} / {{ zone.totalCount | dasNumber }}</span>
-            </div>
-            <div class="das-dashboard__zone-bar">
-              <div
-                class="das-dashboard__zone-bar-fill"
-                [style.width.%]="progressPercent(zone.approvedCount, zone.totalCount)"
-              ></div>
-            </div>
-          </div>
-        }
-      </section>
-
-      <section class="das-card das-dashboard__panel">
-        <h2>{{ 'dashboard.urgentAlerts' | transloco }}</h2>
-
-        @if ((urgentAlerts$ | async)?.length) {
-          @for (alert of urgentAlerts$ | async; track alert.id) {
-            <div class="das-dashboard__alert" [class.das-dashboard__alert--high]="alert.severity === 'high'">
-              <span class="das-dashboard__alert-message">
-                {{ alert.messageKey | transloco: alert.messageParams }}
-              </span>
-              <span class="das-dashboard__alert-date">{{ alert.createdAt | dasDate }}</span>
+      <section class="das-card panel panel--wide">
+        <div class="panel__head">
+          <span class="panel__title">{{ 'dashboard.collectionsTitle' | transloco }}</span>
+        </div>
+        <div class="bars">
+          @for (bar of weeklyBars(); track bar.label) {
+            <div class="bars__col" [attr.title]="bar.count">
+              <div class="bars__bar" [class.bars__bar--current]="bar.isCurrent" [style.height.%]="bar.heightPercent"></div>
             </div>
           }
-        } @else {
-          <p class="das-dashboard__empty">{{ 'common.noResults' | transloco }}</p>
-        }
+        </div>
+      </section>
+
+      <section class="das-card panel">
+        <div class="panel__head"><span class="panel__title">{{ 'dashboard.blocksByStatus' | transloco }}</span></div>
+        <div class="donut">
+          <svg class="donut__svg" viewBox="0 0 108 108" role="img" [attr.aria-label]="'dashboard.blocksByStatus' | transloco">
+            <circle cx="54" cy="54" r="42" fill="none" stroke="var(--color-surface-sunken)" stroke-width="13" />
+            @for (seg of statusSegments(); track seg.status) {
+              <circle cx="54" cy="54" r="42" fill="none" stroke-width="13"
+                [attr.stroke]="seg.color"
+                [attr.stroke-dasharray]="seg.dashArray"
+                [attr.transform]="'rotate(' + seg.rotate + ' 54 54)'" />
+            }
+            <text class="donut__total" x="54" y="51" text-anchor="middle">{{ blocksTotal() | dasNumber }}</text>
+            <text class="donut__unit" x="54" y="66" text-anchor="middle">{{ 'dashboard.blocksUnit' | transloco }}</text>
+          </svg>
+          <div class="legend">
+            @for (seg of statusSegments(); track seg.status) {
+              <div class="legend__row">
+                <span class="legend__dot" [style.background]="seg.color"></span>
+                <span class="legend__label">{{ statusLabelKey(seg.status) | transloco }}</span>
+                <span class="legend__count">{{ seg.count | dasNumber }}</span>
+              </div>
+            }
+          </div>
+        </div>
       </section>
     </div>
+
+    <div class="das-dashboard__row">
+      <section class="das-card panel panel--wide">
+        <div class="panel__head">
+          <span class="panel__title">{{ 'dashboard.apiByClient' | transloco }}</span>
+          <span class="panel__meta">{{ 'dashboard.callsTotal' | transloco: { count: (s.apiCalls30d | dasNumber) } }}</span>
+        </div>
+        <div class="clients">
+          @for (c of clientConsumption(); track c.clientId) {
+            <div class="client">
+              <span class="client__avatar">{{ c.initials }}</span>
+              <div class="client__body">
+                <div class="client__top">
+                  <span class="client__name">{{ c.clientName }}</span>
+                  <span class="client__calls">{{ c.calls | dasNumber }}</span>
+                </div>
+                <div class="client__track"><div class="client__fill" [style.width.%]="c.widthPercent"></div></div>
+              </div>
+              <span class="client__status" [style.color]="c.color">
+                <span class="client__dot" [style.background]="c.color"></span>
+                {{ clientStatusLabelKey(c.status) | transloco }}
+              </span>
+            </div>
+          }
+        </div>
+      </section>
+
+      <section class="das-card panel">
+        <div class="panel__head"><span class="panel__title">{{ 'dashboard.zoneProgress' | transloco }}</span></div>
+        <div class="zones">
+          @for (z of zoneProgress(); track z.zoneName) {
+            <div class="zone">
+              <div class="zone__head"><span class="zone__name">{{ z.zoneName }}</span><span class="zone__percent">{{ z.percent }} %</span></div>
+              <div class="zone__track"><div class="zone__fill" [style.width.%]="z.percent"></div></div>
+            </div>
+          }
+        </div>
+      </section>
+    </div>
+  } @else {
+    <div class="das-dashboard__loading">{{ 'common.loading' | transloco }}</div>
   }
 </div>

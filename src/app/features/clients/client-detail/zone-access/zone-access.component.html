@@ -1,56 +1,30 @@
-<div class="das-zone-access">
-  <form class="das-zone-access__grant das-card" [formGroup]="form" (ngSubmit)="grant()">
-    <label>
-      <span>{{ 'clients.grantZoneAccess' | transloco }}</span>
-      <select formControlName="zoneId">
-        <option value="" disabled>{{ 'clients.selectZone' | transloco }}</option>
-        @for (zone of availableZones$ | async; track zone.id) {
-        <option [value]="zone.id">{{ zone.name }}</option>
-        }
-      </select>
-    </label>
-    <button type="submit" [disabled]="form.invalid">{{ 'clients.grant' | transloco }}</button>
+<div class="za">
+  <form class="za__grant das-card" [formGroup]="form" (ngSubmit)="grant()">
+    <select formControlName="zoneId">
+      <option value="">{{ 'clients.selectZone' | transloco }}</option>
+      @for (z of (availableZones$ | async) ?? []; track z.id) {
+        <option [value]="z.id">{{ z.name }}</option>
+      }
+    </select>
+    <button type="submit" class="btn btn--primary" [disabled]="form.invalid"><i class="ti ti-plus" aria-hidden="true"></i>{{ 'clients.grantZone' | transloco }}</button>
   </form>
 
-  @if (errorMessageKey$ | async; as errorKey) {
-  <p class="das-zone-access__error">{{ errorKey | transloco }}</p>
-  }
+  @if (errorMessageKey$ | async; as err) { <div class="za__error">{{ err | transloco }}</div> }
 
-  @if (isLoading$ | async) {
-  <p>{{ 'common.loading' | transloco }}</p>
-  } @else {
-  <table class="das-zone-access__table">
-    <thead>
-      <tr>
-        <th>{{ 'clients.zone' | transloco }}</th>
-        <th>{{ 'clients.accessStatus' | transloco }}</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (za of zoneAccess$ | async; track za.id) {
-      <tr>
-        <td>{{ za.zoneName }}</td>
-        <td>
-          <span class="das-badge" [class.das-badge--approved]="za.accessStatus === 'granted'"
-            [class.das-badge--needs-redo]="za.accessStatus === 'blocked'">
-            {{ ('clients.access' + (za.accessStatus === 'granted' ? 'Granted' : 'Blocked')) | transloco }}
-          </span>
-        </td>
-        <td>
-          @if (za.accessStatus === 'granted') {
-          <button type="button" (click)="revoke(za.id)">
-            {{ 'clients.revoke' | transloco }}
-          </button>
-          }
-        </td>
-      </tr>
-      } @empty {
-      <tr>
-        <td colspan="3">{{ 'clients.noZoneAccess' | transloco }}</td>
-      </tr>
-      }
-    </tbody>
-  </table>
-  }
+  <section class="das-card za__list">
+    <div class="za__head"><span>{{ 'clients.zone' | transloco }}</span><span>{{ 'clients.zoneStatus' | transloco }}</span><span></span></div>
+    @for (z of (zoneAccess$ | async) ?? []; track z.id) {
+      <div class="za__row">
+        <span class="za__name">{{ z.zoneName }}</span>
+        <span class="za__status" [class.za__status--blocked]="z.accessStatus === 'blocked'">
+          <span class="za__dot"></span>{{ (z.accessStatus === 'granted' ? 'clients.granted' : 'clients.blocked') | transloco }}
+        </span>
+        <button type="button" class="icon-btn" (click)="revoke(z.id)" [attr.aria-label]="'clients.revoke' | transloco"><i class="ti ti-trash" aria-hidden="true"></i></button>
+      </div>
+    } @empty {
+      <div class="za__empty">
+        @if (isLoading$ | async) { {{ 'common.loading' | transloco }} } @else { {{ 'clients.zoneEmpty' | transloco }} }
+      </div>
+    }
+  </section>
 </div>
