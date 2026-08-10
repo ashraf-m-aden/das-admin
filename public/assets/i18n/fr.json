@@ -257,5 +257,21 @@
       "intersection": "Intersection",
       "roundabout": "Rond-point"
     }
+  },
+  "feedback": {
+    "saved": "Enregistré",
+    "error": "L'action a échoué",
+    "blockAssigned": "Bloc assigné",
+    "blockNamed": "Nom du bloc enregistré",
+    "reviewApproved": "Soumission approuvée",
+    "reviewRejected": "Renvoyée pour reprise",
+    "clientCreated": "Client créé",
+    "clientUpdated": "Client mis à jour",
+    "zoneGranted": "Accès zone accordé",
+    "zoneRevoked": "Accès zone révoqué",
+    "tokenRegenerated": "Jeton régénéré",
+    "tokenRevoked": "Jeton révoqué",
+    "staffCreated": "Membre ajouté",
+    "numbered": "Numéro attribué"
   }
 }
