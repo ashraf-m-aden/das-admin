@@ -259,9 +259,19 @@
     }
   },
   "feedback": {
+    "saved": "Saved",
+    "error": "Action failed",
     "blockAssigned": "Close assigned",
     "blockNamed": "Close name saved",
-    "saved": "Saved",
-    "error": "Action failed"
+    "reviewApproved": "Submission approved",
+    "reviewRejected": "Sent back for redo",
+    "clientCreated": "Client created",
+    "clientUpdated": "Client updated",
+    "zoneGranted": "Zone access granted",
+    "zoneRevoked": "Zone access revoked",
+    "tokenRegenerated": "Token regenerated",
+    "tokenRevoked": "Token revoked",
+    "staffCreated": "Member added",
+    "numbered": "Number assigned"
   }
 }

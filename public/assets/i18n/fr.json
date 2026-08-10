@@ -257,11 +257,5 @@
       "intersection": "Intersection",
       "roundabout": "Rond-point"
     }
-  },
-  "feedback": {
-    "blockAssigned": "Bloc assigné",
-    "blockNamed": "Nom du bloc enregistré",
-    "saved": "Enregistré",
-    "error": "L'action a échoué"
   }
 }
