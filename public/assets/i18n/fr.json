@@ -489,7 +489,28 @@
     "requestResurvey": "Redemander un levé",
     "liveMap": "Carte terrain en direct",
     "layerZones": "Zones",
-    "layerTeams": "Équipes"
+    "layerTeams": "Équipes",
+    "todaysSchedule": "Planning du jour",
+    "quickActions": "Actions rapides",
+    "sched": {
+      "briefing": "Briefing Zone 01",
+      "deployment": "Déploiement",
+      "midSync": "Sync de mi-journée",
+      "routeCheck": "Point itinéraire",
+      "endOfDay": "Sync de fin de journée",
+      "hqRoom": "Salle de conférence QG",
+      "zone2": "Zone 02",
+      "zone3": "Zone 03",
+      "zone4": "Zone 04"
+    },
+    "qa": {
+      "assignZone": "Assigner une zone",
+      "dispatch": "Dépêcher une équipe",
+      "resurvey": "Redemander un levé",
+      "contact": "Contacter le superviseur",
+      "locations": "Voir les positions",
+      "approveUpload": "Approuver l'import"
+    }
   },
   "dataquality": {
     "eyebrow": "Règles qualité, alertes et détection de doublons",
@@ -604,5 +625,62 @@
       "snapshotDesc": "Capture et partage la vue actuelle du tableau de bord."
     },
     "coverageByRegion": "Couverture par région"
+  },
+  "integrations": {
+    "eyebrow": "Connecteurs et services externes",
+    "lastSync": "Dernière synchro",
+    "neverSynced": "Jamais synchronisé",
+    "connect": "Connecter",
+    "disconnect": "Déconnecter",
+    "empty": "Aucune intégration",
+    "status": {
+      "connected": "Connecté",
+      "disconnected": "Déconnecté",
+      "error": "Erreur"
+    },
+    "item": {
+      "martin": "Serveur de tuiles vectorielles (ST_AsMVT).",
+      "qgis": "Import des couches cadastrales depuis QGIS.",
+      "laposte": "Consommation de l'API d'adresses par La Poste.",
+      "interior": "Référentiel administratif du Ministère.",
+      "analytics": "Tableaux de bord décisionnels.",
+      "storage": "Stockage des photos et pièces jointes."
+    }
+  },
+  "audit": {
+    "eyebrow": "Traçabilité des actions",
+    "allActions": "Toutes les actions",
+    "action": {
+      "created": "Création",
+      "updated": "Modification",
+      "approved": "Approbation",
+      "rejected": "Rejet",
+      "published": "Publication",
+      "deleted": "Suppression",
+      "login": "Connexion"
+    },
+    "entity": "Entité",
+    "record": "Enregistrement",
+    "actor": "Auteur",
+    "when": "Quand",
+    "empty": "Aucune entrée",
+    "showing": "{{count}} sur {{total}}",
+    "actionCol": "Action"
+  },
+  "profile": {
+    "eyebrow": "Mon compte",
+    "title": "Profil",
+    "info": "Informations",
+    "password": "Mot de passe",
+    "current": "Mot de passe actuel",
+    "new": "Nouveau mot de passe",
+    "confirm": "Confirmer",
+    "changePassword": "Changer le mot de passe",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "passwordChanged": "Mot de passe modifié",
+    "preferences": "Préférences",
+    "theme": "Thème",
+    "light": "Clair",
+    "dark": "Sombre"
   }
 }

@@ -1,23 +1,31 @@
 <das-page-header [eyebrow]="'audit.eyebrow' | transloco" [title]="'nav.auditLogs' | transloco">
   <div actions class="al-filters" [formGroup]="filterForm">
-    <label class="al-search"><i class="ti ti-search" aria-hidden="true"></i><input type="text" formControlName="search" [attr.placeholder]="'common.search' | transloco" /></label>
-    <select formControlName="action"><option [ngValue]="null">{{ 'audit.allActions' | transloco }}</option>@for (a of actions; track a) {<option [ngValue]="a">{{ actionLabelKey(a) | transloco }}</option>}</select>
+    <label class="al-search"><i class="ti ti-search" aria-hidden="true"></i><input type="text" formControlName="search"
+        [attr.placeholder]="'common.search' | transloco" /></label>
+    <select formControlName="action">
+      <option [ngValue]="null">{{ 'audit.allActions' | transloco }}</option>@for (a of actions; track a) {<option
+        [ngValue]="a">{{ actionLabelKey(a) | transloco }}</option>}
+    </select>
   </div>
 </das-page-header>
 
 <div class="al">
   <section class="das-card table-card">
-    <div class="thead"><span>{{ 'audit.action' | transloco }}</span><span>{{ 'audit.entity' | transloco }}</span><span>{{ 'audit.record' | transloco }}</span><span>{{ 'audit.actor' | transloco }}</span><span>{{ 'audit.when' | transloco }}</span></div>
+    <div class="thead"><span>{{ 'audit.actionCol' | transloco }}</span><span>{{ 'audit.entity' | transloco
+        }}</span><span>{{ 'audit.record' | transloco }}</span><span>{{ 'audit.actor' | transloco }}</span><span>{{
+        'audit.when' | transloco }}</span></div>
     @for (r of facade.rows(); track r.id) {
-      <div class="trow">
-        <span><span class="chip" [style.color]="actionColor(r.action)"><span class="chip__dot" [style.background]="actionColor(r.action)"></span>{{ actionLabelKey(r.action) | transloco }}</span></span>
-        <span>{{ r.entityType }}</span>
-        <span class="trow__rec">{{ r.entityLabel }}</span>
-        <span>{{ r.actor }}</span>
-        <span class="trow__when">{{ r.at | dasDate: 'long' }}</span>
-      </div>
+    <div class="trow">
+      <span><span class="chip" [style.color]="actionColor(r.action)"><span class="chip__dot"
+            [style.background]="actionColor(r.action)"></span>{{ actionLabelKey(r.action) | transloco }}</span></span>
+      <span>{{ r.entityType }}</span>
+      <span class="trow__rec">{{ r.entityLabel }}</span>
+      <span>{{ r.actor }}</span>
+      <span class="trow__when">{{ r.at | dasDate: 'long' }}</span>
+    </div>
     } @empty {
-      <div class="empty">@if (facade.loading()) { {{ 'common.loading' | transloco }} } @else { {{ 'audit.empty' | transloco }} }</div>
+    <div class="empty">@if (facade.loading()) { {{ 'common.loading' | transloco }} } @else { {{ 'audit.empty' |
+      transloco }} }</div>
     }
     <div class="foot">{{ 'audit.showing' | transloco: { count: facade.rows().length, total: facade.total() } }}</div>
   </section>

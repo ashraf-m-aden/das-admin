@@ -489,7 +489,28 @@
     "requestResurvey": "Request resurvey",
     "liveMap": "Live field map",
     "layerZones": "Zones",
-    "layerTeams": "Teams"
+    "layerTeams": "Teams",
+    "todaysSchedule": "Today's schedule",
+    "quickActions": "Quick actions",
+    "sched": {
+      "briefing": "Zone 01 briefing",
+      "deployment": "Deployment",
+      "midSync": "Mid-day sync",
+      "routeCheck": "Route check-in",
+      "endOfDay": "End of day sync",
+      "hqRoom": "HQ conference room",
+      "zone2": "Zone 02",
+      "zone3": "Zone 03",
+      "zone4": "Zone 04"
+    },
+    "qa": {
+      "assignZone": "Assign zone",
+      "dispatch": "Dispatch team",
+      "resurvey": "Request resurvey",
+      "contact": "Contact supervisor",
+      "locations": "View team locations",
+      "approveUpload": "Approve upload"
+    }
   },
   "dataquality": {
     "eyebrow": "Quality rules, alerts and duplicate detection",
@@ -604,5 +625,62 @@
       "snapshotDesc": "Capture and share the current dashboard view."
     },
     "coverageByRegion": "Coverage by region"
+  },
+  "integrations": {
+    "eyebrow": "External connectors and services",
+    "lastSync": "Last sync",
+    "neverSynced": "Never synced",
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "empty": "No integrations",
+    "status": {
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "error": "Error"
+    },
+    "item": {
+      "martin": "Vector tile server (ST_AsMVT).",
+      "qgis": "Cadastral layer import from QGIS.",
+      "laposte": "Address API consumption by La Poste.",
+      "interior": "Ministry administrative reference data.",
+      "analytics": "Business intelligence dashboards.",
+      "storage": "Storage for photos and attachments."
+    }
+  },
+  "audit": {
+    "eyebrow": "Action traceability",
+    "allActions": "All actions",
+    "action": {
+      "created": "Created",
+      "updated": "Updated",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "published": "Published",
+      "deleted": "Deleted",
+      "login": "Login"
+    },
+    "entity": "Entity",
+    "record": "Record",
+    "actor": "Actor",
+    "when": "When",
+    "empty": "No entries",
+    "showing": "{{count}} of {{total}}",
+    "actionCol": "Action"
+  },
+  "profile": {
+    "eyebrow": "My account",
+    "title": "Profile",
+    "info": "Information",
+    "password": "Password",
+    "current": "Current password",
+    "new": "New password",
+    "confirm": "Confirm",
+    "changePassword": "Change password",
+    "passwordMismatch": "Passwords do not match",
+    "passwordChanged": "Password changed",
+    "preferences": "Preferences",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark"
   }
 }
