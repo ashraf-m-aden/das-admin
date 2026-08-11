@@ -6,6 +6,7 @@
   flex-direction: column;
   gap: v.$space-3;
 
+  &__hint { display: flex; align-items: center; gap: v.$space-2; padding: v.$space-2 v.$space-3; background: var(--color-info-bg); color: var(--color-text-secondary); border-radius: v.$radius-sm; font-size: v.$font-size-xs; }
   &__error { padding: v.$space-3 v.$space-4; background: var(--color-danger-bg); color: var(--color-danger); border-radius: v.$radius-md; font-size: v.$font-size-sm; }
   &__empty { padding: v.$space-10; text-align: center; color: var(--color-text-muted); }
 }
@@ -15,10 +16,25 @@
 
   &__row { display: flex; align-items: center; gap: v.$space-3; }
 
+  &__numero {
+    flex-shrink: 0; min-width: 42px; height: 42px; padding: 0 v.$space-2;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--das-blue-50); color: var(--das-blue-700);
+    border-radius: v.$radius-md; font-family: v.$font-family-mono; font-size: v.$font-size-base; font-weight: v.$font-weight-medium;
+  }
+
   &__info { flex: 1; min-width: 0; }
   &__address { font-size: v.$font-size-sm; color: var(--color-text-primary); @include m.truncate; }
-  &__meta { font-size: v.$font-size-xs; color: var(--color-text-muted); margin-top: 2px; }
+  &__meta { font-size: v.$font-size-xs; color: var(--color-text-muted); margin-top: 2px; display: flex; gap: v.$space-1; }
   &__code { font-family: v.$font-family-mono; }
+
+  &__action {
+    flex-shrink: 0; display: inline-flex; align-items: center; gap: v.$space-1;
+    height: 32px; padding: 0 v.$space-3; border: 1px solid var(--color-border);
+    background: var(--color-surface); border-radius: v.$radius-sm; color: var(--color-text-secondary);
+    font: inherit; font-size: v.$font-size-sm; cursor: pointer;
+    &:hover { background: var(--color-surface-alt); }
+  }
 
   &__toggle {
     width: 34px; height: 34px; flex-shrink: 0;
@@ -29,24 +45,14 @@
   }
 }
 
-.num {
+.adjust {
   display: flex; gap: v.$space-2; flex-shrink: 0;
-
-  input {
-    width: 110px; height: 34px; padding: 0 v.$space-3;
-    border: 1px solid var(--color-border); border-radius: v.$radius-sm;
-    font: inherit; font-size: v.$font-size-sm; color: var(--color-text-primary); outline: none;
-    &:focus { border-color: var(--color-accent); }
-  }
+  input { width: 90px; height: 34px; padding: 0 v.$space-3; border: 1px solid var(--color-border); border-radius: v.$radius-sm; font: inherit; font-size: v.$font-size-sm; outline: none; &:focus { border-color: var(--color-accent); } }
 }
 
 .hierarchy {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: v.$space-2;
-  margin-top: v.$space-3;
-  padding-top: v.$space-3;
-  border-top: 1px solid var(--color-surface-sunken);
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: v.$space-2;
+  margin-top: v.$space-3; padding-top: v.$space-3; border-top: 1px solid var(--color-surface-sunken);
 
   &__cell { background: var(--color-surface-alt); border-radius: v.$radius-sm; padding: v.$space-2 v.$space-3; }
   &__label { display: block; font-size: v.$font-size-xs; color: var(--color-text-muted); }
@@ -55,11 +61,9 @@
 
 .btn {
   height: 34px; padding: 0 v.$space-3;
-  display: inline-flex; align-items: center; gap: v.$space-1;
-  border: none; border-radius: v.$radius-sm;
+  display: inline-flex; align-items: center; border: none; border-radius: v.$radius-sm;
   font: inherit; font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; cursor: pointer;
-  white-space: nowrap;
-  &:disabled { opacity: 0.55; cursor: default; }
-
+  &:disabled { opacity: 0.55; }
   &--primary { background: var(--color-accent); color: var(--color-on-accent); }
+  &--ghost { background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text-secondary); }
 }

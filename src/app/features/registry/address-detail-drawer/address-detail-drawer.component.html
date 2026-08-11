@@ -1,0 +1,81 @@
+<div class="scrim" (click)="close()"></div>
+<aside class="drawer">
+  @if (isLoading$ | async) {
+    <div class="drawer__loading">{{ 'common.loading' | transloco }}</div>
+  } @else if (detail$ | async; as d) {
+    <header class="drawer__head">
+      <div>
+        <div class="drawer__eyebrow">{{ d.addressCode }}</div>
+        <div class="drawer__title">{{ d.street }}</div>
+      </div>
+      <span class="stage" [style.color]="stageColor(d.workflowStage)"><span class="stage__dot" [style.background]="stageColor(d.workflowStage)"></span>{{ stageLabelKey(d.workflowStage) | transloco }}</span>
+      <button type="button" class="drawer__close" (click)="close()" aria-label="Fermer"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </header>
+
+    <nav class="tabs">
+      <button type="button" class="tabs__tab" [class.tabs__tab--active]="tab() === 'details'" (click)="setTab('details')">{{ 'registry.tabDetails' | transloco }}</button>
+      <button type="button" class="tabs__tab" [class.tabs__tab--active]="tab() === 'history'" (click)="setTab('history')">{{ 'registry.tabHistory' | transloco }}</button>
+      <button type="button" class="tabs__tab" [class.tabs__tab--active]="tab() === 'linked'" (click)="setTab('linked')">{{ 'registry.tabLinked' | transloco }}</button>
+    </nav>
+
+    <div class="drawer__body">
+      @switch (tab()) {
+        @case ('details') {
+          <div class="section">
+            <div class="section__title">{{ 'registry.components' | transloco }}</div>
+            <dl class="kv">
+              <div><dt>{{ 'registry.colStreet' | transloco }}</dt><dd>{{ d.components.street }}</dd></div>
+              <div><dt>{{ 'registry.colDistrict' | transloco }}</dt><dd>{{ d.components.district }}</dd></div>
+              <div><dt>{{ 'addressing.commune' | transloco }}</dt><dd>{{ d.components.commune }}</dd></div>
+              <div><dt>{{ 'addressing.region' | transloco }}</dt><dd>{{ d.components.region }}</dd></div>
+              <div><dt>{{ 'registry.colPostcode' | transloco }}</dt><dd>{{ d.components.postcode }}</dd></div>
+            </dl>
+          </div>
+          <div class="section">
+            <div class="section__title">{{ 'registry.location' | transloco }}</div>
+            <dl class="kv">
+              <div><dt>{{ 'registry.latitude' | transloco }}</dt><dd>{{ d.location.latitude | number: '1.5-5' }}</dd></div>
+              <div><dt>{{ 'registry.longitude' | transloco }}</dt><dd>{{ d.location.longitude | number: '1.5-5' }}</dd></div>
+              <div><dt>{{ 'registry.parcelNumber' | transloco }}</dt><dd class="mono">{{ d.location.parcelNumber }}</dd></div>
+            </dl>
+          </div>
+          <div class="section">
+            <div class="section__title">{{ 'registry.propertyInfo' | transloco }}</div>
+            <dl class="kv">
+              <div><dt>{{ 'registry.colType' | transloco }}</dt><dd>{{ typeLabelKey(d.propertyInfo.propertyType) | transloco }}</dd></div>
+              <div><dt>{{ 'registry.occupancy' | transloco }}</dt><dd>{{ occupancyLabelKey(d.propertyInfo.occupancyType) | transloco }}</dd></div>
+              @if (d.propertyInfo.buildingUse) { <div><dt>{{ 'registry.buildingUse' | transloco }}</dt><dd>{{ d.propertyInfo.buildingUse }}</dd></div> }
+            </dl>
+          </div>
+          <div class="section">
+            <div class="section__title">{{ 'registry.validation' | transloco }}</div>
+            <div class="score"><div class="score__bar"><div class="score__fill" [style.width.%]="d.validation.score"></div></div><span>{{ d.validation.score }} %</span></div>
+            @if (d.validation.notes) { <p class="score__notes">{{ d.validation.notes }}</p> }
+          </div>
+          <div class="actions">
+            <button type="button" class="abtn"><i class="ti ti-map-pin" aria-hidden="true"></i>{{ 'registry.viewOnMap' | transloco }}</button>
+            <button type="button" class="abtn"><i class="ti ti-pencil" aria-hidden="true"></i>{{ 'registry.editAddress' | transloco }}</button>
+            <button type="button" class="abtn abtn--warn" (click)="flag(d.id)" [disabled]="(isMutating$ | async)"><i class="ti ti-flag" aria-hidden="true"></i>{{ 'registry.flagForReview' | transloco }}</button>
+          </div>
+        }
+        @case ('history') {
+          <ol class="timeline">
+            @for (h of d.history; track h.id) {
+              <li class="timeline__item">
+                <span class="timeline__dot"></span>
+                <div><div class="timeline__action">{{ h.actionKey | transloco }}</div><div class="timeline__meta">{{ h.actor }} · {{ h.at | dasDate: 'long' }}</div></div>
+              </li>
+            }
+          </ol>
+        }
+        @case ('linked') {
+          <div class="linked">
+            @for (l of d.linked; track l.id) {
+              <div class="linked__item"><i class="ti ti-link" aria-hidden="true"></i><span class="linked__kind">{{ ('registry.linked.' + l.kind) | transloco }}</span><span class="linked__label">{{ l.label }}</span></div>
+            }
+          </div>
+        }
+      }
+    </div>
+  }
+</aside>

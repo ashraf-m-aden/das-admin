@@ -1,6 +1,6 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { Block, UUID } from '../../models/das.models';
-import { BlockListItem, BlockWithLots } from '../models/blocks.models';
+import { BlockListItem, BlockWithParcels } from '../models/blocks.models';
 import { BlocksFilters } from './blocks.state';
 
 export const BlocksActions = createActionGroup({
@@ -13,7 +13,7 @@ export const BlocksActions = createActionGroup({
     'Set Filters': props<{ filters: Partial<BlocksFilters> }>(),
 
     'Load Block Detail': props<{ id: UUID }>(),
-    'Load Block Detail Success': props<{ block: BlockWithLots }>(),
+    'Load Block Detail Success': props<{ block: BlockWithParcels }>(),
     'Load Block Detail Failure': props<{ errorMessageKey: string }>(),
     'Clear Block Detail': emptyProps(),
 

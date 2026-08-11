@@ -37,8 +37,8 @@ export const AddressingActions = createActionGroup({
     'Load Properties To Number': props<{ query: PropertyNumberingQuery }>(),
     'Load Properties To Number Success': props<{ items: PropertyToNumber[] }>(),
     'Load Properties To Number Failure': props<{ errorMessageKey: string }>(),
-    'Assign House Number': props<{ id: UUID; payload: { houseNumber: string } }>(),
-    'Assign House Number Success': props<{ item: PropertyToNumber }>(),
+'Assign House Number': props<{ id: UUID; payload: { numero: string } }>(),    'Assign House Number Success': props<{ item: PropertyToNumber }>(),
     'Assign House Number Failure': props<{ errorMessageKey: string }>(),
+
   },
 });

@@ -4,10 +4,17 @@
   display: flex;
   min-height: 100vh;
 
-  &__main {
+  &__body {
     flex: 1;
     min-width: 0;
     height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__main {
+    flex: 1;
+    min-height: 0;
     overflow: auto;
     background: var(--color-surface-alt);
     @include m.slim-scrollbar;

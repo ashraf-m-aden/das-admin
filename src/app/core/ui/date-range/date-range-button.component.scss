@@ -1,0 +1,11 @@
+@use "styles/variables" as v;
+
+.drb {
+  display: inline-flex; align-items: center; gap: v.$space-2;
+  height: 34px; padding: 0 v.$space-3;
+  border: 1px solid var(--color-border); background: var(--color-surface);
+  border-radius: v.$radius-sm; color: var(--color-text-secondary);
+  font: inherit; font-size: v.$font-size-sm; cursor: pointer;
+  &:hover { background: var(--color-surface-alt); }
+  &__chev { font-size: 14px; color: var(--color-text-muted); }
+}

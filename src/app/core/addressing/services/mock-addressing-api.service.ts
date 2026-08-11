@@ -79,17 +79,16 @@ export class MockAddressingApiService extends AddressingApiPort {
     { id: 'street-0003', code: 'STR-0003', name: 'Impasse du Puits', type: 'Impasse', pendingSuggestion: null },
   ];
 
-  private properties: PropertyToNumber[] = [
+private properties: PropertyToNumber[] = [
     {
       id: 'property-0001',
       blockCode: 'BLK-Q7-021',
       blockName: null,
-      lotCode: 'A',
-      houseNumber: '22',
+      numero: '22',
       quartierName: 'Q7',
       cityName: 'Djibouti-ville',
-      adminHierarchy: { region: 'Djibouti', commune: 'Boulaos', arrondissement: 'Arrondissement 2', quartier: 'Q7' },
-      addressCode: 'DJ-BOU-ARR2-Q7-BLK-Q7-021-A-022',
+      adminHierarchy: { region: 'Djibouti', ville: 'Djibouti-ville', commune: 'Boulaos', quartier: 'Q7' },
+      addressCode: 'DJ-BOU-Q7-BLK-Q7-021-022',
       formattedAddress: '22, Q7, Djibouti-ville',
       status: 'approved',
     },
@@ -97,12 +96,11 @@ export class MockAddressingApiService extends AddressingApiPort {
       id: 'property-0002',
       blockCode: 'BLK-EIN-007',
       blockName: 'Rue des Palmiers',
-      lotCode: 'B',
-      houseNumber: '12',
+      numero: '12',
       quartierName: 'Einguela',
       cityName: 'Djibouti-ville',
-      adminHierarchy: { region: 'Djibouti', commune: 'Boulaos', arrondissement: null, quartier: 'Einguela' },
-      addressCode: 'DJ-BOU-EIN-BLK-EIN-007-B-012',
+      adminHierarchy: { region: 'Djibouti', ville: 'Djibouti-ville', commune: 'Boulaos', quartier: 'Einguela' },
+      addressCode: 'DJ-BOU-EIN-BLK-EIN-007-012',
       formattedAddress: '12 Rue des Palmiers, Einguela, Djibouti-ville',
       status: 'approved',
     },
@@ -159,8 +157,7 @@ export class MockAddressingApiService extends AddressingApiPort {
   private propagateBlockName(blockCode: string, name: string): void {
     this.properties = this.properties.map((p) =>
       p.blockCode === blockCode
-        ? { ...p, blockName: name, formattedAddress: `${p.houseNumber} ${name}, ${p.quartierName}, ${p.cityName}` }
-        : p,
+? { ...p, blockName: name, formattedAddress: `${p.numero} ${name}, ${p.quartierName}, ${p.cityName}` }        : p,
     );
   }
 
@@ -219,11 +216,11 @@ export class MockAddressingApiService extends AddressingApiPort {
     const existing = this.properties.find((p) => p.id === id);
     if (!existing) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
     const blockPart = existing.blockName ? ` ${existing.blockName}` : '';
-    const updated: PropertyToNumber = {
+   const updated: PropertyToNumber = {
       ...existing,
-      houseNumber: payload.houseNumber,
-      addressCode: existing.addressCode.replace(/-\d+(-BIS)?$/i, `-${payload.houseNumber}`),
-      formattedAddress: `${payload.houseNumber}${blockPart}, ${existing.quartierName}, ${existing.cityName}`,
+      numero: payload.numero,
+      addressCode: existing.addressCode.replace(/-\d+(-BIS)?$/i, `-${payload.numero}`),
+      formattedAddress: `${payload.numero}${blockPart}, ${existing.quartierName}, ${existing.cityName}`,
     };
     this.properties = this.properties.map((p) => (p.id === id ? updated : p));
     return of(updated).pipe(delay(300));

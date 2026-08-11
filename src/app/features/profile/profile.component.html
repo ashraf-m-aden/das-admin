@@ -1,0 +1,48 @@
+<das-page-header [eyebrow]="'profile.eyebrow' | transloco" [title]="'profile.title' | transloco" />
+
+<div class="pf">
+  <section class="das-card identity">
+    <span class="identity__avatar">{{ initials((fullName$ | async) ?? '') }}</span>
+    <div>
+      <div class="identity__name">{{ fullName$ | async }}</div>
+      @if ((roles$ | async)?.[0]; as role) { <div class="identity__role">{{ ('roles.' + role) | transloco }}</div> }
+    </div>
+  </section>
+
+  <div class="pf__grid">
+    <section class="das-card panel" [formGroup]="infoForm">
+      <div class="panel__title">{{ 'profile.info' | transloco }}</div>
+      <label class="field"><span>{{ 'staff.fullName' | transloco }}</span><input type="text" formControlName="fullName" /></label>
+      <label class="field"><span>{{ 'clients.email' | transloco }}</span><input type="email" formControlName="email" /></label>
+      <label class="field"><span>{{ 'clients.phone' | transloco }}</span><input type="text" formControlName="phone" /></label>
+      <button type="button" class="btn btn--primary" (click)="saveInfo()">{{ 'common.save' | transloco }}</button>
+    </section>
+
+    <section class="das-card panel" [formGroup]="passwordForm">
+      <div class="panel__title">{{ 'profile.password' | transloco }}</div>
+      <label class="field"><span>{{ 'profile.current' | transloco }}</span><input type="password" formControlName="current" /></label>
+      <label class="field"><span>{{ 'profile.new' | transloco }}</span><input type="password" formControlName="next" /></label>
+      <label class="field"><span>{{ 'profile.confirm' | transloco }}</span><input type="password" formControlName="confirm" /></label>
+      <button type="button" class="btn btn--primary" (click)="changePassword()">{{ 'profile.changePassword' | transloco }}</button>
+    </section>
+
+    <section class="das-card panel">
+      <div class="panel__title">{{ 'profile.preferences' | transloco }}</div>
+      <div class="pref">
+        <span class="pref__label">{{ 'topbar.language' | transloco }}</span>
+        <div class="seg">
+          @for (l of langs; track l) {
+            <button type="button" class="seg__btn" [class.seg__btn--on]="activeLang() === l" (click)="setLang(l)">{{ l | uppercase }}</button>
+          }
+        </div>
+      </div>
+      <div class="pref">
+        <span class="pref__label">{{ 'profile.theme' | transloco }}</span>
+        <div class="seg">
+          <button type="button" class="seg__btn" [class.seg__btn--on]="theme() === 'light'" (click)="setTheme('light')"><i class="ti ti-sun" aria-hidden="true"></i>{{ 'profile.light' | transloco }}</button>
+          <button type="button" class="seg__btn" [class.seg__btn--on]="theme() === 'dark'" (click)="setTheme('dark')"><i class="ti ti-moon" aria-hidden="true"></i>{{ 'profile.dark' | transloco }}</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

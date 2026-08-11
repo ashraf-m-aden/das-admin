@@ -5,9 +5,7 @@ import { TranslocoModule } from '@jsverse/transloco';
 import { AddressingFacade } from '../../../core/addressing/store/addressing.facade';
 import { PropertyToNumber } from '../../../core/addressing/models/addressing.models';
 
-type HouseNumberForm = FormGroup<{
-  houseNumber: FormControl<string>;
-}>;
+type NumeroForm = FormGroup<{ numero: FormControl<string> }>;
 
 @Component({
   selector: 'das-property-numbering',
@@ -24,45 +22,49 @@ export class PropertyNumberingComponent implements OnInit {
   protected readonly isLoading$ = this.facade.isPropertiesLoading$;
   protected readonly errorMessageKey$ = this.facade.propertySaveErrorMessageKey$;
 
-  protected readonly forms = new Map<string, HouseNumberForm>();
+  protected readonly forms = new Map<string, NumeroForm>();
 
-  /** id de la propriété dont le panneau "détails" (hiérarchie admin complète) est ouvert. */
+  /** id de la parcelle dont le panneau détails (hiérarchie) est ouvert. */
   protected readonly expandedId = signal<string | null>(null);
+  /** id de la parcelle en cours d'ajustement du numéro. */
+  protected readonly editingId = signal<string | null>(null);
 
   ngOnInit(): void {
     this.facade.loadPropertiesToNumber({ blockId: null });
-    this.facade.properties$.subscribe((properties) => this.ensureForms(properties));
   }
 
-  private buildForm(property: PropertyToNumber): HouseNumberForm {
-    return this.fb.nonNullable.group({
-      houseNumber: [property.houseNumber, [Validators.required]],
-    });
-  }
-
-  private ensureForms(properties: PropertyToNumber[]): void {
-    for (const property of properties) {
-      if (!this.forms.has(property.id)) {
-        this.forms.set(property.id, this.buildForm(property));
-      }
+  private formFor(id: string, current: string): NumeroForm {
+    if (!this.forms.has(id)) {
+      this.forms.set(id, this.fb.nonNullable.group({ numero: [current, [Validators.required]] }));
     }
+    return this.forms.get(id)!;
   }
 
-  formFor(id: string): HouseNumberForm {
-    return this.forms.get(id)!;
+  form(id: string, current: string): NumeroForm {
+    return this.formFor(id, current);
   }
 
   isSaving$(id: string) {
     return this.facade.isSavingProperty$(id);
   }
 
+  startEdit(property: PropertyToNumber): void {
+    this.formFor(property.id, property.numero).setValue({ numero: property.numero });
+    this.editingId.set(property.id);
+  }
+
+  cancelEdit(): void {
+    this.editingId.set(null);
+  }
+
   save(property: PropertyToNumber): void {
-    const form = this.formFor(property.id);
+    const form = this.formFor(property.id, property.numero);
     if (form.invalid) {
       form.markAllAsTouched();
       return;
     }
-    this.facade.assignHouseNumber(property.id, { houseNumber: form.getRawValue().houseNumber });
+    this.facade.assignHouseNumber(property.id, { numero: form.getRawValue().numero.trim() });
+    this.editingId.set(null);
   }
 
   toggleDetails(id: string): void {

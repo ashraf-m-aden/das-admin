@@ -4,89 +4,59 @@ import { delay } from 'rxjs/operators';
 import { DashboardApiPort } from './dashboard-api.port';
 import { DashboardSummary } from '../models/dashboard.models';
 
-/**
- * Données factices cohérentes avec le domaine. Les totaux se recoupent :
- * la somme des blocs par statut = blocksTotal ; la somme des appels par
- * client = apiCalls30d. Permet de développer tout l'écran sans backend.
- */
 @Injectable({ providedIn: 'root' })
 export class MockDashboardApiService extends DashboardApiPort {
-  private static readonly SIMULATED_LATENCY_MS = 500;
+  private static readonly LATENCY = 420;
 
   override getSummary(): Observable<DashboardSummary> {
+    const now = Date.now();
+    const day = 24 * 60 * 60 * 1000;
     const summary: DashboardSummary = {
-      blocksTotal: 312,
-      streetsRegistered: 1284,
-      areaCoveredKm2: 42.6,
-      addressesRegistered: 8940,
-
-      activeClients: 5,
-      trialClients: 1,
-      apiCalls30d: 128420,
-
-      blocksByStatus: [
-        { status: 'approved', count: 198 },
-        { status: 'in_progress', count: 47 },
-        { status: 'not_assigned', count: 35 },
-        { status: 'submitted', count: 23 },
-        { status: 'needs_redo', count: 9 },
+      kpis: {
+        totalProperties: 312458, totalPropertiesDelta: { value: 2.8, direction: 'up' },
+        verifiedAddresses: 248193, verifiedPct: 79.5,
+        pendingVerification: 41726, pendingPct: 13.4,
+        activeFieldTeams: 36, teamsInField: 12,
+        newPostcodes: 128, newPostcodesDelta: { value: 15, direction: 'up' },
+        dataQualityAlerts: 78,
+      },
+      workflow: [
+        { stage: 'registered', count: 312458, percent: 100 },
+        { stage: 'surveyed', count: 268947, percent: 86.1 },
+        { stage: 'verified', count: 248193, percent: 79.5 },
+        { stage: 'approved', count: 236875, percent: 75.8 },
+        { stage: 'published', count: 229341, percent: 73.4 },
       ],
-
-      weeklyCollections: [
-        { weekLabel: 'S-11', count: 28 },
-        { weekLabel: 'S-10', count: 34 },
-        { weekLabel: 'S-9', count: 24 },
-        { weekLabel: 'S-8', count: 42 },
-        { weekLabel: 'S-7', count: 48 },
-        { weekLabel: 'S-6', count: 40 },
-        { weekLabel: 'S-5', count: 56 },
-        { weekLabel: 'S-4', count: 52 },
-        { weekLabel: 'S-3', count: 66 },
-        { weekLabel: 'S-2', count: 60 },
-        { weekLabel: 'S-1', count: 76 },
-        { weekLabel: 'S-0', count: 84 },
+      hierarchy: [
+        { levelKey: 'region', count: 5 },
+        { levelKey: 'ville', count: 12 },
+        { levelKey: 'commune', count: 25 },
+        { levelKey: 'quartier', count: 133 },
+        { levelKey: 'bloc', count: 542 },
+        { levelKey: 'rue', count: 2842 },
+        { levelKey: 'parcelle', count: 312458 },
       ],
-
-      apiConsumptionByClient: [
-        { clientId: 'client-lp', clientName: 'La Poste de Djibouti', initials: 'LP', calls: 96240, status: 'active' },
-        { clientId: 'client-bi', clientName: 'Banque Indosuez', initials: 'BI', calls: 18400, status: 'active' },
-        { clientId: 'client-mh', clientName: "Ministère de l'Habitat", initials: 'MH', calls: 9780, status: 'trial' },
-        { clientId: 'client-da', clientName: 'Doraleh Terminal', initials: 'DA', calls: 4000, status: 'active' },
+      registrationsTrend: [
+        { label: 'Déc', value: 10 }, { label: 'Jan', value: 16 }, { label: 'Fév', value: 24 },
+        { label: 'Mar', value: 26 }, { label: 'Avr', value: 31 }, { label: 'Mai', value: 32 },
       ],
-
-      zoneProgress: [
-        { zoneId: 'zone-q7', zoneName: 'Boulaos — Arr. 2 — Q7', approvedCount: 812, totalCount: 950 },
-        { zoneId: 'zone-rasdika', zoneName: 'Ras Dika', approvedCount: 615, totalCount: 640 },
-        { zoneId: 'zone-q3', zoneName: 'Balbala — Q3', approvedCount: 340, totalCount: 900 },
-        { zoneId: 'zone-einguela', zoneName: 'Einguela', approvedCount: 128, totalCount: 500 },
-      ],
-
-      totalProperties: 8940,
-      pendingReview: 137,
-      approvedRecords: 3806,
-      activeStaff: 24,
-      urgentAlerts: [
-        {
-          id: 'alert-0001',
-          type: 'redo_overdue',
-          severity: 'high',
-          messageKey: 'alerts.redo_overdue',
-          messageParams: { code: 'DJ-BOU-ARR2-Q7-B012-A-045' },
-          relatedEntityId: 'redo-0001',
-          createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: 'alert-0002',
-          type: 'task_overdue',
-          severity: 'medium',
-          messageKey: 'alerts.task_overdue',
-          messageParams: { code: 'BLK-Q3-014' },
-          relatedEntityId: 'task-0002',
-          createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        },
+      verification: { verified: 248193, pending: 41726, unverified: 22539 },
+      mapPoints: Array.from({ length: 40 }, (_, i) => {
+        const stages: any = ['registered', 'surveyed', 'verified', 'approved', 'published'];
+        return {
+          id: `mp-${i}`,
+          location: { type: 'Point', coordinates: [43.128 + (i % 8) * 0.006, 11.585 + Math.floor(i / 8) * 0.006] },
+          stage: stages[i % 5],
+        };
+      }),
+      recentActivity: [
+        { id: 'a1', kind: 'batch_approved', titleKey: 'dashboard.activity.batchApproved.title', descriptionKey: 'dashboard.activity.batchApproved.desc', params: { code: 'B-2025-0522-001' }, at: new Date(now - 0.4 * day).toISOString() },
+        { id: 'a2', kind: 'postcode_created', titleKey: 'dashboard.activity.postcodeCreated.title', descriptionKey: 'dashboard.activity.postcodeCreated.desc', params: { code: 'PC 1006', area: 'Héron Bay' }, at: new Date(now - 0.5 * day).toISOString() },
+        { id: 'a3', kind: 'survey_uploaded', titleKey: 'dashboard.activity.surveyUploaded.title', descriptionKey: 'dashboard.activity.surveyUploaded.desc', params: { team: 'Team Alpha 3', count: 152 }, at: new Date(now - 0.6 * day).toISOString() },
+        { id: 'a4', kind: 'duplicate_flagged', titleKey: 'dashboard.activity.duplicateFlagged.title', descriptionKey: 'dashboard.activity.duplicateFlagged.desc', params: { location: 'Rue 12, Balbala' }, at: new Date(now - 1 * day).toISOString() },
+        { id: 'a5', kind: 'published', titleKey: 'dashboard.activity.published.title', descriptionKey: 'dashboard.activity.published.desc', params: { count: 1245 }, at: new Date(now - 1 * day).toISOString() },
       ],
     };
-
-    return of(summary).pipe(delay(MockDashboardApiService.SIMULATED_LATENCY_MS));
+    return of(summary).pipe(delay(MockDashboardApiService.LATENCY));
   }
 }

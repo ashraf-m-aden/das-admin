@@ -37,7 +37,11 @@ export class StaffListComponent implements OnInit {
     password: ['', [Validators.required, Validators.minLength(6)]],
     roles: this.fb.nonNullable.control<UserRole[]>([]),
   });
-
+initialsOf(name: string): string {
+    const p = name.trim().split(/\s+/).filter(Boolean);
+    return ((p[0]?.[0] ?? '') + (p[1]?.[0] ?? '')).toUpperCase() || '?';
+  }
+  roleLabelKey(role: UserRole): string { return `roles.${role}`; }
   ngOnInit(): void {
     this.facade.load();
     this.filterForm.valueChanges.subscribe((v) => this.facade.setFilters(v.search ?? '', null));
@@ -98,7 +102,4 @@ export class StaffListComponent implements OnInit {
     return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || '?';
   }
 
-  roleLabelKey(role: UserRole): string {
-    return `roles.${role}`;
-  }
 }

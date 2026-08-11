@@ -20,6 +20,7 @@
     "@jsverse/transloco": "^8.4.0",
     "@microsoft/signalr": "^10.0.11",
     "@ngrx/effects": "^21.1.1",
+    "@ngrx/operators": "^21.1.1",
     "@ngrx/store": "^21.1.1",
     "@ngrx/store-devtools": "^21.1.1",
     "@tabler/icons-webfont": "^3.46.0",

@@ -1,14 +1,27 @@
 {
   "nav": {
     "dashboard": "Tableau de bord",
+    "registry": "Registre des adresses",
+    "gis": "SIG & Cartographie",
+    "gisMap": "Carte",
+    "gisBoundaries": "Limites",
+    "fieldOps": "Opérations terrain",
+    "verification": "File de vérification",
+    "postcodes": "Codes postaux",
+    "dataQuality": "Qualité des données",
+    "reports": "Rapports",
+    "reportsOverview": "Vue d'ensemble",
+    "auditLogs": "Journaux d'audit",
+    "users": "Utilisateurs",
+    "integrations": "Intégrations",
+    "settings": "Paramètres",
+    "notifications": "Notifications",
+    "logout": "Déconnexion",
     "blocks": "Blocs & lots",
     "addressing": "Adressage",
     "review": "Revue des données",
     "staff": "Personnel",
-    "clients": "Clients",
-    "settings": "Paramètres",
-    "notifications": "Notifications",
-    "logout": "Déconnexion"
+    "clients": "Clients"
   },
   "common": {
     "search": "Rechercher…",
@@ -58,6 +71,13 @@
       "active": "Actif",
       "trial": "Essai",
       "suspended": "Suspendu"
+    },
+    "stage": {
+      "registered": "Enregistré",
+      "surveyed": "Levé",
+      "verified": "Vérifié",
+      "approved": "Approuvé",
+      "published": "Publié"
     }
   },
   "alerts": {
@@ -66,22 +86,69 @@
     "block_stalled": "Bloc {{code}} à l'arrêt"
   },
   "dashboard": {
-    "title": "Tableau de bord",
     "eyebrow": "République de Djibouti · vue nationale",
-    "range30d": "30 derniers jours",
-    "blocksTotal": "Blocs cartographiés",
-    "streetsRegistered": "Rues enregistrées",
-    "areaCovered": "Superficie couverte",
-    "addresses": "Adresses enregistrées",
-    "activeClients": "Clients actifs",
-    "apiCalls30d": "Appels API · 30 j",
-    "trialCount": "{{count}} en essai",
-    "collectionsTitle": "Collectes soumises · 12 semaines",
-    "blocksByStatus": "Blocs par statut",
-    "blocksUnit": "blocs",
-    "apiByClient": "Consommation API par client",
-    "callsTotal": "{{count}} appels",
-    "zoneProgress": "Progression par zone"
+    "vs30d": "30 j",
+    "ofTotal": "du total",
+    "requiresAttention": "requiert attention",
+    "teamsInField": "{{count}} équipes sur le terrain",
+    "kpi": {
+      "total": "Propriétés enregistrées",
+      "verified": "Adresses vérifiées",
+      "pending": "Vérif. terrain en attente",
+      "teams": "Équipes actives",
+      "postcodes": "Codes postaux émis",
+      "alerts": "Alertes qualité"
+    },
+    "workflowProgress": "Progression du workflow",
+    "nationalHierarchy": "Hiérarchie nationale",
+    "nationalMap": "Carte nationale",
+    "mapNote": "Aperçu — carte interactive dans SIG & Cartographie",
+    "recentActivity": "Activité récente",
+    "viewAll": "Tout voir",
+    "registrationsTrend": "Tendance des enregistrements",
+    "verificationCompletion": "Vérification",
+    "verified": "Vérifiées",
+    "pending": "En attente",
+    "unverified": "Non vérifiées",
+    "quickActions": "Actions rapides",
+    "qa": {
+      "createAddress": "Créer une adresse",
+      "assignTeam": "Assigner une équipe",
+      "approveBatch": "Approuver un lot",
+      "generateReport": "Générer un rapport"
+    },
+    "level": {
+      "region": "Région",
+      "ville": "Ville",
+      "commune": "Commune",
+      "quartier": "Quartier",
+      "bloc": "Bloc",
+      "rue": "Rue",
+      "parcelle": "Parcelle"
+    },
+    "activity": {
+      "batchApproved": {
+        "title": "Lot d'adresses approuvé",
+        "desc": "Lot {{code}} approuvé"
+      },
+      "postcodeCreated": {
+        "title": "Code postal créé",
+        "desc": "{{code}} créé pour {{area}}"
+      },
+      "surveyUploaded": {
+        "title": "Levé terrain importé",
+        "desc": "{{team}} a importé {{count}} enregistrements"
+      },
+      "duplicateFlagged": {
+        "title": "Doublon signalé",
+        "desc": "Doublon potentiel à {{location}}"
+      },
+      "published": {
+        "title": "Adresses publiées",
+        "desc": "{{count}} adresses publiées au registre"
+      }
+    },
+    "layerAddresses": "Adresses"
   },
   "blocks": {
     "eyebrow": "Djibouti-ville · Boulaos",
@@ -101,14 +168,18 @@
     "agentAssigned": "Agent assigné",
     "selectAgent": "Choisir un agent…",
     "assign": "Assigner",
-    "lotsProgress": "Progression des lots",
+    "parcels": "Parcelles",
+    "parcelsProgress": "Progression des parcelles",
     "lots": "Lots",
+    "lotsProgress": "Progression des lots",
     "nameLabel": "Nom du bloc",
     "namePlaceholder": "ex. Avenue du Corail",
     "saveName": "Enregistrer",
     "mapPreview": "Aperçu du bloc",
     "mapNote": "Carte MapLibre à intégrer",
-    "mapError": "Carte indisponible"
+    "mapError": "Carte indisponible",
+    "viewList": "Liste",
+    "viewMap": "Carte"
   },
   "addressing": {
     "title": "Adressage",
@@ -127,13 +198,13 @@
     "emptyBlocks": "Aucun bloc à nommer",
     "emptyStreets": "Aucune rue à nommer",
     "emptyProperties": "Aucune propriété à numéroter",
-    "lot": "Lot",
-    "houseNumberPlaceholder": "N°",
-    "saveNumber": "Enregistrer",
+    "numero": "Numéro",
+    "adjust": "Ajuster",
+    "numberingHint": "Les numéros sont générés automatiquement à l'import (séquentiels par bloc). L'ajustement reste possible pour corriger.",
     "details": "Détails",
     "region": "Région",
+    "ville": "Ville",
     "commune": "Commune",
-    "arrondissement": "Arrondissement",
     "quartier": "Quartier"
   },
   "review": {
@@ -273,5 +344,265 @@
     "tokenRevoked": "Jeton révoqué",
     "staffCreated": "Membre ajouté",
     "numbered": "Numéro attribué"
+  },
+  "app": {
+    "tagline": "Opérations d'adressage national",
+    "systemStatus": "État du système",
+    "allOperational": "Tous les systèmes opérationnels",
+    "country": "République de Djibouti",
+    "ministry": "Ministère de l'Intérieur",
+    "authority": "Autorité D.A.S"
+  },
+  "topbar": {
+    "search": "Rechercher adresses, codes postaux, parcelles, équipes…",
+    "help": "Aide",
+    "language": "Langue"
+  },
+  "registry": {
+    "eyebrow": "Gérer les adresses, parcelles et codes postaux officiels",
+    "import": "Importer",
+    "merge": "Fusionner doublons",
+    "create": "Créer une adresse",
+    "export": "Exporter",
+    "kpi": {
+      "total": "Enregistrements",
+      "pending": "En attente de revue",
+      "duplicates": "Doublons signalés",
+      "published": "Publiés aujourd'hui"
+    },
+    "searchPlaceholder": "Adresse, rue, repère…",
+    "allPostcodes": "Tous les codes postaux",
+    "allRegions": "Toutes les régions",
+    "allStatuses": "Tous les statuts",
+    "allTeams": "Toutes les équipes",
+    "selected": "{{count}} sélectionné(s)",
+    "approveSelected": "Approuver",
+    "publishSelected": "Publier",
+    "colId": "ID adresse",
+    "colPostcode": "Code postal",
+    "colStreet": "Rue",
+    "colDistrict": "Quartier",
+    "colType": "Type",
+    "colStatus": "Statut",
+    "colUpdated": "Mise à jour",
+    "colTeam": "Équipe",
+    "empty": "Aucune adresse",
+    "rowsPerPage": "Lignes par page",
+    "pageRange": "{{from}}–{{to}} sur {{total}}",
+    "tabDetails": "Détails",
+    "tabHistory": "Historique",
+    "tabLinked": "Liens",
+    "components": "Composants de l'adresse",
+    "location": "Localisation",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "parcelNumber": "N° de parcelle",
+    "propertyInfo": "Propriété",
+    "occupancy": "Occupation",
+    "buildingUse": "Usage du bâtiment",
+    "validation": "Validation",
+    "viewOnMap": "Voir sur la carte",
+    "editAddress": "Modifier",
+    "flagForReview": "Signaler pour revue",
+    "type": {
+      "residential": "Résidentiel",
+      "commercial": "Commercial",
+      "industrial": "Industriel",
+      "institutional": "Institutionnel",
+      "vacant": "Vacant"
+    },
+    "occupancy.occupied": "Occupé",
+    "occupancy.vacant": "Vacant",
+    "occupancy.under_construction": "En construction",
+    "occupancy.unknown": "Inconnu",
+    "history": {
+      "created": "Adresse créée",
+      "verified": "Vérifiée sur site"
+    },
+    "linked": {
+      "street": "Rue",
+      "postcode": "Code postal",
+      "block": "Bloc",
+      "team": "Équipe"
+    },
+    "layerParcels": "Parcelles"
+  },
+  "postcodes": {
+    "eyebrow": "Allocation et suivi des codes postaux",
+    "allocate": "Allouer un code postal",
+    "code": "Code",
+    "area": "Zone",
+    "areaPlaceholder": "Quartier / commune",
+    "region": "Région",
+    "reserve": "Réserver",
+    "issuedThisMonth": "émis ce mois",
+    "active": "actifs",
+    "reserved": "réservés",
+    "issuedByMonth": "Émis par mois",
+    "addresses": "Adresses",
+    "statusCol": "Statut",
+    "issued": "Émis le",
+    "empty": "Aucun code postal",
+    "status": {
+      "active": "Actif",
+      "reserved": "Réservé",
+      "retired": "Retiré"
+    }
+  },
+  "fieldops": {
+    "eyebrow": "Gérer les équipes, tâches de vérification et couverture",
+    "kpi": {
+      "activeTeams": "Équipes actives",
+      "tasksToday": "Tâches assignées aujourd'hui",
+      "completed": "Levés terminés",
+      "pending": "Vérifications en attente",
+      "offline": "Appareils hors-ligne",
+      "escalations": "Escalades"
+    },
+    "ofAssigned": "des assignées",
+    "teamRoster": "Effectif des équipes",
+    "team": "Équipe",
+    "supervisor": "Superviseur",
+    "currentZone": "Zone actuelle",
+    "progress": "Progression",
+    "device": "Appareil",
+    "members": "{{count}} membres",
+    "taskBoard": "Tableau des tâches",
+    "col": {
+      "new": "Nouveau",
+      "in_progress": "En cours",
+      "awaiting_review": "En attente de revue",
+      "completed": "Terminé"
+    },
+    "priority": {
+      "high": "Haute",
+      "normal": "Normale",
+      "low": "Basse"
+    },
+    "verificationReview": "Revue de vérification",
+    "taskId": "ID tâche",
+    "submittedBy": "Soumis par",
+    "location": "Localisation",
+    "geoConfidence": "Confiance géo",
+    "approve": "Approuver",
+    "reject": "Rejeter",
+    "requestResurvey": "Redemander un levé",
+    "liveMap": "Carte terrain en direct",
+    "layerZones": "Zones",
+    "layerTeams": "Équipes"
+  },
+  "dataquality": {
+    "eyebrow": "Règles qualité, alertes et détection de doublons",
+    "runScan": "Lancer un scan",
+    "scanning": "Scan en cours…",
+    "kpi": {
+      "coverage": "Taux de couverture",
+      "accuracy": "Score de précision",
+      "duplicate": "Taux de doublons",
+      "openCases": "Cas qualité ouverts"
+    },
+    "alerts": "Alertes qualité",
+    "issueType": "Type d'anomalie",
+    "severity": "Sévérité",
+    "district": "District",
+    "ruleTriggered": "Règle déclenchée",
+    "impacted": "Enregistrements impactés",
+    "reviewer": "Reviewer",
+    "statusCol": "Statut",
+    "severity.high": "Haute",
+    "severity.medium": "Moyenne",
+    "severity.low": "Basse",
+    "caseStatus.new": "Nouveau",
+    "caseStatus.in_review": "En revue",
+    "caseStatus.resolved": "Résolu",
+    "issue": {
+      "duplicate_candidate": "Doublon potentiel",
+      "missing_coordinates": "Coordonnées manquantes",
+      "inconsistent_street": "Nom de rue incohérent",
+      "out_of_boundary": "Propriété hors limite",
+      "missing_building_type": "Type de bâtiment manquant"
+    },
+    "trigger": {
+      "duplicate_detected": "Adresse en doublon détectée",
+      "coordinates_missing": "Coordonnées absentes",
+      "street_standardization": "Standardisation des noms de rue",
+      "outside_boundary": "Hors des limites administratives",
+      "building_type_required": "Type de bâtiment requis"
+    },
+    "autoRules": "Règles automatisées",
+    "impactedShort": "impactés",
+    "rule": {
+      "missing_coordinates": {
+        "name": "Coordonnées manquantes",
+        "desc": "Signale les adresses sans latitude/longitude valide."
+      },
+      "duplicate_coordinate": {
+        "name": "Coordonnée en doublon",
+        "desc": "Détecte les candidats doublons d'adresse."
+      },
+      "inconsistent_street": {
+        "name": "Nom de rue incohérent",
+        "desc": "Identifie les noms de rue non conformes."
+      },
+      "out_of_boundary": {
+        "name": "Propriété hors limite",
+        "desc": "Signale les parcelles hors des limites définies."
+      },
+      "missing_building_type": {
+        "name": "Type de bâtiment manquant",
+        "desc": "Identifie les adresses sans type de bâtiment."
+      }
+    },
+    "coverageByRegion": "Couverture par région",
+    "duplicates": "Doublons détectés",
+    "dupKind": "Type",
+    "dupA": "Adresse A",
+    "dupB": "Adresse B",
+    "dupScore": "Score",
+    "merge": "Fusionner",
+    "dismiss": "Ignorer",
+    "noDuplicates": "Aucun doublon détecté",
+    "kind": {
+      "spatial": "Spatial",
+      "textual": "Textuel"
+    }
+  },
+  "map": {
+    "layers": "Couches",
+    "error": "Carte indisponible"
+  },
+  "reports": {
+    "eyebrow": "Analyses et performance nationale de l'adressage",
+    "period": "Avr – Mai 2025",
+    "export": "Exporter",
+    "generate": "Générer un rapport",
+    "generating": "Génération…",
+    "vs30d": "30 j",
+    "days": " j",
+    "avg": "Moyenne",
+    "kpi": {
+      "coverage": "Taux de couverture",
+      "accuracy": "Score de précision",
+      "sla": "SLA de vérification",
+      "turnaround": "Délai moyen de traitement"
+    },
+    "growthTrend": "Croissance des adresses",
+    "totalAddresses": "Adresses totales",
+    "verifiedAddresses": "Adresses vérifiées",
+    "total": "Total",
+    "regionalComparison": "Comparaison régionale",
+    "turnaround": "Délai de vérification (jours)",
+    "quickActions": "Actions rapides",
+    "qa": {
+      "runScan": "Lancer un scan qualité",
+      "runScanDesc": "Exécute les règles qualité sur le registre national.",
+      "exportNational": "Exporter le rapport national",
+      "exportNationalDesc": "Télécharge le rapport complet qualité et performance.",
+      "schedule": "Planifier un rapport mensuel",
+      "scheduleDesc": "Automatise l'envoi mensuel aux parties prenantes.",
+      "snapshot": "Publier un instantané",
+      "snapshotDesc": "Capture et partage la vue actuelle du tableau de bord."
+    },
+    "coverageByRegion": "Couverture par région"
   }
 }

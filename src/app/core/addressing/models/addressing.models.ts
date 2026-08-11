@@ -19,7 +19,6 @@ export interface BlockToName {
   id: UUID;
   code: string;
   name: string | null;
-  /** Suggestion en attente de traitement, s'il y en a une — au plus une à la fois (contrainte backend). */
   pendingSuggestion: NameSuggestion | null;
   status: BlockStatus;
 }
@@ -29,7 +28,7 @@ export interface BlockNamingQuery {
   onlyUnnamed: boolean;
 }
 
-/** Reprend exactement l'enum backend (Streets.Type) — pas une table pilotable, contrairement à ROAD_TYPES initialement prévu. */
+/** Reprend l'enum backend (Streets.Type). */
 export type StreetType = 'Rue' | 'Avenue' | 'Boulevard' | 'Piste' | 'Impasse' | 'Route';
 
 export interface StreetToName {
@@ -45,32 +44,38 @@ export interface StreetNamingQuery {
   onlyUnnamed: boolean;
 }
 
+/** Hiérarchie de rattachement — Region → Ville → Commune → Quartier (plus d'arrondissement). */
 export interface AdminHierarchy {
   region: string;
+  ville: string;
   commune: string;
-  arrondissement: string | null;
   quartier: string;
 }
 
+/**
+ * Parcelle à consulter/ajuster. Le `numero` est généré automatiquement à
+ * l'import (séquentiel par bloc) ; l'écran sert surtout à la consultation, avec
+ * possibilité d'ajustement ponctuel. Plus de lot (la parcelle EST l'adresse).
+ */
 export interface PropertyToNumber {
   id: UUID;
   blockCode: string;
   blockName: string | null;
-  lotCode: string | null;
-  houseNumber: string;
+  numero: string;
 
   quartierName: string;
   cityName: string;
   adminHierarchy: AdminHierarchy;
 
   addressCode: string;
-  /** Calculé côté API (EF Core, jointure Adresses→Lots→Blocs→Quartiers→Communes) — jamais recalculé ni stocké côté frontend. */
+  /** Calculé côté API (jointure Adresses→Blocs→Quartiers→…→Region) — jamais recalculé côté frontend. */
   formattedAddress: string;
   status: 'draft' | 'submitted' | 'approved' | 'needs_redo';
 }
 
+/** Ajustement ponctuel du numéro (correction) — le numéro initial reste auto-généré. */
 export interface AssignHouseNumberPayload {
-  houseNumber: string;
+  numero: string;
 }
 
 export interface PropertyNumberingQuery {

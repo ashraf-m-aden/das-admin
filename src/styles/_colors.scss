@@ -1,46 +1,51 @@
 :root {
-  --das-indigo-900: #312e81;
-  --das-indigo-800: #3730a3;
-  --das-indigo-700: #4338ca;
-  --das-indigo-600: #4f46e5;
-  --das-indigo-500: #6366f1;
-  --das-indigo-100: #e0e7ff;
-  --das-indigo-50:  #eef0ff;
+  /* Marine (sidebar / topbar) */
+  --das-navy-950: #0b1220;
+  --das-navy-900: #0f1a2e;
+  --das-navy-800: #16233c;
+  --das-navy-700: #1e2f4d;
 
+  /* Bleu accent (actions, item actif, liens) */
+  --das-blue-700: #1d4ed8;
   --das-blue-600: #2563eb;
+  --das-blue-500: #3b82f6;
   --das-blue-100: #dbeafe;
+  --das-blue-50:  #eff6ff;
 
+  /* Statuts / catégories */
   --das-purple-600: #7c3aed;
   --das-purple-100: #f3e8fd;
-
   --das-amber-600: #d97706;
   --das-amber-100: #fef3c7;
-
   --das-green-600: #16a34a;
   --das-green-100: #dcfce7;
-
   --das-red-600: #dc2626;
   --das-red-100: #fee2e2;
+  --das-teal-600: #0d9488;
+  --das-teal-100: #ccfbf1;
 
-  --das-ink-900: #1b2137;
-  --das-ink-700: #3f4658;
-  --das-ink-600: #5a6274;
-  --das-ink-500: #9099ab;
-  --das-ink-300: #c2c8d4;
+  /* Neutres */
+  --das-ink-900: #111827;
+  --das-ink-700: #374151;
+  --das-ink-600: #4b5563;
+  --das-ink-500: #6b7280;
+  --das-ink-400: #9ca3af;
+  --das-ink-300: #cbd5e1;
 
-  --das-line:        #eaedf3;
-  --das-line-strong: #dde1ea;
+  --das-line:        #e6eaf0;
+  --das-line-strong: #d7dde7;
   --das-surface:        #ffffff;
-  --das-surface-alt:    #f6f8fb;
-  --das-surface-sunken: #f1f3f7;
+  --das-surface-alt:    #f4f6fa;
+  --das-surface-sunken: #eef1f6;
   --das-white:          #ffffff;
 
-  --color-primary: var(--das-indigo-900);
-  --color-primary-hover: var(--das-indigo-800);
+  /* ---- Rôles sémantiques (noms conservés) ---- */
+  --color-primary: var(--das-navy-900);          /* sidebar / topbar */
+  --color-primary-hover: var(--das-navy-800);
   --color-on-primary: var(--das-white);
 
-  --color-accent: var(--das-indigo-600);
-  --color-accent-hover: var(--das-indigo-700);
+  --color-accent: var(--das-blue-600);           /* CTA / actif / liens */
+  --color-accent-hover: var(--das-blue-700);
   --color-on-accent: var(--das-white);
 
   --color-surface: var(--das-surface);
@@ -52,7 +57,7 @@
   --color-text-primary: var(--das-ink-900);
   --color-text-secondary: var(--das-ink-700);
   --color-text-muted: var(--das-ink-500);
-  --color-text-disabled: var(--das-ink-300);
+  --color-text-disabled: var(--das-ink-400);
   --color-text-inverse: var(--das-white);
 
   --color-success: var(--das-green-600);
@@ -61,9 +66,10 @@
   --color-warning-bg: var(--das-amber-100);
   --color-danger: var(--das-red-600);
   --color-danger-bg: var(--das-red-100);
-  --color-info: var(--das-indigo-600);
-  --color-info-bg: var(--das-indigo-100);
+  --color-info: var(--das-blue-600);
+  --color-info-bg: var(--das-blue-100);
 
+  /* Statuts entités (dot + tint) */
   --color-status-not-assigned: var(--das-ink-600);
   --color-status-not-assigned-bg: var(--das-surface-sunken);
   --color-status-assigned: var(--das-blue-600);
@@ -77,18 +83,27 @@
   --color-status-needs-redo: #b91c1c;
   --color-status-needs-redo-bg: var(--das-red-100);
 
-  --color-focus-ring: var(--das-indigo-600);
-  --color-overlay: rgb(27 33 55 / 55%);
+  /* Sidebar sombre — tokens dédiés */
+  --color-sidebar-bg: var(--das-navy-900);
+  --color-sidebar-item: #aab6c8;
+  --color-sidebar-item-hover-bg: rgb(255 255 255 / 6%);
+  --color-sidebar-item-active-bg: var(--das-blue-600);
+  --color-sidebar-item-active: var(--das-white);
+  --color-sidebar-section: #6b7a90;
+  --color-topbar-bg: var(--das-navy-950);
+
+  --color-focus-ring: var(--das-blue-600);
+  --color-overlay: rgb(11 18 32 / 55%);
 }
 
 $das-palette: (
-  "indigo-900": #312e81,
-  "indigo-600": #4f46e5,
+  "navy-900": #0f1a2e,
   "blue-600": #2563eb,
   "purple-600": #7c3aed,
   "amber-600": #d97706,
   "green-600": #16a34a,
   "red-600": #dc2626,
-  "ink-900": #1b2137,
-  "ink-500": #9099ab,
+  "teal-600": #0d9488,
+  "ink-900": #111827,
+  "ink-500": #6b7280,
 );

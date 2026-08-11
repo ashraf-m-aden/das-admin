@@ -1,15 +1,6 @@
 import {
-  Component,
-  DestroyRef,
-  ElementRef,
-  NgZone,
-  OnDestroy,
-  OnInit,
-  effect,
-  inject,
-  input,
-  signal,
-  viewChild,
+  Component, DestroyRef, ElementRef, NgZone, OnDestroy, OnInit,
+  effect, inject, input, signal, viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslocoModule } from '@jsverse/transloco';
@@ -17,25 +8,14 @@ import type { Feature, Geometry } from 'geojson';
 import * as maplibregl from 'maplibre-gl';
 import { AppConfigService } from '../../../core/config/app-config.service';
 import { MapStyleService } from '../../../core/map/map-style.service';
-import { BlockStatus, GeoJSONPolygon } from '../../../core/models/das.models';
+import { BlockStatus, GeoJSONMultiPolygon } from '../../../core/models/das.models';
 
 const STATUS_COLORS: Record<BlockStatus, string> = {
-  not_assigned: '#9aa3b5',
-  assigned: '#2563eb',
-  in_progress: '#d97706',
-  submitted: '#7c3aed',
-  approved: '#16a34a',
-  needs_redo: '#dc2626',
+  not_assigned: '#9aa3b5', assigned: '#2563eb', in_progress: '#d97706',
+  submitted: '#7c3aed', approved: '#16a34a', needs_redo: '#dc2626',
 };
-
 const MOCK_BASEMAP_STYLE_URL = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
 
-/**
- * Carte focalisée sur un seul bloc : affiche son polygone coloré par statut et
- * cadre dessus. Réutilise la même config MapLibre que blocks-map (worker posé
- * dans main.ts, init hors zone Angular, ResizeObserver). En mode mock : fond
- * Carto ; en mode réel : style Martin via MapStyleService.
- */
 @Component({
   selector: 'das-block-map',
   standalone: true,
@@ -44,7 +24,7 @@ const MOCK_BASEMAP_STYLE_URL = 'https://basemaps.cartocdn.com/gl/positron-gl-sty
   styleUrl: './block-map.component.scss',
 })
 export class BlockMapComponent implements OnInit, OnDestroy {
-  readonly geometry = input<GeoJSONPolygon | null>(null);
+  readonly geometry = input<GeoJSONMultiPolygon | null>(null);
   readonly status = input<BlockStatus>('not_assigned');
 
   private readonly mapContainer = viewChild.required<ElementRef<HTMLDivElement>>('mapContainer');
@@ -62,13 +42,10 @@ export class BlockMapComponent implements OnInit, OnDestroy {
   protected readonly initError = signal(false);
 
   constructor() {
-    // Re-rend le bloc quand la géométrie ou le statut change (une fois la carte prête).
     effect(() => {
       const geom = this.geometry();
       this.status();
-      if (this.map && this.loaded && geom) {
-        this.renderBlock();
-      }
+      if (this.map && this.loaded && geom) this.renderBlock();
     });
   }
 
@@ -77,10 +54,7 @@ export class BlockMapComponent implements OnInit, OnDestroy {
       if (this.isMockMode) {
         this.initMap(MOCK_BASEMAP_STYLE_URL);
       } else {
-        this.mapStyle
-          .getStyle()
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe((style) => this.initMap(style));
+        this.mapStyle.getStyle().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((style) => this.initMap(style));
       }
     });
   }
@@ -95,9 +69,7 @@ export class BlockMapComponent implements OnInit, OnDestroy {
   private initMap(style: maplibregl.StyleSpecification | string): void {
     const map = new maplibregl.Map({
       container: this.mapContainer().nativeElement,
-      style,
-      center: [43.145, 11.595],
-      zoom: 13,
+      style, center: [43.145, 11.595], zoom: 13,
     });
     this.map = map;
 
@@ -133,16 +105,19 @@ export class BlockMapComponent implements OnInit, OnDestroy {
       this.map.addLayer({ id: 'block-fill', type: 'fill', source: 'block', paint: { 'fill-color': color, 'fill-opacity': 0.4 } });
       this.map.addLayer({ id: 'block-outline', type: 'line', source: 'block', paint: { 'line-color': color, 'line-width': 2.5 } });
     }
-
     this.map.setPaintProperty('block-fill', 'fill-color', color);
     this.map.setPaintProperty('block-outline', 'line-color', color);
 
     this.fitToGeometry(geom);
   }
 
-  private fitToGeometry(geom: GeoJSONPolygon): void {
+  private fitToGeometry(geom: GeoJSONMultiPolygon): void {
     const bounds = new maplibregl.LngLatBounds();
-    geom.coordinates[0].forEach((c) => bounds.extend(c as [number, number]));
+    for (const polygon of geom.coordinates) {
+      for (const coord of polygon[0]) {
+        bounds.extend(coord as [number, number]);
+      }
+    }
     if (!bounds.isEmpty()) {
       this.map!.fitBounds(bounds, { padding: 40, maxZoom: 17, duration: 0 });
     }

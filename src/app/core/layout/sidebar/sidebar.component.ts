@@ -1,18 +1,26 @@
 import { Component, inject, signal } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
-import { map } from 'rxjs';
+import { TranslocoModule } from '@jsverse/transloco';
 import { AuthFacade } from '../../auth/store/auth.facade';
-import { NotificationsFacade } from '../../notifications/store/notifications.facade';
 import { UserRole } from '../../models/das.models';
 
-interface NavItem {
+interface NavLink {
+  kind: 'link';
   labelKey: string;
   path: string;
   icon: string;
   allowedRoles?: UserRole[];
 }
+interface NavGroup {
+  kind: 'group';
+  key: string;
+  labelKey: string;
+  icon: string;
+  allowedRoles?: UserRole[];
+  children: { labelKey: string; path: string }[];
+}
+type NavEntry = NavLink | NavGroup;
 
 @Component({
   selector: 'das-sidebar',
@@ -23,76 +31,50 @@ interface NavItem {
 })
 export class SidebarComponent {
   private authFacade = inject(AuthFacade);
-  private notificationsFacade = inject(NotificationsFacade);
-  private transloco = inject(TranslocoService);
-
-  private readonly storageKey = 'das.sidebar.collapsed';
-  protected readonly collapsed = signal(this.readCollapsed());
-  protected readonly activeLang = signal(this.transloco.getActiveLang());
-
-  private readonly langs = this.transloco
-    .getAvailableLangs()
-    .map((l) => (typeof l === 'string' ? l : l.id));
-
-  protected readonly fullName$ = this.authFacade.fullName$;
   protected readonly roles$ = this.authFacade.roles$;
-  protected readonly unreadCount$ = this.notificationsFacade.unreadCount$;
 
-  protected readonly initials$ = this.authFacade.fullName$.pipe(
-    map((name) => {
-      const parts = (name ?? '').trim().split(/\s+/).filter(Boolean);
-      if (!parts.length) return '?';
-      return (parts[0][0] + (parts[1]?.[0] ?? '')).toUpperCase();
-    }),
-  );
+  protected readonly openGroups = signal<Set<string>>(new Set());
 
-  protected readonly navItems: NavItem[] = [
-    { labelKey: 'nav.dashboard', path: '/dashboard', icon: 'ti-layout-dashboard' },
-    { labelKey: 'nav.blocks', path: '/blocks', icon: 'ti-map-2' },
-    { labelKey: 'nav.addressing', path: '/addressing', icon: 'ti-signpost', allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
-    { labelKey: 'nav.review', path: '/review', icon: 'ti-checkup-list', allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
-    { labelKey: 'nav.staff', path: '/staff', icon: 'ti-users', allowedRoles: ['Admin'] },
-    { labelKey: 'nav.clients', path: '/clients', icon: 'ti-briefcase', allowedRoles: ['Admin'] },
-    // { labelKey: 'nav.settings', path: '/settings', icon: 'ti-settings', allowedRoles: ['Admin'] },
+  protected readonly entries: NavEntry[] = [
+    { kind: 'link', labelKey: 'nav.dashboard', path: '/dashboard', icon: 'ti-layout-dashboard' },
+    { kind: 'link', labelKey: 'nav.registry', path: '/registry', icon: 'ti-address-book' },
+    {
+      kind: 'group', key: 'gis', labelKey: 'nav.gis', icon: 'ti-map-2',
+      allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'],
+      children: [
+        { labelKey: 'nav.gisMap', path: '/blocks/map' },
+      ],
+    },
+    { kind: 'link', labelKey: 'nav.fieldOps', path: '/field-operations', icon: 'ti-users-group', allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
+    { kind: 'link', labelKey: 'nav.verification', path: '/review', icon: 'ti-checkup-list', allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
+    { kind: 'link', labelKey: 'nav.postcodes', path: '/postcodes', icon: 'ti-mail-code', allowedRoles: ['Admin', 'Gestionnaire'] },
+    { kind: 'link', labelKey: 'nav.dataQuality', path: '/data-quality', icon: 'ti-shield-check', allowedRoles: ['Admin', 'Superviseur'] },
+    {
+      kind: 'group', key: 'reports', labelKey: 'nav.reports', icon: 'ti-chart-bar',
+      allowedRoles: ['Admin', 'Gestionnaire'],
+      children: [
+        { labelKey: 'nav.reportsOverview', path: '/reports' },
+        { labelKey: 'nav.auditLogs', path: '/reports/audit' },
+      ],
+    },
+    { kind: 'link', labelKey: 'nav.users', path: '/staff', icon: 'ti-users', allowedRoles: ['Admin'] },
+    { kind: 'link', labelKey: 'nav.integrations', path: '/integrations', icon: 'ti-plug', allowedRoles: ['Admin'] },
+    { kind: 'link', labelKey: 'nav.settings', path: '/settings', icon: 'ti-settings', allowedRoles: ['Admin'] },
   ];
 
-  isVisible(item: NavItem, roles: UserRole[]): boolean {
-    return !item.allowedRoles || item.allowedRoles.some((r) => roles.includes(r));
+  isVisible(entry: NavEntry, roles: UserRole[]): boolean {
+    return !entry.allowedRoles || entry.allowedRoles.some((r) => roles.includes(r));
   }
 
-  toggle(): void {
-    const next = !this.collapsed();
-    this.collapsed.set(next);
-    try {
-      localStorage.setItem(this.storageKey, next ? '1' : '0');
-    } catch {
-      /* stockage indisponible : on garde l'état en mémoire uniquement */
-    }
+  isOpen(key: string): boolean {
+    return this.openGroups().has(key);
   }
 
-  toggleLang(): void {
-    if (this.langs.length < 2) return;
-    const current = this.transloco.getActiveLang();
-    const idx = this.langs.indexOf(current);
-    const next = this.langs[(idx + 1) % this.langs.length];
-    this.transloco.setActiveLang(next);
-    this.activeLang.set(next);
-  }
-
-  langLabel(code: string): string {
-    const labels: Record<string, string> = { fr: 'Français', en: 'English' };
-    return labels[code] ?? code.toUpperCase();
-  }
-
-  logout(): void {
-    this.authFacade.logout();
-  }
-
-  private readCollapsed(): boolean {
-    try {
-      return localStorage.getItem(this.storageKey) === '1';
-    } catch {
-      return false;
-    }
+  toggleGroup(key: string): void {
+    this.openGroups.update((set) => {
+      const next = new Set(set);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
   }
 }

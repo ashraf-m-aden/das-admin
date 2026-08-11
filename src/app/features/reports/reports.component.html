@@ -1,0 +1,84 @@
+<das-page-header [eyebrow]="'reports.eyebrow' | transloco" [title]="'nav.reports' | transloco">
+  <div actions class="rp-actions">
+    <span class="rp-range"><i class="ti ti-calendar" aria-hidden="true"></i>{{ 'reports.period' | transloco }}</span>
+    <das-date-range-button actions [label]="'May 22, 2025'" />
+    <button type="button" class="rbtn" (click)="exportCsv()" [disabled]="facade.busy()"><i class="ti ti-download" aria-hidden="true"></i>{{ 'reports.export' | transloco }}</button>
+    <button type="button" class="rbtn rbtn--primary" (click)="generate()" [disabled]="facade.busy()"><i class="ti ti-file-analytics" aria-hidden="true"></i>@if (facade.busy()) { {{ 'reports.generating' | transloco }} } @else { {{ 'reports.generate' | transloco }} }</button>
+  </div>
+</das-page-header>
+
+<div class="rp">
+  @if (facade.data(); as d) {
+    <div class="kpis">
+      <div class="kpi"><span class="kpi__l">{{ 'reports.kpi.coverage' | transloco }}</span><span class="kpi__v">{{ d.kpis.coverageRate }} %</span><span class="kpi__d">▲ {{ d.kpis.coverageDelta }} % · {{ 'reports.vs30d' | transloco }}</span></div>
+      <div class="kpi"><span class="kpi__l">{{ 'reports.kpi.accuracy' | transloco }}</span><span class="kpi__v">{{ d.kpis.accuracyScore }}<small>/100</small></span><span class="kpi__d">▲ {{ d.kpis.accuracyDelta }} · {{ 'reports.vs30d' | transloco }}</span></div>
+      <div class="kpi"><span class="kpi__l">{{ 'reports.kpi.sla' | transloco }}</span><span class="kpi__v">{{ d.kpis.verificationSla }} %</span><span class="kpi__d">▲ {{ d.kpis.slaDelta }} % · {{ 'reports.vs30d' | transloco }}</span></div>
+      <div class="kpi"><span class="kpi__l">{{ 'reports.kpi.turnaround' | transloco }}</span><span class="kpi__v">{{ d.kpis.avgTurnaroundDays }}<small>{{ 'reports.days' | transloco }}</small></span><span class="kpi__d kpi__d--muted">{{ 'reports.avg' | transloco }}</span></div>
+    </div>
+
+    <div class="charts">
+      <!-- Croissance -->
+      <section class="das-card panel panel--wide">
+        <div class="panel__title">{{ 'reports.growthTrend' | transloco }}</div>
+        <div class="legend"><span><i class="dot dot--blue"></i>{{ 'reports.totalAddresses' | transloco }}</span><span><i class="dot dot--green"></i>{{ 'reports.verifiedAddresses' | transloco }}</span></div>
+        <svg class="chart-svg" viewBox="0 0 300 110" preserveAspectRatio="none">
+          <polyline [attr.points]="growthTotalPath()" fill="none" stroke="var(--das-blue-600)" stroke-width="2" />
+          <polyline [attr.points]="growthVerifiedPath()" fill="none" stroke="var(--das-green-600)" stroke-width="2" />
+        </svg>
+        <div class="axis">@for (p of facade.growth(); track p.label) { <span>{{ p.label }}</span> }</div>
+        <div class="totals">
+          <div><span class="totals__l">{{ 'reports.total' | transloco }}</span><span class="totals__v">{{ d.totalAddresses | number }}</span></div>
+          <div><span class="totals__l">{{ 'status.stage.verified' | transloco }}</span><span class="totals__v">{{ d.verifiedAddresses | number }}</span></div>
+        </div>
+      </section>
+
+      <!-- Comparaison régionale -->
+      <section class="das-card panel">
+        <div class="panel__title">{{ 'reports.regionalComparison' | transloco }}</div>
+        <div class="bars">
+          @for (r of facade.regional(); track r.region) {
+            <div class="bar"><span class="bar__val">{{ r.completionPct }} %</span><div class="bar__fill" [style.height.%]="barHeight(r.completionPct)"></div><span class="bar__label">{{ r.region }}</span></div>
+          }
+        </div>
+      </section>
+
+      <!-- SLA turnaround -->
+      <section class="das-card panel">
+        <div class="panel__title">{{ 'reports.turnaround' | transloco }}</div>
+        <svg class="chart-svg" viewBox="0 0 300 110" preserveAspectRatio="none">
+          <polyline [attr.points]="turnaroundPath()" fill="none" stroke="var(--das-blue-600)" stroke-width="2" />
+        </svg>
+        <div class="axis">@for (p of facade.turnaround(); track p.label) { <span>{{ p.label }}</span> }</div>
+        <div class="turnaround-avg">{{ 'reports.avg' | transloco }} <b>{{ d.kpis.avgTurnaroundDays }} {{ 'reports.days' | transloco }}</b></div>
+      </section>
+    </div>
+<section class="das-card panel">
+      <div class="panel__title">{{ 'reports.coverageByRegion' | transloco }}</div>
+      <div class="cov-map"><das-map [features]="coverageFeatures()" [layers]="coverageLayers" [showLayerControl]="false" /></div>
+    </section>
+    <!-- Actions rapides -->
+    <section class="das-card panel">
+      <div class="panel__title">{{ 'reports.quickActions' | transloco }}</div>
+      <div class="qa">
+        <button type="button" class="qa__btn" (click)="generate()" [disabled]="facade.busy()">
+          <span class="qa__ic"><i class="ti ti-search" aria-hidden="true"></i></span>
+          <div><div class="qa__t">{{ 'reports.qa.runScan' | transloco }}</div><div class="qa__d">{{ 'reports.qa.runScanDesc' | transloco }}</div></div>
+        </button>
+        <button type="button" class="qa__btn" (click)="exportPdf()" [disabled]="facade.busy()">
+          <span class="qa__ic"><i class="ti ti-download" aria-hidden="true"></i></span>
+          <div><div class="qa__t">{{ 'reports.qa.exportNational' | transloco }}</div><div class="qa__d">{{ 'reports.qa.exportNationalDesc' | transloco }}</div></div>
+        </button>
+        <button type="button" class="qa__btn">
+          <span class="qa__ic"><i class="ti ti-calendar-time" aria-hidden="true"></i></span>
+          <div><div class="qa__t">{{ 'reports.qa.schedule' | transloco }}</div><div class="qa__d">{{ 'reports.qa.scheduleDesc' | transloco }}</div></div>
+        </button>
+        <button type="button" class="qa__btn">
+          <span class="qa__ic"><i class="ti ti-camera" aria-hidden="true"></i></span>
+          <div><div class="qa__t">{{ 'reports.qa.snapshot' | transloco }}</div><div class="qa__d">{{ 'reports.qa.snapshotDesc' | transloco }}</div></div>
+        </button>
+      </div>
+    </section>
+  } @else {
+    <div class="rp__loading">{{ 'common.loading' | transloco }}</div>
+  }
+</div>

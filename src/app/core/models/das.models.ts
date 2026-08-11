@@ -5,14 +5,28 @@ export type ISODate = string;
 export interface GeoJSONPoint { type: 'Point'; coordinates: [number, number]; }
 export interface GeoJSONLineString { type: 'LineString'; coordinates: [number, number][]; }
 export interface GeoJSONPolygon { type: 'Polygon'; coordinates: [number, number][][]; }
+export interface GeoJSONMultiPolygon { type: 'MultiPolygon'; coordinates: [number, number][][][]; }
 export type GeoJSONPointOrLine = GeoJSONPoint | GeoJSONLineString;
 
-export type AdminUnitLevel = 'country' | 'region' | 'commune' | 'sub_prefecture' | 'arrondissement' | 'quartier';
+/* =============================================================================
+ * HIÉRARCHIE ADMINISTRATIVE — arbre générique
+ * Region → Ville → Commune → Quartier   (au-dessus du Bloc)
+ * Puis entités concrètes : Bloc → Parcelle (= Adresse). Plus de Lot.
+ * ========================================================================== */
+
+export type AdminUnitLevel = 'region' | 'ville' | 'commune' | 'quartier';
 
 export interface AdministrativeUnit {
-  id: UUID; parentId: UUID | null; levelType: AdminUnitLevel; code: string;
-  nameFr: string; nameAr: string; path: string; geomPolygon: GeoJSONPolygon;
-  publicVisible: boolean; createdAt: ISODateTime;
+  id: UUID;
+  parentId: UUID | null;
+  levelType: AdminUnitLevel;
+  code: string;                    // ex. "Q7" pour un quartier
+  nameFr: string;
+  nameAr: string | null;
+  path: string;                    // ltree matérialisé (rattachement + reporting)
+  geom: GeoJSONMultiPolygon;
+  publicVisible: boolean;
+  createdAt: ISODateTime;
 }
 
 export type RoadTypeCode = 'street' | 'avenue' | 'boulevard' | 'alley' | 'road' | 'intersection' | 'roundabout';
@@ -21,12 +35,12 @@ export interface RoadType { id: UUID; code: RoadTypeCode; labelFr: string; isPoi
 export type BlockStatus = 'not_assigned' | 'assigned' | 'in_progress' | 'submitted' | 'approved' | 'needs_redo';
 export interface Block {
   id: UUID;
-  adminUnitId: UUID;
-  code: string;
-  /** Nom officiel utilisé dans les adresses (ex: "Avenue Nasser"). Fixé via le module Adressage ou la page détail. */
+  adminUnitId: UUID;               // rattaché à l'unité de niveau quartier (calculé à l'import)
+  code: string;                    // calculé backend
+  /** Nom officiel utilisé dans les adresses (ex: "Avenue Nasser"). Fixé via l'Adressage. */
   name: string | null;
-  geomPolygon: GeoJSONPolygon;
-  areaM2: number;
+  geom: GeoJSONMultiPolygon;
+  areaM2: number;                  // calculé (UTM 38N)
   status: BlockStatus;
   assignedUserId: UUID | null;
   sourceFile: string | null;
@@ -35,22 +49,49 @@ export interface Block {
   updatedAt: ISODateTime;
 }
 
-export type LotPlannedType = 'residential' | 'commercial' | 'mixed';
-export type LotStatus = 'planned' | 'in_progress' | 'completed';
-export interface Lot {
-  id: UUID; blockId: UUID; code: string; plannedType: LotPlannedType;
-  plannedUnitCount: number; actualUnitCount: number; status: LotStatus; createdAt: ISODateTime;
-}
+/* Le niveau LOT est supprimé : la parcelle EST l'adresse (Bloc → Parcelle). */
 
-export type PropertyType = 'residential' | 'commercial' | 'industrial' | 'vacant';
+/* Cycle de vie enrichi (maquettes) : Registered → Surveyed → Verified → Approved → Published */
+export type AddressWorkflowStage = 'registered' | 'surveyed' | 'verified' | 'approved' | 'published';
+export type PropertyType = 'residential' | 'commercial' | 'industrial' | 'institutional' | 'vacant';
+export type OccupancyType = 'occupied' | 'vacant' | 'under_construction' | 'unknown';
+
+/** Statuts de soumission pour la file de vérification (revue terrain). */
 export type SubmissionStatus = 'draft' | 'submitted' | 'approved' | 'needs_redo';
+
+/**
+ * Parcelle = Adresse. Livrée par l'expert comme un polygone (emprise) ; le
+ * backend calcule numero, location, blockId. validationScore et geoConfidence
+ * alimentent la revue et les indicateurs de qualité (cf. maquettes).
+ */
 export interface Property {
-  id: UUID; blockId: UUID; lotId: UUID | null; streetId: UUID | null; clientUuid: UUID;
-  geomPoint: GeoJSONPoint; houseNumber: string; addressCode: string; formattedAddress: string;
-  postcode: string | null; propertyType: PropertyType; ownerName: string | null;
-  floorsCount: number | null; status: SubmissionStatus; gpsAccuracy: number;
-  rejectionReason: string | null; notes: string | null; submittedBy: UUID; reviewedBy: UUID | null;
-  createdAt: ISODateTime; updatedAt: ISODateTime; syncedAt: ISODateTime | null;
+  id: UUID;
+  blockId: UUID;                   // calculé (ST_Contains parcelle → bloc)
+  streetId: UUID | null;
+  clientUuid: UUID;
+  numero: string;                  // calculé séquentiellement par bloc
+  addressCode: string;             // ex. "ADDR-00012345"
+  formattedAddress: string;        // composée côté serveur (Parcelle→Bloc→Quartier→…→Region)
+  geom: GeoJSONMultiPolygon;       // emprise de la parcelle (fourni)
+  location: GeoJSONPoint;          // ST_PointOnSurface (calculé)
+  postcode: string | null;
+  propertyType: PropertyType;
+  occupancyType: OccupancyType;
+  buildingUse: string | null;
+  ownerName: string | null;
+  floorsCount: number | null;
+  workflowStage: AddressWorkflowStage;
+  status: SubmissionStatus;
+  validationScore: number | null;  // 0–100
+  geoConfidence: number | null;    // 0–100
+  gpsAccuracy: number;
+  rejectionReason: string | null;
+  notes: string | null;
+  submittedBy: UUID;
+  reviewedBy: UUID | null;
+  createdAt: ISODateTime;
+  updatedAt: ISODateTime;
+  syncedAt: ISODateTime | null;
 }
 
 export type PropertyPhotoType = 'building_front' | 'door' | 'street_view' | 'house_number_plate' | 'extra';
@@ -69,13 +110,33 @@ export interface Street {
 export type StreetPhotoType = 'sign' | 'road_view';
 export interface StreetPhoto { id: UUID; streetId: UUID; photoType: StreetPhotoType; s3Key: string; uploadedAt: ISODateTime; }
 
-export type TaskType = 'survey' | 'street_naming';
-export type TaskStatus = 'not_started' | 'in_progress' | 'submitted' | 'completed';
+/* =============================================================================
+ * OPÉRATIONS TERRAIN — équipes (maquettes Field Operations)
+ * ========================================================================== */
+
+export type FieldTeamStatus = 'active' | 'en_route' | 'offline' | 'idle';
+export interface FieldTeam {
+  id: UUID;
+  name: string;                    // ex. "Team Alpha"
+  supervisorId: UUID;
+  supervisorName: string;
+  memberCount: number;
+  currentZoneId: UUID | null;
+  currentZoneName: string | null;
+  progressPercent: number;
+  status: FieldTeamStatus;
+  deviceOnline: boolean;
+}
+
+export type TaskType = 'survey' | 'street_naming' | 'verification' | 'boundary_validation';
+export type TaskStatus = 'new' | 'in_progress' | 'awaiting_review' | 'completed';
 export type TaskPriority = 'low' | 'normal' | 'high';
 export interface Task {
-  id: UUID; blockId: UUID; redoRequestId: UUID | null; type: TaskType; assignedTo: UUID;
-  createdBy: UUID; status: TaskStatus; priority: TaskPriority; deadline: ISODateTime | null;
-  createdAt: ISODateTime; updatedAt: ISODateTime;
+  id: UUID; blockId: UUID | null; redoRequestId: UUID | null; type: TaskType;
+  title: string; zoneName: string | null; addressCount: number | null;
+  assignedTeamId: UUID | null; assignedTeamName: string | null;
+  createdBy: UUID; status: TaskStatus; priority: TaskPriority; progressPercent: number;
+  deadline: ISODateTime | null; createdAt: ISODateTime; updatedAt: ISODateTime;
 }
 
 export type RedoSubmissionType = 'property' | 'street';
@@ -84,6 +145,34 @@ export interface RedoRequest {
   id: UUID; submissionType: RedoSubmissionType; submissionId: UUID; requestedBy: UUID;
   reason: string; status: RedoRequestStatus; deadline: ISODateTime | null;
   createdAt: ISODateTime; resolvedAt: ISODateTime | null;
+}
+
+/* =============================================================================
+ * CODES POSTAUX (module Postcodes)
+ * ========================================================================== */
+
+export type PostcodeStatus = 'active' | 'reserved' | 'retired';
+export interface Postcode {
+  id: UUID; code: string;          // ex. "PC 1001"
+  adminUnitId: UUID; adminUnitName: string;
+  addressCount: number; status: PostcodeStatus;
+  issuedAt: ISODateTime; createdBy: UUID;
+}
+
+/* =============================================================================
+ * QUALITÉ DES DONNÉES (module Data Quality)
+ * ========================================================================== */
+
+export type QualitySeverity = 'low' | 'medium' | 'high';
+export type QualityCaseStatus = 'new' | 'in_review' | 'resolved';
+export interface QualityRule {
+  id: UUID; code: string; nameKey: string; descriptionKey: string;
+  enabled: boolean; impactedCount: number;
+}
+export interface QualityAlert {
+  id: UUID; ruleId: UUID; issueType: string; severity: QualitySeverity;
+  adminUnitName: string; ruleTriggered: string; impactedRecords: number;
+  assignedReviewer: string | null; status: QualityCaseStatus; createdAt: ISODateTime;
 }
 
 export type UserRole = 'Admin' | 'Gestionnaire' | 'Superviseur' | 'AgentTerrain';
@@ -101,6 +190,10 @@ export interface AuditLogEntry {
   oldValue: Record<string, unknown> | null; newValue: Record<string, unknown> | null;
   performedBy: UUID; createdAt: ISODateTime;
 }
+
+/* =============================================================================
+ * COMMERCIAL — conservé en modèle, HORS PÉRIMÈTRE de cette passe (pas d'UI)
+ * ========================================================================== */
 
 export type ClientStatus = 'trial' | 'active' | 'suspended';
 export interface Client {

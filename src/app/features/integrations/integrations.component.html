@@ -1,0 +1,27 @@
+<das-page-header [eyebrow]="'integrations.eyebrow' | transloco" [title]="'nav.integrations' | transloco" />
+
+<div class="intg">
+  <div class="grid">
+    @for (it of facade.items(); track it.id) {
+      <section class="das-card card">
+        <div class="card__head">
+          <span class="card__ic"><i class="ti {{ it.icon }}" aria-hidden="true"></i></span>
+          <span class="chip" [style.color]="status(it.status).color" [style.background]="status(it.status).bg">{{ statusLabelKey(it.status) | transloco }}</span>
+        </div>
+        <div class="card__name">{{ it.name }}</div>
+        <div class="card__desc">{{ it.descriptionKey | transloco }}</div>
+        <div class="card__foot">
+          <span class="card__sync">
+            @if (it.lastSync) { {{ 'integrations.lastSync' | transloco }}: {{ it.lastSync | dasDate: 'long' }} }
+            @else { {{ 'integrations.neverSynced' | transloco }} }
+          </span>
+          <button type="button" class="card__btn" [class.card__btn--on]="it.status === 'connected'" (click)="toggle(it.id, it.status)">
+            {{ (it.status === 'connected' ? 'integrations.disconnect' : 'integrations.connect') | transloco }}
+          </button>
+        </div>
+      </section>
+    } @empty {
+      <div class="empty">@if (facade.loading()) { {{ 'common.loading' | transloco }} } @else { {{ 'integrations.empty' | transloco }} }</div>
+    }
+  </div>
+</div>

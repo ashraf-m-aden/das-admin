@@ -1,89 +1,112 @@
-<das-page-header [eyebrow]="block()?.code ?? ''" [title]="block()?.name ?? ('blocks.unnamed' | transloco)">
-  <a actions routerLink="/blocks" class="detail-back"><i class="ti ti-arrow-left" aria-hidden="true"></i>{{
-    'blocks.backToList' | transloco }}</a>
+<das-page-header
+  [eyebrow]="block()?.code ?? ''"
+  [title]="block()?.name ?? ('blocks.unnamed' | transloco)"
+>
+  <a actions routerLink="/blocks" class="detail-back"
+    ><i class="ti ti-arrow-left" aria-hidden="true"></i>{{ 'blocks.backToList' | transloco }}</a
+  >
 </das-page-header>
 
 <div class="detail">
   @if (block(); as b) {
-  <div class="detail__grid">
-    <section class="das-card detail__map">
-      <das-block-map [geometry]="b.geomPolygon" [status]="b.status" />
-    </section>
+    <div class="detail__grid">
+  <section class="das-card detail__map">
+        <das-map [features]="mapFeatures()" [layers]="mapLayers" [showLayerControl]="false" />
+      </section>
 
-    <section class="das-card detail__fiche">
-      <div class="fiche__head">
-        <div>
-          <div class="fiche__name">{{ b.name ?? ('blocks.unnamed' | transloco) }}</div>
-          <div class="fiche__code">{{ b.code }}</div>
+      <section class="das-card detail__fiche">
+        <div class="fiche__head">
+          <div>
+            <div class="fiche__name">{{ b.name ?? ('blocks.unnamed' | transloco) }}</div>
+            <div class="fiche__code">{{ b.code }}</div>
+          </div>
+          <span [class]="statusBadgeClass(b.status)">{{
+            statusLabelKey(b.status) | transloco
+          }}</span>
         </div>
-        <span [class]="statusBadgeClass(b.status)">{{ statusLabelKey(b.status) | transloco }}</span>
-      </div>
 
-      <div class="fiche__agent">
-        @if (assignedName(); as name) {
-        <span class="fiche__avatar"><i class="ti ti-user" aria-hidden="true"></i></span>
-        <div>
-          <div class="fiche__muted">{{ 'blocks.assignedTo' | transloco }}</div>
-          <div class="fiche__val">{{ name }}</div>
+        <div class="fiche__agent">
+          @if (assignedName(); as name) {
+            <span class="fiche__avatar"><i class="ti ti-user" aria-hidden="true"></i></span>
+            <div>
+              <div class="fiche__muted">{{ 'blocks.assignedTo' | transloco }}</div>
+              <div class="fiche__val">{{ name }}</div>
+            </div>
+          } @else if (b.assignedUserId) {
+            <span class="fiche__avatar"><i class="ti ti-user" aria-hidden="true"></i></span>
+            <div>
+              <div class="fiche__muted">{{ 'blocks.assignedTo' | transloco }}</div>
+              <div class="fiche__val">{{ 'blocks.agentAssigned' | transloco }}</div>
+            </div>
+          } @else {
+            <span class="fiche__avatar fiche__avatar--empty"
+              ><i class="ti ti-user-off" aria-hidden="true"></i
+            ></span>
+            <div>
+              <div class="fiche__muted">{{ 'blocks.assignedTo' | transloco }}</div>
+              <div class="fiche__val">{{ 'status.block.not_assigned' | transloco }}</div>
+            </div>
+          }
         </div>
-        } @else if (b.assignedUserId) {
-        <span class="fiche__avatar"><i class="ti ti-user" aria-hidden="true"></i></span>
-        <div>
-          <div class="fiche__muted">{{ 'blocks.assignedTo' | transloco }}</div>
-          <div class="fiche__val">{{ 'blocks.agentAssigned' | transloco }}</div>
-        </div>
-        } @else {
-        <span class="fiche__avatar fiche__avatar--empty"><i class="ti ti-user-off" aria-hidden="true"></i></span>
-        <div>
-          <div class="fiche__muted">{{ 'blocks.assignedTo' | transloco }}</div>
-          <div class="fiche__val">{{ 'status.block.not_assigned' | transloco }}</div>
-        </div>
-        }
-      </div>
 
-      <form class="fiche__assign" [formGroup]="assignForm" (ngSubmit)="assign()">
-        <select formControlName="userId">
-          <option value="">{{ 'blocks.selectAgent' | transloco }}</option>
-          @for (a of agents(); track a.id) { <option [value]="a.id">{{ a.fullName }}</option> }
-        </select>
-        <button type="submit" class="btn btn--ghost" [disabled]="assignForm.invalid || (isAssigning$ | async)">
-          <i class="ti ti-user-plus" aria-hidden="true"></i>{{ 'blocks.assign' | transloco }}
-        </button>
-      </form>
-
-      <div class="fiche__progress">
-        <div class="fiche__progress-head"><span>{{ 'blocks.lotsProgress' | transloco }}</span><span>{{ lotsCompleted()
-            }} / {{ lotsPlanned() }}</span></div>
-        <div class="fiche__track">
-          <div class="fiche__fill" [style.width.%]="lotsProgress()"></div>
-        </div>
-      </div>
-
-      <div class="fiche__stats">
-        <div class="stat">
-          <div class="stat__label">{{ 'blocks.colArea' | transloco }}</div>
-          <div class="stat__val">{{ hectares(b.areaM2) | dasNumber: 2 }} ha</div>
-        </div>
-        <div class="stat">
-          <div class="stat__label">{{ 'blocks.lots' | transloco }}</div>
-          <div class="stat__val">{{ b.lots.length }}</div>
-        </div>
-      </div>
-
-      <form class="fiche__name-form" [formGroup]="nameForm" (ngSubmit)="saveName()">
-        <label class="fiche__muted" for="block-name">{{ 'blocks.nameLabel' | transloco }}</label>
-        <div class="fiche__name-row">
-          <input id="block-name" type="text" formControlName="name"
-            [attr.placeholder]="'blocks.namePlaceholder' | transloco" />
-          <button type="submit" [disabled]="nameForm.invalid || (isSavingName$ | async)">
-            @if (isSavingName$ | async) { {{ 'common.saving' | transloco }} } @else { {{ 'blocks.saveName' | transloco
-            }} }
+        <form class="fiche__assign" [formGroup]="assignForm" (ngSubmit)="assign()">
+          <select formControlName="userId">
+            <option value="">{{ 'blocks.selectAgent' | transloco }}</option>
+            @for (a of agents(); track a.id) {
+              <option [value]="a.id">{{ a.fullName }}</option>
+            }
+          </select>
+          <button
+            type="submit"
+            class="btn btn--ghost"
+            [disabled]="assignForm.invalid || (isAssigning$ | async)"
+          >
+            <i class="ti ti-user-plus" aria-hidden="true"></i>{{ 'blocks.assign' | transloco }}
           </button>
+        </form>
+
+        <div class="fiche__progress">
+          <div class="fiche__progress-head">
+            <span>{{ 'blocks.parcelsProgress' | transloco }}</span
+            ><span>{{ parcelsVerified() }} / {{ parcelsTotal() }}</span>
+          </div>
+          <div class="fiche__track">
+            <div class="fiche__fill" [style.width.%]="parcelsProgress()"></div>
+          </div>
         </div>
-      </form>
-    </section>
-  </div>
+
+        <div class="fiche__stats">
+          <div class="stat">
+            <div class="stat__label">{{ 'blocks.colArea' | transloco }}</div>
+            <div class="stat__val">{{ hectares(b.areaM2) | dasNumber: 2 }} ha</div>
+          </div>
+          <div class="stat">
+            <div class="stat__label">{{ 'blocks.parcels' | transloco }}</div>
+            <div class="stat__val">{{ parcelsTotal() }}</div>
+          </div>
+        </div>
+
+        <form class="fiche__name-form" [formGroup]="nameForm" (ngSubmit)="saveName()">
+          <label class="fiche__muted" for="block-name">{{ 'blocks.nameLabel' | transloco }}</label>
+          <div class="fiche__name-row">
+            <input
+              id="block-name"
+              type="text"
+              formControlName="name"
+              [attr.placeholder]="'blocks.namePlaceholder' | transloco"
+            />
+            <button type="submit" [disabled]="nameForm.invalid || (isSavingName$ | async)">
+              @if (isSavingName$ | async) {
+                {{ 'common.saving' | transloco }}
+              } @else {
+                {{ 'blocks.saveName' | transloco }}
+              }
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
   } @else if (isLoading$ | async) {
-  <div class="detail__loading">{{ 'common.loading' | transloco }}</div>
+    <div class="detail__loading">{{ 'common.loading' | transloco }}</div>
   }
 </div>

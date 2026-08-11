@@ -16,6 +16,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
       },
       {
+        path: 'registry',
+        loadChildren: () => import('./features/registry/registry.routes').then((m) => m.registryRoutes),
+      },
+      {
         path: 'blocks',
         loadChildren: () => import('./features/blocks/blocks.routes').then((m) => m.blocksRoutes),
       },
@@ -25,9 +29,29 @@ export const routes: Routes = [
         loadChildren: () => import('./features/addressing/addressing.routes').then((m) => m.addressingRoutes),
       },
       {
+        path: 'field-operations',
+        canActivate: [roleGuard(['Admin', 'Superviseur', 'Gestionnaire'])],
+        loadChildren: () => import('./features/field-operations/field-operations.routes').then((m) => m.fieldOpsRoutes),
+      },
+      {
         path: 'review',
         canActivate: [roleGuard(['Admin', 'Superviseur', 'Gestionnaire'])],
         loadChildren: () => import('./features/review/review.routes').then((m) => m.reviewRoutes),
+      },
+      {
+        path: 'postcodes',
+        canActivate: [roleGuard(['Admin', 'Gestionnaire'])],
+        loadChildren: () => import('./features/postcodes/postcodes.routes').then((m) => m.postcodesRoutes),
+      },
+      {
+        path: 'data-quality',
+        canActivate: [roleGuard(['Admin', 'Superviseur'])],
+        loadChildren: () => import('./features/data-quality/data-quality.routes').then((m) => m.dataQualityRoutes),
+      },
+      {
+        path: 'reports',
+        canActivate: [roleGuard(['Admin', 'Gestionnaire'])],
+        loadChildren: () => import('./features/reports/reports.routes').then((m) => m.reportsRoutes),
       },
       {
         path: 'staff',
@@ -41,9 +65,14 @@ export const routes: Routes = [
       },
       {
         path: 'notifications',
-        loadChildren: () =>
-          import('./features/notifications/notifications.routes').then((m) => m.notificationsRoutes),
+        loadChildren: () => import('./features/notifications/notifications.routes').then((m) => m.notificationsRoutes),
       },
+      {
+        path: 'integrations',
+        canActivate: [roleGuard(['Admin'])],
+        loadChildren: () => import('./features/integrations/integrations.routes').then((m) => m.integrationsRoutes),
+      },
+      { path: 'profile', loadChildren: () => import('./features/profile/profile.routes').then((m) => m.profileRoutes) },
       {
         path: 'settings',
         canActivate: [roleGuard(['Admin'])],

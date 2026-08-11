@@ -15,14 +15,13 @@ export const selectIsBlockDetailLoading = createSelector(
 /**
  * Conversion des blocs du store en FeatureCollection GeoJSON — consommée
  * UNIQUEMENT par blocks-map.component.ts en mode mock (overlay local).
- * En mode réel, la carte ignore complètement cette donnée et lit les
- * tuiles Martin à la place.
+ * En mode réel, la carte lit les tuiles Martin à la place.
  */
 export const selectBlocksAsGeoJson = createSelector(blocksFeature.selectItems, (items) => ({
   type: 'FeatureCollection' as const,
   features: items.map((b) => ({
     type: 'Feature' as const,
-    geometry: b.geomPolygon,
+    geometry: b.geom,
     properties: { id: b.id, code: b.code, status: b.status } satisfies BlockGeoJsonProperties,
   })),
 }));

@@ -67,7 +67,7 @@ export class BlocksListComponent implements OnInit {
   }
 
   progressPercent(b: BlockListItem): number {
-    return b.lotsTotal === 0 ? 0 : Math.round((b.lotsCompleted / b.lotsTotal) * 100);
+    return b.parcelsTotal === 0 ? 0 : Math.round((b.parcelsVerified / b.parcelsTotal) * 100);
   }
 
   initials(name: string): string {

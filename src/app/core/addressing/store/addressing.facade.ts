@@ -45,5 +45,4 @@ export class AddressingFacade {
 
   loadPropertiesToNumber(query: PropertyNumberingQuery): void { this.store.dispatch(AddressingActions.loadPropertiesToNumber({ query })); }
   isSavingProperty$(id: UUID) { return this.store.select(selectIsSavingProperty(id)); }
-  assignHouseNumber(id: UUID, payload: { houseNumber: string }): void { this.store.dispatch(AddressingActions.assignHouseNumber({ id, payload })); }
-}
+assignHouseNumber(id: UUID, payload: { numero: string }): void { this.store.dispatch(AddressingActions.assignHouseNumber({ id, payload })); }}

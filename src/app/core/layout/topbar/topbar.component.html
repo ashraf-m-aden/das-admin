@@ -1,0 +1,37 @@
+<header class="tb">
+  <label class="tb__search">
+    <i class="ti ti-search" aria-hidden="true"></i>
+    <input type="text" [attr.placeholder]="'topbar.search' | transloco" />
+    <span class="tb__kbd">⌘K</span>
+  </label>
+
+  <div class="tb__actions">
+    <button type="button" class="tb__lang" (click)="toggleLang()" [attr.aria-label]="'topbar.language' | transloco">
+      {{ activeLang() | uppercase }}
+    </button>
+
+    <a class="tb__icon-btn" routerLink="/notifications" [attr.aria-label]="'nav.notifications' | transloco">
+      <i class="ti ti-bell" aria-hidden="true"></i>
+      @if ((unreadCount$ | async); as count) {
+        @if (count > 0) { <span class="tb__badge">{{ count }}</span> }
+      }
+    </a>
+
+    <button type="button" class="tb__icon-btn" [attr.aria-label]="'topbar.help' | transloco">
+      <i class="ti ti-help-circle" aria-hidden="true"></i>
+    </button>
+
+    <div class="tb__profile">
+    <a class="tb__profile-link" routerLink="/profile">
+        <div class="tb__profile-text">
+          <span class="tb__profile-name">{{ fullName$ | async }}</span>
+          @if ((roles$ | async)?.[0]; as role) { <span class="tb__profile-role">{{ ('roles.' + role) | transloco }}</span> }
+        </div>
+        <span class="tb__avatar">{{ initials$ | async }}</span>
+      </a>
+      <button type="button" class="tb__icon-btn tb__logout" (click)="logout()" [attr.aria-label]="'nav.logout' | transloco">
+        <i class="ti ti-logout" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+</header>

@@ -1,0 +1,36 @@
+@use "styles/variables" as v;
+@use "styles/mixins" as m;
+
+:host { position: relative; display: block; width: 100%; height: 100%; }
+
+.das-map { position: absolute; inset: 0; }
+
+.das-map__error {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: v.$space-2;
+  background: var(--color-surface-alt); color: var(--color-danger); font-size: v.$font-size-sm; i { font-size: 18px; }
+}
+
+.layers {
+  position: absolute; top: v.$space-3; right: v.$space-3; z-index: 2;
+
+  &__toggle {
+    display: inline-flex; align-items: center; gap: v.$space-1; height: 32px; padding: 0 v.$space-3;
+    background: var(--color-surface); border: 1px solid var(--color-border); border-radius: v.$radius-sm;
+    color: var(--color-text-secondary); font: inherit; font-size: v.$font-size-xs; cursor: pointer;
+    box-shadow: var(--shadow-1, 0 1px 2px rgb(27 33 55 / 8%));
+    &:hover { background: var(--color-surface-alt); }
+  }
+
+  &__panel {
+    margin-top: v.$space-1; padding: v.$space-2; min-width: 170px;
+    background: var(--color-surface); border: 1px solid var(--color-border); border-radius: v.$radius-md;
+    box-shadow: var(--shadow-2, 0 4px 12px rgb(27 33 55 / 12%));
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  &__item {
+    display: flex; align-items: center; gap: v.$space-2; padding: v.$space-1 v.$space-2;
+    font-size: v.$font-size-sm; color: var(--color-text-secondary); cursor: pointer; border-radius: v.$radius-sm;
+    &:hover { background: var(--color-surface-alt); }
+    input { accent-color: var(--color-accent); }
+  }
+}

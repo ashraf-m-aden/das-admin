@@ -1,7 +1,10 @@
 <div class="shell">
   <das-sidebar />
-  <main class="shell__main">
-    <router-outlet />
-  </main>
+  <div class="shell__body">
+    <das-topbar />
+    <main class="shell__main">
+      <router-outlet />
+    </main>
+  </div>
 </div>
 <das-toast-container />

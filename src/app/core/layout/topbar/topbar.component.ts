@@ -1,0 +1,49 @@
+import { Component, inject, signal } from '@angular/core';
+import { AsyncPipe, UpperCasePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { map } from 'rxjs';
+import { AuthFacade } from '../../auth/store/auth.facade';
+import { NotificationsFacade } from '../../notifications/store/notifications.facade';
+
+@Component({
+  selector: 'das-topbar',
+  standalone: true,
+  imports: [AsyncPipe, RouterLink, TranslocoModule,UpperCasePipe],
+  templateUrl: './topbar.component.html',
+  styleUrl: './topbar.component.scss',
+})
+export class TopbarComponent {
+  private authFacade = inject(AuthFacade);
+  private notificationsFacade = inject(NotificationsFacade);
+  private transloco = inject(TranslocoService);
+
+  protected readonly fullName$ = this.authFacade.fullName$;
+  protected readonly roles$ = this.authFacade.roles$;
+  protected readonly unreadCount$ = this.notificationsFacade.unreadCount$;
+
+  protected readonly activeLang = signal(this.transloco.getActiveLang());
+
+  protected readonly initials$ = this.authFacade.fullName$.pipe(
+    map((name) => {
+      const parts = (name ?? '').trim().split(/\s+/).filter(Boolean);
+      return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || '?';
+    }),
+  );
+
+  private readonly langs = this.transloco
+    .getAvailableLangs()
+    .map((l) => (typeof l === 'string' ? l : l.id));
+
+  toggleLang(): void {
+    if (this.langs.length < 2) return;
+    const idx = this.langs.indexOf(this.transloco.getActiveLang());
+    const next = this.langs[(idx + 1) % this.langs.length];
+    this.transloco.setActiveLang(next);
+    this.activeLang.set(next);
+  }
+
+  logout(): void {
+    this.authFacade.logout();
+  }
+}

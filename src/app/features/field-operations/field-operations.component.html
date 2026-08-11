@@ -1,0 +1,107 @@
+<das-page-header [eyebrow]="'fieldops.eyebrow' | transloco" [title]="'nav.fieldOps' | transloco" />
+
+<div class="fo">
+  @if (facade.data(); as d) {
+    <div class="kpis">
+      <div class="kpi"><span class="kpi__l">{{ 'fieldops.kpi.activeTeams' | transloco }}</span><span class="kpi__v">{{ d.kpis.activeTeams }}</span></div>
+      <div class="kpi"><span class="kpi__l">{{ 'fieldops.kpi.tasksToday' | transloco }}</span><span class="kpi__v">{{ d.kpis.tasksAssignedToday }}</span></div>
+      <div class="kpi"><span class="kpi__l">{{ 'fieldops.kpi.completed' | transloco }}</span><span class="kpi__v">{{ d.kpis.completedSurveys }}</span><span class="kpi__s">{{ d.kpis.completedPct }} % {{ 'fieldops.ofAssigned' | transloco }}</span></div>
+      <div class="kpi"><span class="kpi__l">{{ 'fieldops.kpi.pending' | transloco }}</span><span class="kpi__v">{{ d.kpis.pendingVerifications }}</span></div>
+      <div class="kpi"><span class="kpi__l">{{ 'fieldops.kpi.offline' | transloco }}</span><span class="kpi__v">{{ d.kpis.offlineDevices }}</span></div>
+      <div class="kpi"><span class="kpi__l">{{ 'fieldops.kpi.escalations' | transloco }}</span><span class="kpi__v">{{ d.kpis.escalations }}</span></div>
+    </div>
+<section class="das-card live-map">
+      <div class="panel__title">{{ 'fieldops.liveMap' | transloco }}</div>
+      <div class="live-map__canvas"><das-map [features]="mapFeatures()" [layers]="mapLayers" /></div>
+    </section>
+    <div class="fo-split">
+      <section class="das-card panel schedule">
+        <div class="panel__title">{{ 'fieldops.todaysSchedule' | transloco }}</div>
+        @for (e of d.schedule; track e.id) {
+          <div class="sched" [class.sched--done]="e.done">
+            <span class="sched__time">{{ e.time }}</span>
+            <span class="sched__dot"></span>
+            <div class="sched__body">
+              <div class="sched__title">{{ e.teamName }} · {{ e.titleKey | transloco }}</div>
+              <div class="sched__loc">{{ e.locationKey | transloco }}</div>
+            </div>
+          </div>
+        }
+      </section>
+
+      <section class="das-card panel quick">
+        <div class="panel__title">{{ 'fieldops.quickActions' | transloco }}</div>
+        <div class="qa">
+          <button type="button" class="qa__btn"><span class="qa__ic"><i class="ti ti-map-pin-plus" aria-hidden="true"></i></span>{{ 'fieldops.qa.assignZone' | transloco }}</button>
+          <button type="button" class="qa__btn"><span class="qa__ic"><i class="ti ti-send" aria-hidden="true"></i></span>{{ 'fieldops.qa.dispatch' | transloco }}</button>
+          <button type="button" class="qa__btn"><span class="qa__ic"><i class="ti ti-rotate" aria-hidden="true"></i></span>{{ 'fieldops.qa.resurvey' | transloco }}</button>
+          <button type="button" class="qa__btn"><span class="qa__ic"><i class="ti ti-phone" aria-hidden="true"></i></span>{{ 'fieldops.qa.contact' | transloco }}</button>
+          <button type="button" class="qa__btn"><span class="qa__ic"><i class="ti ti-current-location" aria-hidden="true"></i></span>{{ 'fieldops.qa.locations' | transloco }}</button>
+          <button type="button" class="qa__btn"><span class="qa__ic"><i class="ti ti-checkup-list" aria-hidden="true"></i></span>{{ 'fieldops.qa.approveUpload' | transloco }}</button>
+        </div>
+      </section>
+    </div>
+    <section class="das-card roster">
+      <div class="panel__title">{{ 'fieldops.teamRoster' | transloco }}</div>
+      <div class="rhead"><span>{{ 'fieldops.team' | transloco }}</span><span>{{ 'fieldops.supervisor' | transloco }}</span><span>{{ 'fieldops.currentZone' | transloco }}</span><span>{{ 'fieldops.progress' | transloco }}</span><span>{{ 'fieldops.device' | transloco }}</span></div>
+      @for (t of facade.teams(); track t.id) {
+        <div class="rrow">
+          <div class="rteam"><span class="rteam__dot" [style.background]="teamStatusColor(t.status)"></span><div><div class="rteam__name">{{ t.name }}</div><div class="rteam__sub">{{ 'fieldops.members' | transloco: { count: t.memberCount } }}</div></div></div>
+          <span>{{ t.supervisorName }}</span>
+          <span>{{ t.currentZoneName }}</span>
+          <span class="rprog"><span class="rprog__track"><span class="rprog__fill" [style.width.%]="t.progressPercent" [style.background]="teamStatusColor(t.status)"></span></span>{{ t.progressPercent }} %</span>
+          <span class="rdev" [class.rdev--off]="!t.deviceOnline"><i class="ti" [class.ti-device-mobile]="t.deviceOnline" [class.ti-device-mobile-off]="!t.deviceOnline" aria-hidden="true"></i></span>
+        </div>
+      }
+    </section>
+
+    <section class="das-card kanban">
+      <div class="panel__title">{{ 'fieldops.taskBoard' | transloco }}</div>
+      <div class="board">
+        @for (col of d.columns; track col.status) {
+          <div class="kcol">
+            <div class="kcol__head"><span>{{ columnLabelKey(col.status) | transloco }}</span><span class="kcol__count">{{ col.tasks.length }}</span></div>
+            @for (task of col.tasks; track task.id) {
+              <div class="kcard">
+                <div class="kcard__title">{{ task.title }}</div>
+                <div class="kcard__zone">{{ task.zoneName }}</div>
+                <div class="kcard__foot">
+                  @if (task.assignedTeamName) { <span class="kcard__team">{{ task.assignedTeamName }}</span> }
+                  @if (col.status === 'new') { <span class="kcard__prio" [style.color]="priorityColor(task.priority)">{{ priorityLabelKey(task.priority) | transloco }}</span> }
+                  @else if (col.status === 'completed') { <span class="kcard__done"><i class="ti ti-check" aria-hidden="true"></i>{{ 'fieldops.col.completed' | transloco }}</span> }
+                  @else { <span class="kcard__pct">{{ task.progressPercent }} %</span> }
+                </div>
+                @if (col.status === 'in_progress') { <div class="kcard__track"><div class="kcard__fill" [style.width.%]="task.progressPercent"></div></div> }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </section>
+
+    @if (facade.review(); as r) {
+      <section class="das-card review">
+        <div class="panel__title">{{ 'fieldops.verificationReview' | transloco }}</div>
+        <div class="review__grid">
+          <div class="review__facts">
+            <div class="rf"><span class="rf__l">{{ 'fieldops.taskId' | transloco }}</span><span class="rf__v mono">{{ r.taskId }}</span></div>
+            <div class="rf"><span class="rf__l">{{ 'fieldops.submittedBy' | transloco }}</span><span class="rf__v">{{ r.submittedBy }}</span></div>
+            <div class="rf"><span class="rf__l">{{ 'fieldops.location' | transloco }}</span><span class="rf__v">{{ r.locationLabel }}</span></div>
+            <div class="rf"><span class="rf__l">{{ 'fieldops.geoConfidence' | transloco }}</span><span class="rf__v">{{ r.geoConfidence }} %</span></div>
+            <div class="review__actions">
+              <button type="button" class="btn btn--approve"><i class="ti ti-check" aria-hidden="true"></i>{{ 'fieldops.approve' | transloco }}</button>
+              <button type="button" class="btn btn--reject"><i class="ti ti-x" aria-hidden="true"></i>{{ 'fieldops.reject' | transloco }}</button>
+              <button type="button" class="btn btn--ghost"><i class="ti ti-rotate" aria-hidden="true"></i>{{ 'fieldops.requestResurvey' | transloco }}</button>
+            </div>
+          </div>
+          <div class="review__photos">
+            @for (i of [1,2,3]; track i) { <div class="photo"></div> }
+            <div class="photo photo--more">+{{ r.photoCount - 3 }}</div>
+          </div>
+        </div>
+      </section>
+    }
+  } @else {
+    <div class="fo__loading">{{ 'common.loading' | transloco }}</div>
+  }
+</div>

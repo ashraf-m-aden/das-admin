@@ -1,4 +1,8 @@
 <div class="numbering">
+  <div class="numbering__hint">
+    <i class="ti ti-info-circle" aria-hidden="true"></i>{{ 'addressing.numberingHint' | transloco }}
+  </div>
+
   @if (errorMessageKey$ | async; as err) {
     <div class="numbering__error">{{ err | transloco }}</div>
   }
@@ -6,20 +10,29 @@
   @for (p of (properties$ | async) ?? []; track p.id) {
     <section class="das-card item">
       <div class="item__row">
+        <span class="item__numero">{{ p.numero }}</span>
+
         <div class="item__info">
           <div class="item__address">{{ p.formattedAddress }}</div>
           <div class="item__meta">
             <span class="item__code">{{ p.blockCode }}</span>
-            @if (p.lotCode) { <span class="item__lot">· {{ 'addressing.lot' | transloco }} {{ p.lotCode }}</span> }
+            @if (p.blockName) { <span>· {{ p.blockName }}</span> }
           </div>
         </div>
 
-        <form class="num" [formGroup]="formFor(p.id)" (ngSubmit)="save(p)">
-          <input type="text" formControlName="houseNumber" [attr.placeholder]="'addressing.houseNumberPlaceholder' | transloco" />
-          <button type="submit" class="btn btn--primary" [disabled]="(isSaving$(p.id) | async)">
-            @if (isSaving$(p.id) | async) { {{ 'common.saving' | transloco }} } @else { {{ 'addressing.saveNumber' | transloco }} }
+        @if (editingId() === p.id) {
+          <form class="adjust" [formGroup]="form(p.id, p.numero)" (ngSubmit)="save(p)">
+            <input type="text" formControlName="numero" [attr.placeholder]="'addressing.numero' | transloco" />
+            <button type="submit" class="btn btn--primary" [disabled]="(isSaving$(p.id) | async)">
+              @if (isSaving$(p.id) | async) { {{ 'common.saving' | transloco }} } @else { {{ 'common.save' | transloco }} }
+            </button>
+            <button type="button" class="btn btn--ghost" (click)="cancelEdit()">{{ 'common.cancel' | transloco }}</button>
+          </form>
+        } @else {
+          <button type="button" class="item__action" (click)="startEdit(p)">
+            <i class="ti ti-pencil" aria-hidden="true"></i>{{ 'addressing.adjust' | transloco }}
           </button>
-        </form>
+        }
 
         <button type="button" class="item__toggle" (click)="toggleDetails(p.id)" [attr.aria-expanded]="expandedId() === p.id" [attr.aria-label]="'addressing.details' | transloco">
           <i class="ti" [class.ti-chevron-down]="expandedId() !== p.id" [class.ti-chevron-up]="expandedId() === p.id" aria-hidden="true"></i>
@@ -28,24 +41,10 @@
 
       @if (expandedId() === p.id) {
         <div class="hierarchy">
-          <div class="hierarchy__cell">
-            <span class="hierarchy__label">{{ 'addressing.region' | transloco }}</span>
-            <span class="hierarchy__value">{{ p.adminHierarchy.region }}</span>
-          </div>
-          <div class="hierarchy__cell">
-            <span class="hierarchy__label">{{ 'addressing.commune' | transloco }}</span>
-            <span class="hierarchy__value">{{ p.adminHierarchy.commune }}</span>
-          </div>
-          @if (p.adminHierarchy.arrondissement) {
-            <div class="hierarchy__cell">
-              <span class="hierarchy__label">{{ 'addressing.arrondissement' | transloco }}</span>
-              <span class="hierarchy__value">{{ p.adminHierarchy.arrondissement }}</span>
-            </div>
-          }
-          <div class="hierarchy__cell">
-            <span class="hierarchy__label">{{ 'addressing.quartier' | transloco }}</span>
-            <span class="hierarchy__value">{{ p.adminHierarchy.quartier }}</span>
-          </div>
+          <div class="hierarchy__cell"><span class="hierarchy__label">{{ 'addressing.region' | transloco }}</span><span class="hierarchy__value">{{ p.adminHierarchy.region }}</span></div>
+          <div class="hierarchy__cell"><span class="hierarchy__label">{{ 'addressing.ville' | transloco }}</span><span class="hierarchy__value">{{ p.adminHierarchy.ville }}</span></div>
+          <div class="hierarchy__cell"><span class="hierarchy__label">{{ 'addressing.commune' | transloco }}</span><span class="hierarchy__value">{{ p.adminHierarchy.commune }}</span></div>
+          <div class="hierarchy__cell"><span class="hierarchy__label">{{ 'addressing.quartier' | transloco }}</span><span class="hierarchy__value">{{ p.adminHierarchy.quartier }}</span></div>
         </div>
       }
     </section>

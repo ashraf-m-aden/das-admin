@@ -4,12 +4,12 @@ import { Observable, switchMap } from 'rxjs';
 import { BlocksApiPort } from './blocks-api.port';
 import { AppConfigService } from '../../config/app-config.service';
 import { Block, UUID } from '../../models/das.models';
-import { BlockListItem, BlockListQuery, BlockWithLots } from '../models/blocks.models';
+import { BlockListItem, BlockListQuery, BlockWithParcels } from '../models/blocks.models';
 
 /**
- * NOTE : list/getById/assign utilisent des chemins provisoires (/blocks) posés
- * avant réception de la spec API réelle (dasApi_v1.json, /blocs) — à aligner.
- * list renvoie désormais le format enrichi BlockListItem (agent + lots).
+ * Chemins provisoires (/blocks) à aligner sur la spec réelle (/blocs).
+ * list = format enrichi (agent + parcelles). setName conserve le risque
+ * boundaryWkt documenté (PATCH remplacement complet).
  */
 @Injectable({ providedIn: 'root' })
 export class BlocksApiService extends BlocksApiPort {
@@ -28,22 +28,17 @@ export class BlocksApiService extends BlocksApiPort {
     return this.http.get<BlockListItem[]>(this.baseUrl, { params });
   }
 
-  override getById(id: UUID): Observable<BlockWithLots> {
-    return this.http.get<BlockWithLots>(`${this.baseUrl}/${id}`);
+  override getById(id: UUID): Observable<BlockWithParcels> {
+    return this.http.get<BlockWithParcels>(`${this.baseUrl}/${id}`);
   }
 
   override assign(id: UUID, userId: UUID): Observable<Block> {
     return this.http.patch<Block>(`${this.baseUrl}/${id}/assign`, { userId });
   }
 
-  /**
-   * Endpoint réel : PATCH /api/blocs/{id} (BlocBody) — remplacement complet
-   * exigeant code + name + boundaryWkt. boundaryWkt n'existe pas côté frontend :
-   * risque d'écrasement géométrique (voir demande backend, point prioritaire).
-   */
   override setName(id: UUID, name: string): Observable<Block> {
     return this.getById(id).pipe(
-      switchMap((current: BlockWithLots) =>
+      switchMap((current) =>
         this.http.patch<Block>(`${this.config.get('apiBaseUrl')}/blocs/${id}`, {
           code: current.code,
           name,

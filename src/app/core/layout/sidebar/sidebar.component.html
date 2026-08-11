@@ -1,76 +1,50 @@
-<aside class="rail" [class.rail--collapsed]="collapsed()">
-  <div class="rail__head">
-    <a class="rail__brand" routerLink="/dashboard" aria-label="D.A.S — accueil">DAS</a>
-    <span class="rail__wordmark">D.A.S</span>
-    <button
-      type="button"
-      class="rail__toggle"
-      (click)="toggle()"
-      [attr.aria-label]="collapsed() ? 'Déplier le menu' : 'Replier le menu'"
-    >
-      <i class="ti" [class.ti-chevrons-right]="collapsed()" [class.ti-chevrons-left]="!collapsed()" aria-hidden="true"></i>
-    </button>
+<aside class="sb">
+  <div class="sb__head">
+    <span class="sb__crest"><i class="ti ti-building-monument" aria-hidden="true"></i></span>
+    <div class="sb__brand">
+      <span class="sb__brand-name">D.A.S <span>Admin Platform</span></span>
+      <span class="sb__brand-sub">{{ 'app.tagline' | transloco }}</span>
+    </div>
   </div>
 
-  <nav class="rail__nav" aria-label="Navigation principale">
-    @for (item of navItems; track item.path) {
-      @if (isVisible(item, (roles$ | async) ?? [])) {
-<a
-          class="rail__item"
-          [routerLink]="item.path"
-          routerLinkActive="rail__item--active"
-          [attr.title]="collapsed() ? (item.labelKey | transloco) : null"
-        >
-          <span class="rail__icon"><i class="ti {{ item.icon }}" aria-hidden="true"></i></span>
-          <span class="rail__label">{{ item.labelKey | transloco }}</span>
-        </a>
+  <nav class="sb__nav" aria-label="Navigation principale">
+    @for (entry of entries; track entry.labelKey) {
+      @if (isVisible(entry, (roles$ | async) ?? [])) {
+        @if (entry.kind === 'link') {
+          <a class="sb__item" [routerLink]="entry.path" routerLinkActive="sb__item--active">
+            <i class="ti {{ entry.icon }} sb__icon" aria-hidden="true"></i>
+            <span class="sb__label">{{ entry.labelKey | transloco }}</span>
+          </a>
+        } @else {
+          <button type="button" class="sb__item sb__item--group" (click)="toggleGroup(entry.key)" [attr.aria-expanded]="isOpen(entry.key)">
+            <i class="ti {{ entry.icon }} sb__icon" aria-hidden="true"></i>
+            <span class="sb__label">{{ entry.labelKey | transloco }}</span>
+            <i class="ti sb__chevron" [class.ti-chevron-down]="!isOpen(entry.key)" [class.ti-chevron-up]="isOpen(entry.key)" aria-hidden="true"></i>
+          </button>
+          @if (isOpen(entry.key)) {
+            <div class="sb__children">
+              @for (child of entry.children; track child.path) {
+                <a class="sb__child" [routerLink]="child.path" routerLinkActive="sb__child--active">{{ child.labelKey | transloco }}</a>
+              }
+            </div>
+          }
+        }
       }
     }
   </nav>
 
-  <div class="rail__spacer"></div>
-
-  <div class="rail__bottom">
-<a
-      class="rail__item"
-      routerLink="/notifications"
-      routerLinkActive="rail__item--active"
-      [attr.title]="collapsed() ? ('nav.notifications' | transloco) : null"
-    >
-      <span class="rail__icon">
-        <i class="ti ti-bell" aria-hidden="true"></i>
-        @if ((unreadCount$ | async); as count) {
-          @if (count > 0) {
-            <span class="rail__badge">{{ count }}</span>
-          }
-        }
-      </span>
-      <span class="rail__label">{{ 'nav.notifications' | transloco }}</span>
-    </a>
-
-    <button
-      type="button"
-      class="rail__item"
-      (click)="toggleLang()"
-      [attr.title]="collapsed() ? langLabel(activeLang()) : null"
-    >
-      <span class="rail__icon"><i class="ti ti-language" aria-hidden="true"></i></span>
-      <span class="rail__label">{{ langLabel(activeLang()) }}</span>
-    </button>
-
-    <div class="rail__item rail__user" [attr.title]="collapsed() ? (fullName$ | async) : null">
-      <span class="rail__avatar">{{ initials$ | async }}</span>
-      <span class="rail__label">{{ fullName$ | async }}</span>
+  <div class="sb__foot">
+    <div class="sb__status">
+      <span class="sb__status-dot"></span>
+      <div>
+        <div class="sb__status-title">{{ 'app.systemStatus' | transloco }}</div>
+        <div class="sb__status-sub">{{ 'app.allOperational' | transloco }}</div>
+      </div>
     </div>
-
-    <button
-      type="button"
-      class="rail__item"
-      (click)="logout()"
-      [attr.title]="collapsed() ? ('nav.logout' | transloco) : null"
-    >
-      <span class="rail__icon"><i class="ti ti-logout" aria-hidden="true"></i></span>
-      <span class="rail__label">{{ 'nav.logout' | transloco }}</span>
-    </button>
+    <div class="sb__authority">
+      <div class="sb__authority-name">{{ 'app.country' | transloco }}</div>
+      <div class="sb__authority-sub">{{ 'app.ministry' | transloco }}</div>
+      <div class="sb__authority-sub">{{ 'app.authority' | transloco }}</div>
+    </div>
   </div>
 </aside>

@@ -1,4 +1,4 @@
-import { ApplicationConfig } from '@angular/core';
+import { ApplicationConfig, inject } from '@angular/core';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { provideStore } from '@ngrx/store';
@@ -36,6 +36,22 @@ import { provideClientsApi } from './core/clients/services/clients-api.provider'
 import { clientsFeature } from './core/clients/store/clients.reducer';
 import { ClientsEffects } from './core/clients/store/clients.effects';
 import { FeedbackEffects } from './core/ui/feedback.effects';
+import { AppConfigService } from './core/config/app-config.service';
+import { DataQualityApiPort } from './core/dataquality/services/dataquality-api.port';
+import { MockDataQualityApiService } from './core/dataquality/services/mock-dataquality-api.service';
+import { FieldOpsApiPort } from './core/fieldops/services/fieldops-api.port';
+import { MockFieldOpsApiService } from './core/fieldops/services/mock-fieldops-api.service';
+import { MockPostcodesApiService } from './core/postcodes/services/mock-postcodes-api.service';
+import { PostcodesApiPort } from './core/postcodes/services/postcodes-api.port';
+import { MockRegistryApiService } from './core/registry/services/mock-registry-api.service';
+import { RegistryApiPort } from './core/registry/services/registry-api.port';
+import { RegistryApiService } from './core/registry/services/registry-api.service';
+import { MockReportsApiService } from './core/reports/services/mock-reports-api.service';
+import { ReportsApiPort } from './core/reports/services/reports-api.port';
+import { IntegrationsApiPort } from './core/integrations/services/integrations-api.port';
+import { MockIntegrationsApiService } from './core/integrations/services/mock-integrations-api.service';
+import { MockAuditApiService } from './core/audit/services/mock-audit-api.service';
+import { AuditApiPort } from './core/audit/services/audit-api.port';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideHttpClient(withInterceptors([authInterceptor])),
@@ -75,7 +91,16 @@ export const appConfig: ApplicationConfig = {
       ClientsEffects,
       FeedbackEffects
     ]),
-
+    { provide: PostcodesApiPort, useClass: MockPostcodesApiService },
+    { provide: FieldOpsApiPort, useClass: MockFieldOpsApiService },
+    { provide: DataQualityApiPort, useClass: MockDataQualityApiService },
+    { provide: ReportsApiPort, useClass: MockReportsApiService },
+    {
+      provide: RegistryApiPort,
+      useFactory: () => (inject(AppConfigService).get('useMockApi') ? inject(MockRegistryApiService) : inject(RegistryApiService)),
+    },
+        { provide: AuditApiPort, useClass: MockAuditApiService },
+    { provide: IntegrationsApiPort, useClass: MockIntegrationsApiService },
     provideStoreDevtools({ maxAge: 25, logOnly: false }),
   ],
 };
