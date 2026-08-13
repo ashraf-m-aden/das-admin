@@ -24,11 +24,11 @@ export class MockDataQualityApiService extends DataQualityApiPort {
       },
       rules: this.rules,
       alerts: [
-        { id: 'a1', issueTypeKey: 'dataquality.issue.duplicate_candidate', severity: 'high', district: 'Djibouti', ruleTriggeredKey: 'dataquality.trigger.duplicate_detected', impactedRecords: 1245, assignedReviewer: 'Fatouma A.', status: 'in_review' },
-        { id: 'a2', issueTypeKey: 'dataquality.issue.missing_coordinates', severity: 'high', district: 'Arta', ruleTriggeredKey: 'dataquality.trigger.coordinates_missing', impactedRecords: 2318, assignedReviewer: 'Ibrahim H.', status: 'new' },
-        { id: 'a3', issueTypeKey: 'dataquality.issue.inconsistent_street', severity: 'medium', district: 'Dikhil', ruleTriggeredKey: 'dataquality.trigger.street_standardization', impactedRecords: 987, assignedReviewer: 'Khadija M.', status: 'in_review' },
-        { id: 'a4', issueTypeKey: 'dataquality.issue.out_of_boundary', severity: 'high', district: 'Obock', ruleTriggeredKey: 'dataquality.trigger.outside_boundary', impactedRecords: 612, assignedReviewer: 'Youssouf D.', status: 'in_review' },
-        { id: 'a5', issueTypeKey: 'dataquality.issue.missing_building_type', severity: 'low', district: 'Tadjourah', ruleTriggeredKey: 'dataquality.trigger.building_type_required', impactedRecords: 2104, assignedReviewer: 'Amina R.', status: 'new' },
+        { id: 'a1', issueTypeKey: 'dataquality.issue.duplicate_candidate', severity: 'high', quartier: 'Djibouti', ruleTriggeredKey: 'dataquality.trigger.duplicate_detected', impactedRecords: 1245, assignedReviewer: 'Fatouma A.', status: 'in_review' },
+        { id: 'a2', issueTypeKey: 'dataquality.issue.missing_coordinates', severity: 'high', quartier: 'Arta', ruleTriggeredKey: 'dataquality.trigger.coordinates_missing', impactedRecords: 2318, assignedReviewer: 'Ibrahim H.', status: 'new' },
+        { id: 'a3', issueTypeKey: 'dataquality.issue.inconsistent_street', severity: 'medium', quartier: 'Dikhil', ruleTriggeredKey: 'dataquality.trigger.street_standardization', impactedRecords: 987, assignedReviewer: 'Khadija M.', status: 'in_review' },
+        { id: 'a4', issueTypeKey: 'dataquality.issue.out_of_boundary', severity: 'high', quartier: 'Obock', ruleTriggeredKey: 'dataquality.trigger.outside_boundary', impactedRecords: 612, assignedReviewer: 'Youssouf D.', status: 'in_review' },
+        { id: 'a5', issueTypeKey: 'dataquality.issue.missing_building_type', severity: 'low', quartier: 'Tadjourah', ruleTriggeredKey: 'dataquality.trigger.building_type_required', impactedRecords: 2104, assignedReviewer: 'Amina R.', status: 'new' },
       ],
       regionCoverage: [
         { region: 'Djibouti', coveragePct: 96.5 },
@@ -38,9 +38,9 @@ export class MockDataQualityApiService extends DataQualityApiPort {
         { region: 'Obock', coveragePct: 78.6 },
       ],
       duplicates: [
-        { id: 'd1', kind: 'spatial', addressA: '12 Rue de Rome', addressB: '12B Rue de Rome', scorePct: 94, district: 'Balbala' },
-        { id: 'd2', kind: 'textual', addressA: 'Avenue 13 Juin', addressB: 'Av. 13-Juin', scorePct: 88, district: 'Héron' },
-        { id: 'd3', kind: 'spatial', addressA: 'Bloc ILOTS_Q7', addressB: 'Bloc ILOTS-Q7', scorePct: 99, district: 'Q7' },
+        { id: 'd1', kind: 'spatial', addressA: '12 Rue de Rome', addressB: '12B Rue de Rome', scorePct: 94, quartier: 'Balbala' },
+        { id: 'd2', kind: 'textual', addressA: 'Avenue 13 Juin', addressB: 'Av. 13-Juin', scorePct: 88, quartier: 'Héron' },
+        { id: 'd3', kind: 'spatial', addressA: 'Bloc ILOTS_Q7', addressB: 'Bloc ILOTS-Q7', scorePct: 99, quartier: 'Q7' },
       ],
     };
   }

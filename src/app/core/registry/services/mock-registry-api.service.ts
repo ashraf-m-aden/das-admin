@@ -9,7 +9,13 @@ import {
 } from '../models/registry.models';
 
 const STREETS = ['Rue de Rome', 'Avenue 13 Juin', 'Rue d\'Angleterre', 'Boulevard Hassan Gouled', 'Rue d\'Éthiopie', 'Rue de Genève'];
-const DISTRICTS = ['Balbala', 'Héron', 'Centre-ville', 'Le Plateau', 'Arhiba'];
+const QUARTIERS = ['Balbala', 'Héron', 'Centre-ville', 'Le Plateau', 'Arhiba'];
+const POSTCODE_BY_QUARTIER: Record<string, string> = {
+  'Balbala': 'PC 1001', 'Héron': 'PC 1002', 'Centre-ville': 'PC 1003', 'Le Plateau': 'PC 1004', 'Arhiba': 'PC 1005',
+};
+const ZONE_BY_QUARTIER: Record<string, string> = {
+  'Balbala': 'Zone Sud', 'Héron': 'Zone Nord', 'Centre-ville': 'Zone Centre', 'Le Plateau': 'Zone Centre', 'Arhiba': 'Zone Nord',
+};
 const REGIONS = ['Djibouti', 'Arta', 'Dikhil', 'Tadjourah', 'Obock'];
 const TEAMS = ['Team North', 'Team Central', 'Team South'];
 const TYPES: PropertyType[] = ['residential', 'commercial', 'industrial', 'institutional', 'vacant'];
@@ -33,13 +39,15 @@ export class MockRegistryApiService extends RegistryApiPort {
     const n = 12345 + i;
     const lng = 43.134 + (i % 8) * 0.0045;
     const lat = 11.588 + Math.floor(i / 8) * 0.0045;
+    const quartier = QUARTIERS[i % QUARTIERS.length];
+
     return {
       id: `addr-${n}`,
       addressCode: `ADDR-${String(n).padStart(8, '0')}`,
-      postcode: `PC ${1001 + (i % 6)}`,
-      zone: `Zone ${1001 + (i % 6)}`,
+      quartier,
+      postcode: POSTCODE_BY_QUARTIER[quartier],
+      zone: ZONE_BY_QUARTIER[quartier],
       street: `${8 + (i % 60)} ${STREETS[i % STREETS.length]}`,
-      district: DISTRICTS[i % DISTRICTS.length],
       propertyType: TYPES[i % TYPES.length],
       workflowStage: STAGES[i % STAGES.length],
       lastUpdate: new Date(2026, 6, 1 + (i % 28), 9, (i * 7) % 60).toISOString(),
@@ -95,9 +103,8 @@ export class MockRegistryApiService extends RegistryApiPort {
     const detail: AddressDetail = {
       ...base,
       components: {
-        street: base.street,
-        district: base.district,
-        zone: `Zone ${base.postcode ?? '—'}`,   // dérivée du code postal (mock)
+        street: base.street, quartier: base.quartier,
+        zone: base.zone ?? '—',
         commune: 'Boulaos',
         region: 'Djibouti',
         postcode: base.postcode,

@@ -32,7 +32,8 @@
     "save": "Save",
     "cancel": "Cancel",
     "back": "Back",
-    "error": "Something went wrong"
+    "error": "Something went wrong",
+    "apply": "Apply"
   },
   "auth": {
     "title": "Sign in",
@@ -179,7 +180,8 @@
     "mapNote": "MapLibre map to integrate",
     "mapError": "Map unavailable",
     "viewList": "List",
-    "viewMap": "Map"
+    "viewMap": "Map",
+    "changeStatus": "Change status"
   },
   "addressing": {
     "title": "Addressing",
@@ -381,7 +383,6 @@
     "colId": "Address ID",
     "colPostcode": "Postcode",
     "colStreet": "Street",
-    "colDistrict": "District",
     "colType": "Type",
     "colStatus": "Status",
     "colUpdated": "Last update",
@@ -398,7 +399,6 @@
     "longitude": "Longitude",
     "parcelNumber": "Parcel number",
     "propertyInfo": "Property",
-    "occupancy": "Occupancy",
     "buildingUse": "Building use",
     "validation": "Validation",
     "viewOnMap": "View on map",
@@ -425,7 +425,12 @@
       "block": "Block",
       "team": "Team"
     },
-    "layerParcels": "Parcels"
+    "layerParcels": "Parcels",
+    "occupancyCol": "Occupancy",
+    "zone": "Zone",
+    "allZones": "All zones",
+    "colZone": "Zone",
+    "colQuartier": "Quarter"
   },
   "postcodes": {
     "eyebrow": "Postcode allocation and tracking",
@@ -524,8 +529,6 @@
     },
     "alerts": "Data quality alerts",
     "issueType": "Issue type",
-    "severity": "Severity",
-    "district": "District",
     "ruleTriggered": "Rule triggered",
     "impacted": "Impacted records",
     "reviewer": "Reviewer",
@@ -586,7 +589,9 @@
     "kind": {
       "spatial": "Spatial",
       "textual": "Textual"
-    }
+    },
+    "severityCol": "Severity",
+    "quartier": "Quarter"
   },
   "map": {
     "layers": "Layers",
@@ -682,5 +687,35 @@
     "theme": "Theme",
     "light": "Light",
     "dark": "Dark"
+  },
+  "verification": {
+    "eyebrow": "Field submissions awaiting decision",
+    "all": "All",
+    "validation": "Validation",
+    "geoConfidence": "Geo confidence",
+    "gpsAccuracy": "GPS accuracy",
+    "photos": "Photos",
+    "approve": "Approve",
+    "reject": "Reject",
+    "requestResurvey": "Request resurvey",
+    "confirmReject": "Confirm rejection",
+    "reasonPlaceholder": "Reason (optional)…",
+    "empty": "Queue empty — nothing to verify",
+    "type": {
+      "property": "Parcel",
+      "street": "Street"
+    },
+    "reason": {
+      "photo_retake": "Retake photos",
+      "gps_recheck": "Recheck GPS",
+      "other": "Other"
+    }
+  },
+  "period": {
+    "last7": "Last 7 days",
+    "last30": "Last 30 days",
+    "thisMonth": "This month",
+    "last6m": "Last 6 months",
+    "custom": "Custom"
   }
 }

@@ -32,7 +32,8 @@
     "save": "Enregistrer",
     "cancel": "Annuler",
     "back": "Retour",
-    "error": "Une erreur est survenue"
+    "error": "Une erreur est survenue",
+    "apply": "Appliquer"
   },
   "auth": {
     "title": "Connexion",
@@ -179,7 +180,8 @@
     "mapNote": "Carte MapLibre à intégrer",
     "mapError": "Carte indisponible",
     "viewList": "Liste",
-    "viewMap": "Carte"
+    "viewMap": "Carte",
+    "changeStatus": "Changer le statut"
   },
   "addressing": {
     "title": "Adressage",
@@ -381,7 +383,6 @@
     "colId": "ID adresse",
     "colPostcode": "Code postal",
     "colStreet": "Rue",
-    "colDistrict": "Quartier",
     "colType": "Type",
     "colStatus": "Statut",
     "colUpdated": "Mise à jour",
@@ -398,7 +399,6 @@
     "longitude": "Longitude",
     "parcelNumber": "N° de parcelle",
     "propertyInfo": "Propriété",
-    "occupancy": "Occupation",
     "buildingUse": "Usage du bâtiment",
     "validation": "Validation",
     "viewOnMap": "Voir sur la carte",
@@ -425,7 +425,12 @@
       "block": "Bloc",
       "team": "Équipe"
     },
-    "layerParcels": "Parcelles"
+    "layerParcels": "Parcelles",
+    "occupancyCol": "Occupation",
+    "zone": "Zone",
+    "allZones": "Toutes les zones",
+    "colZone": "Zone",
+    "colQuartier": "Quartier"
   },
   "postcodes": {
     "eyebrow": "Allocation et suivi des codes postaux",
@@ -524,8 +529,6 @@
     },
     "alerts": "Alertes qualité",
     "issueType": "Type d'anomalie",
-    "severity": "Sévérité",
-    "district": "District",
     "ruleTriggered": "Règle déclenchée",
     "impacted": "Enregistrements impactés",
     "reviewer": "Reviewer",
@@ -586,7 +589,9 @@
     "kind": {
       "spatial": "Spatial",
       "textual": "Textuel"
-    }
+    },
+    "severityCol": "Sévérité",
+    "quartier": "Quartier"
   },
   "map": {
     "layers": "Couches",
@@ -682,5 +687,35 @@
     "theme": "Thème",
     "light": "Clair",
     "dark": "Sombre"
+  },
+  "verification": {
+    "eyebrow": "Soumissions terrain en attente de décision",
+    "all": "Toutes",
+    "validation": "Validation",
+    "geoConfidence": "Confiance géo",
+    "gpsAccuracy": "Précision GPS",
+    "photos": "Photos",
+    "approve": "Approuver",
+    "reject": "Rejeter",
+    "requestResurvey": "Redemander un levé",
+    "confirmReject": "Confirmer le rejet",
+    "reasonPlaceholder": "Motif (optionnel)…",
+    "empty": "File vide — rien à vérifier",
+    "type": {
+      "property": "Parcelle",
+      "street": "Rue"
+    },
+    "reason": {
+      "photo_retake": "Reprendre les photos",
+      "gps_recheck": "Revérifier le GPS",
+      "other": "Autre"
+    }
+  },
+  "period": {
+    "last7": "7 derniers jours",
+    "last30": "30 derniers jours",
+    "thisMonth": "Ce mois-ci",
+    "last6m": "6 derniers mois",
+    "custom": "Personnalisé"
   }
 }

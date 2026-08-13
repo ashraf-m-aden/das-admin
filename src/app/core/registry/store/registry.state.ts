@@ -19,10 +19,8 @@ export interface RegistryState {
   detailStatus: LoadStatus;
   isMutating: boolean;
 }
-
 export const initialRegistryFilters: RegistryFilters = {
-  search: '', postcode: null, region: null, status: null as AddressWorkflowStage | null, team: null,
-  zone: null
+  search: '', postcode: null, zone: null, region: null, status: null as AddressWorkflowStage | null, team: null,
 };
 
 export const initialRegistryState: RegistryState = {

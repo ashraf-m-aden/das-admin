@@ -25,7 +25,7 @@ export interface QualityAlertRow {
   id: UUID;
   issueTypeKey: string;        // dataquality.issue.<code>
   severity: QualitySeverity;
-  district: string;
+  quartier: string;
   ruleTriggeredKey: string;    // dataquality.trigger.<code>
   impactedRecords: number;
   assignedReviewer: string | null;
@@ -40,7 +40,7 @@ export interface DuplicateCandidate {
   addressA: string;
   addressB: string;
   scorePct: number;            // similarité / recouvrement
-  district: string;
+  quartier: string;
 }
 
 export interface DataQualityData {

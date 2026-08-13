@@ -16,12 +16,12 @@
     <!-- Alertes -->
     <section class="das-card panel">
       <div class="panel__title">{{ 'dataquality.alerts' | transloco }} <span class="badge">{{ facade.alerts().length }}</span></div>
-      <div class="thead"><span>{{ 'dataquality.issueType' | transloco }}</span><span>{{ 'dataquality.severity' | transloco }}</span><span>{{ 'dataquality.district' | transloco }}</span><span>{{ 'dataquality.ruleTriggered' | transloco }}</span><span>{{ 'dataquality.impacted' | transloco }}</span><span>{{ 'dataquality.reviewer' | transloco }}</span><span>{{ 'dataquality.statusCol' | transloco }}</span></div>
+      <div class="thead"><span>{{ 'dataquality.issueType' | transloco }}</span><span>{{ 'dataquality.severity' | transloco }}</span><span>{{ 'dataquality.quartier' | transloco }}</span><span>{{ 'dataquality.ruleTriggered' | transloco }}</span><span>{{ 'dataquality.impacted' | transloco }}</span><span>{{ 'dataquality.reviewer' | transloco }}</span><span>{{ 'dataquality.statusCol' | transloco }}</span></div>
       @for (a of facade.alerts(); track a.id) {
         <div class="trow">
           <span class="trow__issue">{{ a.issueTypeKey | transloco }}</span>
           <span><span class="chip" [style.color]="severity(a.severity).color" [style.background]="severity(a.severity).bg">{{ severityLabelKey(a.severity) | transloco }}</span></span>
-          <span>{{ a.district }}</span>
+          <span>{{ 'dataquality.quartier' | transloco }}</span>
           <span class="trow__rule">{{ a.ruleTriggeredKey | transloco }}</span>
           <span class="trow__num">{{ a.impactedRecords | number }}</span>
           <span>{{ a.assignedReviewer ?? '—' }}</span>
@@ -65,13 +65,13 @@
     <!-- Doublons détectés -->
     <section class="das-card panel">
       <div class="panel__title">{{ 'dataquality.duplicates' | transloco }}</div>
-      <div class="dhead"><span>{{ 'dataquality.dupKind' | transloco }}</span><span>{{ 'dataquality.dupA' | transloco }}</span><span>{{ 'dataquality.dupB' | transloco }}</span><span>{{ 'dataquality.district' | transloco }}</span><span>{{ 'dataquality.dupScore' | transloco }}</span><span></span></div>
+      <div class="dhead"><span>{{ 'dataquality.dupKind' | transloco }}</span><span>{{ 'dataquality.dupA' | transloco }}</span><span>{{ 'dataquality.dupB' | transloco }}</span><span>{{ 'dataquality.quartier' | transloco }}</span><span>{{ 'dataquality.dupScore' | transloco }}</span><span></span></div>
       @for (dup of facade.duplicates(); track dup.id) {
         <div class="drow">
           <span class="chip chip--kind"><i class="ti" [class.ti-map-pin]="dup.kind === 'spatial'" [class.ti-abc]="dup.kind === 'textual'" aria-hidden="true"></i>{{ ('dataquality.kind.' + dup.kind) | transloco }}</span>
           <span class="drow__addr">{{ dup.addressA }}</span>
           <span class="drow__addr">{{ dup.addressB }}</span>
-          <span>{{ dup.district }}</span>
+          <span>{{ dup.quartier }}</span>
           <span class="drow__score" [class.drow__score--high]="dup.scorePct >= 95">{{ dup.scorePct }} %</span>
           <span class="drow__actions"><button type="button" class="link-btn">{{ 'dataquality.merge' | transloco }}</button><button type="button" class="link-btn link-btn--muted">{{ 'dataquality.dismiss' | transloco }}</button></span>
         </div>
