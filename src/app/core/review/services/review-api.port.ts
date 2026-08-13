@@ -6,4 +6,5 @@ export abstract class ReviewApiPort {
   abstract listQueue(query: ReviewQueueQuery): Observable<ReviewItem[]>;
   abstract approve(id: UUID, submissionType: RedoSubmissionType): Observable<ReviewItem>;
   abstract reject(id: UUID, submissionType: RedoSubmissionType, payload: RejectPayload): Observable<ReviewItem>;
+  abstract requestResurvey(id: UUID, submissionType: RedoSubmissionType): Observable<ReviewItem>;
 }

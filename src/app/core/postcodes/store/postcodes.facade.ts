@@ -5,7 +5,6 @@ import { AllocatePostcodePayload, PostcodesData } from '../models/postcodes.mode
 @Injectable({ providedIn: 'root' })
 export class PostcodesFacade {
   private api = inject(PostcodesApiPort);
-
   private readonly _data = signal<PostcodesData | null>(null);
   private readonly _loading = signal(false);
   private readonly _saving = signal(false);
@@ -18,17 +17,10 @@ export class PostcodesFacade {
 
   load(): void {
     this._loading.set(true);
-    this.api.load().subscribe({
-      next: (data) => { this._data.set(data); this._loading.set(false); },
-      error: () => this._loading.set(false),
-    });
+    this.api.load().subscribe({ next: (d) => { this._data.set(d); this._loading.set(false); }, error: () => this._loading.set(false) });
   }
-
   allocate(payload: AllocatePostcodePayload): void {
     this._saving.set(true);
-    this.api.allocate(payload).subscribe({
-      next: () => { this._saving.set(false); this.load(); },
-      error: () => this._saving.set(false),
-    });
+    this.api.allocate(payload).subscribe({ next: () => { this._saving.set(false); this.load(); }, error: () => this._saving.set(false) });
   }
 }

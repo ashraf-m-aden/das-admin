@@ -3,7 +3,7 @@
 <div class="pc">
   @if (facade.data(); as d) {
     <div class="pc__top">
-      <section class="das-card allocate">
+<section class="das-card allocate">
         <div class="panel__title">{{ 'postcodes.allocate' | transloco }}</div>
         <form [formGroup]="form" (ngSubmit)="allocate()">
           <label class="field"><span>{{ 'postcodes.code' | transloco }}</span><input type="text" formControlName="code" placeholder="PC 1007" /></label>
@@ -14,9 +14,9 @@
           </button>
         </form>
         <div class="stats">
-          <div><span class="stats__n">{{ d.totalIssued | number }}</span><span class="stats__l">{{ 'postcodes.issuedThisMonth' | transloco }}</span></div>
-          <div><span class="stats__n">{{ d.activeCount }}</span><span class="stats__l">{{ 'postcodes.active' | transloco }}</span></div>
-          <div><span class="stats__n">{{ d.reservedCount }}</span><span class="stats__l">{{ 'postcodes.reserved' | transloco }}</span></div>
+          <div><span class="stats__n">{{ (facade.data()?.totalIssued ?? 0) | number }}</span><span class="stats__l">{{ 'postcodes.issuedThisMonth' | transloco }}</span></div>
+          <div><span class="stats__n">{{ facade.data()?.activeCount ?? 0 }}</span><span class="stats__l">{{ 'postcodes.active' | transloco }}</span></div>
+          <div><span class="stats__n">{{ facade.data()?.reservedCount ?? 0 }}</span><span class="stats__l">{{ 'postcodes.reserved' | transloco }}</span></div>
         </div>
       </section>
 
@@ -29,8 +29,7 @@
         </div>
       </section>
     </div>
-
-    <section class="das-card table-card">
+<section class="das-card table-card">
       <div class="thead"><span>{{ 'postcodes.code' | transloco }}</span><span>{{ 'postcodes.area' | transloco }}</span><span>{{ 'postcodes.region' | transloco }}</span><span>{{ 'postcodes.addresses' | transloco }}</span><span>{{ 'postcodes.statusCol' | transloco }}</span><span>{{ 'postcodes.issued' | transloco }}</span></div>
       @for (r of facade.rows(); track r.id) {
         <div class="trow">

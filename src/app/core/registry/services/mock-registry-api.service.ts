@@ -18,22 +18,26 @@ import { GeoJSONMultiPolygon } from '../../models/das.models';
 
 function squareMulti(lng: number, lat: number, size: number): GeoJSONMultiPolygon {
   const h = size / 2;
-  return { type: 'MultiPolygon', coordinates: [[[
-    [lng - h, lat - h], [lng + h, lat - h], [lng + h, lat + h], [lng - h, lat + h], [lng - h, lat - h],
-  ]]] };
+  return {
+    type: 'MultiPolygon', coordinates: [[[
+      [lng - h, lat - h], [lng + h, lat - h], [lng + h, lat + h], [lng - h, lat + h], [lng - h, lat - h],
+    ]]]
+  };
 }
 @Injectable({ providedIn: 'root' })
 export class MockRegistryApiService extends RegistryApiPort {
   private static readonly LATENCY = 380;
 
   private records: AddressListItem[] = Array.from({ length: 47 }, (_, i) => {
+
     const n = 12345 + i;
-const lng = 43.134 + (i % 8) * 0.0045;
+    const lng = 43.134 + (i % 8) * 0.0045;
     const lat = 11.588 + Math.floor(i / 8) * 0.0045;
     return {
       id: `addr-${n}`,
       addressCode: `ADDR-${String(n).padStart(8, '0')}`,
       postcode: `PC ${1001 + (i % 6)}`,
+      zone: `Zone ${1001 + (i % 6)}`,
       street: `${8 + (i % 60)} ${STREETS[i % STREETS.length]}`,
       district: DISTRICTS[i % DISTRICTS.length],
       propertyType: TYPES[i % TYPES.length],
@@ -58,6 +62,7 @@ const lng = 43.134 + (i % 8) * 0.0045;
   override filterOptions(): Observable<RegistryFilterOptions> {
     return of({
       postcodes: [...new Set(this.records.map((r) => r.postcode!).filter(Boolean))].sort(),
+      zones: [...new Set(this.records.map((r) => r.zone!).filter(Boolean))].sort(),
       regions: REGIONS,
       teams: TEAMS,
     }).pipe(delay(200));
@@ -69,8 +74,10 @@ const lng = 43.134 + (i % 8) * 0.0045;
     const filtered = this.records.filter((r) => {
       if (search && !r.street.toLowerCase().includes(search) && !r.addressCode.toLowerCase().includes(search)) return false;
       if (filters.postcode && r.postcode !== filters.postcode) return false;
+      if (filters.zone && r.zone !== filters.zone) return false;
       if (filters.status && r.workflowStage !== filters.status) return false;
       if (filters.team && r.assignedTeamName !== filters.team) return false;
+
       return true;
     });
     const start = (page - 1) * pageSize;
@@ -88,7 +95,12 @@ const lng = 43.134 + (i % 8) * 0.0045;
     const detail: AddressDetail = {
       ...base,
       components: {
-        street: base.street, district: base.district, commune: 'Boulaos', region: 'Djibouti', postcode: base.postcode,
+        street: base.street,
+        district: base.district,
+        zone: `Zone ${base.postcode ?? '—'}`,   // dérivée du code postal (mock)
+        commune: 'Boulaos',
+        region: 'Djibouti',
+        postcode: base.postcode,
       },
       location: { latitude: 11.6004 + Math.random() * 0.01, longitude: 43.1456 + Math.random() * 0.01, parcelNumber: `PAR-${base.postcode?.replace(/\D/g, '')}-${base.id.slice(-4)}` },
       propertyInfo: { propertyType: base.propertyType, occupancyType: 'occupied', buildingUse: base.propertyType === 'residential' ? 'Single Family' : null },

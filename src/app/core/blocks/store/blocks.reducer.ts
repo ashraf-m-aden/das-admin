@@ -14,7 +14,14 @@ export const blocksFeature = createFeature({
     })),
 
     on(BlocksActions.setFilters, (state, { filters }) => ({ ...state, filters: { ...state.filters, ...filters } })),
-
+on(BlocksActions.setBlockStatus, (s) => ({ ...s, isSavingStatus: true, statusErrorMessageKey: null })),
+    on(BlocksActions.setBlockStatusSuccess, (s, { block }) => ({
+      ...s,
+      isSavingStatus: false,
+      items: s.items.map((b) => (b.id === block.id ? { ...b, ...block } : b)),
+      selected: s.selected && s.selected.id === block.id ? { ...s.selected, ...block } : s.selected,
+    })),
+    on(BlocksActions.setBlockStatusFailure, (s, { errorMessageKey }) => ({ ...s, isSavingStatus: false, statusErrorMessageKey: errorMessageKey })),
     on(BlocksActions.loadBlockDetail, (state) => ({ ...state, detailStatus: 'loading' as const, detailErrorMessageKey: null })),
     on(BlocksActions.loadBlockDetailSuccess, (state, { block }) => ({ ...state, selected: block, detailStatus: 'loaded' as const })),
     on(BlocksActions.loadBlockDetailFailure, (state, { errorMessageKey }) => ({

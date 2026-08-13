@@ -17,6 +17,16 @@ export const reviewFeature = createFeature({
       items,
       listStatus: 'loaded' as const,
     })),
+    on(ReviewActions.requestResurveySuccess, (state, { item }) => ({
+      ...state,
+      items: state.items.filter((i) => i.id !== item.id),
+      isDeciding: false,
+    })),
+    on(ReviewActions.requestResurveyFailure, (state, { errorMessageKey }) => ({
+      ...state,
+      isDeciding: false,
+      decisionErrorMessageKey: errorMessageKey,
+    })),
     on(ReviewActions.loadQueueFailure, (state, { errorMessageKey }) => ({
       ...state,
       listStatus: 'error' as const,

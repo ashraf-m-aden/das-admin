@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { AllocatePostcodePayload, PostcodesData, PostcodeRow } from '../models/postcodes.models';
+import { AllocatePostcodePayload, PostcodeRow, PostcodesData } from '../models/postcodes.models';
 
 export abstract class PostcodesApiPort {
   abstract load(): Observable<PostcodesData>;

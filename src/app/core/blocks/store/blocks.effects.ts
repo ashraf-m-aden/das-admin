@@ -1,17 +1,22 @@
 import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
-import { catchError, debounceTime, exhaustMap, map, of, withLatestFrom } from 'rxjs';
+import { catchError, debounceTime, exhaustMap,mergeMap, map, of, withLatestFrom } from 'rxjs';
 import { BlocksActions } from './blocks.actions';
 import { blocksFeature } from './blocks.reducer';
 import { BlocksApiPort } from '../services/blocks-api.port';
-
 @Injectable()
 export class BlocksEffects {
   private actions$ = inject(Actions);
   private store = inject(Store);
   private blocksApi = inject(BlocksApiPort);
-
+  setStatus$ = createEffect(() => this.actions$.pipe(
+    ofType(BlocksActions.setBlockStatus),
+    mergeMap(({ id, status }) => this.blocksApi.setStatus(id, status).pipe(
+      map((block) => BlocksActions.setBlockStatusSuccess({ block })),
+      catchError(() => of(BlocksActions.setBlockStatusFailure({ errorMessageKey: 'common.error' }))),
+    )),
+  ));
   loadBlocks$ = createEffect(() =>
     this.actions$.pipe(
       ofType(BlocksActions.loadBlocks),

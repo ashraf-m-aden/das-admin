@@ -20,7 +20,9 @@ export class ReviewFacade {
   load(): void {
     this.store.dispatch(ReviewActions.loadQueue());
   }
-
+requestResurvey(id: UUID, submissionType: RedoSubmissionType): void {
+    this.store.dispatch(ReviewActions.requestResurvey({ id, submissionType }));
+  }
   setFilters(filters: Partial<ReviewFilters>): void {
     this.store.dispatch(ReviewActions.setFilters({ filters }));
   }

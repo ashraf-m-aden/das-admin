@@ -21,7 +21,11 @@ export class MockAuditApiService extends AuditApiPort {
 
   override load(filters: AuditFilters): Observable<AuditData> {
     const s = filters.search.trim().toLowerCase();
+const from = filters.from ? new Date(filters.from).getTime() : -Infinity;
+    const to = filters.to ? new Date(filters.to).getTime() : Infinity;
     const filtered = this.rows.filter((r) => {
+      const t = new Date(r.at).getTime();
+      if (t < from || t > to) return false;
       if (filters.action && r.action !== filters.action) return false;
       if (s && !r.entityLabel.toLowerCase().includes(s) && !r.actor.toLowerCase().includes(s)) return false;
       return true;

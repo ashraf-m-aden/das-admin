@@ -41,3 +41,13 @@
 
 .btn { height: 38px; border: none; border-radius: v.$radius-sm; font: inherit; font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; cursor: pointer; margin-top: v.$space-1; &:disabled { opacity: 0.55; }
   &--primary { background: var(--color-accent); color: var(--color-on-accent); } }
+.quartiers { display: flex; flex-wrap: wrap; gap: v.$space-1; margin-top: v.$space-1; }
+.quartiers__empty { font-size: v.$font-size-xs; color: var(--color-text-muted); }
+.qchip { padding: 4px v.$space-2; border-radius: v.$radius-full; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text-secondary); font-size: v.$font-size-xs; cursor: pointer;
+  &--on { background: var(--color-accent); color: var(--color-on-accent); border-color: var(--color-accent); } }
+
+.trow__quartiers { display: flex; flex-wrap: wrap; gap: 4px; }
+.qtag { font-size: 11px; padding: 1px 6px; border-radius: v.$radius-sm; background: var(--das-blue-50); color: var(--das-blue-700); }
+
+/* la grille passe de 6 à 7 colonnes */
+.thead, .trow { grid-template-columns: 0.8fr 1.1fr 0.8fr 1.4fr 0.9fr 0.9fr 0.9fr; }

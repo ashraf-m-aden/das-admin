@@ -45,6 +45,7 @@ export class SidebarComponent {
         { labelKey: 'nav.gisMap', path: '/blocks/map' },
       ],
     },
+    { kind: 'link', labelKey: 'nav.verification', path: '/verification', icon: 'ti-checkup-list', allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
     { kind: 'link', labelKey: 'nav.fieldOps', path: '/field-operations', icon: 'ti-users-group', allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
     { kind: 'link', labelKey: 'nav.verification', path: '/review', icon: 'ti-checkup-list', allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
     { kind: 'link', labelKey: 'nav.postcodes', path: '/postcodes', icon: 'ti-mail-code', allowedRoles: ['Admin', 'Gestionnaire'] },

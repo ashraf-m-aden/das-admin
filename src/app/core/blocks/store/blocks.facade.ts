@@ -3,7 +3,7 @@ import { Store } from '@ngrx/store';
 import { BlocksActions } from './blocks.actions';
 import { blocksFeature } from './blocks.reducer';
 import { selectBlocksAsGeoJson, selectIsBlockDetailLoading, selectIsBlocksListLoading } from './blocks.selectors';
-import { UUID } from '../../models/das.models';
+import { BlockStatus, UUID } from '../../models/das.models';
 import { BlocksFilters } from './blocks.state';
 
 @Injectable({ providedIn: 'root' })
@@ -16,7 +16,8 @@ export class BlocksFacade {
   listErrorMessageKey$ = this.store.select(blocksFeature.selectListErrorMessageKey);
 
   blocksGeoJson$ = this.store.select(selectBlocksAsGeoJson);
-
+isSavingStatus$ = this.store.select(blocksFeature.selectIsSavingStatus);
+  setStatus(id: UUID, status: BlockStatus): void { this.store.dispatch(BlocksActions.setBlockStatus({ id, status })); }
   selected$ = this.store.select(blocksFeature.selectSelected);
   isDetailLoading$ = this.store.select(selectIsBlockDetailLoading);
   detailErrorMessageKey$ = this.store.select(blocksFeature.selectDetailErrorMessageKey);

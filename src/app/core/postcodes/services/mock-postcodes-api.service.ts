@@ -32,19 +32,12 @@ export class MockPostcodesApiService extends PostcodesApiPort {
     };
   }
 
-  override load(): Observable<PostcodesData> {
-    return of(this.data()).pipe(delay(360));
-  }
+  override load(): Observable<PostcodesData> { return of(this.data()).pipe(delay(360)); }
 
   override allocate(payload: AllocatePostcodePayload): Observable<PostcodeRow> {
     const row: PostcodeRow = {
-      id: `pc-${this.rows.length}`,
-      code: payload.code,
-      adminUnitName: payload.adminUnitName,
-      region: payload.region,
-      addressCount: 0,
-      status: 'reserved',
-      issuedAt: new Date().toISOString(),
+      id: `pc-${this.rows.length}`, code: payload.code, adminUnitName: payload.adminUnitName,
+      region: payload.region, addressCount: 0, status: 'reserved', issuedAt: new Date().toISOString(),
     };
     this.rows = [row, ...this.rows];
     return of(row).pipe(delay(300));

@@ -1,7 +1,7 @@
 <das-page-header [eyebrow]="'reports.eyebrow' | transloco" [title]="'nav.reports' | transloco">
   <div actions class="rp-actions">
     <span class="rp-range"><i class="ti ti-calendar" aria-hidden="true"></i>{{ 'reports.period' | transloco }}</span>
-    <das-date-range-button actions [label]="'May 22, 2025'" />
+    <das-date-range-button actions />
     <button type="button" class="rbtn" (click)="exportCsv()" [disabled]="facade.busy()"><i class="ti ti-download" aria-hidden="true"></i>{{ 'reports.export' | transloco }}</button>
     <button type="button" class="rbtn rbtn--primary" (click)="generate()" [disabled]="facade.busy()"><i class="ti ti-file-analytics" aria-hidden="true"></i>@if (facade.busy()) { {{ 'reports.generating' | transloco }} } @else { {{ 'reports.generate' | transloco }} }</button>
   </div>

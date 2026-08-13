@@ -1,5 +1,21 @@
-<button type="button" class="drb" (click)="clicked.emit()">
-  <i class="ti ti-calendar" aria-hidden="true"></i>
-  <span>{{ label() }}</span>
-  <i class="ti ti-chevron-down drb__chev" aria-hidden="true"></i>
-</button>
+<div class="drb-wrap">
+  <button type="button" class="drb" (click)="toggle()" [attr.aria-expanded]="open()">
+    <i class="ti ti-calendar" aria-hidden="true"></i>
+    <span>{{ label() }}</span>
+    <i class="ti ti-chevron-down drb__chev" aria-hidden="true"></i>
+  </button>
+
+  @if (open()) {
+    <div class="drb-pop">
+      @for (p of presets; track p) {
+        <button type="button" class="drb-pop__item" [class.drb-pop__item--on]="activePreset() === p" (click)="choose(p)">{{ presetLabelKey(p) | transloco }}</button>
+      }
+      <div class="drb-pop__custom">
+        <span class="drb-pop__label">{{ 'period.custom' | transloco }}</span>
+        <input type="date" [(ngModel)]="customFrom" />
+        <input type="date" [(ngModel)]="customTo" />
+        <button type="button" class="drb-pop__apply" (click)="applyCustom()">{{ 'common.apply' | transloco }}</button>
+      </div>
+    </div>
+  }
+</div>

@@ -24,6 +24,7 @@
     </label>
     @if (filterOptions$ | async; as opt) {
       <select formControlName="postcode"><option [ngValue]="null">{{ 'registry.allPostcodes' | transloco }}</option>@for (p of opt.postcodes; track p) {<option [ngValue]="p">{{ p }}</option>}</select>
+     <select formControlName="zone"><option [ngValue]="null">{{ 'registry.allZones' | transloco }}</option>@for (z of opt.zones; track z) {<option [ngValue]="z">{{ z }}</option>}</select>
       <select formControlName="region"><option [ngValue]="null">{{ 'registry.allRegions' | transloco }}</option>@for (r of opt.regions; track r) {<option [ngValue]="r">{{ r }}</option>}</select>
       <select formControlName="status"><option [ngValue]="null">{{ 'registry.allStatuses' | transloco }}</option>@for (st of stages; track st) {<option [ngValue]="st">{{ stageLabelKey(st) | transloco }}</option>}</select>
       <select formControlName="team"><option [ngValue]="null">{{ 'registry.allTeams' | transloco }}</option>@for (t of opt.teams; track t) {<option [ngValue]="t">{{ t }}</option>}</select>

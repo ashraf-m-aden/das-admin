@@ -1,4 +1,4 @@
-import { ApplicationConfig, inject } from '@angular/core';
+import { ApplicationConfig, ENVIRONMENT_INITIALIZER, inject } from '@angular/core';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { provideStore } from '@ngrx/store';
@@ -52,6 +52,14 @@ import { IntegrationsApiPort } from './core/integrations/services/integrations-a
 import { MockIntegrationsApiService } from './core/integrations/services/mock-integrations-api.service';
 import { MockAuditApiService } from './core/audit/services/mock-audit-api.service';
 import { AuditApiPort } from './core/audit/services/audit-api.port';
+import { ThemeService } from './core/theme/theme.service';
+import { PostcodesApiService } from './core/postcodes/services/postcodes-api.service';
+import { DataQualityApiService } from './core/dataquality/services/dataquality-api.service';
+import { FieldOpsApiService } from './core/fieldops/services/fieldops-api.service';
+import { ReportsApiService } from './core/reports/services/reports-api.service';
+import { AuditApiService } from './core/audit/services/audit-api.service';
+import { IntegrationsApiService } from './core/integrations/services/integrations-api.service';
+const useMock = () => inject(AppConfigService).get('useMockApi');
 export const appConfig: ApplicationConfig = {
   providers: [
     provideHttpClient(withInterceptors([authInterceptor])),
@@ -91,16 +99,18 @@ export const appConfig: ApplicationConfig = {
       ClientsEffects,
       FeedbackEffects
     ]),
-    { provide: PostcodesApiPort, useClass: MockPostcodesApiService },
-    { provide: FieldOpsApiPort, useClass: MockFieldOpsApiService },
-    { provide: DataQualityApiPort, useClass: MockDataQualityApiService },
-    { provide: ReportsApiPort, useClass: MockReportsApiService },
+{ provide: PostcodesApiPort,   useFactory: () => useMock() ? inject(MockPostcodesApiService)   : inject(PostcodesApiService) },
+    { provide: FieldOpsApiPort,    useFactory: () => useMock() ? inject(MockFieldOpsApiService)    : inject(FieldOpsApiService) },
+    { provide: DataQualityApiPort, useFactory: () => useMock() ? inject(MockDataQualityApiService) : inject(DataQualityApiService) },
+    { provide: ReportsApiPort,     useFactory: () => useMock() ? inject(MockReportsApiService)     : inject(ReportsApiService) },
+    { provide: IntegrationsApiPort,useFactory: () => useMock() ? inject(MockIntegrationsApiService): inject(IntegrationsApiService) },
+    { provide: AuditApiPort,       useFactory: () => useMock() ? inject(MockAuditApiService)       : inject(AuditApiService) },
     {
       provide: RegistryApiPort,
-      useFactory: () => (inject(AppConfigService).get('useMockApi') ? inject(MockRegistryApiService) : inject(RegistryApiService)),
+      useFactory: () => (useMock() ?  inject(MockRegistryApiService) : inject(RegistryApiService)),
     },
-        { provide: AuditApiPort, useClass: MockAuditApiService },
-    { provide: IntegrationsApiPort, useClass: MockIntegrationsApiService },
+
+        { provide: ENVIRONMENT_INITIALIZER, multi: true, useValue: () => inject(ThemeService) },
     provideStoreDevtools({ maxAge: 25, logOnly: false }),
   ],
 };

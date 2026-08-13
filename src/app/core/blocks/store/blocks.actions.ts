@@ -1,5 +1,5 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
-import { Block, UUID } from '../../models/das.models';
+import { Block, BlockStatus, UUID } from '../../models/das.models';
 import { BlockListItem, BlockWithParcels } from '../models/blocks.models';
 import { BlocksFilters } from './blocks.state';
 
@@ -24,5 +24,8 @@ export const BlocksActions = createActionGroup({
     'Set Block Name': props<{ id: UUID; name: string }>(),
     'Set Block Name Success': props<{ block: Block }>(),
     'Set Block Name Failure': props<{ errorMessageKey: string }>(),
+    'Set Block Status': props<{ id: UUID; status: BlockStatus }>(),
+    'Set Block Status Success': props<{ block: Block }>(),
+    'Set Block Status Failure': props<{ errorMessageKey: string }>(),
   },
 });

@@ -31,7 +31,23 @@ export interface AdministrativeUnit {
 
 export type RoadTypeCode = 'street' | 'avenue' | 'boulevard' | 'alley' | 'road' | 'intersection' | 'roundabout';
 export interface RoadType { id: UUID; code: RoadTypeCode; labelFr: string; isPoint: boolean; }
+export type ZoneStatus = 'active' | 'reserved' | 'retired';
 
+/**
+ * Zone postale : regroupe un ENSEMBLE de quartiers et porte le code postal.
+ * Orthogonale à la hiérarchie admin (Region→Ville→Commune→Quartier).
+ * Un quartier appartient à une seule zone (partition) → code postal non ambigu.
+ */
+export interface Zone {
+  id: UUID;
+  name: string;                 // ex. "Zone Boulaos Nord"
+  postalCode: string;           // ex. "PC 1001" — porté par la zone
+  regionId: UUID | null;
+  regionName: string;
+  quartierIds: UUID[];          // quartiers couverts par la zone
+  status: ZoneStatus;
+  createdAt: ISODateTime;
+}
 export type BlockStatus = 'not_assigned' | 'assigned' | 'in_progress' | 'submitted' | 'approved' | 'needs_redo';
 export interface Block {
   id: UUID;

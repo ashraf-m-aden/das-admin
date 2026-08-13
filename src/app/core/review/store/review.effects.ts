@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
-import { catchError, exhaustMap, map, of, withLatestFrom } from 'rxjs';
+import { catchError, exhaustMap, map, of, withLatestFrom,mergeMap } from 'rxjs';
 import { ReviewActions } from './review.actions';
 import { reviewFeature } from './review.reducer';
 import { ReviewApiPort } from '../services/review-api.port';
@@ -25,6 +25,13 @@ export class ReviewEffects {
     ),
   );
 
+requestResurvey$ = createEffect(() => this.actions$.pipe(
+    ofType(ReviewActions.requestResurvey),
+    mergeMap(({ id, submissionType }) => this.reviewApi.requestResurvey(id, submissionType).pipe(
+      map((item) => ReviewActions.requestResurveySuccess({ item })),
+      catchError(() => of(ReviewActions.requestResurveyFailure({ errorMessageKey: 'common.error' }))),
+    )),
+  ));
   reloadOnFilterChange$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ReviewActions.setFilters),

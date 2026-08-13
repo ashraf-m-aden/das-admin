@@ -107,3 +107,25 @@ $das-palette: (
   "ink-900": #111827,
   "ink-500": #6b7280,
 );
+:root[data-theme="dark"] {
+  --das-surface: #111c30;
+  --das-surface-alt: #0d1626;
+  --das-surface-sunken: #1a2740;
+  --das-white: #111c30;
+
+  --color-surface: #111c30;
+  --color-surface-alt: #0d1626;
+  --color-surface-sunken: #1a2740;
+  --color-border: #24344f;
+  --color-border-strong: #30456a;
+
+  --color-text-primary: #e6ecf5;
+  --color-text-secondary: #b9c4d6;
+  --color-text-muted: #8092ab;
+  --color-text-disabled: #5d6f8c;
+
+  --color-info-bg: #16233c;
+  --color-success-bg: #12291d;
+  --color-warning-bg: #2c2410;
+  --color-danger-bg: #2c1618;
+}

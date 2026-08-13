@@ -25,7 +25,7 @@ export class RegistryEffects {
     ofType(RegistryActions.loadSummary),
     switchMap(() => this.api.filterOptions().pipe(
       map((options) => RegistryActions.loadFilterOptionsSuccess({ options })),
-      catchError(() => of(RegistryActions.loadFilterOptionsSuccess({ options: { postcodes: [], regions: [], teams: [] } }))),
+      catchError(() => of(RegistryActions.loadFilterOptionsSuccess({ options: { postcodes: [], regions: [], teams: [], zones: [] } }))),
     )),
   ));
 

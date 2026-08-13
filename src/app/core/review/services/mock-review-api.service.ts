@@ -10,14 +10,11 @@ export class MockReviewApiService extends ReviewApiPort {
   private static readonly SIMULATED_LATENCY_MS = 450;
 
   private items: ReviewItem[] = [
-    {
-      id: 'review-property-0001',
-      submissionType: 'property',
-      code: 'DJ-BOU-ARR2-Q7-B012-A-045',
-      submittedByName: 'Idriss Agent',
+ {
+      id: 'review-property-0001', submissionType: 'property',
+      code: 'DJ-BOU-ARR2-Q7-B012-A-045', submittedByName: 'Idriss Agent',
       submittedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      status: 'submitted',
-      gpsAccuracy: 4.2,
+      status: 'submitted', gpsAccuracy: 4.2, validationScore: 92, geoConfidence: 88,
       photos: [
         { id: 'photo-0001', photoType: 'building_front', s3Key: 'demo/building_front.jpg' },
         { id: 'photo-0002', photoType: 'door', s3Key: 'demo/door.jpg' },
@@ -26,29 +23,29 @@ export class MockReviewApiService extends ReviewApiPort {
       notes: null,
     },
     {
-      id: 'review-property-0002',
-      submissionType: 'property',
-      code: 'DJ-BOU-ARR2-Q3-B014-B-012',
-      submittedByName: 'Idriss Agent',
+      id: 'review-property-0002', submissionType: 'property',
+      code: 'DJ-BOU-ARR2-Q3-B014-B-012', submittedByName: 'Idriss Agent',
       submittedAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-      status: 'submitted',
-      gpsAccuracy: 18.7,
+      status: 'submitted', gpsAccuracy: 18.7, validationScore: 61, geoConfidence: 54,
       photos: [{ id: 'photo-0004', photoType: 'building_front', s3Key: 'demo/building_front2.jpg' }],
       notes: 'Accès difficile, façade partiellement masquée par un mur.',
     },
     {
-      id: 'review-street-0001',
-      submissionType: 'street',
-      code: 'Rue suggérée : "Avenue de la Paix"',
-      submittedByName: 'Warsama Robleh',
+      id: 'review-street-0001', submissionType: 'street',
+      code: 'Rue suggérée : "Avenue de la Paix"', submittedByName: 'Warsama Robleh',
       submittedAt: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString(),
-      status: 'submitted',
-      gpsAccuracy: null,
+      status: 'submitted', gpsAccuracy: null, validationScore: 78, geoConfidence: null,
       photos: [{ id: 'photo-0005', photoType: 'sign', s3Key: 'demo/sign.jpg' }],
       notes: null,
     },
   ];
-
+override requestResurvey(id: UUID, submissionType: RedoSubmissionType): Observable<ReviewItem> {
+    const item = this.items.find((i) => i.id === id && i.submissionType === submissionType);
+    if (!item) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
+    const updated: ReviewItem = { ...item, status: 'needs_redo', notes: 'resurvey_requested' };
+    this.items = this.items.map((i) => (i.id === id ? updated : i));
+    return of(updated).pipe(delay(MockReviewApiService.SIMULATED_LATENCY_MS));
+  }
   override listQueue(query: ReviewQueueQuery): Observable<ReviewItem[]> {
     const filtered = this.items.filter(
       (i) => i.status === 'submitted' && (!query.submissionType || i.submissionType === query.submissionType),

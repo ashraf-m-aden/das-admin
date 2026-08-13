@@ -8,7 +8,6 @@ import { BlocksFacade } from '../../../core/blocks/store/blocks.facade';
 import { StaffFacade } from '../../../core/staff/store/staff.facade';
 import { DasNumberPipe } from '../../../core/i18n/das-locale.pipes';
 import { PageHeaderComponent } from '../../../core/layout/page-header/page-header.component';
-import { BlockMapComponent } from '../block-map/block-map.component';
 import { VERIFIED_STAGES } from '../../../core/blocks/models/blocks.models';
 import { BlockStatus } from '../../../core/models/das.models';
 import { StaffMember } from '../../../core/staff/models/staff.models';
@@ -21,7 +20,7 @@ const BLOCK_STATUS_COLOR: Record<BlockStatus, string> = {
 @Component({
   selector: 'das-block-detail',
   standalone: true,
-  imports: [AsyncPipe, ReactiveFormsModule, RouterLink, TranslocoModule, DasNumberPipe, PageHeaderComponent,DasMapComponent, BlockMapComponent],
+  imports: [AsyncPipe, ReactiveFormsModule, RouterLink, TranslocoModule, DasNumberPipe, PageHeaderComponent,DasMapComponent],
   templateUrl: './block-detail.component.html',
   styleUrl: './block-detail.component.scss',
 })
@@ -39,7 +38,13 @@ export class BlockDetailComponent implements OnInit, OnDestroy {
   protected readonly isAssigning$ = this.facade.isAssigning$;
 
   private readonly staff = toSignal(this.staffFacade.items$, { initialValue: [] as StaffMember[] });
+protected readonly statuses: BlockStatus[] = ['not_assigned', 'assigned', 'in_progress', 'submitted', 'approved', 'needs_redo'];
+  protected readonly isSavingStatus$ = this.facade.isSavingStatus$;
 
+  changeStatus(status: string): void {
+    const b = this.block();
+    if (b && status && status !== b.status) this.facade.setStatus(b.id, status as BlockStatus);
+  }
   protected readonly agents = computed(() =>
     this.staff().filter((s) => s.isActive && s.roles.includes('AgentTerrain')),
   );

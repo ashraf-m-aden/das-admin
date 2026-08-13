@@ -5,6 +5,7 @@ import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AuthFacade } from '../../core/auth/store/auth.facade';
 import { PageHeaderComponent } from '../../core/layout/page-header/page-header.component';
 import { ToastService } from '../../core/ui/toast/toast.service';
+import { ThemeService } from '../../core/theme/theme.service';
 
 @Component({
   selector: 'das-profile',
@@ -18,13 +19,13 @@ export class ProfileComponent {
   private auth = inject(AuthFacade);
   private transloco = inject(TranslocoService);
   private toast = inject(ToastService);
-
+  private themeSvc = inject(ThemeService);
+  protected readonly theme = this.themeSvc.theme;   // remplace le signal local
   protected readonly fullName$ = this.auth.fullName$;
   protected readonly roles$ = this.auth.roles$;
 
   protected readonly langs = this.transloco.getAvailableLangs().map((l) => (typeof l === 'string' ? l : l.id));
   protected readonly activeLang = signal(this.transloco.getActiveLang());
-  protected readonly theme = signal<'light' | 'dark'>('light');
 
   protected readonly infoForm = this.fb.nonNullable.group({
     fullName: ['', [Validators.required]],
@@ -62,10 +63,7 @@ export class ProfileComponent {
     this.activeLang.set(lang);
   }
 
-  setTheme(theme: 'light' | 'dark'): void {
-    this.theme.set(theme);
-    // TODO: appliquer un attribut data-theme au <html> + persister (préférence utilisateur)
-  }
+  setTheme(theme: 'light' | 'dark'): void { this.themeSvc.set(theme); }
 
   initials(name: string): string {
     const p = name.trim().split(/\s+/).filter(Boolean);

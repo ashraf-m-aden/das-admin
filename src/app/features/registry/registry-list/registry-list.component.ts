@@ -50,7 +50,7 @@ export class RegistryListComponent implements OnInit {
   ];
 
   protected readonly filterForm = this.fb.group({
-    search: [''], postcode: [null as string | null], region: [null as string | null],
+    search: [''], postcode: [null as string | null], zone: [null as string | null], region: [null as string | null],
     status: [null as AddressWorkflowStage | null], team: [null as string | null],
   });
 
@@ -62,8 +62,8 @@ export class RegistryListComponent implements OnInit {
 
   ngOnInit(): void {
     this.facade.init();
-    this.filterForm.valueChanges.subscribe((v) => this.facade.setFilters({
-      search: v.search ?? '', postcode: v.postcode ?? null, region: v.region ?? null,
+  this.filterForm.valueChanges.subscribe((v) => this.facade.setFilters({
+      search: v.search ?? '', postcode: v.postcode ?? null, zone: v.zone ?? null, region: v.region ?? null,
       status: v.status ?? null, team: v.team ?? null,
     }));
   }

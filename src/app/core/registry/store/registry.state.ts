@@ -6,27 +6,23 @@ export type LoadStatus = 'idle' | 'loading' | 'loaded' | 'error';
 export interface RegistryState {
   summary: RegistrySummary | null;
   summaryStatus: LoadStatus;
-
   items: AddressListItem[];
   total: number;
   page: number;
   pageSize: number;
   listStatus: LoadStatus;
-
   filters: RegistryFilters;
   filterOptions: RegistryFilterOptions;
-
   selectedIds: string[];
-
   detailOpenId: string | null;
   detail: AddressDetail | null;
   detailStatus: LoadStatus;
-
   isMutating: boolean;
 }
 
 export const initialRegistryFilters: RegistryFilters = {
   search: '', postcode: null, region: null, status: null as AddressWorkflowStage | null, team: null,
+  zone: null
 };
 
 export const initialRegistryState: RegistryState = {
@@ -38,7 +34,10 @@ export const initialRegistryState: RegistryState = {
   pageSize: 10,
   listStatus: 'idle',
   filters: initialRegistryFilters,
-  filterOptions: { postcodes: [], regions: [], teams: [] },
+  filterOptions: {
+    postcodes: [], regions: [], teams: [],
+    zones: []
+  },
   selectedIds: [],
   detailOpenId: null,
   detail: null,

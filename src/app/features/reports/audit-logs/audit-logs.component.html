@@ -1,4 +1,5 @@
 <das-page-header [eyebrow]="'audit.eyebrow' | transloco" [title]="'nav.auditLogs' | transloco">
+  <das-date-range-button actions />
   <div actions class="al-filters" [formGroup]="filterForm">
     <label class="al-search"><i class="ti ti-search" aria-hidden="true"></i><input type="text" formControlName="search"
         [attr.placeholder]="'common.search' | transloco" /></label>

@@ -10,10 +10,7 @@ import { RedoSubmissionType, UUID } from '../../models/das.models';
 export class ReviewApiService extends ReviewApiPort {
   private http = inject(HttpClient);
   private config = inject(AppConfigService);
-
-  private get baseUrl(): string {
-    return `${this.config.get('apiBaseUrl')}/review`;
-  }
+  private get baseUrl() { return `${this.config.get('apiBaseUrl')}/review`; }
 
   override listQueue(query: ReviewQueueQuery): Observable<ReviewItem[]> {
     const params: Record<string, string> = {};
@@ -27,5 +24,10 @@ export class ReviewApiService extends ReviewApiPort {
 
   override reject(id: UUID, submissionType: RedoSubmissionType, payload: RejectPayload): Observable<ReviewItem> {
     return this.http.post<ReviewItem>(`${this.baseUrl}/${submissionType}/${id}/reject`, payload);
+  }
+
+  // ⚠ Endpoint ABSENT de la spec actuelle — à implémenter côté backend.
+  override requestResurvey(id: UUID, submissionType: RedoSubmissionType): Observable<ReviewItem> {
+    return this.http.post<ReviewItem>(`${this.baseUrl}/${submissionType}/${id}/resurvey`, {});
   }
 }

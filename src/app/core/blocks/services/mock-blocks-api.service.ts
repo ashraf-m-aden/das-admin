@@ -41,7 +41,13 @@ export class MockBlocksApiService extends BlocksApiPort {
     needs_redo: 0.3,
     not_assigned: 0,
   };
-
+override setStatus(id: UUID, status: BlockStatus): Observable<Block> {
+    const existing = this.blocks.find((b) => b.id === id);
+    if (!existing) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
+    const updated: Block = { ...existing, status, updatedAt: new Date().toISOString() };
+    this.blocks = this.blocks.map((b) => (b.id === id ? updated : b));
+    return of(updated).pipe(delay(300));
+  }
   private blocks: Block[] = [
     {
       id: 'block-0001', adminUnitId: 'unit-q7', code: 'DJ-BOU-Q7-B012', name: null,

@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { Block, UUID } from '../../models/das.models';
+import { Block, BlockStatus, UUID } from '../../models/das.models';
 import { BlockListItem, BlockListQuery, BlockWithParcels } from '../models/blocks.models';
 
 export abstract class BlocksApiPort {
@@ -7,4 +7,5 @@ export abstract class BlocksApiPort {
   abstract getById(id: UUID): Observable<BlockWithParcels>;
   abstract assign(id: UUID, userId: UUID): Observable<Block>;
   abstract setName(id: UUID, name: string): Observable<Block>;
+  abstract setStatus(id: UUID, status: BlockStatus): Observable<Block>;
 }

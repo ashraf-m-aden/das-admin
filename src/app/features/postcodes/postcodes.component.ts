@@ -1,18 +1,18 @@
 import { Component, OnInit, computed, inject } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoModule } from '@jsverse/transloco';
 import { PostcodesFacade } from '../../core/postcodes/store/postcodes.facade';
 import { PageHeaderComponent } from '../../core/layout/page-header/page-header.component';
 import { DasDatePipe } from '../../core/i18n/das-locale.pipes';
 import { PostcodeStatus } from '../../core/models/das.models';
-import { DecimalPipe } from '@angular/common';
 
 const STATUS_COLOR: Record<PostcodeStatus, string> = { active: '#16a34a', reserved: '#d97706', retired: '#9aa3b5' };
 
 @Component({
   selector: 'das-postcodes',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslocoModule, DasDatePipe, PageHeaderComponent,DecimalPipe],
+  imports: [DecimalPipe, ReactiveFormsModule, TranslocoModule, DasDatePipe, PageHeaderComponent],
   templateUrl: './postcodes.component.html',
   styleUrl: './postcodes.component.scss',
 })

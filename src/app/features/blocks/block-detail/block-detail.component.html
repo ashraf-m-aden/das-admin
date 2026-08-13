@@ -23,6 +23,14 @@
           <span [class]="statusBadgeClass(b.status)">{{
             statusLabelKey(b.status) | transloco
           }}</span>
+          <div class="status-change">
+          <label>{{ 'blocks.changeStatus' | transloco }}</label>
+          <select (change)="changeStatus($any($event.target).value)" [disabled]="(isSavingStatus$ | async)">
+            @for (st of statuses; track st) {
+              <option [value]="st" [selected]="st === b.status">{{ ('status.block.' + st) | transloco }}</option>
+            }
+          </select>
+        </div>
         </div>
 
         <div class="fiche__agent">

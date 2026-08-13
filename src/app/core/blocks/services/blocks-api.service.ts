@@ -1,24 +1,16 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, switchMap } from 'rxjs';
+import { Observable } from 'rxjs';
 import { BlocksApiPort } from './blocks-api.port';
 import { AppConfigService } from '../../config/app-config.service';
-import { Block, UUID } from '../../models/das.models';
+import { Block, BlockStatus, UUID } from '../../models/das.models';
 import { BlockListItem, BlockListQuery, BlockWithParcels } from '../models/blocks.models';
 
-/**
- * Chemins provisoires (/blocks) à aligner sur la spec réelle (/blocs).
- * list = format enrichi (agent + parcelles). setName conserve le risque
- * boundaryWkt documenté (PATCH remplacement complet).
- */
 @Injectable({ providedIn: 'root' })
 export class BlocksApiService extends BlocksApiPort {
   private http = inject(HttpClient);
   private config = inject(AppConfigService);
-
-  private get baseUrl(): string {
-    return `${this.config.get('apiBaseUrl')}/blocks`;
-  }
+  private get baseUrl() { return `${this.config.get('apiBaseUrl')}/blocs`; }   // /blocs, pas /blocks
 
   override list(query: BlockListQuery): Observable<BlockListItem[]> {
     const params: Record<string, string> = {};
@@ -36,15 +28,11 @@ export class BlocksApiService extends BlocksApiPort {
     return this.http.patch<Block>(`${this.baseUrl}/${id}/assign`, { userId });
   }
 
+  // Spec : POST /blocs/{id}/name { name } (fini le PATCH remplacement complet — plus de risque geometry loss)
   override setName(id: UUID, name: string): Observable<Block> {
-    return this.getById(id).pipe(
-      switchMap((current) =>
-        this.http.patch<Block>(`${this.config.get('apiBaseUrl')}/blocs/${id}`, {
-          code: current.code,
-          name,
-          boundaryWkt: null,
-        }),
-      ),
-    );
+    return this.http.post<Block>(`${this.baseUrl}/${id}/name`, { name });
+  }
+  override setStatus(id: UUID, status: BlockStatus): Observable<Block> {
+    return this.http.patch<Block>(`${this.baseUrl}/${id}/status`, { status });
   }
 }

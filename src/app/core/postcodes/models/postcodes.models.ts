@@ -3,10 +3,10 @@ import { UUID, ISODateTime, PostcodeStatus } from '../../models/das.models';
 export interface PostcodeRow {
   id: UUID;
   code: string;             // "PC 1001"
-  adminUnitName: string;    // quartier / commune rattaché
+  adminUnitName: string;    // quartier rattaché
   region: string;
   addressCount: number;
-  status: PostcodeStatus;   // active | reserved | retired
+  status: PostcodeStatus;
   issuedAt: ISODateTime;
 }
 

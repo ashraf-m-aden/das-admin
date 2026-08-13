@@ -15,7 +15,8 @@ export interface BlocksState {
   listStatus: BlocksListStatus;
   listErrorMessageKey: string | null;
   filters: BlocksFilters;
-
+isSavingStatus: boolean;
+  statusErrorMessageKey: string | null,
   selected: BlockWithParcels | null;
   detailStatus: BlockDetailStatus;
   detailErrorMessageKey: string | null;
@@ -31,7 +32,8 @@ export const initialBlocksState: BlocksState = {
   listStatus: 'idle',
   listErrorMessageKey: null,
   filters: { search: '', status: null, adminUnitId: null },
-
+isSavingStatus: false,
+  statusErrorMessageKey: null as string | null,
   selected: null,
   detailStatus: 'idle',
   detailErrorMessageKey: null,

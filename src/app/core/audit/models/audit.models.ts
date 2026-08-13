@@ -11,6 +11,5 @@ export interface AuditRow {
   at: ISODateTime;
 }
 
-export interface AuditFilters { search: string; action: AuditAction | null; }
-
+export interface AuditFilters { search: string; action: AuditAction | null; from?: string; to?: string; }
 export interface AuditData { rows: AuditRow[]; total: number; }

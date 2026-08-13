@@ -19,5 +19,9 @@ export const ReviewActions = createActionGroup({
     Reject: props<{ id: UUID; submissionType: RedoSubmissionType; payload: RejectPayload }>(),
     'Reject Success': props<{ item: ReviewItem }>(),
     'Reject Failure': props<{ errorMessageKey: string }>(),
+
+    'Request Resurvey': props<{ id: UUID; submissionType: RedoSubmissionType }>(),
+    'Request Resurvey Success': props<{ item: ReviewItem }>(),
+    'Request Resurvey Failure': props<{ errorMessageKey: string }>(),
   },
 });

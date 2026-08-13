@@ -1,0 +1,931 @@
+﻿ 
+=== E:\das\das-admin\src\app\core\addressing\models\addressing.models.ts ===
+import { UUID, ISODateTime, BlockStatus } from '../../models/das.models';
+
+export type SuggestionStatus = 'pending' | 'approved' | 'rejected';
+
+/** Une proposition de nom (agent terrain), en attente ou dÃ©jÃ  traitÃ©e par un superviseur/admin. */
+export interface NameSuggestion {
+  id: UUID;
+  suggestedName: string;
+  comment: string | null;
+  status: SuggestionStatus;
+  proposedByName: string;
+  proposedAt: ISODateTime;
+  reviewedByName: string | null;
+  reviewedAt: ISODateTime | null;
+  rejectionReason: string | null;
+}
+
+export interface BlockToName {
+  id: UUID;
+  code: string;
+  name: string | null;
+  pendingSuggestion: NameSuggestion | null;
+  status: BlockStatus;
+}
+
+export interface BlockNamingQuery {
+  search: string;
+  onlyUnnamed: boolean;
+}
+
+/** Reprend l'enum backend (Streets.Type). */
+export type StreetType = 'Rue' | 'Avenue' | 'Boulevard' | 'Piste' | 'Impasse' | 'Route';
+
+export interface StreetToName {
+  id: UUID;
+  code: string;
+  name: string | null;
+  type: StreetType;
+  pendingSuggestion: NameSuggestion | null;
+}
+
+export interface StreetNamingQuery {
+  search: string;
+  onlyUnnamed: boolean;
+}
+
+/** HiÃ©rarchie de rattachement â€” Region â†’ Ville â†’ Commune â†’ Quartier (plus d'arrondissement). */
+export interface AdminHierarchy {
+  region: string;
+  ville: string;
+  commune: string;
+  quartier: string;
+}
+
+/**
+ * Parcelle Ã  consulter/ajuster. Le `numero` est gÃ©nÃ©rÃ© automatiquement Ã 
+ * l'import (sÃ©quentiel par bloc) ; l'Ã©cran sert surtout Ã  la consultation, avec
+ * possibilitÃ© d'ajustement ponctuel. Plus de lot (la parcelle EST l'adresse).
+ */
+export interface PropertyToNumber {
+  id: UUID;
+  blockCode: string;
+  blockName: string | null;
+  numero: string;
+
+  quartierName: string;
+  cityName: string;
+  adminHierarchy: AdminHierarchy;
+
+  addressCode: string;
+  /** CalculÃ© cÃ´tÃ© API (jointure Adressesâ†’Blocsâ†’Quartiersâ†’â€¦â†’Region) â€” jamais recalculÃ© cÃ´tÃ© frontend. */
+  formattedAddress: string;
+  status: 'draft' | 'submitted' | 'approved' | 'needs_redo';
+}
+
+/** Ajustement ponctuel du numÃ©ro (correction) â€” le numÃ©ro initial reste auto-gÃ©nÃ©rÃ©. */
+export interface AssignHouseNumberPayload {
+  numero: string;
+}
+
+export interface PropertyNumberingQuery {
+  blockId: UUID | null;
+}
+ 
+=== E:\das\das-admin\src\app\core\audit\models\audit.models.ts ===
+import { ISODateTime } from '../../models/das.models';
+
+export type AuditAction = 'created' | 'updated' | 'approved' | 'rejected' | 'published' | 'deleted' | 'login';
+
+export interface AuditRow {
+  id: string;
+  action: AuditAction;
+  entityType: string;      // "Address", "Block", "Postcode"â€¦
+  entityLabel: string;     // "ADDR-00012345"
+  actor: string;
+  at: ISODateTime;
+}
+
+export interface AuditFilters { search: string; action: AuditAction | null; }
+
+export interface AuditData { rows: AuditRow[]; total: number; }
+ 
+=== E:\das\das-admin\src\app\core\auth\models\auth.models.ts ===
+import { UUID, ISODateTime, UserRole } from '../../models/das.models';
+
+export interface LoginCredentials {
+  username: string;
+  password: string;
+}
+
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: ISODateTime;
+}
+
+export interface AuthenticatedUser {
+  id: UUID;
+  fullName: string;
+  roles: UserRole[];
+}
+
+export interface AuthResponse {
+  user: AuthenticatedUser;
+  tokens: AuthTokens;
+}
+
+export interface AuthError {
+  code: 'invalid_credentials' | 'account_disabled' | 'network_error' | 'unknown';
+  message: string;
+}
+ 
+=== E:\das\das-admin\src\app\core\blocks\models\blocks.models.ts ===
+import { UUID, Block, BlockStatus, AddressWorkflowStage } from '../../models/das.models';
+
+export interface BlockListQuery {
+  search: string;
+  status: BlockStatus | null;
+  adminUnitId: UUID | null;
+}
+
+/** RÃ©sumÃ© lÃ©ger d'une parcelle pour la fiche dÃ©tail d'un bloc. */
+export interface BlockParcelSummary {
+  id: UUID;
+  numero: string;
+  workflowStage: AddressWorkflowStage;
+}
+
+/** Ã‰tapes considÃ©rÃ©es comme Â« vÃ©rifiÃ©es Â» pour le calcul de progression. */
+export const VERIFIED_STAGES: AddressWorkflowStage[] = ['verified', 'approved', 'published'];
+
+/**
+ * Bloc enrichi pour la liste : nom d'agent + compteurs de PARCELLES.
+ * Progression = parcelsVerified / parcelsTotal. Fourni par l'endpoint enrichi.
+ */
+export interface BlockListItem extends Block {
+  assignedUserName: string | null;
+  parcelsVerified: number;
+  parcelsTotal: number;
+}
+
+/** Bloc + ses parcelles (le Lot a disparu : la parcelle EST l'adresse). */
+export interface BlockWithParcels extends Block {
+  parcels: BlockParcelSummary[];
+}
+
+export interface BlockGeoJsonProperties {
+  id: UUID;
+  code: string;
+  status: BlockStatus;
+}
+ 
+=== E:\das\das-admin\src\app\core\clients\models\clients.models.ts ===
+import { UUID, ISODateTime, ClientStatus, ZoneAccessStatus } from '../../models/das.models';
+
+export interface ClientListItem {
+  id: UUID;
+  companyName: string;
+  contactName: string;
+  email: string;
+  phone: string | null;
+  status: ClientStatus;
+  enabled: boolean;
+  planId: UUID;
+  planName: string;
+  createdAt: ISODateTime;
+}
+
+export interface ClientListQuery {
+  search: string;
+  status: ClientStatus | null;
+}
+
+export interface SubscriptionPlanOption {
+  id: UUID;
+  name: string;
+  maxZones: number;
+}
+
+export interface CreateClientPayload {
+  companyName: string;
+  contactName: string;
+  login: string;
+  email: string;
+  phone: string | null;
+  planId: UUID;
+}
+
+export type UpdateClientPayload = Omit<CreateClientPayload, 'login'>;
+
+export interface CreateClientResult {
+  client: ClientListItem;
+  temporaryPassword: string;
+}
+
+export interface ZoneAccessItem {
+  id: UUID;
+  zoneId: UUID;
+  zoneName: string;
+  accessStatus: ZoneAccessStatus;
+  grantedAt: ISODateTime;
+}
+
+export interface GrantZoneAccessPayload {
+  zoneId: UUID;
+}
+
+export interface ZoneOption {
+  id: UUID;
+  name: string;
+}
+
+// --- Jeton API â€” un seul par client -----------------------------------------
+
+export interface ApiTokenItem {
+  id: UUID;
+  name: string;
+  scopes: string[];
+  lastUsedAt: ISODateTime | null;
+  createdAt: ISODateTime;
+}
+
+export interface CreateApiTokenPayload {
+  name: string;
+  scopes: string[];
+}
+
+export interface CreateApiTokenResult {
+  token: ApiTokenItem;
+  /** Valeur brute â€” affichÃ©e UNE SEULE FOIS, jamais rÃ©cupÃ©rable ensuite. */
+  rawToken: string;
+}
+ 
+=== E:\das\das-admin\src\app\core\dashboard\models\dashboard.models.ts ===
+import { AddressWorkflowStage, GeoJSONPoint } from '../../models/das.models';
+
+export interface KpiDelta { value: number; direction: 'up' | 'down' | 'flat'; }
+
+export interface DashboardKpis {
+  totalProperties: number; totalPropertiesDelta: KpiDelta;
+  verifiedAddresses: number; verifiedPct: number;
+  pendingVerification: number; pendingPct: number;
+  activeFieldTeams: number; teamsInField: number;
+  newPostcodes: number; newPostcodesDelta: KpiDelta;
+  dataQualityAlerts: number;
+}
+export interface MapAddressPoint { id: string; location: GeoJSONPoint; stage: AddressWorkflowStage; }
+export interface WorkflowStageCount { stage: AddressWorkflowStage; count: number; percent: number; }
+export interface HierarchyLevelCount { levelKey: string; count: number; }
+export interface TrendPoint { label: string; value: number; }
+export interface VerificationBreakdown { verified: number; pending: number; unverified: number; }
+
+export type ActivityKind = 'batch_approved' | 'postcode_created' | 'survey_uploaded' | 'duplicate_flagged' | 'published' | 'quality_rule';
+export interface ActivityItem {
+  id: string;
+  kind: ActivityKind;
+  titleKey: string;
+  descriptionKey: string;
+  params?: Record<string, unknown>;
+  at: string;
+}
+
+export interface DashboardSummary {
+  kpis: DashboardKpis;
+  workflow: WorkflowStageCount[];
+  hierarchy: HierarchyLevelCount[];
+  registrationsTrend: TrendPoint[];
+  verification: VerificationBreakdown;
+  recentActivity: ActivityItem[];
+  mapPoints: MapAddressPoint[];
+}
+ 
+=== E:\das\das-admin\src\app\core\dataquality\models\dataquality.models.ts ===
+import { UUID, QualitySeverity, QualityCaseStatus } from '../../models/das.models';
+
+export interface QualityKpis {
+  coverageRate: number;        // %
+  coverageDelta: number;
+  accuracyScore: number;       // /100
+  accuracyDelta: number;
+  duplicateRate: number;       // %
+  duplicateDelta: number;
+  openCases: number;
+  openCasesDelta: number;
+}
+
+export interface QualityRuleRow {
+  id: UUID;
+  code: string;
+  nameKey: string;             // dataquality.rule.<code>.name
+  descriptionKey: string;      // dataquality.rule.<code>.desc
+  icon: string;                // tabler icon
+  enabled: boolean;
+  impactedCount: number;
+}
+
+export interface QualityAlertRow {
+  id: UUID;
+  issueTypeKey: string;        // dataquality.issue.<code>
+  severity: QualitySeverity;
+  district: string;
+  ruleTriggeredKey: string;    // dataquality.trigger.<code>
+  impactedRecords: number;
+  assignedReviewer: string | null;
+  status: QualityCaseStatus;
+}
+
+export interface RegionCoverage { region: string; coveragePct: number; }
+
+export interface DuplicateCandidate {
+  id: UUID;
+  kind: 'spatial' | 'textual';
+  addressA: string;
+  addressB: string;
+  scorePct: number;            // similaritÃ© / recouvrement
+  district: string;
+}
+
+export interface DataQualityData {
+  kpis: QualityKpis;
+  rules: QualityRuleRow[];
+  alerts: QualityAlertRow[];
+  regionCoverage: RegionCoverage[];
+  duplicates: DuplicateCandidate[];
+}
+ 
+=== E:\das\das-admin\src\app\core\fieldops\models\fieldops.models.ts ===
+import { UUID, ISODateTime, FieldTeam, Task, TaskStatus, TaskPriority, FieldTeamStatus, GeoJSONPoint, GeoJSONMultiPolygon } from '../../models/das.models';
+
+export interface FieldOpsKpis {
+  activeTeams: number;
+  tasksAssignedToday: number;
+  completedSurveys: number;
+  completedPct: number;
+  pendingVerifications: number;
+  offlineDevices: number;
+  escalations: number;
+}
+
+export interface KanbanColumn {
+  status: TaskStatus;
+  tasks: Task[];
+}
+
+export interface VerificationReview {
+  taskId: string;
+  submittedBy: string;
+  submittedAt: ISODateTime;
+  latitude: number;
+  longitude: number;
+  locationLabel: string;
+  geoConfidence: number;
+  photoCount: number;
+}
+export interface ScheduleEntry {
+  id: string;
+  time: string;          // "07:30"
+  teamName: string;
+  titleKey: string;      // dataquality-style i18n key
+  locationKey: string;
+  done: boolean;
+}
+export interface FieldOpsData {
+  kpis: FieldOpsKpis;
+  teams: FieldTeam[];
+  columns: KanbanColumn[];
+  review: VerificationReview | null;
+  teamLocations: TeamLocation[];
+  zones: ZoneBoundary[];
+  schedule: ScheduleEntry[];
+}
+
+export type { TaskPriority };
+
+export interface TeamLocation { id: string; name: string; status: FieldTeamStatus; location: GeoJSONPoint; }
+export interface ZoneBoundary { id: string; name: string; geom: GeoJSONMultiPolygon; }
+ 
+=== E:\das\das-admin\src\app\core\integrations\models\integrations.models.ts ===
+import { ISODateTime } from '../../models/das.models';
+
+export type IntegrationStatus = 'connected' | 'disconnected' | 'error';
+export type IntegrationCategory = 'gis' | 'postal' | 'gov' | 'analytics' | 'storage';
+
+export interface Integration {
+  id: string;
+  name: string;
+  category: IntegrationCategory;
+  descriptionKey: string;
+  icon: string;
+  status: IntegrationStatus;
+  lastSync: ISODateTime | null;
+}
+
+export interface IntegrationsData {
+  items: Integration[];
+  connectedCount: number;
+}
+ 
+=== E:\das\das-admin\src\app\core\models\das.models.ts ===
+export type UUID = string;
+export type ISODateTime = string;
+export type ISODate = string;
+
+export interface GeoJSONPoint { type: 'Point'; coordinates: [number, number]; }
+export interface GeoJSONLineString { type: 'LineString'; coordinates: [number, number][]; }
+export interface GeoJSONPolygon { type: 'Polygon'; coordinates: [number, number][][]; }
+export interface GeoJSONMultiPolygon { type: 'MultiPolygon'; coordinates: [number, number][][][]; }
+export type GeoJSONPointOrLine = GeoJSONPoint | GeoJSONLineString;
+
+/* =============================================================================
+ * HIÃ‰RARCHIE ADMINISTRATIVE â€” arbre gÃ©nÃ©rique
+ * Region â†’ Ville â†’ Commune â†’ Quartier   (au-dessus du Bloc)
+ * Puis entitÃ©s concrÃ¨tes : Bloc â†’ Parcelle (= Adresse). Plus de Lot.
+ * ========================================================================== */
+
+export type AdminUnitLevel = 'region' | 'ville' | 'commune' | 'quartier';
+
+export interface AdministrativeUnit {
+  id: UUID;
+  parentId: UUID | null;
+  levelType: AdminUnitLevel;
+  code: string;                    // ex. "Q7" pour un quartier
+  nameFr: string;
+  nameAr: string | null;
+  path: string;                    // ltree matÃ©rialisÃ© (rattachement + reporting)
+  geom: GeoJSONMultiPolygon;
+  publicVisible: boolean;
+  createdAt: ISODateTime;
+}
+
+export type RoadTypeCode = 'street' | 'avenue' | 'boulevard' | 'alley' | 'road' | 'intersection' | 'roundabout';
+export interface RoadType { id: UUID; code: RoadTypeCode; labelFr: string; isPoint: boolean; }
+
+export type BlockStatus = 'not_assigned' | 'assigned' | 'in_progress' | 'submitted' | 'approved' | 'needs_redo';
+export interface Block {
+  id: UUID;
+  adminUnitId: UUID;               // rattachÃ© Ã  l'unitÃ© de niveau quartier (calculÃ© Ã  l'import)
+  code: string;                    // calculÃ© backend
+  /** Nom officiel utilisÃ© dans les adresses (ex: "Avenue Nasser"). FixÃ© via l'Adressage. */
+  name: string | null;
+  geom: GeoJSONMultiPolygon;
+  areaM2: number;                  // calculÃ© (UTM 38N)
+  status: BlockStatus;
+  assignedUserId: UUID | null;
+  sourceFile: string | null;
+  importedBy: UUID | null;
+  importedAt: ISODateTime;
+  updatedAt: ISODateTime;
+}
+
+/* Le niveau LOT est supprimÃ© : la parcelle EST l'adresse (Bloc â†’ Parcelle). */
+
+/* Cycle de vie enrichi (maquettes) : Registered â†’ Surveyed â†’ Verified â†’ Approved â†’ Published */
+export type AddressWorkflowStage = 'registered' | 'surveyed' | 'verified' | 'approved' | 'published';
+export type PropertyType = 'residential' | 'commercial' | 'industrial' | 'institutional' | 'vacant';
+export type OccupancyType = 'occupied' | 'vacant' | 'under_construction' | 'unknown';
+
+/** Statuts de soumission pour la file de vÃ©rification (revue terrain). */
+export type SubmissionStatus = 'draft' | 'submitted' | 'approved' | 'needs_redo';
+
+/**
+ * Parcelle = Adresse. LivrÃ©e par l'expert comme un polygone (emprise) ; le
+ * backend calcule numero, location, blockId. validationScore et geoConfidence
+ * alimentent la revue et les indicateurs de qualitÃ© (cf. maquettes).
+ */
+export interface Property {
+  id: UUID;
+  blockId: UUID;                   // calculÃ© (ST_Contains parcelle â†’ bloc)
+  streetId: UUID | null;
+  clientUuid: UUID;
+  numero: string;                  // calculÃ© sÃ©quentiellement par bloc
+  addressCode: string;             // ex. "ADDR-00012345"
+  formattedAddress: string;        // composÃ©e cÃ´tÃ© serveur (Parcelleâ†’Blocâ†’Quartierâ†’â€¦â†’Region)
+  geom: GeoJSONMultiPolygon;       // emprise de la parcelle (fourni)
+  location: GeoJSONPoint;          // ST_PointOnSurface (calculÃ©)
+  postcode: string | null;
+  propertyType: PropertyType;
+  occupancyType: OccupancyType;
+  buildingUse: string | null;
+  ownerName: string | null;
+  floorsCount: number | null;
+  workflowStage: AddressWorkflowStage;
+  status: SubmissionStatus;
+  validationScore: number | null;  // 0â€“100
+  geoConfidence: number | null;    // 0â€“100
+  gpsAccuracy: number;
+  rejectionReason: string | null;
+  notes: string | null;
+  submittedBy: UUID;
+  reviewedBy: UUID | null;
+  createdAt: ISODateTime;
+  updatedAt: ISODateTime;
+  syncedAt: ISODateTime | null;
+}
+
+export type PropertyPhotoType = 'building_front' | 'door' | 'street_view' | 'house_number_plate' | 'extra';
+export interface PropertyPhoto {
+  id: UUID; propertyId: UUID; photoType: PropertyPhotoType; s3Key: string;
+  fileSizeKb: number; uploadedBy: UUID; uploadedAt: ISODateTime;
+}
+
+export interface Street {
+  id: UUID; blockId: UUID; nameFr: string | null; nameAr: string | null; roadTypeId: UUID;
+  geom: GeoJSONPointOrLine; signPresent: boolean; nameVisible: boolean; suggestedName: string | null;
+  status: SubmissionStatus; notes: string | null; submittedBy: UUID; reviewedBy: UUID | null;
+  createdAt: ISODateTime; updatedAt: ISODateTime;
+}
+
+export type StreetPhotoType = 'sign' | 'road_view';
+export interface StreetPhoto { id: UUID; streetId: UUID; photoType: StreetPhotoType; s3Key: string; uploadedAt: ISODateTime; }
+
+/* =============================================================================
+ * OPÃ‰RATIONS TERRAIN â€” Ã©quipes (maquettes Field Operations)
+ * ========================================================================== */
+
+export type FieldTeamStatus = 'active' | 'en_route' | 'offline' | 'idle';
+export interface FieldTeam {
+  id: UUID;
+  name: string;                    // ex. "Team Alpha"
+  supervisorId: UUID;
+  supervisorName: string;
+  memberCount: number;
+  currentZoneId: UUID | null;
+  currentZoneName: string | null;
+  progressPercent: number;
+  status: FieldTeamStatus;
+  deviceOnline: boolean;
+}
+
+export type TaskType = 'survey' | 'street_naming' | 'verification' | 'boundary_validation';
+export type TaskStatus = 'new' | 'in_progress' | 'awaiting_review' | 'completed';
+export type TaskPriority = 'low' | 'normal' | 'high';
+export interface Task {
+  id: UUID; blockId: UUID | null; redoRequestId: UUID | null; type: TaskType;
+  title: string; zoneName: string | null; addressCount: number | null;
+  assignedTeamId: UUID | null; assignedTeamName: string | null;
+  createdBy: UUID; status: TaskStatus; priority: TaskPriority; progressPercent: number;
+  deadline: ISODateTime | null; createdAt: ISODateTime; updatedAt: ISODateTime;
+}
+
+export type RedoSubmissionType = 'property' | 'street';
+export type RedoRequestStatus = 'pending' | 'resolved';
+export interface RedoRequest {
+  id: UUID; submissionType: RedoSubmissionType; submissionId: UUID; requestedBy: UUID;
+  reason: string; status: RedoRequestStatus; deadline: ISODateTime | null;
+  createdAt: ISODateTime; resolvedAt: ISODateTime | null;
+}
+
+/* =============================================================================
+ * CODES POSTAUX (module Postcodes)
+ * ========================================================================== */
+
+export type PostcodeStatus = 'active' | 'reserved' | 'retired';
+export interface Postcode {
+  id: UUID; code: string;          // ex. "PC 1001"
+  adminUnitId: UUID; adminUnitName: string;
+  addressCount: number; status: PostcodeStatus;
+  issuedAt: ISODateTime; createdBy: UUID;
+}
+
+/* =============================================================================
+ * QUALITÃ‰ DES DONNÃ‰ES (module Data Quality)
+ * ========================================================================== */
+
+export type QualitySeverity = 'low' | 'medium' | 'high';
+export type QualityCaseStatus = 'new' | 'in_review' | 'resolved';
+export interface QualityRule {
+  id: UUID; code: string; nameKey: string; descriptionKey: string;
+  enabled: boolean; impactedCount: number;
+}
+export interface QualityAlert {
+  id: UUID; ruleId: UUID; issueType: string; severity: QualitySeverity;
+  adminUnitName: string; ruleTriggered: string; impactedRecords: number;
+  assignedReviewer: string | null; status: QualityCaseStatus; createdAt: ISODateTime;
+}
+
+export type UserRole = 'Admin' | 'Gestionnaire' | 'Superviseur' | 'AgentTerrain';
+
+export interface User {
+  id: UUID;
+  fullName: string;
+  username: string;
+  roles: UserRole[];
+  isActive: boolean;
+}
+
+export interface AuditLogEntry {
+  id: UUID; entityType: string; entityId: UUID; action: string;
+  oldValue: Record<string, unknown> | null; newValue: Record<string, unknown> | null;
+  performedBy: UUID; createdAt: ISODateTime;
+}
+
+/* =============================================================================
+ * COMMERCIAL â€” conservÃ© en modÃ¨le, HORS PÃ‰RIMÃˆTRE de cette passe (pas d'UI)
+ * ========================================================================== */
+
+export type ClientStatus = 'trial' | 'active' | 'suspended';
+export interface Client {
+  id: UUID; companyName: string; contactName: string; login: string; passwordHash: string;
+  email: string; phone: string | null; billingAddress: string | null; taxId: string | null;
+  status: ClientStatus; enabled: boolean; planId: UUID; createdAt: ISODateTime; updatedAt: ISODateTime;
+}
+
+export interface SubscriptionPlan {
+  id: UUID; name: string; monthlyPrice: number; maxRequestsPerMonth: number; maxZones: number;
+  routeGenerationEnabled: boolean; fullMapAccess: boolean; createdAt: ISODateTime;
+}
+
+export type ApiTokenStatus = 'active' | 'revoked';
+export interface ApiToken {
+  id: UUID; clientId: UUID; tokenHash: string; name: string; scopes: string[];
+  status: ApiTokenStatus; expiresAt: ISODateTime | null; lastUsedAt: ISODateTime | null;
+  createdAt: ISODateTime; revokedAt: ISODateTime | null;
+}
+
+export type ZoneAccessStatus = 'granted' | 'blocked';
+export interface ClientZoneAccess {
+  id: UUID; clientId: UUID; zoneId: UUID; accessStatus: ZoneAccessStatus;
+  grantedBy: UUID; grantedAt: ISODateTime; blockedAt: ISODateTime | null;
+}
+
+export interface ApiUsageLogEntry {
+  id: UUID; tokenId: UUID; endpoint: string; statusCode: number; responseTimeMs: number; requestedAt: ISODateTime;
+}
+
+export type TravelMode = 'driving' | 'walking' | 'transit';
+export interface RouteRequest {
+  id: UUID; clientId: UUID; tokenId: UUID; originPoint: GeoJSONPoint; destinationPoint: GeoJSONPoint;
+  routeGeom: GeoJSONLineString; distanceM: number; durationS: number; travelMode: TravelMode; createdAt: ISODateTime;
+}
+
+export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue';
+export interface Invoice {
+  id: UUID; clientId: UUID; periodStart: ISODate; periodEnd: ISODate; amountTotal: number;
+  currency: string; status: InvoiceStatus; dueDate: ISODate; issuedAt: ISODateTime | null; paidAt: ISODateTime | null;
+}
+
+export type BillingUsageType = 'api_call' | 'route_request' | 'zone_access';
+export interface BillingRecord {
+  id: UUID; clientId: UUID; invoiceId: UUID | null; usageType: BillingUsageType;
+  quantity: number; unitPrice: number; amount: number; periodStart: ISODate; periodEnd: ISODate; createdAt: ISODateTime;
+}
+ 
+=== E:\das\das-admin\src\app\core\notifications\models\notifications.models.ts ===
+import { UUID, ISODateTime } from '../../models/das.models';
+
+/**
+ * Notifications 100% gÃ©nÃ©rÃ©es cÃ´tÃ© serveur, dÃ©clenchÃ©es par des Ã©vÃ©nements
+ * de travail â€” jamais composÃ©es manuellement par un utilisateur (pas de
+ * messagerie interne, dÃ©cision actÃ©e). Le frontend ne fait qu'afficher et
+ * marquer comme lu.
+ */
+export type NotificationType =
+  | 'task_completed'
+  | 'block_submitted'
+  | 'property_approved'
+  | 'property_needs_redo'
+  | 'redo_resolved';
+
+export type NotificationRelatedEntityType = 'task' | 'block' | 'property' | 'redo_request';
+
+export interface Notification {
+  id: UUID;
+  type: NotificationType;
+  /** ClÃ© de traduction (ex: 'notifications.task_completed') â€” le libellÃ© final est composÃ© avec messageParams */
+  messageKey: string;
+  messageParams: Record<string, string | number>;
+  relatedEntityType: NotificationRelatedEntityType;
+  relatedEntityId: UUID;
+  readAt: ISODateTime | null;
+  createdAt: ISODateTime;
+}
+ 
+=== E:\das\das-admin\src\app\core\postcodes\models\postcodes.models.ts ===
+import { UUID, ISODateTime, PostcodeStatus } from '../../models/das.models';
+
+export interface PostcodeRow {
+  id: UUID;
+  code: string;             // "PC 1001"
+  adminUnitName: string;    // quartier / commune rattachÃ©
+  region: string;
+  addressCount: number;
+  status: PostcodeStatus;   // active | reserved | retired
+  issuedAt: ISODateTime;
+}
+
+export interface PostcodeMonthly { month: string; count: number; }
+
+export interface PostcodesData {
+  rows: PostcodeRow[];
+  monthly: PostcodeMonthly[];
+  totalIssued: number;
+  activeCount: number;
+  reservedCount: number;
+}
+
+export interface AllocatePostcodePayload {
+  code: string;
+  adminUnitName: string;
+  region: string;
+}
+ 
+=== E:\das\das-admin\src\app\core\registry\models\registry.models.ts ===
+// en tÃªte, complÃ©ter l'import :
+import { UUID, ISODateTime, AddressWorkflowStage, PropertyType, OccupancyType, GeoJSONMultiPolygon } from '../../models/das.models';
+export interface AddressListItem {
+  id: UUID;
+  addressCode: string;              // ADDR-00012345
+  postcode: string | null;          // PC 1001
+  street: string;                   // "12 Rue de Rome"
+  district: string;                 // quartier / commune (affichage)
+  propertyType: PropertyType;
+  workflowStage: AddressWorkflowStage;
+  lastUpdate: ISODateTime;
+  assignedTeamName: string | null;
+  geom: GeoJSONMultiPolygon;   // emprise parcelle (pour la carte)
+}
+
+export interface AddressComponents { street: string; district: string; commune: string; region: string; postcode: string | null; }
+export interface AddressLocation { latitude: number; longitude: number; parcelNumber: string; }
+export interface AddressPropertyInfo { propertyType: PropertyType; occupancyType: OccupancyType; buildingUse: string | null; }
+export interface AddressValidation { score: number; notes: string | null; }
+export interface AddressHistoryEntry { id: UUID; actionKey: string; actor: string; at: ISODateTime; }
+
+export type LinkedRecordKind = 'street' | 'postcode' | 'block' | 'team';
+export interface LinkedRecord { id: UUID; kind: LinkedRecordKind; label: string; }
+
+export interface AddressDetail extends AddressListItem {
+  components: AddressComponents;
+  location: AddressLocation;
+  propertyInfo: AddressPropertyInfo;
+  validation: AddressValidation;
+  history: AddressHistoryEntry[];
+  linked: LinkedRecord[];
+}
+
+export interface RegistryFilters {
+  search: string;
+  postcode: string | null;
+  region: string | null;
+  status: AddressWorkflowStage | null;
+  team: string | null;
+}
+
+export interface RegistryFilterOptions {
+  postcodes: string[];
+  regions: string[];
+  teams: string[];
+}
+
+export interface RegistrySummary {
+  totalRecords: number;
+  pendingReview: number;
+  duplicatesFlagged: number;
+  publishedToday: number;
+}
+
+export interface RegistryPageResult {
+  items: AddressListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface RegistryQuery {
+  filters: RegistryFilters;
+  page: number;
+  pageSize: number;
+}
+
+export interface BulkUpdatePayload {
+  ids: UUID[];
+  team?: string | null;
+  stage?: AddressWorkflowStage;
+}
+
+export const WORKFLOW_STAGES: AddressWorkflowStage[] = ['registered', 'surveyed', 'verified', 'approved', 'published'];
+ 
+=== E:\das\das-admin\src\app\core\reports\models\reports.models.ts ===
+import { GeoJSONMultiPolygon } from "../../models/das.models";
+
+export interface GrowthPoint { label: string; total: number; verified: number; }
+export interface RegionalCompletion { region: string; completionPct: number; }
+export interface TurnaroundPoint { label: string; days: number; }
+
+export interface ReportsKpis {
+  coverageRate: number; coverageDelta: number;
+  accuracyScore: number; accuracyDelta: number;
+  verificationSla: number; slaDelta: number;
+  avgTurnaroundDays: number;
+}
+
+export type ReportExportFormat = 'csv' | 'pdf' | 'xlsx';
+export interface RegionShape { region: string; completionPct: number; geom: GeoJSONMultiPolygon; }
+export interface ReportsData {
+  kpis: ReportsKpis;
+  growth: GrowthPoint[];
+  regional: RegionalCompletion[];
+  turnaround: TurnaroundPoint[];
+  totalAddresses: number;
+  verifiedAddresses: number;
+  regionShapes: RegionShape[];
+}
+ 
+=== E:\das\das-admin\src\app\core\review\models\review.models.ts ===
+import { UUID, ISODateTime, RedoSubmissionType, SubmissionStatus } from '../../models/das.models';
+
+export interface ReviewPhoto {
+  id: UUID;
+  photoType: string;
+  s3Key: string;
+}
+
+export interface ReviewItem {
+  id: UUID;
+  submissionType: RedoSubmissionType;
+  code: string;
+  submittedByName: string;
+  submittedAt: ISODateTime;
+  status: SubmissionStatus;
+  gpsAccuracy: number | null;
+  photos: ReviewPhoto[];
+  notes: string | null;
+}
+
+export interface ReviewQueueQuery {
+  submissionType: RedoSubmissionType | null;
+}
+
+export type RejectReasonPreset = 'photo_retake' | 'gps_recheck' | 'other';
+
+export interface RejectPayload {
+  preset: RejectReasonPreset;
+  reason: string;
+}
+ 
+=== E:\das\das-admin\src\app\core\settings\models\settings.models.ts ===
+import { UUID, RoadTypeCode } from '../../models/das.models';
+
+export interface CreateRoadTypePayload {
+  code: RoadTypeCode;
+  labelFr: string;
+  isPoint: boolean;
+}
+
+export type MapImportTargetType = 'administrative_units' | 'blocks';
+
+export interface ImportMapDataPayload {
+  targetType: MapImportTargetType;
+  /** Requis si targetType === 'blocks' (zone cible de l'import) */
+  adminUnitId: UUID | null;
+  file: File;
+}
+
+export interface ImportMapDataResult {
+  importedCount: number;
+  skippedCount: number;
+  errors: string[];
+}
+ 
+=== E:\das\das-admin\src\app\core\staff\models\staff.models.ts ===
+import { UUID, UserRole } from '../../models/das.models';
+
+export interface StaffMember {
+  id: UUID;
+  fullName: string;
+  username: string;
+  roles: UserRole[];
+  isActive: boolean;
+}
+
+export interface StaffListQuery {
+  search: string;
+  role: UserRole | null;
+}
+
+export interface CreateStaffPayload {
+  fullName: string;
+  username: string;
+  password: string;
+  roles: UserRole[];
+}
+
+export interface SetRolesPayload {
+  roles: UserRole[];
+}
+ 
+=== E:\das\das-admin\src\app\core\ui\map\map.models.ts ===
+import type { MultiPolygon, Point, Polygon } from 'geojson';
+
+export type MapGeometry = Point | Polygon | MultiPolygon;
+
+/** Une entitÃ© Ã  afficher sur la carte. La couleur est rÃ©solue par l'appelant. */
+export interface MapFeature {
+  id: string;
+  layerId: string;         // rattache l'entitÃ© Ã  une couche dÃ©clarÃ©e
+  geometry: MapGeometry;
+  color: string;           // hex rÃ©solu (par statut, type, etc.)
+  label?: string;          // affichÃ© dans la popup au clic
+  selectable?: boolean;    // dÃ©faut: true
+}
+
+/** DÃ©claration d'une couche (toggle + type de rendu). */
+export interface MapLayerConfig {
+  id: string;
+  labelKey: string;        // clÃ© i18n pour le contrÃ´le de couches
+  type: 'point' | 'fill';
+  visible: boolean;        // Ã©tat initial
+}

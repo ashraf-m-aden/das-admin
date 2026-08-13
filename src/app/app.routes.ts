@@ -33,11 +33,12 @@ export const routes: Routes = [
         canActivate: [roleGuard(['Admin', 'Superviseur', 'Gestionnaire'])],
         loadChildren: () => import('./features/field-operations/field-operations.routes').then((m) => m.fieldOpsRoutes),
       },
-      {
-        path: 'review',
+ {
+        path: 'verification',
         canActivate: [roleGuard(['Admin', 'Superviseur', 'Gestionnaire'])],
-        loadChildren: () => import('./features/review/review.routes').then((m) => m.reviewRoutes),
+        loadChildren: () => import('./features/verification/verification.routes').then((m) => m.verificationRoutes),
       },
+      { path: 'review', redirectTo: 'verification', pathMatch: 'full' },
       {
         path: 'postcodes',
         canActivate: [roleGuard(['Admin', 'Gestionnaire'])],
