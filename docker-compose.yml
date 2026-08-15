@@ -8,7 +8,7 @@ services:
       API_BASE_URL: "/api" # nginx proxie vers das-backend
       TILES_BASE_URL: "/tiles" # nginx proxie vers martin
       APP_ENVIRONMENT: "production"
-      USE_MOCK_API: "false"
+      USE_MOCK_API: "true" # ⚠️ à mettre sur false pour utiliser l'API réelle
     depends_on:
       - das-backend
       - martin
