@@ -5,17 +5,34 @@ services:
     ports:
       - "80:80"
     environment:
+      API_BASE_URL: "/api"       # nginx proxie vers das-backend
+      MAP_TILE_URL: "/tiles"   # nginx proxie vers martin
       APP_ENVIRONMENT: "production"
-      TILES_BASE_URL: "/tiles" # nginx proxie vers martin
-      USE_MOCK_API: "true" # -> "false" quand le backend .NET sera là
+      USE_MOCK_API: "false"
     depends_on:
+      # - das-backend
       - martin
     restart: unless-stopped
     networks: [das-net]
 
+  # das-backend:
+  #   image: nejishow/das-backend:latest   # ⚠️ à adapter au nom réel de ton image back
+  #   container_name: das-backend
+  #   environment:
+  #     ASPNETCORE_HTTP_PORTS: "8080"       # interne au réseau docker, PAS publié sur l'hôte
+  #     ConnectionStrings__Default: "Host=${RDS_HOST};Port=5432;Database=${RDS_DB};Username=${RDS_USER};Password=${RDS_PASSWORD};SSL Mode=Require;Trust Server Certificate=true"
+  #     Redis__Connection: "redis:6379"
+  #   depends_on:
+  #     - redis
+  #   restart: unless-stopped
+  #   networks: [das-net]
+
   martin:
     image: ghcr.io/maplibre/martin:latest
     container_name: martin
+    volumes:
+      - ./docker/martin/config.yaml:/config.yaml:ro
+    command: ["--config", "/config.yaml"]
     environment:
       DATABASE_URL: "postgresql://${RDS_USER}:${RDS_PASSWORD}@${RDS_HOST}:5432/${RDS_DB}?sslmode=require"
     restart: unless-stopped
@@ -24,16 +41,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: redis
-    command:
-      [
-        "redis-server",
-        "--maxmemory",
-        "256mb",
-        "--maxmemory-policy",
-        "allkeys-lru",
-        "--appendonly",
-        "yes",
-      ]
+    command: ["redis-server", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru", "--appendonly", "yes"]
     volumes:
       - das_redis_data:/data
     restart: unless-stopped

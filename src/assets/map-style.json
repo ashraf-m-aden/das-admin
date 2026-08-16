@@ -1,0 +1,37 @@
+{
+  "version": 8,
+  "sources": {
+    "cities":    { "type": "vector", "tiles": ["__TILES_BASE_URL__/Cities/{z}/{x}/{y}"] },
+    "quartiers": { "type": "vector", "tiles": ["__TILES_BASE_URL__/Quartiers/{z}/{x}/{y}"] },
+    "blocs":     { "type": "vector", "tiles": ["__TILES_BASE_URL__/Blocs/{z}/{x}/{y}"] },
+    "streets":   { "type": "vector", "tiles": ["__TILES_BASE_URL__/Streets/{z}/{x}/{y}"] },
+    "adresses":  { "type": "vector", "tiles": ["__TILES_BASE_URL__/Adresses.1/{z}/{x}/{y}"] },
+    "units":     { "type": "vector", "tiles": ["__TILES_BASE_URL__/Units/{z}/{x}/{y}"] }
+  },
+  "glyphs": "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
+  "layers": [
+    { "id": "bg", "type": "background", "paint": { "background-color": "#f8f9fa" } },
+
+    { "id": "cities-fill", "type": "fill", "source": "cities", "source-layer": "Cities",
+      "paint": { "fill-color": "#eef4fb", "fill-outline-color": "#b8d4f0" } },
+
+    { "id": "quartiers-line", "type": "line", "source": "quartiers", "source-layer": "Quartiers",
+      "paint": { "line-color": "#5b9bd5", "line-width": 1.2 } },
+
+    { "id": "blocs-line", "type": "line", "source": "blocs", "source-layer": "Blocs",
+      "minzoom": 13,
+      "paint": { "line-color": "#8fbce0", "line-width": 0.6 } },
+
+    { "id": "streets-line", "type": "line", "source": "streets", "source-layer": "Streets",
+      "minzoom": 12,
+      "paint": { "line-color": "#cbcbcb", "line-width": 0.8 } },
+
+    { "id": "units-circle", "type": "circle", "source": "units", "source-layer": "Units",
+      "minzoom": 15,
+      "paint": { "circle-color": "#f4a259", "circle-radius": 3, "circle-stroke-color": "#fff", "circle-stroke-width": 1 } },
+
+    { "id": "adresses-circle", "type": "circle", "source": "adresses", "source-layer": "Adresses",
+      "minzoom": 15,
+      "paint": { "circle-color": "#2563eb", "circle-radius": 3.5, "circle-stroke-color": "#fff", "circle-stroke-width": 1 } }
+  ]
+}
