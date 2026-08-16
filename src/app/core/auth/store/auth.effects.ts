@@ -54,8 +54,12 @@ export class AuthEffects {
         if (!stored) return of(AuthActions.restoreSessionFailure());
 
         const response: AuthResponse = {
-          user: stored.user,
-          tokens: { accessToken: stored.accessToken, refreshToken: stored.refreshToken, expiresAt: stored.expiresAt },
+          fullName: stored.user,
+          roles: stored.roles,
+          userId: stored.userId,
+          token: stored.accessToken,
+          refreshToken: stored.refreshToken,
+          refreshTokenExpiresAtUtc: stored.expiresAt,
         };
         return of(AuthActions.restoreSessionSuccess({ response }));
       }),

@@ -12,8 +12,8 @@ import { AppConfigService } from './app/core/config/app-config.service';
 // — seul le fond de carte est peint. Le suffixe ?worker&url est obligatoire
 // (et non ?url) pour que Vite empaquette aussi le fichier voisin
 // maplibre-gl-shared.mjs dont le worker dépend.
-setWorkerUrl(workerUrl);
 
+setWorkerUrl('/maplibre-gl-worker.mjs');
 fetch('config.json')
   .then((res) => res.json())
   .then((config) => {

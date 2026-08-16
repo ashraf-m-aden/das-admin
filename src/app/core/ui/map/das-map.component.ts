@@ -118,22 +118,26 @@ export class DasMapComponent implements OnInit, OnDestroy {
   }
 
   /** Crée une source (vide) + les couches de rendu et de highlight pour chaque couche déclarée. */
-  private buildLayers(): void {
+private buildLayers(): void {
     const map = this.map!;
     const empty: FeatureCollection = { type: 'FeatureCollection', features: [] };
+
+    const addLayerSafe = (config: maplibregl.LayerSpecification): void => {
+      if (!map.getLayer(config.id)) map.addLayer(config);
+    };
 
     for (const layer of this.layers()) {
       const src = `src-${layer.id}`;
       if (!map.getSource(src)) map.addSource(src, { type: 'geojson', data: empty });
 
       if (layer.type === 'fill') {
-        map.addLayer({ id: `${layer.id}-fill`, type: 'fill', source: src, paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.45 } });
-        map.addLayer({ id: `${layer.id}-line`, type: 'line', source: src, paint: { 'line-color': ['get', 'color'], 'line-width': 1.4 } });
-        map.addLayer({ id: `${layer.id}-sel`, type: 'line', source: src, filter: ['==', ['get', 'id'], NONE], paint: { 'line-color': HIGHLIGHT, 'line-width': 3 } });
+        addLayerSafe({ id: `${layer.id}-fill`, type: 'fill', source: src, paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.45 } });
+        addLayerSafe({ id: `${layer.id}-line`, type: 'line', source: src, paint: { 'line-color': ['get', 'color'], 'line-width': 1.4 } });
+        addLayerSafe({ id: `${layer.id}-sel`, type: 'line', source: src, filter: ['==', ['get', 'id'], NONE], paint: { 'line-color': HIGHLIGHT, 'line-width': 3 } });
         this.wireInteractions(`${layer.id}-fill`);
       } else {
-        map.addLayer({ id: `${layer.id}-circle`, type: 'circle', source: src, paint: { 'circle-color': ['get', 'color'], 'circle-radius': 5, 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 1.5 } });
-        map.addLayer({ id: `${layer.id}-sel`, type: 'circle', source: src, filter: ['==', ['get', 'id'], NONE], paint: { 'circle-color': HIGHLIGHT, 'circle-opacity': 0.001, 'circle-radius': 8, 'circle-stroke-color': HIGHLIGHT, 'circle-stroke-width': 3 } });
+        addLayerSafe({ id: `${layer.id}-circle`, type: 'circle', source: src, paint: { 'circle-color': ['get', 'color'], 'circle-radius': 5, 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 1.5 } });
+        addLayerSafe({ id: `${layer.id}-sel`, type: 'circle', source: src, filter: ['==', ['get', 'id'], NONE], paint: { 'circle-color': HIGHLIGHT, 'circle-opacity': 0.001, 'circle-radius': 8, 'circle-stroke-color': HIGHLIGHT, 'circle-stroke-width': 3 } });
         this.wireInteractions(`${layer.id}-circle`);
       }
     }
@@ -217,7 +221,8 @@ export class DasMapComponent implements OnInit, OnDestroy {
   }
 
   private extend(bounds: maplibregl.LngLatBounds, f: MapFeature): void {
-    const g = f.geometry;
+     const g = f.geometry;
+  if (!g) return;
     if (g.type === 'Point') bounds.extend(g.coordinates as [number, number]);
     else if (g.type === 'Polygon') g.coordinates[0].forEach((c) => bounds.extend(c as [number, number]));
     else if (g.type === 'MultiPolygon') g.coordinates.forEach((poly) => poly[0].forEach((c) => bounds.extend(c as [number, number])));

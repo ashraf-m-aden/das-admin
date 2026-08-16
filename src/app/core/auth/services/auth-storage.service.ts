@@ -4,20 +4,27 @@ import { AuthResponse } from '../models/auth.models';
 const STORAGE_KEY = 'das-auth-session';
 
 interface StoredSession {
-  user: AuthResponse['user'];
+  user: string;
   accessToken: string;
   refreshToken: string;
   expiresAt: string;
+  fullName: string;
+  userId: string;
+  roles: string[];
 }
 
 @Injectable({ providedIn: 'root' })
 export class AuthStorageService {
   save(response: AuthResponse): void {
     const payload: StoredSession = {
-      user: response.user,
-      accessToken: response.tokens.accessToken,
-      refreshToken: response.tokens.refreshToken,
-      expiresAt: response.tokens.expiresAt,
+      user: response.fullName,
+      accessToken: response.token,
+      refreshToken: response.refreshToken,
+      expiresAt: response.refreshTokenExpiresAtUtc,
+      fullName:response.fullName,
+      roles:response.roles,
+      userId:response.userId
+
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   }

@@ -11,7 +11,7 @@ export class AuthFacade {
   private store = inject(Store);
 
   user$ = this.store.select(authFeature.selectUser);
-  fullName$ = this.store.select(authFeature.selectUser).pipe(map((user) => user?.fullName ?? ''));
+  fullName$ = this.store.select(authFeature.selectUser);
   roles$ = this.store.select(selectUserRoles);
   isAuthenticated$ = this.store.select(selectIsAuthenticated);
   isLoading$ = this.store.select(selectIsAuthLoading);

@@ -1,4 +1,4 @@
-﻿ 
+﻿
 === E:\das\das-admin\src\app\core\addressing\models\addressing.models.ts ===
 import { UUID, ISODateTime, BlockStatus } from '../../models/das.models';
 
@@ -83,7 +83,7 @@ export interface AssignHouseNumberPayload {
 export interface PropertyNumberingQuery {
   blockId: UUID | null;
 }
- 
+
 === E:\das\das-admin\src\app\core\audit\models\audit.models.ts ===
 import { ISODateTime } from '../../models/das.models';
 
@@ -101,7 +101,7 @@ export interface AuditRow {
 export interface AuditFilters { search: string; action: AuditAction | null; }
 
 export interface AuditData { rows: AuditRow[]; total: number; }
- 
+
 === E:\das\das-admin\src\app\core\auth\models\auth.models.ts ===
 import { UUID, ISODateTime, UserRole } from '../../models/das.models';
 
@@ -111,7 +111,7 @@ export interface LoginCredentials {
 }
 
 export interface AuthTokens {
-  accessToken: string;
+  token: string;
   refreshToken: string;
   expiresAt: ISODateTime;
 }
@@ -131,7 +131,7 @@ export interface AuthError {
   code: 'invalid_credentials' | 'account_disabled' | 'network_error' | 'unknown';
   message: string;
 }
- 
+
 === E:\das\das-admin\src\app\core\blocks\models\blocks.models.ts ===
 import { UUID, Block, BlockStatus, AddressWorkflowStage } from '../../models/das.models';
 
@@ -171,7 +171,7 @@ export interface BlockGeoJsonProperties {
   code: string;
   status: BlockStatus;
 }
- 
+
 === E:\das\das-admin\src\app\core\clients\models\clients.models.ts ===
 import { UUID, ISODateTime, ClientStatus, ZoneAccessStatus } from '../../models/das.models';
 
@@ -252,7 +252,7 @@ export interface CreateApiTokenResult {
   /** Valeur brute â€” affichÃ©e UNE SEULE FOIS, jamais rÃ©cupÃ©rable ensuite. */
   rawToken: string;
 }
- 
+
 === E:\das\das-admin\src\app\core\dashboard\models\dashboard.models.ts ===
 import { AddressWorkflowStage, GeoJSONPoint } from '../../models/das.models';
 
@@ -291,7 +291,7 @@ export interface DashboardSummary {
   recentActivity: ActivityItem[];
   mapPoints: MapAddressPoint[];
 }
- 
+
 === E:\das\das-admin\src\app\core\dataquality\models\dataquality.models.ts ===
 import { UUID, QualitySeverity, QualityCaseStatus } from '../../models/das.models';
 
@@ -345,7 +345,7 @@ export interface DataQualityData {
   regionCoverage: RegionCoverage[];
   duplicates: DuplicateCandidate[];
 }
- 
+
 === E:\das\das-admin\src\app\core\fieldops\models\fieldops.models.ts ===
 import { UUID, ISODateTime, FieldTeam, Task, TaskStatus, TaskPriority, FieldTeamStatus, GeoJSONPoint, GeoJSONMultiPolygon } from '../../models/das.models';
 
@@ -396,7 +396,7 @@ export type { TaskPriority };
 
 export interface TeamLocation { id: string; name: string; status: FieldTeamStatus; location: GeoJSONPoint; }
 export interface ZoneBoundary { id: string; name: string; geom: GeoJSONMultiPolygon; }
- 
+
 === E:\das\das-admin\src\app\core\integrations\models\integrations.models.ts ===
 import { ISODateTime } from '../../models/das.models';
 
@@ -417,7 +417,7 @@ export interface IntegrationsData {
   items: Integration[];
   connectedCount: number;
 }
- 
+
 === E:\das\das-admin\src\app\core\models\das.models.ts ===
 export type UUID = string;
 export type ISODateTime = string;
@@ -662,7 +662,7 @@ export interface BillingRecord {
   id: UUID; clientId: UUID; invoiceId: UUID | null; usageType: BillingUsageType;
   quantity: number; unitPrice: number; amount: number; periodStart: ISODate; periodEnd: ISODate; createdAt: ISODateTime;
 }
- 
+
 === E:\das\das-admin\src\app\core\notifications\models\notifications.models.ts ===
 import { UUID, ISODateTime } from '../../models/das.models';
 
@@ -692,7 +692,7 @@ export interface Notification {
   readAt: ISODateTime | null;
   createdAt: ISODateTime;
 }
- 
+
 === E:\das\das-admin\src\app\core\postcodes\models\postcodes.models.ts ===
 import { UUID, ISODateTime, PostcodeStatus } from '../../models/das.models';
 
@@ -721,7 +721,7 @@ export interface AllocatePostcodePayload {
   adminUnitName: string;
   region: string;
 }
- 
+
 === E:\das\das-admin\src\app\core\registry\models\registry.models.ts ===
 // en tÃªte, complÃ©ter l'import :
 import { UUID, ISODateTime, AddressWorkflowStage, PropertyType, OccupancyType, GeoJSONMultiPolygon } from '../../models/das.models';
@@ -797,7 +797,7 @@ export interface BulkUpdatePayload {
 }
 
 export const WORKFLOW_STAGES: AddressWorkflowStage[] = ['registered', 'surveyed', 'verified', 'approved', 'published'];
- 
+
 === E:\das\das-admin\src\app\core\reports\models\reports.models.ts ===
 import { GeoJSONMultiPolygon } from "../../models/das.models";
 
@@ -823,7 +823,7 @@ export interface ReportsData {
   verifiedAddresses: number;
   regionShapes: RegionShape[];
 }
- 
+
 === E:\das\das-admin\src\app\core\review\models\review.models.ts ===
 import { UUID, ISODateTime, RedoSubmissionType, SubmissionStatus } from '../../models/das.models';
 
@@ -855,7 +855,7 @@ export interface RejectPayload {
   preset: RejectReasonPreset;
   reason: string;
 }
- 
+
 === E:\das\das-admin\src\app\core\settings\models\settings.models.ts ===
 import { UUID, RoadTypeCode } from '../../models/das.models';
 
@@ -879,7 +879,7 @@ export interface ImportMapDataResult {
   skippedCount: number;
   errors: string[];
 }
- 
+
 === E:\das\das-admin\src\app\core\staff\models\staff.models.ts ===
 import { UUID, UserRole } from '../../models/das.models';
 
@@ -906,7 +906,7 @@ export interface CreateStaffPayload {
 export interface SetRolesPayload {
   roles: UserRole[];
 }
- 
+
 === E:\das\das-admin\src\app\core\ui\map\map.models.ts ===
 import type { MultiPolygon, Point, Polygon } from 'geojson';
 

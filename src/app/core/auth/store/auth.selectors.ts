@@ -8,5 +8,4 @@ export const selectIsAuthLoading = createSelector(
   authFeature.selectStatus,
   (status) => status === 'authenticating' || status === 'restoring',
 );
-
-export const selectUserRoles = createSelector(authFeature.selectUser, (user): UserRole[] => user?.roles ?? []);
+export const selectUserRoles = createSelector(authFeature.selectRoles, (roles) => roles as UserRole[] ?? []);

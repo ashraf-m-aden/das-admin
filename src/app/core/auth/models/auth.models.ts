@@ -6,7 +6,7 @@ export interface LoginCredentials {
 }
 
 export interface AuthTokens {
-  accessToken: string;
+  token: string;
   refreshToken: string;
   expiresAt: ISODateTime;
 }
@@ -18,8 +18,12 @@ export interface AuthenticatedUser {
 }
 
 export interface AuthResponse {
-  user: AuthenticatedUser;
-  tokens: AuthTokens;
+  token: string;
+  refreshToken: string;
+  refreshTokenExpiresAtUtc: ISODateTime;
+  userId: UUID;
+  fullName: string;
+  roles: string[];
 }
 
 export interface AuthError {

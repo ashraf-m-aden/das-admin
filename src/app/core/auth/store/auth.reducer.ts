@@ -1,6 +1,7 @@
 import { createFeature, createReducer, on } from '@ngrx/store';
 import { AuthActions } from './auth.actions';
 import { initialAuthState } from './auth.state';
+import { UserRole } from '../../models/das.models';
 
 export const authFeature = createFeature({
   name: 'auth',
@@ -11,12 +12,13 @@ export const authFeature = createFeature({
 
     on(AuthActions.loginSuccess, AuthActions.restoreSessionSuccess, (state, { response }) => ({
       ...state,
-      user: response.user,
-      accessToken: response.tokens.accessToken,
-      refreshToken: response.tokens.refreshToken,
-      expiresAt: response.tokens.expiresAt,
+      user: response.fullName,
+      accessToken: response.token,
+      refreshToken: response.refreshToken,
+      expiresAt: response.refreshTokenExpiresAtUtc,
       status: 'authenticated' as const,
       errorMessageKey: null,
+      roles: response.roles as UserRole[],   // ← ajouter
     })),
 
     on(AuthActions.loginFailure, (state, { errorMessageKey }) => ({

@@ -15,7 +15,7 @@ export class MockAuthApiService extends AuthApiPort {
     { id: 'mock-surveyor-0001', username: 'agent', fullName: 'Idriss Agent', roles: ['AgentTerrain'] },
   ];
 
-  override login(credentials: LoginCredentials): Observable<AuthResponse> {
+override login(credentials: LoginCredentials): Observable<AuthResponse> {
     const account = MockAuthApiService.MOCK_ACCOUNTS.find(
       (a) => a.username.toLowerCase() === credentials.username.trim().toLowerCase(),
     );
@@ -26,21 +26,16 @@ export class MockAuthApiService extends AuthApiPort {
       );
     }
 
-    const { username, ...user } = account;
     const response: AuthResponse = {
-      user,
-      tokens: {
-        accessToken: `mock.${account.id}.${Date.now()}`,
-        refreshToken: `mock-refresh.${account.id}`,
-        expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
-      },
+      token: `mock.${account.id}.${Date.now()}`,
+      refreshToken: `mock-refresh.${account.id}`,
+      refreshTokenExpiresAtUtc: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
+      userId: account.id,
+      fullName: account.fullName,
+      roles: account.roles,
     };
 
     return of(response).pipe(delay(MockAuthApiService.SIMULATED_LATENCY_MS));
-  }
-
-  override logout(): Observable<void> {
-    return of(undefined).pipe(delay(200));
   }
 
   override refresh(refreshToken: string): Observable<AuthResponse> {
@@ -48,14 +43,20 @@ export class MockAuthApiService extends AuthApiPort {
     if (!account) {
       return throwError(() => ({ code: 'invalid_credentials' as const, message: 'Session expirée' }));
     }
-    const { username, ...user } = account;
-    return of({
-      user,
-      tokens: {
-        accessToken: `mock.${account.id}.${Date.now()}`,
-        refreshToken,
-        expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
-      },
-    }).pipe(delay(200));
+    const response: AuthResponse = {
+      token: `mock.${account.id}.${Date.now()}`,
+      refreshToken,
+      refreshTokenExpiresAtUtc: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
+      userId: account.id,
+      fullName: account.fullName,
+      roles: account.roles,
+    };
+    return of(response).pipe(delay(200));
   }
+
+  override logout(): Observable<void> {
+    return of(undefined).pipe(delay(200));
+  }
+
+
 }

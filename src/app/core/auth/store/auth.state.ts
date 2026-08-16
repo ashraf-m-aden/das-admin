@@ -3,12 +3,13 @@ import { AuthenticatedUser } from '../models/auth.models';
 export type AuthStatus = 'idle' | 'restoring' | 'authenticating' | 'authenticated' | 'error';
 
 export interface AuthState {
-  user: AuthenticatedUser | null;
+  user: string | null;
   accessToken: string | null;
   refreshToken: string | null;
   expiresAt: string | null;
   status: AuthStatus;
   errorMessageKey: string | null;
+  roles:string[]
 }
 
 export const initialAuthState: AuthState = {
@@ -18,4 +19,5 @@ export const initialAuthState: AuthState = {
   expiresAt: null,
   status: 'idle',
   errorMessageKey: null,
+  roles:[]
 };

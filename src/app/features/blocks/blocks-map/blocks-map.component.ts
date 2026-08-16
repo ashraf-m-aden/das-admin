@@ -32,7 +32,9 @@ export class BlocksMapComponent implements OnInit {
   ];
 
   protected readonly mapFeatures = computed<MapFeature[]>(() =>
-    this.items().map((b) => ({
+    this.items()
+      .filter((b) => b.geom)          // ← ne garde que ceux avec géométrie
+  .map((b) => ({
       id: b.id, layerId: 'blocks', geometry: b.geom, color: STATUS_COLORS[b.status], label: b.code,
     })),
   );
