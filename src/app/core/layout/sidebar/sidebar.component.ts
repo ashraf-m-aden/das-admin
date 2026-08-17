@@ -37,14 +37,14 @@ export class SidebarComponent {
 
   protected readonly entries: NavEntry[] = [
     // { kind: 'link', labelKey: 'nav.dashboard', path: '/dashboard', icon: 'ti-layout-dashboard' },
-     { kind: 'link', labelKey: 'nav.registry', path: '/registry', icon: 'ti-address-book' },
-     {
-       kind: 'group', key: 'gis', labelKey: 'nav.gis', icon: 'ti-map-2',
-       allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'],
-       children: [
-         { labelKey: 'nav.gisMap', path: '/blocks/map' },
-       ],
-     },
+    { kind: 'link', labelKey: 'nav.registry', path: '/registry', icon: 'ti-address-book' },
+    {
+      kind: 'group', key: 'gis', labelKey: 'nav.gis', icon: 'ti-map-2',
+      allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'],
+      children: [
+        { labelKey: 'nav.gisMap', path: '/blocks/map' },
+      ],
+    },
     // { kind: 'link', labelKey: 'nav.verification', path: '/verification', icon: 'ti-checkup-list', allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
     // { kind: 'link', labelKey: 'nav.fieldOps', path: '/field-operations', icon: 'ti-users-group', allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
     // { kind: 'link', labelKey: 'nav.verification', path: '/review', icon: 'ti-checkup-list', allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
