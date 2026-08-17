@@ -6,7 +6,7 @@
 </das-page-header>
 
 <div class="map-wrap">
-  <das-map [features]="mapFeatures()" [layers]="mapLayers" (featureSelect)="onSelect($event)" />
+  <das-map [features]="mapFeatures()" [layers]="mapLayers" [basemapLayers]="basemapLayers" (featureSelect)="onSelect($event)" />
 
   <div class="map-legend">
     @for (st of legend; track st) {

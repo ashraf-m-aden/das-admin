@@ -595,7 +595,12 @@
   },
   "map": {
     "layers": "Couches",
-    "error": "Carte indisponible"
+    "error": "Carte indisponible",
+     "basemap": {
+    "ilots": "Contours îlots",
+    "parcelles": "Contours parcelles",
+    "adresses": "Points adresses"
+  }
   },
   "reports": {
     "eyebrow": "Analyses et performance nationale de l'adressage",

@@ -4,7 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
 import { BlocksFacade } from '../../../core/blocks/store/blocks.facade';
 import { PageHeaderComponent } from '../../../core/layout/page-header/page-header.component';
-import { DasMapComponent } from '../../../core/ui/map/das-map.component';
+import { BasemapLayerGroup, DasMapComponent } from '../../../core/ui/map/das-map.component';
 import { MapFeature, MapLayerConfig } from '../../../core/ui/map/map.models';
 import { BlockListItem } from '../../../core/blocks/models/blocks.models';
 import { BlockStatus } from '../../../core/models/das.models';
@@ -31,16 +31,24 @@ export class BlocksMapComponent implements OnInit {
     'approved', 'in_progress', 'submitted', 'assigned', 'not_assigned', 'needs_redo',
   ];
 
-protected readonly mapFeatures = computed<MapFeature[]>(() =>
-  this.items()
-    .filter((b) => b.geom)
-    .map((b) => ({
-      id: b.id, layerId: 'blocks', geometry: b.geom,
-      color: STATUS_COLORS[b.status], label: b.code,
-    })),
-);
+  protected readonly mapFeatures = computed<MapFeature[]>(() =>
+    this.items()
+      .filter((b) => b.geom)
+      .map((b) => ({
+        id: b.id, layerId: 'blocks', geometry: b.geom,
+        color: STATUS_COLORS[b.status], label: b.code,
+      })),
+  );
+
   protected readonly mapLayers: MapLayerConfig[] = [
     { id: 'blocks', labelKey: 'nav.blocks', type: 'fill', visible: true },
+  ];
+
+  /** Contours cadastraux issus du style de base (map-style.json), pilotables via le panneau. */
+  protected readonly basemapLayers: BasemapLayerGroup[] = [
+    { id: 'ilots', labelKey: 'map.basemap.ilots', styleLayerIds: ['ilots-fill', 'ilots-line'], visible: true },
+    { id: 'parcelles', labelKey: 'map.basemap.parcelles', styleLayerIds: ['parcelles-fill', 'parcelles-line'], visible: false },
+    { id: 'adresses', labelKey: 'map.basemap.adresses', styleLayerIds: ['adresses-circle'], visible: false },
   ];
 
   ngOnInit(): void { this.facade.load(); }

@@ -14,6 +14,24 @@ const MOCK_BASEMAP_STYLE_URL = 'https://basemaps.cartocdn.com/gl/positron-gl-sty
 const HIGHLIGHT = '#2563eb';
 const NONE = '___none___';
 
+/**
+ * Groupe de couches issues du STYLE DE BASE (map-style.json) que l'on peut
+ * afficher/masquer ensemble via une seule case à cocher.
+ * À distinguer de MapLayerConfig, qui pilote l'overlay GeoJSON dynamique.
+ */
+export interface BasemapLayerGroup {
+  /** Identifiant logique unique (ne doit pas entrer en collision avec un MapLayerConfig.id). */
+  id: string;
+  /** Clé i18n du libellé affiché dans le panneau des couches. */
+  labelKey: string;
+  /** IDs des couches du style de base à basculer ensemble (ex. ['ilots-fill', 'ilots-line']). */
+  styleLayerIds: string[];
+  /** Visibilité initiale. */
+  visible: boolean;
+}
+
+interface PanelItem { id: string; labelKey: string; }
+
 @Component({
   selector: 'das-map',
   standalone: true,
@@ -24,6 +42,7 @@ const NONE = '___none___';
 export class DasMapComponent implements OnInit, OnDestroy {
   readonly features = input<MapFeature[]>([]);
   readonly layers = input<MapLayerConfig[]>([]);
+  readonly basemapLayers = input<BasemapLayerGroup[]>([]);
   readonly center = input<[number, number]>([43.145, 11.595]);
   readonly zoom = input<number>(12);
   readonly fitToData = input<boolean>(true);
@@ -51,13 +70,19 @@ export class DasMapComponent implements OnInit, OnDestroy {
   protected readonly visibility = signal<Record<string, boolean>>({});
 
   private readonly internalSelected = signal<string | null>(null);
-  protected readonly layerList = computed(() => this.layers());
+
+  /** Éléments listés dans le panneau : overlays d'abord, puis groupes du fond cadastral. */
+  protected readonly panelLayers = computed<PanelItem[]>(() => [
+    ...this.layers().map((l) => ({ id: l.id, labelKey: l.labelKey })),
+    ...this.basemapLayers().map((b) => ({ id: b.id, labelKey: b.labelKey })),
+  ]);
 
   constructor() {
-    // Init visibilité depuis la config des couches
+    // Init visibilité depuis la config des couches (overlay + fond cadastral)
     effect(() => {
       const map: Record<string, boolean> = {};
       for (const l of this.layers()) map[l.id] = l.visible;
+      for (const b of this.basemapLayers()) map[b.id] = b.visible;
       this.visibility.set(map);
     });
     // Sync sélection contrôlée depuis le parent
@@ -192,10 +217,19 @@ export class DasMapComponent implements OnInit, OnDestroy {
 
   private applyVisibility(vis: Record<string, boolean>): void {
     if (!this.map || !this.loaded) return;
+
+    // Overlays GeoJSON
     for (const l of this.layers()) {
       const value = (vis[l.id] ?? true) ? 'visible' : 'none';
       const ids = l.type === 'fill' ? [`${l.id}-fill`, `${l.id}-line`, `${l.id}-sel`] : [`${l.id}-circle`, `${l.id}-sel`];
       for (const id of ids) if (this.map.getLayer(id)) this.map.setLayoutProperty(id, 'visibility', value);
+    }
+
+    // Groupes du style de base (contours cadastraux) — no-op silencieux si la couche
+    // n'existe pas (ex. en mode mock où le fond est CARTO Positron).
+    for (const b of this.basemapLayers()) {
+      const value = (vis[b.id] ?? true) ? 'visible' : 'none';
+      for (const id of b.styleLayerIds) if (this.map.getLayer(id)) this.map.setLayoutProperty(id, 'visibility', value);
     }
   }
 

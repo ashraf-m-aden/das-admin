@@ -595,7 +595,12 @@
   },
   "map": {
     "layers": "Layers",
-    "error": "Map unavailable"
+    "error": "Map unavailable",
+      "basemap": {
+    "ilots": "Block outlines",
+    "parcelles": "Parcel outlines",
+    "adresses": "Address points"
+  }
   },
   "reports": {
     "eyebrow": "Analytics and national address performance",

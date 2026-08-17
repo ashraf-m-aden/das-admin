@@ -4,14 +4,14 @@
   <div class="das-map__error"><i class="ti ti-map-off" aria-hidden="true"></i>{{ 'map.error' | transloco }}</div>
 }
 
-@if (showLayerControl() && !initError() && layerList().length) {
+@if (showLayerControl() && !initError() && panelLayers().length) {
   <div class="layers">
     <button type="button" class="layers__toggle" (click)="togglePanel()" [attr.aria-expanded]="panelOpen()">
       <i class="ti ti-stack-2" aria-hidden="true"></i>{{ 'map.layers' | transloco }}
     </button>
     @if (panelOpen()) {
       <div class="layers__panel">
-        @for (l of layerList(); track l.id) {
+        @for (l of panelLayers(); track l.id) {
           <label class="layers__item">
             <input type="checkbox" [checked]="isVisible(l.id)" (change)="toggleLayer(l.id)" />
             <span>{{ l.labelKey | transloco }}</span>
