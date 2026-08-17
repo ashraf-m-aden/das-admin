@@ -18,7 +18,7 @@ export class MapStyleService {
         .pipe(
           map((raw) => {
             const tilesBaseUrl = this.config.get('mapTileUrl') || '';
-            const resolved = (raw as unknown as string).replaceAll('___TILES_BASE_URL___', tilesBaseUrl);
+            const resolved = (raw as unknown as string).replaceAll('__TILES_BASE_URL__', tilesBaseUrl);
             return JSON.parse(resolved) as StyleSpecification;
           }),
           shareReplay(1),
