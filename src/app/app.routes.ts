@@ -79,7 +79,7 @@ export const routes: Routes = [
         canActivate: [roleGuard(['Admin'])],
         loadChildren: () => import('./features/settings/settings.routes').then((m) => m.settingsRoutes),
       },
-      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      { path: '', pathMatch: 'full', redirectTo: 'registry' },
     ],
   },
   { path: '**', redirectTo: 'login' },
