@@ -18,7 +18,7 @@ export class MapStyleService {
         .pipe(
           map((raw) => {
             const tilesBaseUrl = this.config.get('mapTileUrl') || '';
-            const resolved = (raw as unknown as string).replaceAll('__TILES_BASE_URL__', tilesBaseUrl);
+            const resolved = (raw as unknown as string).replaceAll('___TILES_BASE_URL___', tilesBaseUrl);
             return JSON.parse(resolved) as StyleSpecification;
           }),
           shareReplay(1),
@@ -27,16 +27,18 @@ export class MapStyleService {
     return this.style$;
   }
 
-  getClientStyle(clientId: string): Observable<StyleSpecification> {
-    return this.getStyle().pipe(
-      map((style) => {
-        const cloned = structuredClone(style);
-        const blocksSource = cloned.sources['blocks'] as VectorSourceSpecification;
-        blocksSource.tiles = [
-          `${this.config.get('mapTileUrl')}/blocks_tiles_for_client/{z}/{x}/{y}?client_id=${clientId}`,
+getClientStyle(clientId: string): Observable<StyleSpecification> {
+  return this.getStyle().pipe(
+    map((style) => {
+      const cloned = structuredClone(style);
+      const source = cloned.sources['das_ilots'] as VectorSourceSpecification | undefined;
+      if (source) {
+        source.tiles = [
+          `${this.config.get('mapTileUrl')}/das_ilots/{z}/{x}/{y}?client_id=${clientId}`,
         ];
-        return cloned;
-      }),
-    );
-  }
+      }
+      return cloned;
+    }),
+  );
+}
 }

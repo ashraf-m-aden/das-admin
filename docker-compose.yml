@@ -6,6 +6,7 @@ services:
       - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./public/assets/map-style.json:/usr/share/nginx/html/assets/map-style.json:ro
     environment:
       API_BASE_URL: "/api"
       MAP_TILE_URL: "/tiles"

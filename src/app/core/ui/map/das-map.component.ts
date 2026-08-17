@@ -118,7 +118,7 @@ export class DasMapComponent implements OnInit, OnDestroy {
   }
 
   /** Crée une source (vide) + les couches de rendu et de highlight pour chaque couche déclarée. */
-private buildLayers(): void {
+  private buildLayers(): void {
     const map = this.map!;
     const empty: FeatureCollection = { type: 'FeatureCollection', features: [] };
 
@@ -164,10 +164,14 @@ private buildLayers(): void {
 
   private renderFeatures(features: MapFeature[]): void {
     if (!this.map || !this.loaded) return;
+
+    // Ne conserver que les features réellement géométriques.
+    const withGeom = (features ?? []).filter((f): f is MapFeature => !!f && !!f.geometry);
+
     const byLayer = new Map<string, Feature[]>();
     for (const l of this.layers()) byLayer.set(l.id, []);
 
-    for (const feat of features) {
+    for (const feat of withGeom) {
       const bucket = byLayer.get(feat.layerId);
       if (!bucket) continue;
       bucket.push({
@@ -183,7 +187,7 @@ private buildLayers(): void {
       src?.setData({ type: 'FeatureCollection', features: list });
     }
 
-    if (this.fitToData() && !this.hasFit && features.length > 0) this.fitBounds(features);
+    if (this.fitToData() && !this.hasFit && withGeom.length > 0) this.fitBounds(withGeom);
   }
 
   private applyVisibility(vis: Record<string, boolean>): void {
@@ -220,11 +224,26 @@ private buildLayers(): void {
     }
   }
 
-  private extend(bounds: maplibregl.LngLatBounds, f: MapFeature): void {
-     const g = f.geometry;
-  if (!g) return;
-    if (g.type === 'Point') bounds.extend(g.coordinates as [number, number]);
-    else if (g.type === 'Polygon') g.coordinates[0].forEach((c) => bounds.extend(c as [number, number]));
-    else if (g.type === 'MultiPolygon') g.coordinates.forEach((poly) => poly[0].forEach((c) => bounds.extend(c as [number, number])));
+  private extend(bounds: maplibregl.LngLatBounds, f: MapFeature | undefined): void {
+    const g = f?.geometry;
+    if (!g) return;
+
+    const ring = (r: unknown): void => {
+      if (!Array.isArray(r)) return;
+      for (const c of r) {
+        if (Array.isArray(c) && c.length >= 2 && typeof c[0] === 'number' && typeof c[1] === 'number') {
+          bounds.extend([c[0], c[1]]);
+        }
+      }
+    };
+
+    if (g.type === 'Point') {
+      const c = g.coordinates;
+      if (Array.isArray(c) && c.length >= 2) bounds.extend([c[0], c[1]]);
+    } else if (g.type === 'Polygon') {
+      ring(g.coordinates?.[0]);
+    } else if (g.type === 'MultiPolygon') {
+      for (const poly of g.coordinates ?? []) ring(poly?.[0]);
+    }
   }
 }

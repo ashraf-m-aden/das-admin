@@ -31,13 +31,14 @@ export class BlocksMapComponent implements OnInit {
     'approved', 'in_progress', 'submitted', 'assigned', 'not_assigned', 'needs_redo',
   ];
 
-  protected readonly mapFeatures = computed<MapFeature[]>(() =>
-    this.items()
-      .filter((b) => b.geom)          // ← ne garde que ceux avec géométrie
-  .map((b) => ({
-      id: b.id, layerId: 'blocks', geometry: b.geom, color: STATUS_COLORS[b.status], label: b.code,
+protected readonly mapFeatures = computed<MapFeature[]>(() =>
+  this.items()
+    .filter((b) => b.geom)
+    .map((b) => ({
+      id: b.id, layerId: 'blocks', geometry: b.geom,
+      color: STATUS_COLORS[b.status], label: b.code,
     })),
-  );
+);
   protected readonly mapLayers: MapLayerConfig[] = [
     { id: 'blocks', labelKey: 'nav.blocks', type: 'fill', visible: true },
   ];
