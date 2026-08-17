@@ -425,7 +425,7 @@
       "block": "Block",
       "team": "Team"
     },
-    "layerParcels": "Parcels",
+    "layerParcels": "Addresses",
     "occupancyCol": "Occupancy",
     "zone": "Zone",
     "allZones": "All zones",

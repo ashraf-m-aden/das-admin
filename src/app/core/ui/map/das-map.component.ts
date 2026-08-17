@@ -62,7 +62,14 @@ export class DasMapComponent implements OnInit, OnDestroy {
   private popup?: maplibregl.Popup;
   private resizeObserver?: ResizeObserver;
   private loaded = false;
-  private hasFit = false;
+
+  /**
+   * Signature du dernier jeu de features recadré. On ne recadre que si l'ensemble
+   * des id géométriques change (filtre, page). Inchangé au clic / highlight → pas
+   * de recadrage intempestif.
+   */
+  private lastFitKey = '';
+
   private readonly isMockMode = this.config.get('useMockApi');
 
   protected readonly initError = signal(false);
@@ -212,7 +219,14 @@ export class DasMapComponent implements OnInit, OnDestroy {
       src?.setData({ type: 'FeatureCollection', features: list });
     }
 
-    if (this.fitToData() && !this.hasFit && withGeom.length > 0) this.fitBounds(withGeom);
+    // Recadre uniquement si l'ENSEMBLE des id géométriques a changé.
+    if (this.fitToData() && withGeom.length > 0) {
+      const key = withGeom.map((f) => f.id).sort().join('|');
+      if (key !== this.lastFitKey) {
+        this.lastFitKey = key;
+        this.fitBounds(withGeom);
+      }
+    }
   }
 
   private applyVisibility(vis: Record<string, boolean>): void {
@@ -253,7 +267,6 @@ export class DasMapComponent implements OnInit, OnDestroy {
     const bounds = new maplibregl.LngLatBounds();
     for (const f of features) this.extend(bounds, f);
     if (!bounds.isEmpty()) {
-      this.hasFit = true;
       this.map!.fitBounds(bounds, { padding: 48, maxZoom: 16, duration: 0 });
     }
   }

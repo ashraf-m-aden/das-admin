@@ -22,4 +22,6 @@ export const registryRoutes: Routes = [
     ],
     loadComponent: () => import('./registry-list/registry-list.component').then((m) => m.RegistryListComponent),
   },
+    { path: 'registry/map', loadComponent: () => import('./registry-map/registry-map-component').then(m => m.RegistryMapComponent) }
+
 ];

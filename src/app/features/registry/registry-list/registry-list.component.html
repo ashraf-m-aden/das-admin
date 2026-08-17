@@ -79,10 +79,11 @@
       </select>
     }
   </div>
-  <section class="das-card reg-map">
+<section class="das-card reg-map">
     <das-map
       [features]="mapFeatures()"
       [layers]="mapLayers"
+      [basemapLayers]="basemapLayers"
       [selectedId]="detailOpenId$ | async"
       (featureSelect)="open($event)"
     />

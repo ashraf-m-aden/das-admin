@@ -6,7 +6,7 @@ import { TranslocoModule } from '@jsverse/transloco';
 import { RegistryFacade } from '../../../core/registry/store/registry.facade';
 import { PageHeaderComponent } from '../../../core/layout/page-header/page-header.component';
 import { DasDatePipe } from '../../../core/i18n/das-locale.pipes';
-import { DasMapComponent } from '../../../core/ui/map/das-map.component';
+import { BasemapLayerGroup, DasMapComponent } from '../../../core/ui/map/das-map.component';
 import { MapFeature, MapLayerConfig } from '../../../core/ui/map/map.models';
 import { AddressDetailDrawerComponent } from '../address-detail-drawer/address-detail-drawer.component';
 import { AddressListItem, WORKFLOW_STAGES } from '../../../core/registry/models/registry.models';
@@ -40,13 +40,21 @@ export class RegistryListComponent implements OnInit {
   protected readonly stages = WORKFLOW_STAGES;
 
   protected readonly mapFeatures = computed<MapFeature[]>(() =>
-    this.items().map((a) => ({
-      id: a.id, layerId: 'parcels', geometry: a.geom,
-      color: STAGE_COLOR[a.workflowStage], label: a.addressCode,
-    })),
+    this.items()
+      .filter((a) => a.geom)
+      .map((a) => ({
+        id: a.id, layerId: 'parcels', geometry: a.geom,
+        color: STAGE_COLOR[a.workflowStage], label: a.addressCode,
+      })),
   );
   protected readonly mapLayers: MapLayerConfig[] = [
     { id: 'parcels', labelKey: 'registry.layerParcels', type: 'fill', visible: true },
+  ];
+
+  /** Contours cadastraux du style de base (map-style.json), pilotables via le panneau des couches. */
+  protected readonly basemapLayers: BasemapLayerGroup[] = [
+    { id: 'ilots', labelKey: 'map.basemap.ilots', styleLayerIds: ['ilots-fill', 'ilots-line'], visible: true },
+    { id: 'parcelles', labelKey: 'map.basemap.parcelles', styleLayerIds: ['parcelles-fill', 'parcelles-line'], visible: false },
   ];
 
   protected readonly filterForm = this.fb.group({
@@ -62,7 +70,7 @@ export class RegistryListComponent implements OnInit {
 
   ngOnInit(): void {
     this.facade.init();
-  this.filterForm.valueChanges.subscribe((v) => this.facade.setFilters({
+    this.filterForm.valueChanges.subscribe((v) => this.facade.setFilters({
       search: v.search ?? '', postcode: v.postcode ?? null, zone: v.zone ?? null, region: v.region ?? null,
       status: v.status ?? null, team: v.team ?? null,
     }));

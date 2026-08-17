@@ -1,0 +1,20 @@
+<das-page-header [eyebrow]="'registry.eyebrow' | transloco" [title]="'nav.registry' | transloco">
+  <div actions class="view-toggle">
+    <a class="view-toggle__btn" routerLink="/registry"><i class="ti ti-list" aria-hidden="true"></i>{{ 'registry.viewList' | transloco }}</a>
+    <span class="view-toggle__btn view-toggle__btn--active"><i class="ti ti-map-2" aria-hidden="true"></i>{{ 'registry.viewMap' | transloco }}</span>
+  </div>
+</das-page-header>
+
+<div class="map-wrap">
+  <das-map [features]="mapFeatures()" [layers]="mapLayers" [basemapLayers]="basemapLayers" (featureSelect)="onSelect($event)" />
+
+  <div class="map-legend">
+    @for (st of legend; track st) {
+      <span class="map-legend__item"><span class="map-legend__dot" [style.background]="stageColor(st)"></span>{{ stageLabelKey(st) | transloco }}</span>
+    }
+  </div>
+</div>
+
+@if (detailOpenId$ | async) {
+  <das-address-detail-drawer />
+}
