@@ -1,9 +1,13 @@
-import { UUID, Block, BlockStatus, AddressWorkflowStage } from '../../models/das.models';
+import { UUID, Block, BlockStatus, AddressWorkflowStage, GeoJSONMultiPolygon } from '../../models/das.models';
+import { HierarchySelection } from '../../hierarchy/models/hierarchy.models';
 
-export interface BlockListQuery {
+/**
+ * Requête de listing des blocs. Le filtre hiérarchie (cascade
+ * City→Commune→Zone→Quartier) remplace l'ancien `adminUnitId` unique.
+ */
+export interface BlockListQuery extends HierarchySelection {
   search: string;
   status: BlockStatus | null;
-  adminUnitId: UUID | null;
 }
 
 /** Résumé léger d'une parcelle pour la fiche détail d'un bloc. */
@@ -18,12 +22,14 @@ export const VERIFIED_STAGES: AddressWorkflowStage[] = ['verified', 'approved', 
 
 /**
  * Bloc enrichi pour la liste : nom d'agent + compteurs de PARCELLES.
- * Progression = parcelsVerified / parcelsTotal. Fourni par l'endpoint enrichi.
+ * `geom` est OPTIONNEL : présent en mode mock (overlay GeoJSON local), absent
+ * en mode réel où la géométrie provient des tuiles Martin (source `blocs`).
  */
-export interface BlockListItem extends Block {
+export interface BlockListItem extends Omit<Block, 'geom'> {
   assignedUserName: string | null;
   parcelsVerified: number;
   parcelsTotal: number;
+  geom?: GeoJSONMultiPolygon;
 }
 
 /** Bloc + ses parcelles (le Lot a disparu : la parcelle EST l'adresse). */

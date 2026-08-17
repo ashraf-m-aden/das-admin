@@ -59,6 +59,9 @@ import { FieldOpsApiService } from './core/fieldops/services/fieldops-api.servic
 import { ReportsApiService } from './core/reports/services/reports-api.service';
 import { AuditApiService } from './core/audit/services/audit-api.service';
 import { IntegrationsApiService } from './core/integrations/services/integrations-api.service';
+import { HierarchyMockService } from './core/hierarchy/services/hierarchy-api.mock';
+import { HierarchyApiPort } from './core/hierarchy/services/hierarchy-api.port';
+import { HierarchyApiService } from './core/hierarchy/services/hierarchy-api.service';
 const useMock = () => inject(AppConfigService).get('useMockApi');
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -99,18 +102,24 @@ export const appConfig: ApplicationConfig = {
       ClientsEffects,
       FeedbackEffects
     ]),
-{ provide: PostcodesApiPort,   useFactory: () => useMock() ? inject(MockPostcodesApiService)   : inject(PostcodesApiService) },
-    { provide: FieldOpsApiPort,    useFactory: () => useMock() ? inject(MockFieldOpsApiService)    : inject(FieldOpsApiService) },
+    { provide: PostcodesApiPort, useFactory: () => useMock() ? inject(MockPostcodesApiService) : inject(PostcodesApiService) },
+    {
+      provide: HierarchyApiPort,
+      useFactory: (config: AppConfigService, mock: HierarchyMockService, real: HierarchyApiService) =>
+        config.get('useMockApi') ? mock : real,
+      deps: [AppConfigService, HierarchyMockService, HierarchyApiService],
+    },
+    { provide: FieldOpsApiPort, useFactory: () => useMock() ? inject(MockFieldOpsApiService) : inject(FieldOpsApiService) },
     { provide: DataQualityApiPort, useFactory: () => useMock() ? inject(MockDataQualityApiService) : inject(DataQualityApiService) },
-    { provide: ReportsApiPort,     useFactory: () => useMock() ? inject(MockReportsApiService)     : inject(ReportsApiService) },
-    { provide: IntegrationsApiPort,useFactory: () => useMock() ? inject(MockIntegrationsApiService): inject(IntegrationsApiService) },
-    { provide: AuditApiPort,       useFactory: () => useMock() ? inject(MockAuditApiService)       : inject(AuditApiService) },
+    { provide: ReportsApiPort, useFactory: () => useMock() ? inject(MockReportsApiService) : inject(ReportsApiService) },
+    { provide: IntegrationsApiPort, useFactory: () => useMock() ? inject(MockIntegrationsApiService) : inject(IntegrationsApiService) },
+    { provide: AuditApiPort, useFactory: () => useMock() ? inject(MockAuditApiService) : inject(AuditApiService) },
     {
       provide: RegistryApiPort,
-      useFactory: () => (useMock() ?  inject(MockRegistryApiService) : inject(RegistryApiService)),
+      useFactory: () => (useMock() ? inject(MockRegistryApiService) : inject(RegistryApiService)),
     },
 
-        { provide: ENVIRONMENT_INITIALIZER, multi: true, useValue: () => inject(ThemeService) },
+    { provide: ENVIRONMENT_INITIALIZER, multi: true, useValue: () => inject(ThemeService) },
     provideStoreDevtools({ maxAge: 25, logOnly: false }),
   ],
 };

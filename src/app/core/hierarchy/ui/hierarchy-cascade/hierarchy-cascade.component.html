@@ -1,0 +1,29 @@
+<div class="cascade">
+  <select class="cascade__select" (change)="onCity($any($event.target).value)">
+    <option value="">{{ 'hierarchy.allCities' | transloco }}</option>
+    @for (c of cities(); track c.id) {
+    <option [value]="c.id" [selected]="c.id === selection().cityId">{{ c.name }}</option>
+    }
+  </select>
+
+  <select class="cascade__select" [disabled]="!selection().cityId" (change)="onCommune($any($event.target).value)">
+    <option value="">{{ 'hierarchy.allCommunes' | transloco }}</option>
+    @for (c of communes(); track c.id) {
+    <option [value]="c.id" [selected]="c.id === selection().communeId">{{ c.name }}</option>
+    }
+  </select>
+
+  <select class="cascade__select" [disabled]="!selection().communeId" (change)="onZone($any($event.target).value)">
+    <option value="">{{ 'hierarchy.allZones' | transloco }}</option>
+    @for (z of zones(); track z.id) {
+    <option [value]="z.id" [selected]="z.id === selection().zoneId">{{ z.name }}</option>
+    }
+  </select>
+
+  <select class="cascade__select" [disabled]="!selection().zoneId" (change)="onQuartier($any($event.target).value)">
+    <option value="">{{ 'hierarchy.allQuartiers' | transloco }}</option>
+    @for (q of quartiers(); track q.id) {
+    <option [value]="q.id" [selected]="q.id === selection().quartierId">{{ q.name }}</option>
+    }
+  </select>
+</div>

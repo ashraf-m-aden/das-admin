@@ -1,0 +1,21 @@
+.cascade {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+
+  &__select {
+    min-width: 10rem;
+    flex: 1 1 10rem;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid #d0d7e2;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 0.875rem;
+
+    &:disabled {
+      background: #f1f4f8;
+      color: #9aa3b5;
+      cursor: not-allowed;
+    }
+  }
+}

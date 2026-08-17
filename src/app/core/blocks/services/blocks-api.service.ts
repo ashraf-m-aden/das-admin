@@ -16,7 +16,10 @@ export class BlocksApiService extends BlocksApiPort {
     const params: Record<string, string> = {};
     if (query.search) params['search'] = query.search;
     if (query.status) params['status'] = query.status;
-    if (query.adminUnitId) params['adminUnitId'] = query.adminUnitId;
+    if (query.cityId) params['cityId'] = query.cityId;
+    if (query.communeId) params['communeId'] = query.communeId;
+    if (query.zoneId) params['zoneId'] = query.zoneId;
+    if (query.quartierId) params['quartierId'] = query.quartierId;
     return this.http.get<BlockListItem[]>(this.baseUrl, { params });
   }
 

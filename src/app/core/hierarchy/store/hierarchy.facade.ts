@@ -1,0 +1,58 @@
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { HierarchyApiPort } from '../services/hierarchy-api.port';
+import { UUID } from '../../models/das.models';
+import { Bbox4326, EMPTY_HIERARCHY_SELECTION, HierarchyNode, HierarchySelection } from '../models/hierarchy.models';
+
+@Injectable({ providedIn: 'root' })
+export class HierarchyFacade {
+  private api = inject(HierarchyApiPort);
+
+  private readonly _cities = signal<HierarchyNode[]>([]);
+  private readonly _communes = signal<HierarchyNode[]>([]);
+  private readonly _zones = signal<HierarchyNode[]>([]);
+  private readonly _quartiers = signal<HierarchyNode[]>([]);
+  private readonly _selection = signal<HierarchySelection>(EMPTY_HIERARCHY_SELECTION);
+
+  readonly cities = this._cities.asReadonly();
+  readonly communes = this._communes.asReadonly();
+  readonly zones = this._zones.asReadonly();
+  readonly quartiers = this._quartiers.asReadonly();
+  readonly selection = this._selection.asReadonly();
+
+  /** bbox du niveau non-null le plus profond — pour le fitBounds (à venir). */
+  readonly selectedBbox = computed<Bbox4326 | null>(() => {
+    const s = this._selection();
+    const bboxOf = (list: HierarchyNode[], id: UUID | null) =>
+      id ? (list.find((n) => n.id === id)?.bbox ?? null) : null;
+    return bboxOf(this._quartiers(), s.quartierId)
+      ?? bboxOf(this._zones(), s.zoneId)
+      ?? bboxOf(this._communes(), s.communeId)
+      ?? bboxOf(this._cities(), s.cityId);
+  });
+
+  loadRoot(): void {
+    this.api.cities().subscribe((c) => this._cities.set(c));
+  }
+
+  selectCity(cityId: UUID | null): void {
+    this._selection.set({ cityId, communeId: null, zoneId: null, quartierId: null });
+    this._communes.set([]); this._zones.set([]); this._quartiers.set([]);
+    if (cityId) this.api.communes(cityId).subscribe((c) => this._communes.set(c));
+  }
+
+  selectCommune(communeId: UUID | null): void {
+    this._selection.update((s) => ({ ...s, communeId, zoneId: null, quartierId: null }));
+    this._zones.set([]); this._quartiers.set([]);
+    if (communeId) this.api.zones(communeId).subscribe((z) => this._zones.set(z));
+  }
+
+  selectZone(zoneId: UUID | null): void {
+    this._selection.update((s) => ({ ...s, zoneId, quartierId: null }));
+    this._quartiers.set([]);
+    if (zoneId) this.api.quartiers(zoneId).subscribe((q) => this._quartiers.set(q));
+  }
+
+  selectQuartier(quartierId: UUID | null): void {
+    this._selection.update((s) => ({ ...s, quartierId }));
+  }
+}

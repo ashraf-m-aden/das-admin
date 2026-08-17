@@ -8,7 +8,9 @@ import type { Feature, FeatureCollection } from 'geojson';
 import * as maplibregl from 'maplibre-gl';
 import { AppConfigService } from '../../config/app-config.service';
 import { MapStyleService } from '../../map/map-style.service';
-import { MapFeature, MapLayerConfig } from './map.models';
+import {
+  MapFeature, MapLayerConfig, TileFeatureStateMap, TileFilter, TileLayerBinding,
+} from './map.models';
 
 const MOCK_BASEMAP_STYLE_URL = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
 const HIGHLIGHT = '#2563eb';
@@ -43,6 +45,14 @@ export class DasMapComponent implements OnInit, OnDestroy {
   readonly features = input<MapFeature[]>([]);
   readonly layers = input<MapLayerConfig[]>([]);
   readonly basemapLayers = input<BasemapLayerGroup[]>([]);
+
+  /** Couches vecteur-tuiles interactives (Blocs, Adresses…) du style de base. */
+  readonly tileLayers = input<TileLayerBinding[]>([]);
+  /** feature-state par binding : { [bindingId]: { [featureId]: état } }. */
+  readonly tileFeatureStates = input<Record<string, TileFeatureStateMap>>({});
+  /** Filtre data-driven par binding : { [bindingId]: expression | null }. */
+  readonly tileFilters = input<Record<string, TileFilter>>({});
+
   readonly center = input<[number, number]>([43.145, 11.595]);
   readonly zoom = input<number>(12);
   readonly fitToData = input<boolean>(true);
@@ -70,6 +80,9 @@ export class DasMapComponent implements OnInit, OnDestroy {
    */
   private lastFitKey = '';
 
+  /** feature-state déjà posés, par binding, pour ne retirer que ce qui disparaît. */
+  private readonly appliedTileStateIds = new Map<string, Set<string>>();
+
   private readonly isMockMode = this.config.get('useMockApi');
 
   protected readonly initError = signal(false);
@@ -78,28 +91,34 @@ export class DasMapComponent implements OnInit, OnDestroy {
 
   private readonly internalSelected = signal<string | null>(null);
 
-  /** Éléments listés dans le panneau : overlays d'abord, puis groupes du fond cadastral. */
+  /** Éléments listés dans le panneau : overlays, puis couches tuiles, puis fond cadastral. */
   protected readonly panelLayers = computed<PanelItem[]>(() => [
     ...this.layers().map((l) => ({ id: l.id, labelKey: l.labelKey })),
+    ...this.tileLayers().map((t) => ({ id: t.id, labelKey: t.labelKey })),
     ...this.basemapLayers().map((b) => ({ id: b.id, labelKey: b.labelKey })),
   ]);
 
   constructor() {
-    // Init visibilité depuis la config des couches (overlay + fond cadastral)
+    // Init visibilité depuis la config des couches (overlay + tuiles + fond cadastral)
     effect(() => {
       const map: Record<string, boolean> = {};
       for (const l of this.layers()) map[l.id] = l.visible;
+      for (const t of this.tileLayers()) map[t.id] = t.visible;
       for (const b of this.basemapLayers()) map[b.id] = b.visible;
       this.visibility.set(map);
     });
     // Sync sélection contrôlée depuis le parent
     effect(() => { this.internalSelected.set(this.selectedId()); });
-    // Re-rendu des données
+    // Re-rendu des données overlay
     effect(() => { const f = this.features(); if (this.loaded) this.renderFeatures(f); });
     // Application de la visibilité
     effect(() => { const v = this.visibility(); if (this.loaded) this.applyVisibility(v); });
-    // Application du highlight
+    // Application du highlight overlay
     effect(() => { const sel = this.internalSelected(); if (this.loaded) this.applyHighlight(sel); });
+    // Application des feature-state sur les couches tuiles
+    effect(() => { const s = this.tileFeatureStates(); if (this.loaded) this.applyTileFeatureStates(s); });
+    // Application des filtres sur les couches tuiles
+    effect(() => { const f = this.tileFilters(); if (this.loaded) this.applyTileFilters(f); });
   }
 
   ngOnInit(): void {
@@ -141,11 +160,14 @@ export class DasMapComponent implements OnInit, OnDestroy {
 
     map.on('load', () => {
       this.buildLayers();
+      this.wireTileInteractions();
       this.loaded = true;
       map.resize();
       this.renderFeatures(this.features());
       this.applyVisibility(this.visibility());
       this.applyHighlight(this.internalSelected());
+      this.applyTileFilters(this.tileFilters());
+      this.applyTileFeatureStates(this.tileFeatureStates());
     });
   }
 
@@ -194,6 +216,30 @@ export class DasMapComponent implements OnInit, OnDestroy {
     map.on('mouseleave', layerId, () => { map.getCanvas().style.cursor = ''; });
   }
 
+  /**
+   * Câble clic + curseur sur les couches tuiles interactives.
+   * L'id de feature vient de `promoteId` côté source (l'UUID du bloc) : c'est
+   * cette clé qui relie clic, feature-state et sélection.
+   */
+  private wireTileInteractions(): void {
+    const map = this.map!;
+    for (const binding of this.tileLayers()) {
+      const layerId = binding.interactiveLayerId;
+      map.on('click', layerId, (e) => {
+        const f = e.features?.[0];
+        const id = f?.id;
+        if (id === undefined || id === null) return;
+        this.ngZone.run(() => {
+          this.featureSelect.emit(String(id));
+          const label = f?.properties?.['code'];
+          if (label) this.showPopup(e.lngLat, String(label));
+        });
+      });
+      map.on('mouseenter', layerId, () => { map.getCanvas().style.cursor = 'pointer'; });
+      map.on('mouseleave', layerId, () => { map.getCanvas().style.cursor = ''; });
+    }
+  }
+
   private renderFeatures(features: MapFeature[]): void {
     if (!this.map || !this.loaded) return;
 
@@ -239,6 +285,12 @@ export class DasMapComponent implements OnInit, OnDestroy {
       for (const id of ids) if (this.map.getLayer(id)) this.map.setLayoutProperty(id, 'visibility', value);
     }
 
+    // Couches tuiles interactives — no-op silencieux en mode mock (couches absentes).
+    for (const t of this.tileLayers()) {
+      const value = (vis[t.id] ?? true) ? 'visible' : 'none';
+      for (const id of t.styleLayerIds) if (this.map.getLayer(id)) this.map.setLayoutProperty(id, 'visibility', value);
+    }
+
     // Groupes du style de base (contours cadastraux) — no-op silencieux si la couche
     // n'existe pas (ex. en mode mock où le fond est CARTO Positron).
     for (const b of this.basemapLayers()) {
@@ -252,6 +304,44 @@ export class DasMapComponent implements OnInit, OnDestroy {
     for (const l of this.layers()) {
       const id = `${l.id}-sel`;
       if (this.map.getLayer(id)) this.map.setFilter(id, ['==', ['get', 'id'], selected ?? NONE]);
+    }
+  }
+
+  /**
+   * Applique les feature-state par binding, en DIFFÉRENTIEL : on ne retire l'état
+   * que des features absentes de la nouvelle map (setFeatureState fusionne le reste).
+   * Persistant côté source : MapLibre le réapplique aux tuiles au fil du pan/zoom.
+   */
+  private applyTileFeatureStates(all: Record<string, TileFeatureStateMap>): void {
+    if (!this.map || !this.loaded) return;
+    const map = this.map;
+    for (const binding of this.tileLayers()) {
+      if (!map.getSource(binding.source)) continue;   // mode mock : source absente
+      const states = all[binding.id] ?? {};
+      const nextIds = new Set(Object.keys(states));
+      const prevIds = this.appliedTileStateIds.get(binding.id) ?? new Set<string>();
+
+      for (const id of prevIds) {
+        if (!nextIds.has(id)) {
+          map.removeFeatureState({ source: binding.source, sourceLayer: binding.sourceLayer, id });
+        }
+      }
+      for (const [id, st] of Object.entries(states)) {
+        map.setFeatureState({ source: binding.source, sourceLayer: binding.sourceLayer, id }, st);
+      }
+      this.appliedTileStateIds.set(binding.id, nextIds);
+    }
+  }
+
+  /** Applique un filtre data-driven à toutes les couches de style d'un binding (null = tout visible). */
+  private applyTileFilters(filters: Record<string, TileFilter>): void {
+    if (!this.map || !this.loaded) return;
+    const map = this.map;
+    for (const binding of this.tileLayers()) {
+      const filter = filters[binding.id] ?? null;
+      for (const styleLayerId of binding.styleLayerIds) {
+        if (map.getLayer(styleLayerId)) map.setFilter(styleLayerId, filter);
+      }
     }
   }
 

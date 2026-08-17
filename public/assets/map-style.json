@@ -1,10 +1,10 @@
 {
   "version": 8,
   "sources": {
-    "das_ilots": { "type": "vector", "tiles": ["__TILES_BASE_URL__/das_ilots/{z}/{x}/{y}"] },
-    "das_parcelles": {
+    "blocs": {
       "type": "vector",
-      "tiles": ["__TILES_BASE_URL__/das_parcelles/{z}/{x}/{y}"]
+      "tiles": ["__TILES_BASE_URL__/Blocs/{z}/{x}/{y}"],
+      "promoteId": "Id"
     },
     "adresses": { "type": "vector", "tiles": ["__TILES_BASE_URL__/Adresses/{z}/{x}/{y}"] }
   },
@@ -13,37 +13,58 @@
     { "id": "bg", "type": "background", "paint": { "background-color": "#f8f9fa" } },
 
     {
-      "id": "parcelles-fill",
+      "id": "blocs-fill",
       "type": "fill",
-      "source": "das_parcelles",
-      "source-layer": "das_parcelles",
-      "minzoom": 15,
-      "paint": { "fill-color": "#eaf1f8", "fill-outline-color": "#b8d4f0", "fill-opacity": 0.6 }
+      "source": "blocs",
+      "source-layer": "Blocs",
+      "paint": {
+        "fill-color": [
+          "case",
+          ["!=", ["feature-state", "colorOverride"], null],
+          ["feature-state", "colorOverride"],
+          [
+            "match",
+            ["get", "status"],
+            "not_assigned",
+            "#9aa3b5",
+            "assigned",
+            "#2563eb",
+            "in_progress",
+            "#d97706",
+            "submitted",
+            "#7c3aed",
+            "approved",
+            "#16a34a",
+            "needs_redo",
+            "#dc2626",
+            "#dceaf7"
+          ]
+        ],
+        "fill-opacity": [
+          "case",
+          ["boolean", ["feature-state", "hidden"], false],
+          0,
+          ["boolean", ["feature-state", "selected"], false],
+          0.6,
+          0.4
+        ]
+      }
     },
 
     {
-      "id": "ilots-fill",
-      "type": "fill",
-      "source": "das_ilots",
-      "source-layer": "das_ilots",
-      "paint": { "fill-color": "#dceaf7", "fill-opacity": 0.35 }
-    },
-
-    {
-      "id": "ilots-line",
+      "id": "blocs-line",
       "type": "line",
-      "source": "das_ilots",
-      "source-layer": "das_ilots",
-      "paint": { "line-color": "#5b9bd5", "line-width": 1.2 }
-    },
-
-    {
-      "id": "parcelles-line",
-      "type": "line",
-      "source": "das_parcelles",
-      "source-layer": "das_parcelles",
-      "minzoom": 16,
-      "paint": { "line-color": "#8fbce0", "line-width": 0.5 }
+      "source": "blocs",
+      "source-layer": "Blocs",
+      "paint": {
+        "line-color": [
+          "case",
+          ["boolean", ["feature-state", "selected"], false],
+          "#1d4ed8",
+          "#64748b"
+        ],
+        "line-width": ["case", ["boolean", ["feature-state", "selected"], false], 2.4, 1]
+      }
     },
 
     {
