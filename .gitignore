@@ -5,7 +5,9 @@
 /tmp
 /out-tsc
 /bazel-out
-
+* text=auto eol=lf
+*.sh text eol=lf
+docker/env-config.sh text eol=lf
 # Node
 /node_modules
 npm-debug.log
