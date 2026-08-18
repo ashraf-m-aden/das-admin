@@ -1,0 +1,113 @@
+{
+  "version": 8,
+  "sources": {
+    "blocs": {
+      "type": "vector",
+      "tiles": ["__TILES_BASE_URL__/blocs_tiles/{z}/{x}/{y}"],
+      "promoteId": "Id"
+    },
+    "adresses": {
+      "type": "vector",
+      "tiles": ["__TILES_BASE_URL__/adresses_tiles/{z}/{x}/{y}"],
+      "promoteId": "Id"
+    }
+  },
+  "glyphs": "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
+  "layers": [
+    { "id": "bg", "type": "background", "paint": { "background-color": "#f8f9fa" } },
+
+    {
+      "id": "blocs-fill",
+      "type": "fill",
+      "source": "blocs",
+      "source-layer": "blocs_tiles",
+      "paint": {
+        "fill-color": [
+          "case",
+          ["!=", ["feature-state", "colorOverride"], null],
+          ["feature-state", "colorOverride"],
+          [
+            "match",
+            ["get", "status"],
+            "not_assigned",
+            "#9aa3b5",
+            "assigned",
+            "#2563eb",
+            "in_progress",
+            "#d97706",
+            "submitted",
+            "#7c3aed",
+            "approved",
+            "#16a34a",
+            "needs_redo",
+            "#dc2626",
+            "#dceaf7"
+          ]
+        ],
+        "fill-opacity": [
+          "case",
+          ["boolean", ["feature-state", "hidden"], false],
+          0,
+          ["boolean", ["feature-state", "selected"], false],
+          0.6,
+          0.4
+        ]
+      }
+    },
+
+    {
+      "id": "blocs-line",
+      "type": "line",
+      "source": "blocs",
+      "source-layer": "blocs_tiles",
+      "paint": {
+        "line-color": [
+          "case",
+          ["boolean", ["feature-state", "selected"], false],
+          "#1d4ed8",
+          "#64748b"
+        ],
+        "line-width": ["case", ["boolean", ["feature-state", "selected"], false], 2.4, 1]
+      }
+    },
+
+    {
+      "id": "adresses-circle",
+      "type": "circle",
+      "source": "adresses",
+      "source-layer": "adresses_tiles",
+      "minzoom": 12,
+      "paint": {
+        "circle-color": [
+          "case",
+          ["!=", ["feature-state", "colorOverride"], null],
+          ["feature-state", "colorOverride"],
+          [
+            "match",
+            ["get", "workflowStage"],
+            "registered",
+            "#6b7280",
+            "surveyed",
+            "#d97706",
+            "verified",
+            "#16a34a",
+            "approved",
+            "#0d9488",
+            "published",
+            "#7c3aed",
+            "#2563eb"
+          ]
+        ],
+        "circle-radius": ["case", ["boolean", ["feature-state", "selected"], false], 5.5, 3.5],
+        "circle-opacity": ["case", ["boolean", ["feature-state", "hidden"], false], 0, 1],
+        "circle-stroke-color": [
+          "case",
+          ["boolean", ["feature-state", "selected"], false],
+          "#1d4ed8",
+          "#ffffff"
+        ],
+        "circle-stroke-width": ["case", ["boolean", ["feature-state", "selected"], false], 2, 1]
+      }
+    }
+  ]
+}
