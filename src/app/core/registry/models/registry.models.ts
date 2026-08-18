@@ -1,12 +1,18 @@
-// en tête, compléter l'import :
-import { UUID, ISODateTime, AddressWorkflowStage, PropertyType, OccupancyType, GeoJSONMultiPolygon } from '../../models/das.models';
+import {
+  UUID, ISODateTime, AddressWorkflowStage, PropertyType, OccupancyType, GeoJSONMultiPolygon,
+} from '../../models/das.models';
 
-
+/**
+ * Ligne du registre des adresses.
+ * Rappel domaine : `postcode` appartient au QUARTIER de l'adresse ; `zone`
+ * est la zone (postale) qui regroupe des quartiers. `geom` = emprise de la
+ * parcelle (l'adresse), servie pour l'overlay carte.
+ */
 export interface AddressListItem {
   id: UUID;
   addressCode: string;
   postcode: string | null;   // code postal du quartier de l'adresse
-  zone: string | null;       // zone du quartier
+  zone: string | null;       // zone (regroupe des quartiers)
   street: string;
   quartier: string;
   propertyType: PropertyType;
@@ -16,21 +22,17 @@ export interface AddressListItem {
   geom: GeoJSONMultiPolygon;
 }
 
-export interface RegistryFilters {
-  search: string;
+/** Composantes hiérarchiques d'une adresse (fiche détail). */
+export interface AddressComponents {
+  street: string;
+  quartier: string;      // quartier
+  zone: string;          // zone (regroupe des quartiers)
+  commune: string;
+  region: string;
   postcode: string | null;
-  zone: string | null;       // ← filtre par zone
-  region: string | null;
-  status: AddressWorkflowStage | null;
-  team: string | null;
 }
 
-export interface RegistryFilterOptions {
-  postcodes: string[];
-  zones: string[];           // ← options de zone
-  regions: string[];
-  teams: string[];
-}export interface AddressLocation { latitude: number; longitude: number; parcelNumber: string; }
+export interface AddressLocation { latitude: number; longitude: number; parcelNumber: string; }
 export interface AddressPropertyInfo { propertyType: PropertyType; occupancyType: OccupancyType; buildingUse: string | null; }
 export interface AddressValidation { score: number; notes: string | null; }
 export interface AddressHistoryEntry { id: UUID; actionKey: string; actor: string; at: ISODateTime; }
@@ -38,6 +40,7 @@ export interface AddressHistoryEntry { id: UUID; actionKey: string; actor: strin
 export type LinkedRecordKind = 'street' | 'postcode' | 'block' | 'team';
 export interface LinkedRecord { id: UUID; kind: LinkedRecordKind; label: string; }
 
+/** Adresse enrichie pour le tiroir de détail (details / history / linked). */
 export interface AddressDetail extends AddressListItem {
   components: AddressComponents;
   location: AddressLocation;
@@ -47,16 +50,25 @@ export interface AddressDetail extends AddressListItem {
   linked: LinkedRecord[];
 }
 
+/** Filtres du registre. Déclaration UNIQUE (fin des doublons). */
 export interface RegistryFilters {
   search: string;
-  postcode: string | null;
-  region: string | null;
+  postcode: string | null;   // conservé (inutilisé) — filtrage géo déplacé vers la hiérarchie
+  zone: string | null;       // idem
+  region: string | null;     // idem
   status: AddressWorkflowStage | null;
   team: string | null;
+  cityId: UUID | null;
+  communeId: UUID | null;
+  zoneId: UUID | null;
+  quartierId: UUID | null;
+  blocId: UUID | null;
 }
 
+/** Options de filtre alimentant les selects. Déclaration UNIQUE. */
 export interface RegistryFilterOptions {
   postcodes: string[];
+  zones: string[];
   regions: string[];
   teams: string[];
 }
@@ -88,26 +100,3 @@ export interface BulkUpdatePayload {
 }
 
 export const WORKFLOW_STAGES: AddressWorkflowStage[] = ['registered', 'surveyed', 'verified', 'approved', 'published'];
-export interface AddressComponents {
-  street: string;
-  quartier: string;      // quartier
-  zone: string;          // zone postale (regroupe des quartiers)
-  commune: string;
-  region: string;
-  postcode: string | null;
-}
-export interface RegistryFilters {
-  search: string;
-  postcode: string | null;
-  zone: string | null;        // ← nouveau
-  region: string | null;
-  status: AddressWorkflowStage | null;
-  team: string | null;
-}
-
-export interface RegistryFilterOptions {
-  postcodes: string[];
-  zones: string[];            // ← nouveau
-  regions: string[];
-  teams: string[];
-}

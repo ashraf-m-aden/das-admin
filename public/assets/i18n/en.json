@@ -596,11 +596,11 @@
   "map": {
     "layers": "Layers",
     "error": "Map unavailable",
-      "basemap": {
-    "ilots": "Block outlines",
-    "parcelles": "Parcel outlines",
-    "adresses": "Address points"
-  }
+    "basemap": {
+      "ilots": "Block outlines",
+      "parcelles": "Parcel outlines",
+      "adresses": "Address points"
+    }
   },
   "reports": {
     "eyebrow": "Analytics and national address performance",
@@ -676,6 +676,13 @@
     "empty": "No entries",
     "showing": "{{count}} of {{total}}",
     "actionCol": "Action"
+  },
+  "hierarchy": {
+    "allCities": "All cities",
+    "allCommunes": "All communes",
+    "allZones": "All zones",
+    "allQuartiers": "All quartiers",
+    "allBlocs": "All blocs"
   },
   "profile": {
     "eyebrow": "My account",

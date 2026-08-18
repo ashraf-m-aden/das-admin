@@ -10,9 +10,10 @@ import { MapFeature, MapLayerConfig, TileFilter, TileLayerBinding } from '../../
 import { BlockListItem } from '../../../core/blocks/models/blocks.models';
 import { BlocksFilters } from '../../../core/blocks/store/blocks.state';
 import { BlockStatus } from '../../../core/models/das.models';
-import { EMPTY_HIERARCHY_SELECTION } from '../../../core/hierarchy/models/hierarchy.models';
-import { AppConfigService } from '../../../core/config/app-config.service';
+import { EMPTY_HIERARCHY_SELECTION, HierarchySelection } from '../../../core/hierarchy/models/hierarchy.models';
+import { HierarchyFacade } from '../../../core/hierarchy/store/hierarchy.facade';
 import { HierarchyCascadeComponent } from '../../../core/hierarchy/ui/hierarchy-cascade/hierarchy-cascade.component';
+import { AppConfigService } from '../../../core/config/app-config.service';
 
 const STATUS_COLORS: Record<BlockStatus, string> = {
   not_assigned: '#9aa3b5', assigned: '#2563eb', in_progress: '#d97706',
@@ -21,7 +22,7 @@ const STATUS_COLORS: Record<BlockStatus, string> = {
 
 /** Binding vers la couche tuile `blocs` du style de base (map-style.json). */
 const BLOCS_TILE: TileLayerBinding = {
-  id: 'blocs', labelKey: 'nav.blocks', source: 'blocs', sourceLayer: 'Blocs',
+  id: 'blocs', labelKey: 'nav.blocks', source: 'blocs', sourceLayer: 'blocs_tiles',
   styleLayerIds: ['blocs-fill', 'blocs-line'], interactiveLayerId: 'blocs-fill', visible: true,
 };
 
@@ -34,6 +35,7 @@ const BLOCS_TILE: TileLayerBinding = {
 })
 export class BlocksMapComponent implements OnInit {
   private facade = inject(BlocksFacade);
+  private hierarchy = inject(HierarchyFacade);
   private router = inject(Router);
   private readonly isMock = inject(AppConfigService).get('useMockApi');
 
@@ -41,6 +43,9 @@ export class BlocksMapComponent implements OnInit {
   private readonly filters = toSignal(this.facade.filters$, {
     initialValue: { search: '', status: null, ...EMPTY_HIERARCHY_SELECTION } as BlocksFilters,
   });
+
+  /** Emprise du niveau hiérarchique sélectionné → recadrage carte. */
+  protected readonly selectedBbox = this.hierarchy.selectedBbox;
 
   protected readonly legend: BlockStatus[] = [
     'approved', 'in_progress', 'submitted', 'assigned', 'not_assigned', 'needs_redo',
@@ -69,7 +74,7 @@ export class BlocksMapComponent implements OnInit {
   protected readonly basemapLayers: BasemapLayerGroup[] = [
     { id: 'adresses', labelKey: 'map.basemap.adresses', styleLayerIds: ['adresses-circle'], visible: false },
   ];
-
+  onHierarchy(sel: HierarchySelection): void { this.facade.setFilters(sel); }
   /**
    * Filtre tuile dérivé de la sélection hiérarchie + statut. Le niveau non-null
    * le plus profond gagne (choisir un quartier implique sa zone/commune/ville).

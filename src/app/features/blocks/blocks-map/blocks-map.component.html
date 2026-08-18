@@ -8,10 +8,9 @@
 </das-page-header>
 
 <div class="map-wrap">
-  <das-hierarchy-cascade />
-
+  <das-hierarchy-cascade (selectionChange)="onHierarchy($event)" />
   <das-map [features]="mapFeatures()" [layers]="mapLayers" [tileLayers]="tileLayers" [tileFilters]="tileFilters()"
-    [basemapLayers]="basemapLayers" (featureSelect)="onSelect($event)" />>
+    [basemapLayers]="basemapLayers" [fitBbox]="selectedBbox()" (featureSelect)="onSelect($event)" />
   <div class="map-legend">
     @for (st of legend; track st) {
     <span class="map-legend__item"><span class="map-legend__dot" [style.background]="legendColor(st)"></span>{{

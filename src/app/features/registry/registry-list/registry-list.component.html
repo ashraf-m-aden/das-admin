@@ -17,111 +17,74 @@
 
 <div class="reg">
   @if (summary$ | async; as s) {
-    <div class="kpis">
-      <div class="kpi">
-        <div class="kpi__label">{{ 'registry.kpi.total' | transloco }}</div>
-        <div class="kpi__value">{{ s.totalRecords }}</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi__label">{{ 'registry.kpi.pending' | transloco }}</div>
-        <div class="kpi__value">{{ s.pendingReview }}</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi__label">{{ 'registry.kpi.duplicates' | transloco }}</div>
-        <div class="kpi__value">{{ s.duplicatesFlagged }}</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi__label">{{ 'registry.kpi.published' | transloco }}</div>
-        <div class="kpi__value">{{ s.publishedToday }}</div>
-      </div>
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi__label">{{ 'registry.kpi.total' | transloco }}</div>
+      <div class="kpi__value">{{ s.totalRecords }}</div>
     </div>
+    <div class="kpi">
+      <div class="kpi__label">{{ 'registry.kpi.pending' | transloco }}</div>
+      <div class="kpi__value">{{ s.pendingReview }}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi__label">{{ 'registry.kpi.duplicates' | transloco }}</div>
+      <div class="kpi__value">{{ s.duplicatesFlagged }}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi__label">{{ 'registry.kpi.published' | transloco }}</div>
+      <div class="kpi__value">{{ s.publishedToday }}</div>
+    </div>
+  </div>
   }
 
   <div class="filters das-card" [formGroup]="filterForm">
     <label class="filters__search">
       <i class="ti ti-search" aria-hidden="true"></i>
-      <input
-        type="text"
-        formControlName="search"
-        [attr.placeholder]="'registry.searchPlaceholder' | transloco"
-      />
+      <input type="text" formControlName="search" [attr.placeholder]="'registry.searchPlaceholder' | transloco" />
     </label>
+
+    <das-hierarchy-cascade [showBloc]="true" (selectionChange)="onHierarchy($event)" />
+
+    <select formControlName="status">
+      <option [ngValue]="null">{{ 'registry.allStatuses' | transloco }}</option>
+      @for (st of stages; track st) {
+      <option [ngValue]="st">{{ stageLabelKey(st) | transloco }}</option>
+      }
+    </select>
+
     @if (filterOptions$ | async; as opt) {
-      <select formControlName="postcode">
-        <option [ngValue]="null">{{ 'registry.allPostcodes' | transloco }}</option>
-        @for (p of opt.postcodes; track p) {
-          <option [ngValue]="p">{{ p }}</option>
-        }
-      </select>
-      <select formControlName="zone">
-        <option [ngValue]="null">{{ 'registry.allZones' | transloco }}</option>
-        @for (z of opt.zones; track z) {
-          <option [ngValue]="z">{{ z }}</option>
-        }
-      </select>
-      <select formControlName="region">
-        <option [ngValue]="null">{{ 'registry.allRegions' | transloco }}</option>
-        @for (r of opt.regions; track r) {
-          <option [ngValue]="r">{{ r }}</option>
-        }
-      </select>
-      <select formControlName="status">
-        <option [ngValue]="null">{{ 'registry.allStatuses' | transloco }}</option>
-        @for (st of stages; track st) {
-          <option [ngValue]="st">{{ stageLabelKey(st) | transloco }}</option>
-        }
-      </select>
-      <select formControlName="team">
-        <option [ngValue]="null">{{ 'registry.allTeams' | transloco }}</option>
-        @for (t of opt.teams; track t) {
-          <option [ngValue]="t">{{ t }}</option>
-        }
-      </select>
+    <select formControlName="team">
+      <option [ngValue]="null">{{ 'registry.allTeams' | transloco }}</option>
+      @for (t of opt.teams; track t) {
+      <option [ngValue]="t">{{ t }}</option>
+      }
+    </select>
     }
   </div>
-<section class="das-card reg-map">
-    <das-map
-      [features]="mapFeatures()"
-      [layers]="mapLayers"
-      [basemapLayers]="basemapLayers"
-      [selectedId]="detailOpenId$ | async"
-      (featureSelect)="open($event)"
-    />
+  <section class="das-card reg-map">
+    <das-map [features]="mapFeatures()" [layers]="mapLayers" [tileLayers]="tileLayers" [tileFilters]="tileFilters()"
+      [basemapLayers]="basemapLayers" [fitBbox]="selectedBbox()" (featureSelect)="open($event)" />
   </section>
   <section class="das-card table-card">
     @if (selectedCount$ | async; as count) {
-      @if (count > 0) {
-        <div class="bulk">
-          <span class="bulk__count">{{ 'registry.selected' | transloco: { count } }}</span>
-          <button
-            type="button"
-            class="bulk__btn"
-            (click)="approveSelected()"
-            [disabled]="isMutating$ | async"
-          >
-            <i class="ti ti-circle-check" aria-hidden="true"></i
-            >{{ 'registry.approveSelected' | transloco }}
-          </button>
-          <button
-            type="button"
-            class="bulk__btn"
-            (click)="bulkPublish()"
-            [disabled]="isMutating$ | async"
-          >
-            <i class="ti ti-send" aria-hidden="true"></i
-            >{{ 'registry.publishSelected' | transloco }}
-          </button>
-          <button type="button" class="bulk__btn bulk__btn--ghost" (click)="clearSelection()">
-            {{ 'common.cancel' | transloco }}
-          </button>
-        </div>
-      }
+    @if (count > 0) {
+    <div class="bulk">
+      <span class="bulk__count">{{ 'registry.selected' | transloco: { count } }}</span>
+      <button type="button" class="bulk__btn" (click)="approveSelected()" [disabled]="isMutating$ | async">
+        <i class="ti ti-circle-check" aria-hidden="true"></i>{{ 'registry.approveSelected' | transloco }}
+      </button>
+      <button type="button" class="bulk__btn" (click)="bulkPublish()" [disabled]="isMutating$ | async">
+        <i class="ti ti-send" aria-hidden="true"></i>{{ 'registry.publishSelected' | transloco }}
+      </button>
+      <button type="button" class="bulk__btn bulk__btn--ghost" (click)="clearSelection()">
+        {{ 'common.cancel' | transloco }}
+      </button>
+    </div>
+    }
     }
 
     <div class="thead">
-      <span class="col-check"
-        ><input type="checkbox" [checked]="allOnPageSelected()" (change)="toggleAll()"
-      /></span>
+      <span class="col-check"><input type="checkbox" [checked]="allOnPageSelected()" (change)="toggleAll()" /></span>
       <span>{{ 'registry.colId' | transloco }}</span>
       <span>{{ 'registry.colPostcode' | transloco }}</span>
       <span>{{ 'registry.colStreet' | transloco }}</span>
@@ -133,77 +96,60 @@
     </div>
 
     @for (a of items(); track a.id) {
-      <div
-        class="trow"
-        [class.trow--active]="(detailOpenId$ | async) === a.id"
-        (click)="open(a.id)"
-      >
-        <span class="col-check"
-          ><input type="checkbox" [checked]="isSelected(a.id)" (click)="toggle(a.id, $event)"
-        /></span>
-        <span class="trow__id">{{ a.addressCode }}</span>
-        <span class="trow__pc">{{ a.postcode }}</span>
-        <span class="trow__street">{{ a.street }}</span>
-        <span>{{ a.quartier }}</span> <span>{{ typeLabelKey(a.propertyType) | transloco }}</span>
-        <span
-          ><span class="stage" [style.color]="stageColor(a.workflowStage)"
-            ><span class="stage__dot" [style.background]="stageColor(a.workflowStage)"></span
-            >{{ stageLabelKey(a.workflowStage) | transloco }}</span
-          ></span
-        >
-        <span class="trow__date">{{ a.lastUpdate | dasDate: 'long' }}</span>
-        <span class="trow__team">{{ a.assignedTeamName }}</span>
-      </div>
+    <div class="trow" [class.trow--active]="(detailOpenId$ | async) === a.id" (click)="open(a.id)">
+      <span class="col-check"><input type="checkbox" [checked]="isSelected(a.id)"
+          (click)="toggle(a.id, $event)" /></span>
+      <span class="trow__id">{{ a.addressCode }}</span>
+      <span class="trow__pc">{{ a.postcode }}</span>
+      <span class="trow__street">{{ a.street }}</span>
+      <span>{{ a.quartier }}</span> <span>{{ typeLabelKey(a.propertyType) | transloco }}</span>
+      <span><span class="stage" [style.color]="stageColor(a.workflowStage)"><span class="stage__dot"
+            [style.background]="stageColor(a.workflowStage)"></span>{{ stageLabelKey(a.workflowStage) | transloco
+          }}</span></span>
+      <span class="trow__date">{{ a.lastUpdate | dasDate: 'long' }}</span>
+      <span class="trow__team">{{ a.assignedTeamName }}</span>
+    </div>
     } @empty {
-      <div class="table-empty">
-        @if (isLoading$ | async) {
-          {{ 'common.loading' | transloco }}
-        } @else {
-          {{ 'registry.empty' | transloco }}
-        }
-      </div>
+    <div class="table-empty">
+      @if (isLoading$ | async) {
+      {{ 'common.loading' | transloco }}
+      } @else {
+      {{ 'registry.empty' | transloco }}
+      }
+    </div>
     }
 
     @if (pageInfo$ | async; as pi) {
-      <div class="pager">
-        <label class="pager__size">
-          {{ 'registry.rowsPerPage' | transloco }}
-          <select (change)="changePageSize($any($event.target).value)">
-            <option value="10">10</option>
-            <option value="25">25</option>
-            <option value="50">50</option>
-          </select>
-        </label>
-        <span class="pager__range">{{
-          'registry.pageRange' | transloco: { from: pi.from, to: pi.to, total: pi.total }
+    <div class="pager">
+      <label class="pager__size">
+        {{ 'registry.rowsPerPage' | transloco }}
+        <select (change)="changePageSize($any($event.target).value)">
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+        </select>
+      </label>
+      <span class="pager__range">{{
+        'registry.pageRange' | transloco: { from: pi.from, to: pi.to, total: pi.total }
         }}</span>
-        <div class="pager__nav">
-          <button type="button" (click)="goToPage(pi.page - 1)" [disabled]="pi.page <= 1">
-            <i class="ti ti-chevron-left" aria-hidden="true"></i>
-          </button>
-          @for (p of pagesAround(pi.page, pi.pageCount); track p) {
-            <button
-              type="button"
-              class="pager__page"
-              [class.pager__page--active]="p === pi.page"
-              (click)="goToPage(p)"
-            >
-              {{ p }}
-            </button>
-          }
-          <button
-            type="button"
-            (click)="goToPage(pi.page + 1)"
-            [disabled]="pi.page >= pi.pageCount"
-          >
-            <i class="ti ti-chevron-right" aria-hidden="true"></i>
-          </button>
-        </div>
+      <div class="pager__nav">
+        <button type="button" (click)="goToPage(pi.page - 1)" [disabled]="pi.page <= 1">
+          <i class="ti ti-chevron-left" aria-hidden="true"></i>
+        </button>
+        @for (p of pagesAround(pi.page, pi.pageCount); track p) {
+        <button type="button" class="pager__page" [class.pager__page--active]="p === pi.page" (click)="goToPage(p)">
+          {{ p }}
+        </button>
+        }
+        <button type="button" (click)="goToPage(pi.page + 1)" [disabled]="pi.page >= pi.pageCount">
+          <i class="ti ti-chevron-right" aria-hidden="true"></i>
+        </button>
       </div>
+    </div>
     }
   </section>
 </div>
 
 @if (detailOpenId$ | async) {
-  <das-address-detail-drawer />
+<das-address-detail-drawer />
 }

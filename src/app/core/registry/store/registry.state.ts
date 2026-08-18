@@ -20,7 +20,9 @@ export interface RegistryState {
   isMutating: boolean;
 }
 export const initialRegistryFilters: RegistryFilters = {
-  search: '', postcode: null, zone: null, region: null, status: null as AddressWorkflowStage | null, team: null,
+  search: '', postcode: null, zone: null, region: null,
+  status: null as AddressWorkflowStage | null, team: null,
+  cityId: null, communeId: null, zoneId: null, quartierId: null, blocId: null,
 };
 
 export const initialRegistryState: RegistryState = {

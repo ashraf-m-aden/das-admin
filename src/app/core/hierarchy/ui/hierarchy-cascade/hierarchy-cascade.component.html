@@ -26,4 +26,13 @@
     <option [value]="q.id" [selected]="q.id === selection().quartierId">{{ q.name }}</option>
     }
   </select>
+
+  @if (showBloc()) {
+  <select class="cascade__select" [disabled]="!selection().quartierId" (change)="onBloc($any($event.target).value)">
+    <option value="">{{ 'hierarchy.allBlocs' | transloco }}</option>
+    @for (b of blocs(); track b.id) {
+    <option [value]="b.id" [selected]="b.id === selection().blocId">{{ b.name }}</option>
+    }
+  </select>
+  }
 </div>

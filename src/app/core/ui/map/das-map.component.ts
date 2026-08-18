@@ -56,6 +56,8 @@ export class DasMapComponent implements OnInit, OnDestroy {
   readonly center = input<[number, number]>([43.145, 11.595]);
   readonly zoom = input<number>(12);
   readonly fitToData = input<boolean>(true);
+  /** Emprise [minLng, minLat, maxLng, maxLat] à recadrer (prioritaire sur fitToData). */
+  readonly fitBbox = input<[number, number, number, number] | null>(null);
   readonly selectedId = input<string | null>(null);
   readonly showLayerControl = input<boolean>(true);
 
@@ -119,6 +121,8 @@ export class DasMapComponent implements OnInit, OnDestroy {
     effect(() => { const s = this.tileFeatureStates(); if (this.loaded) this.applyTileFeatureStates(s); });
     // Application des filtres sur les couches tuiles
     effect(() => { const f = this.tileFilters(); if (this.loaded) this.applyTileFilters(f); });
+    // Recadrage sur emprise explicite (cascade hiérarchie)
+    effect(() => { const b = this.fitBbox(); if (this.loaded && b) this.applyFitBbox(b); });
   }
 
   ngOnInit(): void {
@@ -168,6 +172,8 @@ export class DasMapComponent implements OnInit, OnDestroy {
       this.applyHighlight(this.internalSelected());
       this.applyTileFilters(this.tileFilters());
       this.applyTileFeatureStates(this.tileFeatureStates());
+      const bbox = this.fitBbox();
+      if (bbox) this.applyFitBbox(bbox);
     });
   }
 
@@ -265,8 +271,9 @@ export class DasMapComponent implements OnInit, OnDestroy {
       src?.setData({ type: 'FeatureCollection', features: list });
     }
 
-    // Recadre uniquement si l'ENSEMBLE des id géométriques a changé.
-    if (this.fitToData() && withGeom.length > 0) {
+    // Recadre sur les données SEULEMENT si aucune emprise explicite (fitBbox) n'est fournie,
+    // et uniquement si l'ENSEMBLE des id géométriques a changé.
+    if (this.fitToData() && !this.fitBbox() && withGeom.length > 0) {
       const key = withGeom.map((f) => f.id).sort().join('|');
       if (key !== this.lastFitKey) {
         this.lastFitKey = key;
@@ -351,6 +358,15 @@ export class DasMapComponent implements OnInit, OnDestroy {
       .setLngLat(lngLat)
       .setText(label)
       .addTo(this.map!);
+  }
+
+  /** Recadre sur une emprise [minLng, minLat, maxLng, maxLat]. */
+  private applyFitBbox(bbox: [number, number, number, number]): void {
+    if (!this.map || !this.loaded) return;
+    this.map.fitBounds(
+      [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
+      { padding: 48, maxZoom: 16, duration: 400 },
+    );
   }
 
   private fitBounds(features: MapFeature[]): void {

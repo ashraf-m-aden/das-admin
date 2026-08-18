@@ -24,4 +24,8 @@ export class HierarchyApiService extends HierarchyApiPort {
   override quartiers(zoneId: UUID): Observable<HierarchyNode[]> {
     return this.http.get<HierarchyNode[]>(`${this.baseUrl}/quartiers`, { params: { zoneId } });
   }
+  override blocs(quartierId: UUID): Observable<HierarchyNode[]> {
+    // Projection HIÉRARCHIE (id/code/name/bbox) — distincte de la liste riche /blocs du module Blocs.
+    return this.http.get<HierarchyNode[]>(`${this.baseUrl}/blocs`, { params: { quartierId } });
+  }
 }

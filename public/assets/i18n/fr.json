@@ -596,11 +596,11 @@
   "map": {
     "layers": "Couches",
     "error": "Carte indisponible",
-     "basemap": {
-    "ilots": "Contours îlots",
-    "parcelles": "Contours parcelles",
-    "adresses": "Points adresses"
-  }
+    "basemap": {
+      "ilots": "Contours îlots",
+      "parcelles": "Contours parcelles",
+      "adresses": "Points adresses"
+    }
   },
   "reports": {
     "eyebrow": "Analyses et performance nationale de l'adressage",
@@ -676,6 +676,13 @@
     "empty": "Aucune entrée",
     "showing": "{{count}} sur {{total}}",
     "actionCol": "Action"
+  },
+  "hierarchy": {
+    "allCities": "Toutes les villes",
+    "allCommunes": "Toutes les communes",
+    "allZones": "Toutes les zones",
+    "allQuartiers": "Tous les quartiers",
+    "allBlocs": "Tous les blocs"
   },
   "profile": {
     "eyebrow": "Mon compte",

@@ -3,29 +3,45 @@ import { AsyncPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslocoModule } from '@jsverse/transloco';
+import type { ExpressionSpecification, FilterSpecification } from 'maplibre-gl';
 import { RegistryFacade } from '../../../core/registry/store/registry.facade';
 import { PageHeaderComponent } from '../../../core/layout/page-header/page-header.component';
 import { DasDatePipe } from '../../../core/i18n/das-locale.pipes';
 import { BasemapLayerGroup, DasMapComponent } from '../../../core/ui/map/das-map.component';
-import { MapFeature, MapLayerConfig } from '../../../core/ui/map/map.models';
+import { MapFeature, MapLayerConfig, TileFilter, TileLayerBinding } from '../../../core/ui/map/map.models';
 import { AddressDetailDrawerComponent } from '../address-detail-drawer/address-detail-drawer.component';
 import { AddressListItem, WORKFLOW_STAGES } from '../../../core/registry/models/registry.models';
+import { initialRegistryFilters } from '../../../core/registry/store/registry.state';
 import { AddressWorkflowStage } from '../../../core/models/das.models';
+import { HierarchySelection } from '../../../core/hierarchy/models/hierarchy.models';
+import { HierarchyFacade } from '../../../core/hierarchy/store/hierarchy.facade';
+import { HierarchyCascadeComponent } from '../../../core/hierarchy/ui/hierarchy-cascade/hierarchy-cascade.component';
+import { AppConfigService } from '../../../core/config/app-config.service';
 
 const STAGE_COLOR: Record<AddressWorkflowStage, string> = {
   registered: '#6b7280', surveyed: '#d97706', verified: '#16a34a', approved: '#0d9488', published: '#7c3aed',
 };
 
+const ADRESSES_TILE: TileLayerBinding = {
+  id: 'adresses', labelKey: 'registry.layerParcels', source: 'adresses', sourceLayer: 'adresses_tiles',
+  styleLayerIds: ['adresses-circle'], interactiveLayerId: 'adresses-circle', visible: true,
+};
+
 @Component({
   selector: 'das-registry-list',
   standalone: true,
-  imports: [AsyncPipe, ReactiveFormsModule, TranslocoModule, DasDatePipe, PageHeaderComponent, AddressDetailDrawerComponent, DasMapComponent],
+  imports: [
+    AsyncPipe, ReactiveFormsModule, TranslocoModule, DasDatePipe, PageHeaderComponent,
+    AddressDetailDrawerComponent, DasMapComponent, HierarchyCascadeComponent,
+  ],
   templateUrl: './registry-list.component.html',
   styleUrl: './registry-list.component.scss',
 })
 export class RegistryListComponent implements OnInit {
   private fb = inject(FormBuilder);
   private facade = inject(RegistryFacade);
+  private hierarchy = inject(HierarchyFacade);
+  private readonly isMock = inject(AppConfigService).get('useMockApi');
 
   protected readonly summary$ = this.facade.summary$;
   protected readonly items = toSignal(this.facade.items$, { initialValue: [] as AddressListItem[] });
@@ -37,29 +53,57 @@ export class RegistryListComponent implements OnInit {
   protected readonly detailOpenId$ = this.facade.detailOpenId$;
   protected readonly isMutating$ = this.facade.isMutating$;
 
+  private readonly filters = toSignal(this.facade.filters$, { initialValue: initialRegistryFilters });
+
+  /** Emprise du niveau hiérarchique sélectionné → recadrage carte. */
+  protected readonly selectedBbox = this.hierarchy.selectedBbox;
+
   protected readonly stages = WORKFLOW_STAGES;
 
   protected readonly mapFeatures = computed<MapFeature[]>(() =>
-    this.items()
-      .filter((a) => a.geom)
-      .map((a) => ({
-        id: a.id, layerId: 'parcels', geometry: a.geom,
-        color: STAGE_COLOR[a.workflowStage], label: a.addressCode,
-      })),
+    this.isMock
+      ? this.items()
+        .filter((a) => a.geom)
+        .map((a) => ({ id: a.id, layerId: 'parcels', geometry: a.geom!, color: STAGE_COLOR[a.workflowStage], label: a.addressCode }))
+      : [],
   );
-  protected readonly mapLayers: MapLayerConfig[] = [
-    { id: 'parcels', labelKey: 'registry.layerParcels', type: 'fill', visible: true },
+
+  protected readonly mapLayers: MapLayerConfig[] = this.isMock
+    ? [{ id: 'parcels', labelKey: 'registry.layerParcels', type: 'fill', visible: true }]
+    : [];
+
+  protected readonly tileLayers: TileLayerBinding[] = this.isMock ? [] : [ADRESSES_TILE];
+
+  protected readonly basemapLayers: BasemapLayerGroup[] = [
+    { id: 'blocs', labelKey: 'nav.blocks', styleLayerIds: ['blocs-fill', 'blocs-line'], visible: false },
   ];
 
-  /** Contours cadastraux du style de base (map-style.json), pilotables via le panneau des couches. */
-  protected readonly basemapLayers: BasemapLayerGroup[] = [
-    { id: 'ilots', labelKey: 'map.basemap.ilots', styleLayerIds: ['ilots-fill', 'ilots-line'], visible: true },
-    { id: 'parcelles', labelKey: 'map.basemap.parcelles', styleLayerIds: ['parcelles-fill', 'parcelles-line'], visible: false },
-  ];
+  /**
+   * Filtre tuile : niveau hiérarchique non-null le plus profond + étape + équipe.
+   * (search reste géré côté liste ; pas d'attribut tuile texte.)
+   */
+  protected readonly tileFilters = computed<Record<string, TileFilter>>(() => {
+    const f = this.filters();
+    const clauses: ExpressionSpecification[] = [];
+    if (f.blocId) clauses.push(['==', ['get', 'blocId'], f.blocId] as ExpressionSpecification);
+    else if (f.quartierId) clauses.push(['==', ['get', 'quartierId'], f.quartierId] as ExpressionSpecification);
+    else if (f.zoneId) clauses.push(['==', ['get', 'zoneId'], f.zoneId] as ExpressionSpecification);
+    else if (f.communeId) clauses.push(['==', ['get', 'communeId'], f.communeId] as ExpressionSpecification);
+    else if (f.cityId) clauses.push(['==', ['get', 'cityId'], f.cityId] as ExpressionSpecification);
+    if (f.status) clauses.push(['==', ['get', 'workflowStage'], f.status] as ExpressionSpecification);
+    if (f.team) clauses.push(['==', ['get', 'assignedTeamName'], f.team] as ExpressionSpecification);
+
+    const expr: TileFilter =
+      clauses.length === 0 ? null :
+        clauses.length === 1 ? (clauses[0] as FilterSpecification) :
+          (['all', ...clauses] as FilterSpecification);
+    return { adresses: expr };
+  });
 
   protected readonly filterForm = this.fb.group({
-    search: [''], postcode: [null as string | null], zone: [null as string | null], region: [null as string | null],
-    status: [null as AddressWorkflowStage | null], team: [null as string | null],
+    search: [''],
+    status: [null as AddressWorkflowStage | null],
+    team: [null as string | null],
   });
 
   protected readonly allOnPageSelected = computed(() => {
@@ -71,10 +115,12 @@ export class RegistryListComponent implements OnInit {
   ngOnInit(): void {
     this.facade.init();
     this.filterForm.valueChanges.subscribe((v) => this.facade.setFilters({
-      search: v.search ?? '', postcode: v.postcode ?? null, zone: v.zone ?? null, region: v.region ?? null,
-      status: v.status ?? null, team: v.team ?? null,
+      search: v.search ?? '', status: v.status ?? null, team: v.team ?? null,
     }));
   }
+
+  /** Sélection de la cascade → filtres du registre (carte + liste). */
+  onHierarchy(sel: HierarchySelection): void { this.facade.setFilters(sel); }
 
   isSelected(id: string): boolean { return this.selectedIds().includes(id); }
   toggle(id: string, ev: Event): void { ev.stopPropagation(); this.facade.toggleSelect(id); }
