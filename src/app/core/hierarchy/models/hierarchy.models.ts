@@ -11,6 +11,7 @@ export interface HierarchyNode {
   level: HierarchyLevel;
   code: string;
   name: string;
+  nom?: string;
   parentId: UUID | null;
   bbox?: Bbox4326;
 }

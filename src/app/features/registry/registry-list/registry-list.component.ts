@@ -85,19 +85,18 @@ export class RegistryListComponent implements OnInit {
   protected readonly tileFilters = computed<Record<string, TileFilter>>(() => {
     const f = this.filters();
     const clauses: ExpressionSpecification[] = [];
-    if (f.blocId) clauses.push(['==', ['get', 'blocId'], f.blocId] as ExpressionSpecification);
-    else if (f.quartierId) clauses.push(['==', ['get', 'quartierId'], f.quartierId] as ExpressionSpecification);
-    else if (f.zoneId) clauses.push(['==', ['get', 'zoneId'], f.zoneId] as ExpressionSpecification);
-    else if (f.communeId) clauses.push(['==', ['get', 'communeId'], f.communeId] as ExpressionSpecification);
-    else if (f.cityId) clauses.push(['==', ['get', 'cityId'], f.cityId] as ExpressionSpecification);
-    if (f.status) clauses.push(['==', ['get', 'workflowStage'], f.status] as ExpressionSpecification);
-    if (f.team) clauses.push(['==', ['get', 'assignedTeamName'], f.team] as ExpressionSpecification);
+    if (f.blocId) clauses.push(['==', ['get', 'Id'], f.blocId] as ExpressionSpecification);
+    else if (f.quartierId) clauses.push(['==', ['get', 'QuartierId'], f.quartierId] as ExpressionSpecification);
+    else if (f.zoneId) clauses.push(['==', ['get', 'ZoneId'], f.zoneId] as ExpressionSpecification);
+    else if (f.communeId) clauses.push(['==', ['get', 'CommuneId'], f.communeId] as ExpressionSpecification);
+    else if (f.cityId) clauses.push(['==', ['get', 'CityId'], f.cityId] as ExpressionSpecification);
+    if (f.status) clauses.push(['==', ['get', 'status'], f.status] as ExpressionSpecification);
 
     const expr: TileFilter =
       clauses.length === 0 ? null :
         clauses.length === 1 ? (clauses[0] as FilterSpecification) :
           (['all', ...clauses] as FilterSpecification);
-    return { adresses: expr };
+    return { blocs: expr };
   });
 
   protected readonly filterForm = this.fb.group({
