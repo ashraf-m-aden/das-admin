@@ -9,6 +9,7 @@ import { PageHeaderComponent } from '../../../core/layout/page-header/page-heade
 import { DasDatePipe } from '../../../core/i18n/das-locale.pipes';
 import { BasemapLayerGroup, DasMapComponent } from '../../../core/ui/map/das-map.component';
 import { MapFeature, MapLayerConfig, TileFilter, TileLayerBinding } from '../../../core/ui/map/map.models';
+import { MapLegendComponent, LegendEntry } from '../../../core/ui/map/map-legend/map-legend.component';
 import { AddressDetailDrawerComponent } from '../address-detail-drawer/address-detail-drawer.component';
 import { AddressListItem, WORKFLOW_STAGES } from '../../../core/registry/models/registry.models';
 import { initialRegistryFilters } from '../../../core/registry/store/registry.state';
@@ -32,7 +33,7 @@ const ADRESSES_TILE: TileLayerBinding = {
   standalone: true,
   imports: [
     AsyncPipe, ReactiveFormsModule, TranslocoModule, DasDatePipe, PageHeaderComponent,
-    AddressDetailDrawerComponent, DasMapComponent, HierarchyCascadeComponent,
+    AddressDetailDrawerComponent, DasMapComponent, HierarchyCascadeComponent, MapLegendComponent,
   ],
   templateUrl: './registry-list.component.html',
   styleUrl: './registry-list.component.scss',
@@ -60,6 +61,10 @@ export class RegistryListComponent implements OnInit {
 
   protected readonly stages = WORKFLOW_STAGES;
 
+  /** Entrées de légende (étape → couleur), dérivées de la palette unique STAGE_COLOR. */
+  protected readonly legendEntries: LegendEntry[] =
+    WORKFLOW_STAGES.map((stage) => ({ stage, color: STAGE_COLOR[stage] }));
+
   protected readonly mapFeatures = computed<MapFeature[]>(() =>
     this.isMock
       ? this.items()
@@ -79,24 +84,27 @@ export class RegistryListComponent implements OnInit {
   ];
 
   /**
-   * Filtre tuile : niveau hiérarchique non-null le plus profond + étape + équipe.
-   * (search reste géré côté liste ; pas d'attribut tuile texte.)
+   * Filtre tuile ADRESSES : niveau hiérarchique non-null le plus profond + étape.
+   * (search + équipe restent gérés côté liste ; pas d'attribut tuile correspondant.)
+   * Les blocs sont un FOND de contexte non filtré → on ne produit qu'une clé `adresses`.
+   * Attributs de la vue adresses_tiles en PascalCase (casse SQL exacte via Martin) ;
+   * `workflowStage` est aliasé (dérivé du dernier Survey).
    */
   protected readonly tileFilters = computed<Record<string, TileFilter>>(() => {
     const f = this.filters();
     const clauses: ExpressionSpecification[] = [];
-    if (f.blocId) clauses.push(['==', ['get', 'Id'], f.blocId] as ExpressionSpecification);
+    if (f.blocId) clauses.push(['==', ['get', 'BlocId'], f.blocId] as ExpressionSpecification);
     else if (f.quartierId) clauses.push(['==', ['get', 'QuartierId'], f.quartierId] as ExpressionSpecification);
     else if (f.zoneId) clauses.push(['==', ['get', 'ZoneId'], f.zoneId] as ExpressionSpecification);
     else if (f.communeId) clauses.push(['==', ['get', 'CommuneId'], f.communeId] as ExpressionSpecification);
     else if (f.cityId) clauses.push(['==', ['get', 'CityId'], f.cityId] as ExpressionSpecification);
-    if (f.status) clauses.push(['==', ['get', 'status'], f.status] as ExpressionSpecification);
+    if (f.status) clauses.push(['==', ['get', 'workflowStage'], f.status] as ExpressionSpecification);
 
     const expr: TileFilter =
       clauses.length === 0 ? null :
         clauses.length === 1 ? (clauses[0] as FilterSpecification) :
           (['all', ...clauses] as FilterSpecification);
-    return { blocs: expr };
+    return { adresses: expr };
   });
 
   protected readonly filterForm = this.fb.group({

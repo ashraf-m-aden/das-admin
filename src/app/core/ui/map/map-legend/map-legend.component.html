@@ -1,0 +1,11 @@
+<div class="legend" role="group" [attr.aria-label]="titleKey() | transloco">
+  <span class="legend__title">{{ titleKey() | transloco }}</span>
+  <ul class="legend__list">
+    @for (e of entries(); track e.stage) {
+    <li class="legend__item">
+      <span class="legend__swatch" [style.background]="e.color" aria-hidden="true"></span>
+      <span class="legend__label">{{ stageLabelKey(e.stage) | transloco }}</span>
+    </li>
+    }
+  </ul>
+</div>

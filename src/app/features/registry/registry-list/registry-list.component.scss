@@ -55,4 +55,4 @@
   &__nav { display: flex; gap: 2px; button { min-width: 28px; height: 28px; border: 1px solid var(--color-border); background: var(--color-surface); border-radius: v.$radius-sm; cursor: pointer; color: var(--color-text-secondary); &:disabled { opacity: 0.4; } } }
   &__page--active { background: var(--color-accent); color: var(--color-on-accent); border-color: var(--color-accent); }
 }
-.reg-map { padding: 0; overflow: hidden; height: 340px; }
+.reg-map { position: relative; padding: 0; overflow: hidden; height: 340px; }

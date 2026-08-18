@@ -13,10 +13,16 @@ import {
 export class RegistryApiService extends RegistryApiPort {
   private http = inject(HttpClient);
   private config = inject(AppConfigService);
-  private get baseUrl(): string { return `${this.config.get('apiBaseUrl')}/registry`; }
+
+  /**
+   * Ressource backend = /adresses (l'entité domaine réelle).
+   * Le préfixe /registry appartenait au vocabulaire de l'écran, pas à la ressource ;
+   * le nom interne « registry » (module, facade, composant) reste inchangé côté front.
+   */
+  private get baseUrl(): string { return `${this.config.get('apiBaseUrl')}/adresses`; }
 
   override summary(): Observable<RegistrySummary> { return this.http.get<RegistrySummary>(`${this.baseUrl}/summary`); }
-  override filterOptions(): Observable<RegistryFilterOptions> { return this.http.get<RegistryFilterOptions>(`${this.baseUrl}/filters`); }
+  override filterOptions(): Observable<RegistryFilterOptions> { return this.http.get<RegistryFilterOptions>(`${this.baseUrl}/filter-options`); }
   override list(query: RegistryQuery): Observable<RegistryPageResult> {
     return this.http.post<RegistryPageResult>(`${this.baseUrl}/search`, query);
   }

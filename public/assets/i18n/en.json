@@ -596,6 +596,8 @@
   "map": {
     "layers": "Layers",
     "error": "Map unavailable",
+
+      "legend": { "title": "Status" },
     "basemap": {
       "ilots": "Block outlines",
       "parcelles": "Parcel outlines",

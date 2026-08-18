@@ -596,6 +596,7 @@
   "map": {
     "layers": "Couches",
     "error": "Carte indisponible",
+    "legend": { "title": "Statut" },
     "basemap": {
       "ilots": "Contours îlots",
       "parcelles": "Contours parcelles",

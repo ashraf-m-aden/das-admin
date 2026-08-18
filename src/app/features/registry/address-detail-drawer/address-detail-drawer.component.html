@@ -25,7 +25,8 @@
             <div class="section__title">{{ 'registry.components' | transloco }}</div>
             <dl class="kv">
               <div><dt>{{ 'registry.colStreet' | transloco }}</dt><dd>{{ d.components.street }}</dd></div>
-<div><dt>{{ 'registry.colQuartier' | transloco }}</dt><dd>{{ d.components.quartier }}</dd></div>                     <div><dt>{{ 'registry.zone' | transloco }}</dt><dd>{{ d.components.zone }}</dd></div>
+              <div><dt>{{ 'registry.colQuartier' | transloco }}</dt><dd>{{ d.components.quartier }}</dd></div>
+              <div><dt>{{ 'registry.zone' | transloco }}</dt><dd>{{ d.components.zone }}</dd></div>
               <div><dt>{{ 'addressing.commune' | transloco }}</dt><dd>{{ d.components.commune }}</dd></div>
               <div><dt>{{ 'addressing.region' | transloco }}</dt><dd>{{ d.components.region }}</dd></div>
               <div><dt>{{ 'registry.colPostcode' | transloco }}</dt><dd>{{ d.components.postcode }}</dd></div>
@@ -43,7 +44,7 @@
             <div class="section__title">{{ 'registry.propertyInfo' | transloco }}</div>
             <dl class="kv">
               <div><dt>{{ 'registry.colType' | transloco }}</dt><dd>{{ typeLabelKey(d.propertyInfo.propertyType) | transloco }}</dd></div>
-              <div><dt>{{ 'registry.occupancy' | transloco }}</dt><dd>{{ occupancyLabelKey(d.propertyInfo.occupancyType) | transloco }}</dd></div>
+              <div><dt>{{ 'registry.occupancyCol' | transloco }}</dt><dd>{{ occupancyLabelKey(d.propertyInfo.occupancyType) | transloco }}</dd></div>
               @if (d.propertyInfo.buildingUse) { <div><dt>{{ 'registry.buildingUse' | transloco }}</dt><dd>{{ d.propertyInfo.buildingUse }}</dd></div> }
             </dl>
           </div>
