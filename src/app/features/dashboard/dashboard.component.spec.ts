@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideMockStore } from '@ngrx/store/testing';
+import { TranslocoTestingModule } from '@jsverse/transloco';
 
 import { DashboardComponent } from './dashboard.component';
 
@@ -8,7 +10,8 @@ describe('DashboardComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DashboardComponent],
+      imports: [DashboardComponent, TranslocoTestingModule.forRoot({ langs: { fr: {} }, translocoConfig: { availableLangs: ['fr'], defaultLang: 'fr' } })],
+      providers: [provideMockStore()],
     }).compileComponents();
 
     fixture = TestBed.createComponent(DashboardComponent);
