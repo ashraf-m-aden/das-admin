@@ -59,7 +59,7 @@ Ces règles priment sur les habitudes génériques.
 
 ## 4. Architecture front
 
-**Feature NgRx + facade** (module `adresse` = écran adresses, cf. §7) :
+**Feature NgRx + facade** (module `registry` = écran adresses, cf. §7) :
 `models/` · `services/` (`*-api.port.ts` abstrait + `*-api.service.ts` HTTP) ·
 `store/` (`*.actions.ts`, `*.reducer.ts` via `createFeature`, `*.effects.ts`, `*.selectors.ts`,
 `*.state.ts`, `*.facade.ts`).
@@ -80,13 +80,6 @@ Ces règles priment sur les habitudes génériques.
   simple vs double underscore dans `__TILES_BASE_URL__`). Vérifier les endpoints TileJSON en
   direct — les erreurs de casse échouent **silencieusement**.
 
-**Invariant liste ↔ carte (à ne jamais violer).** La liste (API) et la carte (tuiles) doivent
-montrer **le même sous-ensemble** pour une sélection hiérarchique donnée. Concrètement : les
-filtres `cityId/communeId/zoneId/quartierId/blocId` de la liste doivent être résolus côté back
-via **les mêmes FK aplaties que la vue `adresses_tiles`**. Un écart produit X points sur la carte
-et Y lignes dans la liste — divergence **indébogable** depuis le front. Si tu la constates, c'est
-un problème de contrat, pas d'affichage.
-
 **Cascade hiérarchique** : `HierarchyCascadeComponent` émet une `HierarchySelection`, découplée de
 toute facade. Elle pilote **en même temps** le `setFilter` des couches tuiles et les filtres du
 store. Elle s'adapte à la donnée creuse (une Zone vide masque son select au lieu de bloquer).
@@ -99,8 +92,6 @@ Hiérarchie : **City → [Commune] → [Zone] → Quartier → Bloc → Adresse.
 - **La commune est facultative** : seule Djibouti-ville est découpée en communes. `communeId: null`
   est un **état normal et définitif**, pas une donnée manquante. `cityId` est le rattachement
   structurant (obligatoire sur un quartier), pas déductible de la commune.
-- **Une ville sans commune n'a pas de zone**, donc certains quartiers n'ont **ni commune ni zone** :
-  `communeNom`/`zoneNom` nullables partout, à afficher comme une absence, **jamais** à combler.
 - `Street` est une **entité autonome**, pas un niveau. `Arrondissement` et `Lot` sont **supprimés**.
 - Une `Zone` raffine une commune (`zoneId` exige `communeId`).
 
@@ -109,11 +100,6 @@ Hiérarchie : **City → [Commune] → [Zone] → Quartier → Bloc → Adresse.
 Dérivation : `registered` = aucun relevé **ou dernier relevé rejeté** ; `surveyed` = dernier relevé
 Draft/Submitted ; `verified` = dernier relevé Validated ; `approved`/`published` = décision
 back-office. Un relevé **rejeté retombe sur `registered`**, pas `surveyed`.
-
-> **Dérivation unique, deux canaux.** Cette règle de dérivation doit être **identique côté tuile
-> (`adresses_tiles`) et côté API (`AdresseResponse`)**, idéalement factorisée côté back. Si les
-> deux divergent, une adresse peut apparaître verte sur la carte et « surveyed » dans la liste —
-> incohérence visible par l'utilisateur, insoluble côté front.
 
 **Codes** (à lire, jamais à recomposer côté front) : `postcode` (dérivé, nullable),
 `addressCode` (`Ville-Quartier-Bloc-Numéro`, numérique, **`null` tant que pas validé Definitive**),
@@ -140,63 +126,55 @@ back-office. Un relevé **rejeté retombe sur `registered`**, pas `surveyed`.
   seulement du rôle — ce n'est pas forcément un bug d'affichage.
 - **Rôles** : `Admin`, `Superviseur`, `AgentTerrain`, `Gestionnaire` (cumulables ; lire les claims
   multiples).
-- **Casse des valeurs de filtre à vérifier en direct.** La lecture de `workflowStage` est en
-  minuscules, mais la casse attendue par le **filtre `filters.status`** (dans `POST /search`)
-  n'est pas confirmée — la vérifier contre l'API réelle avant de câbler, un mismatch échoue en
-  `400` (cf. §7, piège C.3).
 
 ---
 
-## 7. Le module « adresses » (dossiers `adresse.*`)
+## 7. Le module « adresses » (dossiers `registry.*`)
 
-L'écran adresses portait historiquement le nom de code `registry` — dette **résorbée le
-2026-08-19** : module entier passé en `adresse` au singulier (fichiers, dossiers, `Registry*` →
-`Adresse*`, clés i18n `registry.*` → `adresse.*`, sélecteur `das-registry-list` →
-`das-adresse-list`, route `/registry` → `/adresse`), via un refactor mécanique scopé à `src/`
-uniquement (jamais la racine, qui porte aussi le mot « registry » pour Docker/Jenkins/CI).
+L'écran adresses vit historiquement sous le nom de code **`registry`** (`registry.models.ts`,
+`RegistryFacade`, `das-registry-list`, clés i18n `registry.*`).
 
-> ### Convention de graphie (coexistence assumée, durable)
-> Les **artefacts Angular** (composant, facade, feature, i18n, sélecteur) sont en
-> **`Adresse*` / `adresse.*`** (français, aligné sur la route). Les **types de modèle qui
-> calquent le payload** restent en **`Address*`** (anglais) — `AdresseListComponent` (écran) et
-> `AddressListItem` (modèle) **cohabitent par règle**, pas par accident : ne pas « corriger »
-> l'un sans l'autre au fil de l'eau. Un second passage `Address* → Adresse*` reste possible mais
-> **n'est pas planifié** — plus délicat (touche les DTO), à ne pas confondre avec le renommage
-> déjà fait.
+> ### ❗ Dette à résorber : renommer `registry → adresse`
+> Le nom de code `registry` **ne correspond plus au domaine** (« registry » était le vocabulaire
+> de l'écran, pas la ressource — l'entité réelle est `Adresse`, la route `/api/adresses`). Ce
+> décalage est une **dette à résorber** : à terme, tout le module doit passer en `adresse.*`.
+> - **Décision** : renommage du **module entier** (fichiers, dossiers, `Registry*` → `Adresse*`,
+>   clés i18n `registry.*` → `adresse.*`, sélecteur `das-registry-list` → `das-adresse-list`),
+>   en **`adresse` au singulier**.
+> - **Statut** : décidé, **en pause** — planifié comme un lot séparé, à ne pas mélanger avec du
+>   travail de logique (un renommage noyé dans une refonte fonctionnelle rend la revue infaisable).
+> - **Contrainte d'exécution** : refactor mécanique **scopé à `src/` uniquement**, via un script
+>   bash avec **dry-run** d'abord. **Jamais à la racine du repo** : on y réécrirait les références
+>   Docker/DockerHub/Jenkins/CI qui portent aussi le mot `registry`.
+> - **Ricochets à surveiller** : `nav.registry` → `nav.adresse`, un éventuel `path: 'registry'` de
+>   route (**l'URL passe de `/registry` à `/adresse`**), et les types `Address*` qui ne bougent
+>   PAS d'eux-mêmes (ne contiennent pas « registry ») — un second passage `Address* → Adresse*`
+>   est optionnel et plus délicat.
 
 Faits durables du contrat de cet écran (`/api/adresses`, guide §5) :
 
 - **Casse `workflowStage` (piège C.3)** : **lecture + filtre `status` + filtre tuile = minuscules**
   (`verified`) ; **écriture `PATCH /bulk` `stage` = PascalCase** et **uniquement `Approved` |
   `Published`**. `BulkUpdatePayload.stage` est typé `'Approved' | 'Published'`, pas
-  `AddressWorkflowStage`. (La casse exacte de `filters.status` reste à confirmer en direct, cf. §6.)
+  `AddressWorkflowStage`.
 - **7 routes → 5 vivantes.** `POST /approve` et `POST /{id}/flag` **ne sont pas implémentées** :
   approuver = `bulk { stage: 'Approved' }` ; signaler = `POST /api/surveys/{id}/reject` (écran de
   validation, plus tard). Les retirer des services/facade/actions/effects.
-- **Liste = `POST /api/adresses/search`** (corps `{ filters, page, pageSize }`) — **pas** un `GET`.
-  Le `list()` actuel (déjà POST) correspond au contrat : ne pas le migrer.
 - **Pas d'action de masse hors `approved`/`published`.** Les étapes `registered/surveyed/verified`
   se **déduisent d'un relevé** et ne sont pas inscriptibles ; la validation se traite **un élément
   à la fois avec photos** (via `/api/surveys`), pas en cases à cocher.
 - **`street` toujours `null`** → colonne retirée de la liste, ligne retirée du drawer, `kind`
-  `'street'` retiré de `linked`. **Ajuster la grille CSS** de `.thead/.trow` (`grid-template-columns`)
-  au nombre réel de colonnes — une colonne retirée sans ajuster la grille décale tout l'alignement.
+  `'street'` retiré de `linked`.
 - **`geom` toujours `null`** (la carte vient des tuiles).
 - **`propertyType`** = **libellé FR d'un catalogue** (« Villa », « Immeuble mixte »…), pas un enum
-  fermé. Affiché **brut** en attendant une clé stable back (décision C.4) ; pas de `adresse.type.*`.
+  fermé. Affiché **brut** en attendant une clé stable back (décision C.4) ; pas de `registry.type.*`.
 - **`validation.score`** = **nombre de relevés** de l'agent (pas une note /100) ; `percentage`
-  **peut dépasser 100**. Bloc **masqué** dans le drawer (décision C.2) — et surtout **retirer le
-  rendu `[style.width.%]="d.validation.score"`**, qui traitait `score` comme un pourcentage.
-- **KPIs** : les **4 d'origine sont conservés** (`totalRecords`, `pendingReview`,
-  `duplicatesFlagged`, `publishedToday`). `publishedToday` est **réel** (journée UTC+3, cycle de
-  publication livré) — **ne pas** le renommer en `verified`. Seul **le libellé** de
-  `duplicatesFlagged` change → **« À revoir »** (il compte des **relevés rejetés**, pas des doublons).
+  **peut dépasser 100**. Bloc **masqué** dans le drawer (décision C.2).
+- **`duplicatesFlagged`** compte des **relevés rejetés**, pas des doublons → UI **« À revoir »**.
 - **`history` toujours `[]`** (aucun journal d'audit) → pas d'onglet, **pas de clés `history.*`**.
-- **`assignedTeamName`** = nom d'un **agent** (pas d'équipe), **lecture seule**. **Colonne et filtre
-  `team` conservés** (le back fournit `filter-options.teams`) ; **seul le bulk équipe disparaît**
-  (`changeTeam`). Réaffecter passe par le bloc-en-campagne, jamais par l'adresse.
+- **`assignedTeamName`** = nom d'un **agent** (pas d'équipe), **lecture seule** (décision C.1).
+  Réaffecter passe par le bloc-en-campagne, jamais par l'adresse.
 - Champs `components` : le back envoie **`quartierNom`** (pas `quartier`). `region` = nom de la ville.
-- **`location.parcelNumber` = le `numero` de l'adresse** (même donnée, pas un champ séparé).
 
 ---
 
@@ -218,10 +196,6 @@ Faits durables du contrat de cet écran (`/api/adresses`, guide §5) :
 - ❌ Recomposer `postcode`/`addressCode`/`libelle` côté front — les **lire**.
 - ❌ Mettre la coloration de base en `feature-state`. ❌ Confondre tuiles Martin et GeoJSON API.
 - ❌ Envoyer `stage` en minuscules à `/bulk`, ou une valeur autre que `Approved`/`Published`.
-- ❌ Traiter `validation.score` comme un pourcentage (c'est un décompte de relevés).
-- ❌ Migrer `list()` en `GET` — le contrat est `POST /search`.
 - ❌ Rajouter des clés i18n dans une seule langue.
-- ❌ Faire un refactor mécanique de nommage sur la racine du repo (Docker/Jenkins/CI y portent
-  aussi des mots du domaine, ex. `registry`) — scoper `src/` uniquement, comme pour le
-  renommage `registry → adresse` déjà fait.
+- ❌ Lancer le renommage `registry → adresse` à la racine du repo.
 - ❌ Ajouter de l'import de données géo côté front.
