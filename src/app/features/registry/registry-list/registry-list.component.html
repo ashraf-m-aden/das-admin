@@ -88,7 +88,6 @@
       <span class="col-check"><input type="checkbox" [checked]="allOnPageSelected()" (change)="toggleAll()" /></span>
       <span>{{ 'registry.colId' | transloco }}</span>
       <span>{{ 'registry.colPostcode' | transloco }}</span>
-      <span>{{ 'registry.colStreet' | transloco }}</span>
       <span>{{ 'registry.colQuartier' | transloco }}</span>
       <span>{{ 'registry.colType' | transloco }}</span>
       <span>{{ 'registry.colStatus' | transloco }}</span>
@@ -102,8 +101,7 @@
           (click)="toggle(a.id, $event)" /></span>
       <span class="trow__id">{{ a.addressCode }}</span>
       <span class="trow__pc">{{ a.postcode }}</span>
-      <span class="trow__street">{{ a.street }}</span>
-      <span>{{ a.quartier }}</span> <span>{{ typeLabelKey(a.propertyType) | transloco }}</span>
+      <span>{{ a.quartier }}</span> <span>{{ a.propertyType }}</span>
       <span><span class="stage" [style.color]="stageColor(a.workflowStage)"><span class="stage__dot"
             [style.background]="stageColor(a.workflowStage)"></span>{{ stageLabelKey(a.workflowStage) | transloco
           }}</span></span>

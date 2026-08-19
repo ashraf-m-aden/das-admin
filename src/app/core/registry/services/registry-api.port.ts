@@ -10,7 +10,5 @@ export abstract class RegistryApiPort {
   abstract filterOptions(): Observable<RegistryFilterOptions>;
   abstract list(query: RegistryQuery): Observable<RegistryPageResult>;
   abstract getDetail(id: UUID): Observable<AddressDetail>;
-  abstract approve(ids: UUID[]): Observable<void>;
   abstract bulkUpdate(payload: BulkUpdatePayload): Observable<void>;
-  abstract flagForReview(id: UUID): Observable<void>;
 }

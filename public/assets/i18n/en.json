@@ -369,7 +369,7 @@
     "kpi": {
       "total": "Records",
       "pending": "Pending review",
-      "duplicates": "Duplicates flagged",
+      "duplicates": "To review",
       "published": "Published today"
     },
     "searchPlaceholder": "Address, street, landmark…",
@@ -382,7 +382,6 @@
     "publishSelected": "Publish",
     "colId": "Address ID",
     "colPostcode": "Postcode",
-    "colStreet": "Street",
     "colType": "Type",
     "colStatus": "Status",
     "colUpdated": "Last update",
@@ -391,7 +390,6 @@
     "rowsPerPage": "Rows per page",
     "pageRange": "{{from}}–{{to}} of {{total}}",
     "tabDetails": "Details",
-    "tabHistory": "History",
     "tabLinked": "Linked Records",
     "components": "Address components",
     "location": "Location",
@@ -400,27 +398,13 @@
     "parcelNumber": "Parcel number",
     "propertyInfo": "Property",
     "buildingUse": "Building use",
-    "validation": "Validation",
     "viewOnMap": "View on map",
     "editAddress": "Edit",
-    "flagForReview": "Flag for review",
-    "type": {
-      "residential": "Residential",
-      "commercial": "Commercial",
-      "industrial": "Industrial",
-      "institutional": "Institutional",
-      "vacant": "Vacant"
-    },
     "occupancy.occupied": "Occupied",
     "occupancy.vacant": "Vacant",
     "occupancy.under_construction": "Under construction",
     "occupancy.unknown": "Unknown",
-    "history": {
-      "created": "Address created",
-      "verified": "Verified on-site"
-    },
     "linked": {
-      "street": "Street",
       "postcode": "Postcode",
       "block": "Block",
       "team": "Team"

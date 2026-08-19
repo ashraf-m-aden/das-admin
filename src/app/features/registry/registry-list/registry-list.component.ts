@@ -135,8 +135,7 @@ export class RegistryListComponent implements OnInit {
 
   open(id: string): void { this.facade.openDetail(id); }
   approveSelected(): void { this.facade.approveSelected(); }
-  changeTeam(team: string): void { if (team) this.facade.changeTeam(team); }
-  bulkPublish(): void { this.facade.bulkUpdate({ ids: this.selectedIds(), stage: 'published' }); }
+  bulkPublish(): void { this.facade.bulkUpdate({ ids: this.selectedIds(), stage: 'Published' }); }
   clearSelection(): void { this.facade.clearSelection(); }
 
   goToPage(page: number): void { this.facade.setPage(page); }
@@ -152,5 +151,4 @@ export class RegistryListComponent implements OnInit {
 
   stageColor(stage: AddressWorkflowStage): string { return STAGE_COLOR[stage]; }
   stageLabelKey(stage: AddressWorkflowStage): string { return `status.stage.${stage}`; }
-  typeLabelKey(type: string): string { return `registry.type.${type}`; }
 }

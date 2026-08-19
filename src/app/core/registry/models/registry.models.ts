@@ -1,21 +1,21 @@
 import {
-  UUID, ISODateTime, AddressWorkflowStage, PropertyType, OccupancyType, GeoJSONMultiPolygon,
+  UUID, ISODateTime, AddressWorkflowStage, OccupancyType, GeoJSONMultiPolygon,
 } from '../../models/das.models';
 
 /**
  * Ligne du registre des adresses.
  * Rappel domaine : `postcode` appartient au QUARTIER de l'adresse ; `zone`
- * est la zone (postale) qui regroupe des quartiers. `geom` = emprise de la
- * parcelle (l'adresse), servie pour l'overlay carte.
+ * est la zone (postale) qui regroupe des quartiers.
+ * `geom` est toujours `null` côté API réelle (la carte vient des tuiles Martin) ;
+ * seul le mock le peuple pour simuler un overlay carte hors `useMockApi()`.
  */
 export interface AddressListItem {
   id: UUID;
   addressCode: string;
   postcode: string | null;   // code postal du quartier de l'adresse
   zone: string | null;       // zone (regroupe des quartiers)
-  street: string;
   quartier: string;
-  propertyType: PropertyType;
+  propertyType: string;      // libellé FR d'un catalogue back, pas un enum fermé — à afficher brut
   workflowStage: AddressWorkflowStage;
   lastUpdate: ISODateTime;
   assignedTeamName: string | null;
@@ -24,29 +24,30 @@ export interface AddressListItem {
 
 /** Composantes hiérarchiques d'une adresse (fiche détail). */
 export interface AddressComponents {
-  street: string;
-  quartier: string;      // quartier
+  quartierNom: string;   // le back envoie `quartierNom` (pas `quartier`)
   zone: string;          // zone (regroupe des quartiers)
   commune: string;
   region: string;
   postcode: string | null;
 }
 
-export interface AddressLocation { latitude: number; longitude: number; parcelNumber: string; }
-export interface AddressPropertyInfo { propertyType: PropertyType; occupancyType: OccupancyType; buildingUse: string | null; }
+export interface AddressLocation {
+  latitude: number;
+  longitude: number;
+  parcelNumber: string;  // = le `numero` de l'adresse (même donnée, pas un champ séparé)
+}
+export interface AddressPropertyInfo { propertyType: string; occupancyType: OccupancyType; buildingUse: string | null; }
 export interface AddressValidation { score: number; notes: string | null; }
-export interface AddressHistoryEntry { id: UUID; actionKey: string; actor: string; at: ISODateTime; }
 
-export type LinkedRecordKind = 'street' | 'postcode' | 'block' | 'team';
+export type LinkedRecordKind = 'postcode' | 'block' | 'team';
 export interface LinkedRecord { id: UUID; kind: LinkedRecordKind; label: string; }
 
-/** Adresse enrichie pour le tiroir de détail (details / history / linked). */
+/** Adresse enrichie pour le tiroir de détail (details / linked). Pas d'onglet historique : `history` toujours vide côté back. */
 export interface AddressDetail extends AddressListItem {
   components: AddressComponents;
   location: AddressLocation;
   propertyInfo: AddressPropertyInfo;
   validation: AddressValidation;
-  history: AddressHistoryEntry[];
   linked: LinkedRecord[];
 }
 
@@ -93,10 +94,10 @@ export interface RegistryQuery {
   pageSize: number;
 }
 
+/** `PATCH /bulk` : casse PascalCase obligatoire, uniquement Approved | Published (pas de changement d'équipe en masse). */
 export interface BulkUpdatePayload {
   ids: UUID[];
-  team?: string | null;
-  stage?: AddressWorkflowStage;
+  stage: 'Approved' | 'Published';
 }
 
 export const WORKFLOW_STAGES: AddressWorkflowStage[] = ['registered', 'surveyed', 'verified', 'approved', 'published'];

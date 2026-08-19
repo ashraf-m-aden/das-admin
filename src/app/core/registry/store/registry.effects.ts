@@ -58,16 +58,7 @@ export class RegistryEffects {
   approveSelected$ = createEffect(() => this.actions$.pipe(
     ofType(RegistryActions.approveSelected),
     concatLatestFrom(() => this.store.select(registryFeature.selectSelectedIds)),
-    switchMap(([, ids]) => this.api.approve(ids).pipe(
-      map(() => RegistryActions.mutationSuccess()),
-      catchError(() => of(RegistryActions.mutationFailure({ errorMessageKey: 'common.error' }))),
-    )),
-  ));
-
-  changeTeam$ = createEffect(() => this.actions$.pipe(
-    ofType(RegistryActions.changeTeam),
-    concatLatestFrom(() => this.store.select(registryFeature.selectSelectedIds)),
-    switchMap(([{ team }, ids]) => this.api.bulkUpdate({ ids, team }).pipe(
+    switchMap(([, ids]) => this.api.bulkUpdate({ ids, stage: 'Approved' }).pipe(
       map(() => RegistryActions.mutationSuccess()),
       catchError(() => of(RegistryActions.mutationFailure({ errorMessageKey: 'common.error' }))),
     )),
@@ -76,14 +67,6 @@ export class RegistryEffects {
   bulkUpdate$ = createEffect(() => this.actions$.pipe(
     ofType(RegistryActions.bulkUpdate),
     switchMap(({ payload }) => this.api.bulkUpdate(payload).pipe(
-      map(() => RegistryActions.mutationSuccess()),
-      catchError(() => of(RegistryActions.mutationFailure({ errorMessageKey: 'common.error' }))),
-    )),
-  ));
-
-  flagForReview$ = createEffect(() => this.actions$.pipe(
-    ofType(RegistryActions.flagForReview),
-    switchMap(({ id }) => this.api.flagForReview(id).pipe(
       map(() => RegistryActions.mutationSuccess()),
       catchError(() => of(RegistryActions.mutationFailure({ errorMessageKey: 'common.error' }))),
     )),

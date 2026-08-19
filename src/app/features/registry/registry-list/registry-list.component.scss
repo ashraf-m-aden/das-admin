@@ -1,5 +1,4 @@
 @use "styles/variables" as v;
-@use "styles/mixins" as m;
 
 .reg-actions { display: flex; gap: v.$space-2; }
 .rbtn {
@@ -32,14 +31,13 @@
     &--ghost { border: none; background: transparent; } }
 }
 
-.thead, .trow { display: grid; grid-template-columns: 40px 1.2fr 0.8fr 1.6fr 1fr 1fr 1.2fr 1.3fr 1fr; gap: v.$space-2; align-items: center; padding: v.$space-2 v.$space-4; }
+.thead, .trow { display: grid; grid-template-columns: 40px 1.2fr 0.8fr 1fr 1fr 1.2fr 1.3fr 1fr; gap: v.$space-2; align-items: center; padding: v.$space-2 v.$space-4; }
 .thead { font-size: v.$font-size-xs; color: var(--color-text-muted); border-bottom: 1px solid var(--color-border); }
 .trow { border-bottom: 1px solid var(--color-surface-sunken); cursor: pointer; font-size: v.$font-size-sm; color: var(--color-text-secondary);
   &:hover { background: var(--color-surface-alt); }
   &--active { background: var(--color-info-bg); box-shadow: inset 2px 0 0 var(--color-accent); }
   &__id { font-family: v.$font-family-mono; color: var(--color-accent); }
   &__pc { font-family: v.$font-family-mono; }
-  &__street { color: var(--color-text-primary); @include m.truncate; }
   &__date, &__team { font-size: v.$font-size-xs; color: var(--color-text-muted); }
 }
 .col-check { display: flex; input { accent-color: var(--color-accent); } }

@@ -41,7 +41,5 @@ export class RegistryFacade {
   closeDetail(): void { this.store.dispatch(RegistryActions.closeDetail()); }
 
   approveSelected(): void { this.store.dispatch(RegistryActions.approveSelected()); }
-  changeTeam(team: string): void { this.store.dispatch(RegistryActions.changeTeam({ team })); }
   bulkUpdate(payload: BulkUpdatePayload): void { this.store.dispatch(RegistryActions.bulkUpdate({ payload })); }
-  flagForReview(id: UUID): void { this.store.dispatch(RegistryActions.flagForReview({ id })); }
 }

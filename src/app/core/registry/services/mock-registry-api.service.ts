@@ -2,13 +2,12 @@ import { Injectable } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { RegistryApiPort } from './registry-api.port';
-import { AddressWorkflowStage, PropertyType, UUID } from '../../models/das.models';
+import { AddressWorkflowStage, UUID } from '../../models/das.models';
 import {
   AddressDetail, AddressListItem, BulkUpdatePayload,
   RegistryFilterOptions, RegistryPageResult, RegistryQuery, RegistrySummary,
 } from '../models/registry.models';
 
-const STREETS = ['Rue de Rome', 'Avenue 13 Juin', 'Rue d\'Angleterre', 'Boulevard Hassan Gouled', 'Rue d\'Éthiopie', 'Rue de Genève'];
 const QUARTIERS = ['Balbala', 'Héron', 'Centre-ville', 'Le Plateau', 'Arhiba'];
 const POSTCODE_BY_QUARTIER: Record<string, string> = {
   'Balbala': 'PC 1001', 'Héron': 'PC 1002', 'Centre-ville': 'PC 1003', 'Le Plateau': 'PC 1004', 'Arhiba': 'PC 1005',
@@ -18,7 +17,8 @@ const ZONE_BY_QUARTIER: Record<string, string> = {
 };
 const REGIONS = ['Djibouti', 'Arta', 'Dikhil', 'Tadjourah', 'Obock'];
 const TEAMS = ['Team North', 'Team Central', 'Team South'];
-const TYPES: PropertyType[] = ['residential', 'commercial', 'industrial', 'institutional', 'vacant'];
+// Libellés FR bruts d'un catalogue back — pas un enum fermé (cf. §7 CLAUDE.md).
+const TYPES = ['Villa', 'Immeuble mixte', 'Appartement', 'Local commercial', 'Entrepôt', 'Terrain vacant'];
 const STAGES: AddressWorkflowStage[] = ['registered', 'surveyed', 'verified', 'approved', 'published'];
 import { GeoJSONMultiPolygon } from '../../models/das.models';
 
@@ -47,7 +47,6 @@ export class MockRegistryApiService extends RegistryApiPort {
       quartier,
       postcode: POSTCODE_BY_QUARTIER[quartier],
       zone: ZONE_BY_QUARTIER[quartier],
-      street: `${8 + (i % 60)} ${STREETS[i % STREETS.length]}`,
       propertyType: TYPES[i % TYPES.length],
       workflowStage: STAGES[i % STAGES.length],
       lastUpdate: new Date(2026, 6, 1 + (i % 28), 9, (i * 7) % 60).toISOString(),
@@ -80,7 +79,7 @@ export class MockRegistryApiService extends RegistryApiPort {
     const { filters, page, pageSize } = query;
     const search = filters.search.trim().toLowerCase();
     const filtered = this.records.filter((r) => {
-      if (search && !r.street.toLowerCase().includes(search) && !r.addressCode.toLowerCase().includes(search)) return false;
+      if (search && !r.quartier.toLowerCase().includes(search) && !r.addressCode.toLowerCase().includes(search)) return false;
       if (filters.postcode && r.postcode !== filters.postcode) return false;
       if (filters.zone && r.zone !== filters.zone) return false;
       if (filters.status && r.workflowStage !== filters.status) return false;
@@ -103,48 +102,26 @@ export class MockRegistryApiService extends RegistryApiPort {
     const detail: AddressDetail = {
       ...base,
       components: {
-        street: base.street, quartier: base.quartier,
+        quartierNom: base.quartier,
         zone: base.zone ?? '—',
         commune: 'Boulaos',
         region: 'Djibouti',
         postcode: base.postcode,
       },
       location: { latitude: 11.6004 + Math.random() * 0.01, longitude: 43.1456 + Math.random() * 0.01, parcelNumber: `PAR-${base.postcode?.replace(/\D/g, '')}-${base.id.slice(-4)}` },
-      propertyInfo: { propertyType: base.propertyType, occupancyType: 'occupied', buildingUse: base.propertyType === 'residential' ? 'Single Family' : null },
+      propertyInfo: { propertyType: base.propertyType, occupancyType: 'occupied', buildingUse: base.propertyType === 'Villa' ? 'Single Family' : null },
       validation: { score: 82 + (base.id.charCodeAt(base.id.length - 1) % 18), notes: 'Adresse vérifiée sur site. Numéro de bâtiment visible.' },
-      history: [
-        { id: `${id}-h1`, actionKey: 'registry.history.created', actor: 'Team North', at: base.lastUpdate },
-        { id: `${id}-h2`, actionKey: 'registry.history.verified', actor: 'Fatouma A.', at: base.lastUpdate },
-      ],
       linked: [
-        { id: `${id}-l1`, kind: 'street', label: base.street },
-        { id: `${id}-l2`, kind: 'postcode', label: base.postcode ?? '—' },
-        { id: `${id}-l3`, kind: 'team', label: base.assignedTeamName ?? '—' },
+        { id: `${id}-l1`, kind: 'postcode', label: base.postcode ?? '—' },
+        { id: `${id}-l2`, kind: 'team', label: base.assignedTeamName ?? '—' },
       ],
     };
     return of(detail).pipe(delay(MockRegistryApiService.LATENCY));
   }
 
-  override approve(ids: UUID[]): Observable<void> {
-    this.records = this.records.map((r) => (ids.includes(r.id) ? { ...r, workflowStage: 'approved', lastUpdate: new Date().toISOString() } : r));
-    return of(void 0).pipe(delay(300));
-  }
-
   override bulkUpdate(payload: BulkUpdatePayload): Observable<void> {
-    this.records = this.records.map((r) => {
-      if (!payload.ids.includes(r.id)) return r;
-      return {
-        ...r,
-        assignedTeamName: payload.team !== undefined ? payload.team : r.assignedTeamName,
-        workflowStage: payload.stage ?? r.workflowStage,
-        lastUpdate: new Date().toISOString(),
-      };
-    });
-    return of(void 0).pipe(delay(300));
-  }
-
-  override flagForReview(id: UUID): Observable<void> {
-    this.records = this.records.map((r) => (r.id === id ? { ...r, workflowStage: 'surveyed', lastUpdate: new Date().toISOString() } : r));
+    const stage: AddressWorkflowStage = payload.stage === 'Approved' ? 'approved' : 'published';
+    this.records = this.records.map((r) => (payload.ids.includes(r.id) ? { ...r, workflowStage: stage, lastUpdate: new Date().toISOString() } : r));
     return of(void 0).pipe(delay(300));
   }
 }

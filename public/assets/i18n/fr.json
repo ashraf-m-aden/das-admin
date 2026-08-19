@@ -369,7 +369,7 @@
     "kpi": {
       "total": "Enregistrements",
       "pending": "En attente de revue",
-      "duplicates": "Doublons signalés",
+      "duplicates": "À revoir",
       "published": "Publiés aujourd'hui"
     },
     "searchPlaceholder": "Adresse, rue, repère…",
@@ -382,7 +382,6 @@
     "publishSelected": "Publier",
     "colId": "ID adresse",
     "colPostcode": "Code postal",
-    "colStreet": "Rue",
     "colType": "Type",
     "colStatus": "Statut",
     "colUpdated": "Mise à jour",
@@ -391,7 +390,6 @@
     "rowsPerPage": "Lignes par page",
     "pageRange": "{{from}}–{{to}} sur {{total}}",
     "tabDetails": "Détails",
-    "tabHistory": "Historique",
     "tabLinked": "Liens",
     "components": "Composants de l'adresse",
     "location": "Localisation",
@@ -400,27 +398,13 @@
     "parcelNumber": "N° de parcelle",
     "propertyInfo": "Propriété",
     "buildingUse": "Usage du bâtiment",
-    "validation": "Validation",
     "viewOnMap": "Voir sur la carte",
     "editAddress": "Modifier",
-    "flagForReview": "Signaler pour revue",
-    "type": {
-      "residential": "Résidentiel",
-      "commercial": "Commercial",
-      "industrial": "Industriel",
-      "institutional": "Institutionnel",
-      "vacant": "Vacant"
-    },
     "occupancy.occupied": "Occupé",
     "occupancy.vacant": "Vacant",
     "occupancy.under_construction": "En construction",
     "occupancy.unknown": "Inconnu",
-    "history": {
-      "created": "Adresse créée",
-      "verified": "Vérifiée sur site"
-    },
     "linked": {
-      "street": "Rue",
       "postcode": "Code postal",
       "block": "Bloc",
       "team": "Équipe"

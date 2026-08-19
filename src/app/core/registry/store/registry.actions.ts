@@ -32,9 +32,7 @@ export const RegistryActions = createActionGroup({
     'Close Detail': emptyProps(),
 
     'Approve Selected': emptyProps(),
-    'Change Team': props<{ team: string }>(),
     'Bulk Update': props<{ payload: BulkUpdatePayload }>(),
-    'Flag For Review': props<{ id: UUID }>(),
     'Mutation Success': emptyProps(),
     'Mutation Failure': props<{ errorMessageKey: string }>(),
   },

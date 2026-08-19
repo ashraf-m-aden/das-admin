@@ -38,7 +38,7 @@ export const registryFeature = createFeature({
     on(RegistryActions.loadDetailFailure, (s) => ({ ...s, detailStatus: 'error' as const })),
     on(RegistryActions.closeDetail, (s) => ({ ...s, detailOpenId: null, detail: null, detailStatus: 'idle' as const })),
 
-    on(RegistryActions.approveSelected, RegistryActions.changeTeam, RegistryActions.bulkUpdate, RegistryActions.flagForReview,
+    on(RegistryActions.approveSelected, RegistryActions.bulkUpdate,
       (s) => ({ ...s, isMutating: true })),
     on(RegistryActions.mutationSuccess, (s) => ({ ...s, isMutating: false, selectedIds: [] })),
     on(RegistryActions.mutationFailure, (s) => ({ ...s, isMutating: false })),

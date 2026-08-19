@@ -27,7 +27,5 @@ export class RegistryApiService extends RegistryApiPort {
     return this.http.post<RegistryPageResult>(`${this.baseUrl}/search`, query);
   }
   override getDetail(id: UUID): Observable<AddressDetail> { return this.http.get<AddressDetail>(`${this.baseUrl}/${id}`); }
-  override approve(ids: UUID[]): Observable<void> { return this.http.post<void>(`${this.baseUrl}/approve`, { ids }); }
   override bulkUpdate(payload: BulkUpdatePayload): Observable<void> { return this.http.patch<void>(`${this.baseUrl}/bulk`, payload); }
-  override flagForReview(id: UUID): Observable<void> { return this.http.post<void>(`${this.baseUrl}/${id}/flag`, {}); }
 }
