@@ -15,6 +15,8 @@ services:
       - martin
     restart: unless-stopped
     networks: [das-net]
+    platform: linux/amd64
+
 
   martin:
     image: ghcr.io/maplibre/martin:latest
