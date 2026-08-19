@@ -21,6 +21,11 @@
   display: flex; flex-wrap: wrap; gap: v.$space-2 v.$space-3; max-width: 320px;
   padding: v.$space-2 v.$space-3; background: rgb(255 255 255 / 94%);
   border: 1px solid var(--color-border); border-radius: v.$radius-md; backdrop-filter: blur(6px);
-  &__item { display: inline-flex; align-items: center; gap: v.$space-1; font-size: v.$font-size-xs; color: var(--color-text-secondary); }
+  &__item { display: inline-flex; align-items: center; gap: v.$space-1; font-size: v.$font-size-xs; color: var(--color-text-secondary);
+    &--btn { border: none; background: transparent; padding: 2px 6px; border-radius: v.$radius-sm; cursor: pointer; font: inherit;
+      &:hover { background: var(--color-surface-alt); }
+    }
+    &--on { background: var(--color-surface-alt); color: var(--color-text-primary); font-weight: v.$font-weight-medium; }
+  }
   &__dot { width: 8px; height: 8px; border-radius: 2px; }
 }

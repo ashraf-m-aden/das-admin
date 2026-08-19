@@ -30,47 +30,19 @@
   }
 }
 
-.blocks-new {
-  display: inline-flex;
-  align-items: center;
-  gap: v.$space-1;
-  height: 32px;
-  padding: 0 v.$space-3;
-  background: var(--color-accent);
-  color: var(--color-on-accent);
-  border: none;
-  border-radius: v.$radius-sm;
-  font-size: v.$font-size-sm;
-  font-weight: v.$font-weight-medium;
-  cursor: pointer;
-}
-
 .blocks {
   padding: v.$space-4 v.$space-5;
   display: flex;
   flex-direction: column;
   gap: v.$space-3;
 
-  &__filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: v.$space-2;
+  &__filters-card {
+    padding: v.$space-3 v.$space-4;
   }
 
-  &__row {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: v.$space-3;
-
-    @include m.respond-above(lg) {
-      grid-template-columns: 1.55fr 1fr;
-    }
-  }
-
-  &__side {
-    display: flex;
-    flex-direction: column;
-    gap: v.$space-3;
+  &__summary {
+    font-size: v.$font-size-sm;
+    color: var(--color-text-muted);
   }
 
   &__table {
@@ -79,33 +51,11 @@
   }
 }
 
-.chip {
-  height: 28px;
-  padding: 0 v.$space-3;
-  border: 1px solid var(--color-border);
-  border-radius: v.$radius-full;
-  background: var(--color-surface);
-  color: var(--color-text-secondary);
-  font-size: v.$font-size-xs;
-  cursor: pointer;
-
-  &--active {
-    background: var(--color-accent);
-    color: var(--color-on-accent);
-    border-color: var(--color-accent);
-  }
-
-  &__count {
-    opacity: 0.75;
-  }
-}
-
 .tbl {
-
   &__head,
   &__row {
     display: grid;
-    grid-template-columns: 1.5fr 1fr 1.1fr 1.1fr;
+    grid-template-columns: 1fr 0.4fr;
     gap: v.$space-2;
     align-items: center;
     padding: v.$space-2 v.$space-4;
@@ -150,141 +100,14 @@
     color: var(--color-text-muted);
   }
 
-  &__agent {
-    display: flex;
-    align-items: center;
-    gap: v.$space-2;
-    min-width: 0;
-  }
-
-  &__avatar {
-    width: 22px;
-    height: 22px;
-    flex-shrink: 0;
-    border-radius: 50%;
-    background: var(--das-indigo-100);
-    color: var(--das-indigo-700);
-    font-size: 9px;
-    font-weight: v.$font-weight-medium;
-    @include m.flex-center;
-  }
-
-  &__agent-name {
-    font-size: v.$font-size-xs;
-    color: var(--color-text-secondary);
-    @include m.truncate;
-  }
-
   &__muted {
     color: var(--color-text-disabled);
-  }
-
-  &__prog {
-    display: flex;
-    align-items: center;
-    gap: v.$space-2;
-  }
-
-  &__track {
-    flex: 1;
-    height: 4px;
-    border-radius: v.$radius-full;
-    background: var(--color-surface-sunken);
-    overflow: hidden;
-  }
-
-  &__fill {
-    display: block;
-    height: 100%;
-    background: var(--color-accent);
-  }
-
-  &__prog-val {
-    font-size: v.$font-size-xs;
-    color: var(--color-text-muted);
-    min-width: 22px;
-    text-align: right;
+    font-size: v.$font-size-sm;
   }
 
   &__empty {
     padding: v.$space-10;
     text-align: center;
-    color: var(--color-text-muted);
-  }
-}
-
-.panel {
-  padding: v.$space-3 v.$space-4;
-
-  &__title {
-    font-size: v.$font-size-sm;
-    font-weight: v.$font-weight-medium;
-    color: var(--color-text-primary);
-    margin-bottom: v.$space-3;
-  }
-}
-
-.dist {
-  display: flex;
-  height: 9px;
-  border-radius: v.$radius-full;
-  overflow: hidden;
-  margin-bottom: v.$space-3;
-
-  &__seg {
-    display: block;
-    height: 100%;
-  }
-
-  &__legend {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: v.$space-1 v.$space-3;
-  }
-
-  &__row {
-    display: flex;
-    align-items: center;
-    gap: v.$space-2;
-    font-size: v.$font-size-xs;
-    color: var(--color-text-secondary);
-  }
-
-  &__dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 2px;
-  }
-
-  &__count {
-    margin-left: auto;
-    color: var(--color-text-muted);
-  }
-}
-
-.prog {
-  &__head {
-    @include m.flex-between;
-    font-size: v.$font-size-xs;
-    color: var(--color-text-secondary);
-    margin-bottom: v.$space-1;
-  }
-
-  &__track {
-    height: 6px;
-    border-radius: v.$radius-full;
-    background: var(--color-surface-sunken);
-    overflow: hidden;
-  }
-
-  &__fill {
-    height: 100%;
-    background: var(--color-accent);
-  }
-
-  &__meta {
-    margin-top: v.$space-1;
-    font-size: v.$font-size-xs;
     color: var(--color-text-muted);
   }
 }

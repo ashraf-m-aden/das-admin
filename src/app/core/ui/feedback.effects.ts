@@ -18,17 +18,9 @@ export class FeedbackEffects {
   private toast = inject(ToastService);
 
   // ----- Blocs -----
-  blockAssigned$ = createEffect(
+  blockUpdated$ = createEffect(
     () => this.actions$.pipe(
-      ofType(BlocksActions.assignBlockSuccess),
-      tap(() => this.toast.success('feedback.blockAssigned')),
-    ),
-    { dispatch: false },
-  );
-
-  blockNamed$ = createEffect(
-    () => this.actions$.pipe(
-      ofType(BlocksActions.setBlockNameSuccess),
+      ofType(BlocksActions.updateBlockSuccess),
       tap(() => this.toast.success('feedback.blockNamed')),
     ),
     { dispatch: false },
@@ -36,7 +28,7 @@ export class FeedbackEffects {
 
   blockErrors$ = createEffect(
     () => this.actions$.pipe(
-      ofType(BlocksActions.assignBlockFailure, BlocksActions.setBlockNameFailure),
+      ofType(BlocksActions.updateBlockFailure),
       tap(({ errorMessageKey }) => this.toast.error(errorMessageKey || 'feedback.error')),
     ),
     { dispatch: false },

@@ -12,9 +12,11 @@
   <das-map [features]="mapFeatures()" [layers]="mapLayers" [tileLayers]="tileLayers" [tileFilters]="tileFilters()"
     [basemapLayers]="basemapLayers" [fitBbox]="selectedBbox()" (featureSelect)="onSelect($event)" />
   <div class="map-legend">
+    <button type="button" class="map-legend__item map-legend__item--btn" [class.map-legend__item--on]="statusFilter() === null" (click)="filterStatus(null)">{{ 'blocks.filterAll' | transloco }}</button>
     @for (st of legend; track st) {
-    <span class="map-legend__item"><span class="map-legend__dot" [style.background]="legendColor(st)"></span>{{
-      statusLabelKey(st) | transloco }}</span>
+      <button type="button" class="map-legend__item map-legend__item--btn" [class.map-legend__item--on]="statusFilter() === st" (click)="filterStatus(st)">
+        <span class="map-legend__dot" [style.background]="legendColor(st)"></span>{{ statusLabelKey(st) | transloco }}
+      </button>
     }
   </div>
 </div>

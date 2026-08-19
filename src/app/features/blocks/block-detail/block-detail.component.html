@@ -10,8 +10,8 @@
 <div class="detail">
   @if (block(); as b) {
     <div class="detail__grid">
-  <section class="das-card detail__map">
-        <das-map [features]="mapFeatures()" [layers]="mapLayers" [showLayerControl]="false" />
+      <section class="das-card detail__map">
+        <das-map [tileLayers]="tileLayers" [tileFilters]="tileFilters()" [fitBbox]="fitBbox()" [showLayerControl]="false" />
       </section>
 
       <section class="das-card detail__fiche">
@@ -20,97 +20,41 @@
             <div class="fiche__name">{{ b.name ?? ('blocks.unnamed' | transloco) }}</div>
             <div class="fiche__code">{{ b.code }}</div>
           </div>
-          <span [class]="statusBadgeClass(b.status)">{{
-            statusLabelKey(b.status) | transloco
-          }}</span>
-          <div class="status-change">
-          <label>{{ 'blocks.changeStatus' | transloco }}</label>
-          <select (change)="changeStatus($any($event.target).value)" [disabled]="(isSavingStatus$ | async)">
-            @for (st of statuses; track st) {
-              <option [value]="st" [selected]="st === b.status">{{ ('status.block.' + st) | transloco }}</option>
-            }
-          </select>
-        </div>
-        </div>
-
-        <div class="fiche__agent">
-          @if (assignedName(); as name) {
-            <span class="fiche__avatar"><i class="ti ti-user" aria-hidden="true"></i></span>
-            <div>
-              <div class="fiche__muted">{{ 'blocks.assignedTo' | transloco }}</div>
-              <div class="fiche__val">{{ name }}</div>
-            </div>
-          } @else if (b.assignedUserId) {
-            <span class="fiche__avatar"><i class="ti ti-user" aria-hidden="true"></i></span>
-            <div>
-              <div class="fiche__muted">{{ 'blocks.assignedTo' | transloco }}</div>
-              <div class="fiche__val">{{ 'blocks.agentAssigned' | transloco }}</div>
-            </div>
-          } @else {
-            <span class="fiche__avatar fiche__avatar--empty"
-              ><i class="ti ti-user-off" aria-hidden="true"></i
-            ></span>
-            <div>
-              <div class="fiche__muted">{{ 'blocks.assignedTo' | transloco }}</div>
-              <div class="fiche__val">{{ 'status.block.not_assigned' | transloco }}</div>
-            </div>
-          }
-        </div>
-
-        <form class="fiche__assign" [formGroup]="assignForm" (ngSubmit)="assign()">
-          <select formControlName="userId">
-            <option value="">{{ 'blocks.selectAgent' | transloco }}</option>
-            @for (a of agents(); track a.id) {
-              <option [value]="a.id">{{ a.fullName }}</option>
-            }
-          </select>
-          <button
-            type="submit"
-            class="btn btn--ghost"
-            [disabled]="assignForm.invalid || (isAssigning$ | async)"
-          >
-            <i class="ti ti-user-plus" aria-hidden="true"></i>{{ 'blocks.assign' | transloco }}
-          </button>
-        </form>
-
-        <div class="fiche__progress">
-          <div class="fiche__progress-head">
-            <span>{{ 'blocks.parcelsProgress' | transloco }}</span
-            ><span>{{ parcelsVerified() }} / {{ parcelsTotal() }}</span>
-          </div>
-          <div class="fiche__track">
-            <div class="fiche__fill" [style.width.%]="parcelsProgress()"></div>
-          </div>
         </div>
 
         <div class="fiche__stats">
           <div class="stat">
-            <div class="stat__label">{{ 'blocks.colArea' | transloco }}</div>
-            <div class="stat__val">{{ hectares(b.areaM2) | dasNumber: 2 }} ha</div>
-          </div>
-          <div class="stat">
-            <div class="stat__label">{{ 'blocks.parcels' | transloco }}</div>
-            <div class="stat__val">{{ parcelsTotal() }}</div>
+            <div class="stat__label">{{ 'blocks.colNumber' | transloco }}</div>
+            <div class="stat__val">{{ b.number ?? '—' }}</div>
           </div>
         </div>
 
+        <a class="btn btn--ghost fiche__parcels-link" [routerLink]="['/registry']" [queryParams]="{ blocId: b.id }">
+          <i class="ti ti-list" aria-hidden="true"></i>{{ 'blocks.viewParcels' | transloco }}
+        </a>
+
         <form class="fiche__name-form" [formGroup]="nameForm" (ngSubmit)="saveName()">
           <label class="fiche__muted" for="block-name">{{ 'blocks.nameLabel' | transloco }}</label>
-          <div class="fiche__name-row">
-            <input
-              id="block-name"
-              type="text"
-              formControlName="name"
-              [attr.placeholder]="'blocks.namePlaceholder' | transloco"
-            />
-            <button type="submit" [disabled]="nameForm.invalid || (isSavingName$ | async)">
-              @if (isSavingName$ | async) {
-                {{ 'common.saving' | transloco }}
-              } @else {
-                {{ 'blocks.saveName' | transloco }}
-              }
-            </button>
-          </div>
+          @if (b.number === null) {
+            <div class="fiche__hint">{{ 'blocks.missingNumberHint' | transloco }}</div>
+          } @else {
+            <div class="fiche__name-row">
+              <input
+                id="block-name"
+                type="text"
+                formControlName="name"
+                [attr.placeholder]="'blocks.namePlaceholder' | transloco"
+              />
+              <button type="submit" [disabled]="nameForm.invalid || (isUpdating$ | async)">
+                @if (isUpdating$ | async) {
+                  {{ 'common.saving' | transloco }}
+                } @else {
+                  {{ 'blocks.saveName' | transloco }}
+                }
+              </button>
+            </div>
+            @if (updateErrorMessageKey$ | async; as err) { <div class="fiche__error">{{ err | transloco }}</div> }
+          }
         </form>
       </section>
     </div>

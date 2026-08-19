@@ -1,14 +1,40 @@
-<div actions class="blocks-actions" [formGroup]="filterForm">
-  <div class="view-toggle">
-    <span class="view-toggle__btn view-toggle__btn--active"><i class="ti ti-list" aria-hidden="true"></i>{{
-      'blocks.viewList' | transloco }}</span>
-    <a class="view-toggle__btn" routerLink="/blocks/map"><i class="ti ti-map-2" aria-hidden="true"></i>{{
-      'blocks.viewMap' | transloco }}</a>
+<das-page-header [eyebrow]="'blocks.eyebrow' | transloco" [title]="'nav.blocks' | transloco">
+  <div actions class="blocks-actions">
+    <div class="view-toggle">
+      <span class="view-toggle__btn view-toggle__btn--active"><i class="ti ti-list" aria-hidden="true"></i>{{ 'blocks.viewList' | transloco }}</span>
+      <a class="view-toggle__btn" routerLink="/blocks/map"><i class="ti ti-map-2" aria-hidden="true"></i>{{ 'blocks.viewMap' | transloco }}</a>
+    </div>
+    <label class="blocks-search">
+      <i class="ti ti-search" aria-hidden="true"></i>
+      <input type="text" [value]="search()" (input)="onSearch($any($event.target).value)" [attr.placeholder]="'common.search' | transloco" />
+    </label>
   </div>
-  <label class="blocks-search">
-    <i class="ti ti-search" aria-hidden="true"></i>
-    <input type="text" formControlName="search" [attr.placeholder]="'common.search' | transloco" />
-  </label>
-  <button type="button" class="blocks-new"><i class="ti ti-plus" aria-hidden="true"></i>{{ 'common.new' | transloco
-    }}</button>
+</das-page-header>
+
+<div class="blocks">
+  <section class="das-card blocks__filters-card">
+    <das-hierarchy-cascade (selectionChange)="onHierarchy($event)" />
+  </section>
+
+  <div class="blocks__summary">{{ 'blocks.summary' | transloco: { total: totalCount(), unnamed: unnamedCount() } }}</div>
+
+  <section class="das-card blocks__table">
+    <div class="tbl">
+      <div class="tbl__head">
+        <span>{{ 'blocks.colBlock' | transloco }}</span>
+        <span>{{ 'blocks.colNumber' | transloco }}</span>
+      </div>
+      @for (b of filteredItems(); track b.id) {
+        <a class="tbl__row" [routerLink]="['/blocks', b.id]">
+          <div class="tbl__block">
+            <span class="tbl__name">{{ b.name ?? ('blocks.unnamed' | transloco) }}</span>
+            <span class="tbl__code">{{ b.code }}</span>
+          </div>
+          <span class="tbl__muted">{{ b.number ?? '—' }}</span>
+        </a>
+      } @empty {
+        <div class="tbl__empty">@if (isLoading$ | async) { {{ 'common.loading' | transloco }} } @else { {{ 'blocks.empty' | transloco }} }</div>
+      }
+    </div>
+  </section>
 </div>

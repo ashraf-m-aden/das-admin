@@ -1,5 +1,6 @@
 import { Component, OnInit, computed, inject } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslocoModule } from '@jsverse/transloco';
@@ -42,6 +43,7 @@ export class RegistryListComponent implements OnInit {
   private fb = inject(FormBuilder);
   private facade = inject(RegistryFacade);
   private hierarchy = inject(HierarchyFacade);
+  private route = inject(ActivatedRoute);
   private readonly isMock = inject(AppConfigService).get('useMockApi');
 
   protected readonly summary$ = this.facade.summary$;
@@ -121,6 +123,8 @@ export class RegistryListComponent implements OnInit {
 
   ngOnInit(): void {
     this.facade.init();
+    const blocId = this.route.snapshot.queryParamMap.get('blocId');
+    if (blocId) this.facade.setFilters({ blocId });
     this.filterForm.valueChanges.subscribe((v) => this.facade.setFilters({
       search: v.search ?? '', status: v.status ?? null, team: v.team ?? null,
     }));

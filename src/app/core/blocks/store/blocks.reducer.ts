@@ -12,16 +12,8 @@ export const blocksFeature = createFeature({
     on(BlocksActions.loadBlocksFailure, (state, { errorMessageKey }) => ({
       ...state, listStatus: 'error' as const, listErrorMessageKey: errorMessageKey,
     })),
-
     on(BlocksActions.setFilters, (state, { filters }) => ({ ...state, filters: { ...state.filters, ...filters } })),
-on(BlocksActions.setBlockStatus, (s) => ({ ...s, isSavingStatus: true, statusErrorMessageKey: null })),
-    on(BlocksActions.setBlockStatusSuccess, (s, { block }) => ({
-      ...s,
-      isSavingStatus: false,
-      items: s.items.map((b) => (b.id === block.id ? { ...b, ...block } : b)),
-      selected: s.selected && s.selected.id === block.id ? { ...s.selected, ...block } : s.selected,
-    })),
-    on(BlocksActions.setBlockStatusFailure, (s, { errorMessageKey }) => ({ ...s, isSavingStatus: false, statusErrorMessageKey: errorMessageKey })),
+
     on(BlocksActions.loadBlockDetail, (state) => ({ ...state, detailStatus: 'loading' as const, detailErrorMessageKey: null })),
     on(BlocksActions.loadBlockDetailSuccess, (state, { block }) => ({ ...state, selected: block, detailStatus: 'loaded' as const })),
     on(BlocksActions.loadBlockDetailFailure, (state, { errorMessageKey }) => ({
@@ -29,24 +21,15 @@ on(BlocksActions.setBlockStatus, (s) => ({ ...s, isSavingStatus: true, statusErr
     })),
     on(BlocksActions.clearBlockDetail, (state) => ({ ...state, selected: null, detailStatus: 'idle' as const })),
 
-    on(BlocksActions.assignBlock, (state) => ({ ...state, isAssigning: true })),
-    on(BlocksActions.assignBlockSuccess, (state, { block }) => ({
+    on(BlocksActions.updateBlock, (state) => ({ ...state, isUpdating: true, updateErrorMessageKey: null })),
+    on(BlocksActions.updateBlockSuccess, (state, { block }) => ({
       ...state,
-      isAssigning: false,
-      items: state.items.map((b) => (b.id === block.id ? { ...b, ...block } : b)),
-      selected: state.selected && state.selected.id === block.id ? { ...state.selected, ...block } : state.selected,
+      isUpdating: false,
+      items: state.items.map((b) => (b.id === block.id ? block : b)),
+      selected: state.selected?.id === block.id ? block : state.selected,
     })),
-    on(BlocksActions.assignBlockFailure, (state) => ({ ...state, isAssigning: false })),
-
-    on(BlocksActions.setBlockName, (state) => ({ ...state, isSavingName: true, nameErrorMessageKey: null })),
-    on(BlocksActions.setBlockNameSuccess, (state, { block }) => ({
-      ...state,
-      isSavingName: false,
-      items: state.items.map((b) => (b.id === block.id ? { ...b, ...block } : b)),
-      selected: state.selected && state.selected.id === block.id ? { ...state.selected, ...block } : state.selected,
-    })),
-    on(BlocksActions.setBlockNameFailure, (state, { errorMessageKey }) => ({
-      ...state, isSavingName: false, nameErrorMessageKey: errorMessageKey,
+    on(BlocksActions.updateBlockFailure, (state, { errorMessageKey }) => ({
+      ...state, isUpdating: false, updateErrorMessageKey: errorMessageKey,
     })),
   ),
 });
@@ -56,5 +39,5 @@ export const {
   reducer: blocksReducer,
   selectItems, selectListStatus, selectListErrorMessageKey, selectFilters,
   selectSelected, selectDetailStatus, selectDetailErrorMessageKey,
-  selectIsAssigning, selectIsSavingName, selectNameErrorMessageKey,
+  selectIsUpdating, selectUpdateErrorMessageKey,
 } = blocksFeature;

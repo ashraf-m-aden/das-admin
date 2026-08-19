@@ -1,80 +1,48 @@
-import { Component, OnInit, computed, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslocoModule } from '@jsverse/transloco';
 import { BlocksFacade } from '../../../core/blocks/store/blocks.facade';
 import { PageHeaderComponent } from '../../../core/layout/page-header/page-header.component';
-import { BlockListItem } from '../../../core/blocks/models/blocks.models';
-import { BlockStatus } from '../../../core/models/das.models';
-
-const STATUS_COLOR: Record<BlockStatus, string> = {
-  approved: '#16a34a', in_progress: '#d97706', submitted: '#7c3aed',
-  assigned: '#2563eb', not_assigned: '#9aa3b5', needs_redo: '#dc2626',
-};
+import { HierarchyCascadeComponent } from '../../../core/hierarchy/ui/hierarchy-cascade/hierarchy-cascade.component';
+import { HierarchySelection } from '../../../core/hierarchy/models/hierarchy.models';
+import { Block } from '../../../core/models/das.models';
 
 @Component({
   selector: 'das-blocks-list',
   standalone: true,
-  imports: [AsyncPipe, ReactiveFormsModule, RouterLink, TranslocoModule, PageHeaderComponent],
+  imports: [AsyncPipe, RouterLink, TranslocoModule, PageHeaderComponent, HierarchyCascadeComponent],
   templateUrl: './blocks-list.component.html',
   styleUrl: './blocks-list.component.scss',
 })
 export class BlocksListComponent implements OnInit {
-  private fb = inject(FormBuilder);
   private facade = inject(BlocksFacade);
 
-  protected readonly items = toSignal(this.facade.items$, { initialValue: [] as BlockListItem[] });
+  private readonly items = toSignal(this.facade.items$, { initialValue: [] as Block[] });
   protected readonly isLoading$ = this.facade.isListLoading$;
 
-  protected readonly statuses: BlockStatus[] = [
-    'not_assigned', 'assigned', 'in_progress', 'submitted', 'approved', 'needs_redo',
-  ];
+  /** Filtre texte purement local — l'API ne supporte que `quartierId`, pas de recherche libre. */
+  protected readonly search = signal('');
 
-  protected readonly filterForm = this.fb.group({
-    search: [''],
-    status: [null as BlockStatus | null],
+  protected readonly filteredItems = computed(() => {
+    const q = this.search().trim().toLowerCase();
+    if (!q) return this.items();
+    return this.items().filter((b) => b.code.toLowerCase().includes(q) || (b.name ?? '').toLowerCase().includes(q));
   });
 
   protected readonly totalCount = computed(() => this.items().length);
-  protected readonly approvedCount = computed(() => this.items().filter((b) => b.status === 'approved').length);
-  protected readonly globalProgress = computed(() => {
-    const total = this.items().length;
-    return total === 0 ? 0 : Math.round((this.approvedCount() / total) * 100);
-  });
-
-  protected readonly distribution = computed(() => {
-    const list = this.items();
-    const total = list.length || 1;
-    return this.statuses
-      .map((status) => {
-        const count = list.filter((b) => b.status === status).length;
-        return { status, count, color: STATUS_COLOR[status], percent: Math.round((count / total) * 100) };
-      })
-      .filter((d) => d.count > 0);
-  });
+  protected readonly unnamedCount = computed(() => this.items().filter((b) => !b.name).length);
 
   ngOnInit(): void {
     this.facade.load();
-    this.filterForm.valueChanges.subscribe((value) => {
-      this.facade.setFilters({ search: value.search ?? '', status: value.status ?? null });
-    });
   }
 
-  setStatusFilter(status: BlockStatus | null): void {
-    this.filterForm.patchValue({ status });
+  onSearch(value: string): void {
+    this.search.set(value);
   }
 
-  progressPercent(b: BlockListItem): number {
-    return b.parcelsTotal === 0 ? 0 : Math.round((b.parcelsVerified / b.parcelsTotal) * 100);
+  onHierarchy(sel: HierarchySelection): void {
+    this.facade.setFilters(sel);
   }
-
-  initials(name: string): string {
-    const parts = name.trim().split(/\s+/).filter(Boolean);
-    return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || '?';
-  }
-
-  statusBadgeClass(status: BlockStatus): string { return `das-badge das-badge--${status.replace('_', '-')}`; }
-  statusLabelKey(status: BlockStatus): string { return `status.block.${status}`; }
 }

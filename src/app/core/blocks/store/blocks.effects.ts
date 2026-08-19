@@ -1,22 +1,17 @@
 import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
-import { catchError, debounceTime, exhaustMap,mergeMap, map, of, withLatestFrom } from 'rxjs';
+import { catchError, debounceTime, exhaustMap, map, mergeMap, of, withLatestFrom } from 'rxjs';
 import { BlocksActions } from './blocks.actions';
 import { blocksFeature } from './blocks.reducer';
 import { BlocksApiPort } from '../services/blocks-api.port';
+
 @Injectable()
 export class BlocksEffects {
   private actions$ = inject(Actions);
   private store = inject(Store);
   private blocksApi = inject(BlocksApiPort);
-  setStatus$ = createEffect(() => this.actions$.pipe(
-    ofType(BlocksActions.setBlockStatus),
-    mergeMap(({ id, status }) => this.blocksApi.setStatus(id, status).pipe(
-      map((block) => BlocksActions.setBlockStatusSuccess({ block })),
-      catchError(() => of(BlocksActions.setBlockStatusFailure({ errorMessageKey: 'common.error' }))),
-    )),
-  ));
+
   loadBlocks$ = createEffect(() =>
     this.actions$.pipe(
       ofType(BlocksActions.loadBlocks),
@@ -46,25 +41,13 @@ export class BlocksEffects {
     ),
   );
 
-  assignBlock$ = createEffect(() =>
+  updateBlock$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(BlocksActions.assignBlock),
-      exhaustMap(({ id, userId }) =>
-        this.blocksApi.assign(id, userId).pipe(
-          map((block) => BlocksActions.assignBlockSuccess({ block })),
-          catchError(() => of(BlocksActions.assignBlockFailure({ errorMessageKey: 'common.error' }))),
-        ),
-      ),
-    ),
-  );
-
-  setBlockName$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(BlocksActions.setBlockName),
-      exhaustMap(({ id, name }) =>
-        this.blocksApi.setName(id, name).pipe(
-          map((block) => BlocksActions.setBlockNameSuccess({ block })),
-          catchError(() => of(BlocksActions.setBlockNameFailure({ errorMessageKey: 'common.error' }))),
+      ofType(BlocksActions.updateBlock),
+      mergeMap(({ id, payload }) =>
+        this.blocksApi.update(id, payload).pipe(
+          map((block) => BlocksActions.updateBlockSuccess({ block })),
+          catchError(() => of(BlocksActions.updateBlockFailure({ errorMessageKey: 'common.error' }))),
         ),
       ),
     ),

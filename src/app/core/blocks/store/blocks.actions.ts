@@ -1,31 +1,22 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
-import { Block, BlockStatus, UUID } from '../../models/das.models';
-import { BlockListItem, BlockWithParcels } from '../models/blocks.models';
+import { Block, UpdateBlockPayload, UUID } from '../../models/das.models';
 import { BlocksFilters } from './blocks.state';
 
 export const BlocksActions = createActionGroup({
   source: 'Blocks',
   events: {
     'Load Blocks': emptyProps(),
-    'Load Blocks Success': props<{ items: BlockListItem[] }>(),
+    'Load Blocks Success': props<{ items: Block[] }>(),
     'Load Blocks Failure': props<{ errorMessageKey: string }>(),
-
     'Set Filters': props<{ filters: Partial<BlocksFilters> }>(),
 
     'Load Block Detail': props<{ id: UUID }>(),
-    'Load Block Detail Success': props<{ block: BlockWithParcels }>(),
+    'Load Block Detail Success': props<{ block: Block }>(),
     'Load Block Detail Failure': props<{ errorMessageKey: string }>(),
     'Clear Block Detail': emptyProps(),
 
-    'Assign Block': props<{ id: UUID; userId: UUID }>(),
-    'Assign Block Success': props<{ block: Block }>(),
-    'Assign Block Failure': props<{ errorMessageKey: string }>(),
-
-    'Set Block Name': props<{ id: UUID; name: string }>(),
-    'Set Block Name Success': props<{ block: Block }>(),
-    'Set Block Name Failure': props<{ errorMessageKey: string }>(),
-    'Set Block Status': props<{ id: UUID; status: BlockStatus }>(),
-    'Set Block Status Success': props<{ block: Block }>(),
-    'Set Block Status Failure': props<{ errorMessageKey: string }>(),
+    'Update Block': props<{ id: UUID; payload: UpdateBlockPayload }>(),
+    'Update Block Success': props<{ block: Block }>(),
+    'Update Block Failure': props<{ errorMessageKey: string }>(),
   },
 });

@@ -48,21 +48,35 @@ export interface Zone {
   status: ZoneStatus;
   createdAt: ISODateTime;
 }
+/**
+ * Statut du flux de nommage (`core/addressing`, écran block-naming) — sans rapport avec
+ * `Block` ci-dessous. Conservé ici pour ce seul usage ; le vrai statut d'un bloc n'existe
+ * pas côté REST (voir commentaire sur `Block`).
+ */
 export type BlockStatus = 'not_assigned' | 'assigned' | 'in_progress' | 'submitted' | 'approved' | 'needs_redo';
+
+/**
+ * `GET/PATCH /api/blocs`. Pas de statut, pas de titulaire propre à l'entité — le seul
+ * "statut" réel d'un bloc est dérivé côté tuile (`blocs_tiles`, agrégat live sur
+ * `CampaignAssignments` : not_assigned/assigned/in_progress/submitted), lu uniquement par
+ * la carte via `map-style.json`, jamais par ce modèle REST.
+ */
 export interface Block {
   id: UUID;
-  adminUnitId: UUID;               // rattaché à l'unité de niveau quartier (calculé à l'import)
-  code: string;                    // calculé backend
-  /** Nom officiel utilisé dans les adresses (ex: "Avenue Nasser"). Fixé via l'Adressage. */
+  code: string;
   name: string | null;
-  geom: GeoJSONMultiPolygon;
-  areaM2: number;                  // calculé (UTM 38N)
-  status: BlockStatus;
-  assignedUserId: UUID | null;
-  sourceFile: string | null;
-  importedBy: UUID | null;
-  importedAt: ISODateTime;
-  updatedAt: ISODateTime;
+  /** Composant numérique du code d'adresse — `null` sur les blocs antérieurs au 2026-08-18. */
+  number: number | null;
+  quartierId: UUID;
+  /** WKT (SRID 4326) — géométrie servie par les tuiles Martin pour le rendu, ce champ ne sert qu'au cadrage/à l'édition. */
+  boundaryWkt: string | null;
+}
+
+export interface UpdateBlockPayload {
+  code: string;
+  name: string | null;
+  number: number;
+  boundaryWkt: string | null;
 }
 
 /* Le niveau LOT est supprimé : la parcelle EST l'adresse (Bloc → Parcelle). */

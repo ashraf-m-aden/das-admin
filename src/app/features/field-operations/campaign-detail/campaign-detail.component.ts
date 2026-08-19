@@ -168,7 +168,7 @@ export class CampaignDetailComponent implements OnInit, OnDestroy {
 
   onHierarchy(sel: HierarchySelection): void {
     this.selectedBlocIds.set(new Set());
-    this.blocksFacade.setFilters({ ...sel, search: '', status: null });
+    this.blocksFacade.setFilters(sel);
     this.blocksFacade.load();
   }
 
