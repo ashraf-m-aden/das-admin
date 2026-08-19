@@ -72,7 +72,7 @@ export class BlocksMapComponent implements OnInit {
 
   /** Adresses : couche du style de base, togglable (no-op silencieux en mock). */
   protected readonly basemapLayers: BasemapLayerGroup[] = [
-    { id: 'adresses', labelKey: 'map.basemap.adresses', styleLayerIds: ['adresses-circle'], visible: false },
+    { id: 'adresses', labelKey: 'map.basemap.adresses', styleLayerIds: ['adresses-fill', 'adresses-line'], visible: false },
   ];
   onHierarchy(sel: HierarchySelection): void { this.facade.setFilters(sel); }
   /**

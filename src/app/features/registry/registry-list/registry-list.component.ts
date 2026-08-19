@@ -25,7 +25,7 @@ const STAGE_COLOR: Record<AddressWorkflowStage, string> = {
 
 const ADRESSES_TILE: TileLayerBinding = {
   id: 'adresses', labelKey: 'registry.layerParcels', source: 'adresses', sourceLayer: 'adresses_tiles',
-  styleLayerIds: ['adresses-circle'], interactiveLayerId: 'adresses-circle', visible: true,
+  styleLayerIds: ['adresses-fill', 'adresses-line'], interactiveLayerId: 'adresses-fill', visible: true,
 };
 
 @Component({

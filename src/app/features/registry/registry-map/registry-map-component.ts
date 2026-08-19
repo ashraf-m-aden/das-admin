@@ -45,7 +45,7 @@ export class RegistryMapComponent implements OnInit {
 
   /** Contours cadastraux du style de base, pilotables via le panneau des couches. */
   protected readonly basemapLayers: BasemapLayerGroup[] = [
-    { id: 'adresses', labelKey: 'map.basemap.adresses', styleLayerIds: ['adresses-circle'], visible: false },
+    { id: 'adresses', labelKey: 'map.basemap.adresses', styleLayerIds: ['adresses-fill', 'adresses-line'], visible: false },
   ];
   ngOnInit(): void { this.facade.init(); }
 
