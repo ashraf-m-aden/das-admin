@@ -28,6 +28,15 @@ export interface BlockNamingQuery {
   onlyUnnamed: boolean;
 }
 
+/** Ligne de la file plate `/api/blocs/suggestions?status=Pending` — consommée par l'écran review. */
+export interface PendingBlockSuggestion {
+  id: UUID;
+  blocId: UUID;
+  suggestedName: string;
+  comment: string | null;
+  proposedAtUtc: ISODateTime;
+}
+
 /** Reprend l'enum backend (Streets.Type). */
 export type StreetType = 'Rue' | 'Avenue' | 'Boulevard' | 'Piste' | 'Impasse' | 'Route';
 
@@ -42,6 +51,15 @@ export interface StreetToName {
 export interface StreetNamingQuery {
   search: string;
   onlyUnnamed: boolean;
+}
+
+/** Ligne de la file plate `/api/streets/suggestions?status=Pending` — consommée par l'écran review. */
+export interface PendingStreetSuggestion {
+  id: UUID;
+  streetId: UUID;
+  suggestedName: string;
+  comment: string | null;
+  proposedAtUtc: ISODateTime;
 }
 
 /** Hiérarchie de rattachement — Region → Ville → Commune → Quartier (plus d'arrondissement). */

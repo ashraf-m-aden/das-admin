@@ -19,8 +19,9 @@ export const AddressingActions = createActionGroup({
 
     'Set Block Name': props<{ id: UUID; name: string }>(),
     'Approve Block Suggestion': props<{ id: UUID; suggestionId: UUID }>(),
-    'Reject Block Suggestion': props<{ id: UUID; suggestionId: UUID; reason: string }>(),
+    'Reject Block Suggestion': props<{ id: UUID; suggestionId: UUID; rejectionReason: string }>(),
     'Block Name Action Success': props<{ item: BlockToName }>(),
+    'Block Suggestion Decided': emptyProps(),
     'Block Name Action Failure': props<{ errorMessageKey: string }>(),
 
     'Load Streets To Name': emptyProps(),
@@ -30,8 +31,9 @@ export const AddressingActions = createActionGroup({
 
     'Set Street Name': props<{ id: UUID; name: string }>(),
     'Approve Street Suggestion': props<{ id: UUID; suggestionId: UUID }>(),
-    'Reject Street Suggestion': props<{ id: UUID; suggestionId: UUID; reason: string }>(),
+    'Reject Street Suggestion': props<{ id: UUID; suggestionId: UUID; rejectionReason: string }>(),
     'Street Name Action Success': props<{ item: StreetToName }>(),
+    'Street Suggestion Decided': emptyProps(),
     'Street Name Action Failure': props<{ errorMessageKey: string }>(),
 
     'Load Properties To Number': props<{ query: PropertyNumberingQuery }>(),

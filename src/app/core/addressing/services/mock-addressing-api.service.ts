@@ -8,6 +8,8 @@ import {
   BlockNamingQuery,
   BlockToName,
   NameSuggestion,
+  PendingBlockSuggestion,
+  PendingStreetSuggestion,
   PropertyNumberingQuery,
   PropertyToNumber,
   StreetNamingQuery,
@@ -131,27 +133,36 @@ private properties: PropertyToNumber[] = [
     return of(updated).pipe(delay(MockAddressingApiService.SIMULATED_LATENCY_MS));
   }
 
-  override approveBlockSuggestion(id: UUID, suggestionId: UUID): Observable<BlockToName> {
-    const existing = this.blocks.find((b) => b.id === id);
-    if (!existing?.pendingSuggestion || existing.pendingSuggestion.id !== suggestionId) {
-      return throwError(() => ({ code: 'not_found', message: 'common.error' }));
-    }
+  override approveBlockSuggestion(suggestionId: UUID): Observable<void> {
+    const existing = this.blocks.find((b) => b.pendingSuggestion?.id === suggestionId);
+    if (!existing?.pendingSuggestion) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
     const name = existing.pendingSuggestion.suggestedName;
     const updated: BlockToName = { ...existing, name, pendingSuggestion: null };
-    this.blocks = this.blocks.map((b) => (b.id === id ? updated : b));
+    this.blocks = this.blocks.map((b) => (b.id === existing.id ? updated : b));
     this.propagateBlockName(existing.code, name);
-    return of(updated).pipe(delay(300));
+    return of(undefined).pipe(delay(300));
   }
 
-  override rejectBlockSuggestion(id: UUID, suggestionId: UUID, reason: string): Observable<BlockToName> {
-    const existing = this.blocks.find((b) => b.id === id);
-    if (!existing?.pendingSuggestion || existing.pendingSuggestion.id !== suggestionId) {
-      return throwError(() => ({ code: 'not_found', message: 'common.error' }));
-    }
+  override rejectBlockSuggestion(suggestionId: UUID, rejectionReason: string): Observable<void> {
+    const existing = this.blocks.find((b) => b.pendingSuggestion?.id === suggestionId);
+    if (!existing?.pendingSuggestion) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
     // En mock, on retire simplement la suggestion — en réel elle reste en base avec status='Rejected' (historique conservé).
     const updated: BlockToName = { ...existing, pendingSuggestion: null };
-    this.blocks = this.blocks.map((b) => (b.id === id ? updated : b));
-    return of(updated).pipe(delay(300));
+    this.blocks = this.blocks.map((b) => (b.id === existing.id ? updated : b));
+    return of(undefined).pipe(delay(300));
+  }
+
+  override listPendingBlockSuggestions(): Observable<PendingBlockSuggestion[]> {
+    const items = this.blocks
+      .filter((b) => b.pendingSuggestion)
+      .map((b) => ({
+        id: b.pendingSuggestion!.id,
+        blocId: b.id,
+        suggestedName: b.pendingSuggestion!.suggestedName,
+        comment: b.pendingSuggestion!.comment,
+        proposedAtUtc: b.pendingSuggestion!.proposedAt,
+      }));
+    return of(items).pipe(delay(MockAddressingApiService.SIMULATED_LATENCY_MS));
   }
 
   private propagateBlockName(blockCode: string, name: string): void {
@@ -185,24 +196,33 @@ private properties: PropertyToNumber[] = [
     return of(updated).pipe(delay(MockAddressingApiService.SIMULATED_LATENCY_MS));
   }
 
-  override approveStreetSuggestion(id: UUID, suggestionId: UUID): Observable<StreetToName> {
-    const existing = this.streets.find((s) => s.id === id);
-    if (!existing?.pendingSuggestion || existing.pendingSuggestion.id !== suggestionId) {
-      return throwError(() => ({ code: 'not_found', message: 'common.error' }));
-    }
+  override approveStreetSuggestion(suggestionId: UUID): Observable<void> {
+    const existing = this.streets.find((s) => s.pendingSuggestion?.id === suggestionId);
+    if (!existing?.pendingSuggestion) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
     const updated: StreetToName = { ...existing, name: existing.pendingSuggestion.suggestedName, pendingSuggestion: null };
-    this.streets = this.streets.map((s) => (s.id === id ? updated : s));
-    return of(updated).pipe(delay(300));
+    this.streets = this.streets.map((s) => (s.id === existing.id ? updated : s));
+    return of(undefined).pipe(delay(300));
   }
 
-  override rejectStreetSuggestion(id: UUID, suggestionId: UUID, reason: string): Observable<StreetToName> {
-    const existing = this.streets.find((s) => s.id === id);
-    if (!existing?.pendingSuggestion || existing.pendingSuggestion.id !== suggestionId) {
-      return throwError(() => ({ code: 'not_found', message: 'common.error' }));
-    }
+  override rejectStreetSuggestion(suggestionId: UUID, rejectionReason: string): Observable<void> {
+    const existing = this.streets.find((s) => s.pendingSuggestion?.id === suggestionId);
+    if (!existing?.pendingSuggestion) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
     const updated: StreetToName = { ...existing, pendingSuggestion: null };
-    this.streets = this.streets.map((s) => (s.id === id ? updated : s));
-    return of(updated).pipe(delay(300));
+    this.streets = this.streets.map((s) => (s.id === existing.id ? updated : s));
+    return of(undefined).pipe(delay(300));
+  }
+
+  override listPendingStreetSuggestions(): Observable<PendingStreetSuggestion[]> {
+    const items = this.streets
+      .filter((s) => s.pendingSuggestion)
+      .map((s) => ({
+        id: s.pendingSuggestion!.id,
+        streetId: s.id,
+        suggestedName: s.pendingSuggestion!.suggestedName,
+        comment: s.pendingSuggestion!.comment,
+        proposedAtUtc: s.pendingSuggestion!.proposedAt,
+      }));
+    return of(items).pipe(delay(MockAddressingApiService.SIMULATED_LATENCY_MS));
   }
 
   // --- Propriétés ------------------------------------------------------------

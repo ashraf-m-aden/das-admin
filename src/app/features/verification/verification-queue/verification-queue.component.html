@@ -5,6 +5,7 @@
     <button type="button" class="tab" [class.tab--on]="typeFilter() === null" (click)="filterType(null)">{{ 'verification.all' | transloco }}</button>
     <button type="button" class="tab" [class.tab--on]="typeFilter() === 'property'" (click)="filterType('property')">{{ 'verification.type.property' | transloco }}</button>
     <button type="button" class="tab" [class.tab--on]="typeFilter() === 'street'" (click)="filterType('street')">{{ 'verification.type.street' | transloco }}</button>
+    <button type="button" class="tab" [class.tab--on]="typeFilter() === 'block'" (click)="filterType('block')">{{ 'verification.type.block' | transloco }}</button>
   </div>
 
   @if (decisionError$ | async; as err) { <div class="vq__error">{{ err | transloco }}</div> }
@@ -14,49 +15,63 @@
       <div class="card__head">
         <div>
           <span class="card__type">{{ typeLabelKey(item.submissionType) | transloco }}</span>
-          <div class="card__code">{{ item.code }}</div>
-          <div class="card__meta">{{ item.submittedByName }} · {{ item.submittedAt | dasDate: 'long' }}</div>
+          @if (item.submissionType === 'property') {
+            <div class="card__meta">{{ item.capturedAtUtc | dasDate: 'long' }}</div>
+          } @else {
+            <div class="card__suggestion">{{ item.suggestedName }}</div>
+            <div class="card__meta">{{ item.proposedAtUtc | dasDate: 'long' }}</div>
+          }
         </div>
-        @if (item.validationScore !== null) {
-          <div class="score">
-            <div class="score__ring" [style.--c]="scoreColor(item.validationScore)" [style.--v]="item.validationScore">
-              <span>{{ item.validationScore }}</span>
-            </div>
-            <span class="score__cap">{{ 'verification.validation' | transloco }}</span>
-          </div>
+      </div>
+
+      @if (item.submissionType === 'property') {
+        <div class="facts">
+          @if (item.gpsAccuracyM !== null) { <div class="fact"><span class="fact__l">{{ 'verification.gpsAccuracy' | transloco }}</span><span class="fact__v">±{{ item.gpsAccuracyM }} m</span></div> }
+          @if (item.distanceFromAddressM !== null) { <div class="fact"><span class="fact__l">{{ 'verification.distance' | transloco }}</span><span class="fact__v">{{ item.distanceFromAddressM }} m</span></div> }
+          <div class="fact"><span class="fact__l">{{ 'verification.photos' | transloco }}</span><span class="fact__v">{{ item.photoCount }}</span></div>
+        </div>
+
+        @if (item.isMockLocation) { <div class="notes notes--warning"><i class="ti ti-alert-triangle" aria-hidden="true"></i>{{ 'verification.mockLocationWarning' | transloco }}</div> }
+        @if (item.outcome === 'NotSurveyable' && item.notSurveyableReason) {
+          <div class="notes"><i class="ti ti-ban" aria-hidden="true"></i>{{ 'verification.notSurveyable' | transloco }} — {{ notSurveyableReasonKey(item.notSurveyableReason) | transloco }}</div>
         }
-      </div>
 
-      <div class="facts">
-        @if (item.geoConfidence !== null) { <div class="fact"><span class="fact__l">{{ 'verification.geoConfidence' | transloco }}</span><span class="fact__v">{{ item.geoConfidence }} %</span></div> }
-        @if (item.gpsAccuracy !== null) { <div class="fact"><span class="fact__l">{{ 'verification.gpsAccuracy' | transloco }}</span><span class="fact__v">±{{ item.gpsAccuracy }} m</span></div> }
-        <div class="fact"><span class="fact__l">{{ 'verification.photos' | transloco }}</span><span class="fact__v">{{ item.photos.length }}</span></div>
-      </div>
-
-      @if (item.notes) { <div class="notes"><i class="ti ti-note" aria-hidden="true"></i>{{ item.notes }}</div> }
-
-      @if (item.photos.length) {
-        <div class="photos">
-          @for (p of item.photos; track p.id) { <div class="photo"><i class="ti ti-photo" aria-hidden="true"></i></div> }
-        </div>
+        @if (item.photoCount > 0) {
+          <button type="button" class="btn btn--ghost" (click)="togglePhotos(item)">
+            <i class="ti ti-photo" aria-hidden="true"></i>{{ 'verification.viewPhotos' | transloco: { count: item.photoCount } }}
+          </button>
+          @if (expandedPhotosId() === item.id) {
+            <div class="photos">
+              @if (facade.isLoadingPhotos$(item.id) | async) {
+                <span class="photos__loading">{{ 'common.loading' | transloco }}</span>
+              } @else {
+                @for (p of (facade.photosFor$(item.id) | async) ?? []; track p.id) {
+                  <div class="photo photo--img" [style.backgroundImage]="'url(' + p.readUrl + ')'"></div>
+                }
+              }
+            </div>
+          }
+        }
+      } @else {
+        @if (item.comment) { <div class="notes"><i class="ti ti-note" aria-hidden="true"></i>{{ item.comment }}</div> }
       }
 
       @if (rejectingId() === item.id) {
         <div class="reject" [formGroup]="rejectForm">
-          <select formControlName="preset">
-            <option value="photo_retake">{{ 'verification.reason.photo_retake' | transloco }}</option>
-            <option value="gps_recheck">{{ 'verification.reason.gps_recheck' | transloco }}</option>
-            <option value="other">{{ 'verification.reason.other' | transloco }}</option>
-          </select>
           <input type="text" formControlName="reason" [attr.placeholder]="'verification.reasonPlaceholder' | transloco" />
           <button type="button" class="btn btn--reject" (click)="confirmReject(item)">{{ 'verification.confirmReject' | transloco }}</button>
           <button type="button" class="btn btn--ghost" (click)="cancelReject()">{{ 'common.cancel' | transloco }}</button>
         </div>
       } @else {
         <div class="actions">
-          <button type="button" class="btn btn--approve" (click)="approve(item)"><i class="ti ti-check" aria-hidden="true"></i>{{ 'verification.approve' | transloco }}</button>
-          <button type="button" class="btn btn--reject" (click)="startReject(item)"><i class="ti ti-x" aria-hidden="true"></i>{{ 'verification.reject' | transloco }}</button>
-          <button type="button" class="btn btn--ghost" (click)="requestResurvey(item)"><i class="ti ti-rotate" aria-hidden="true"></i>{{ 'verification.requestResurvey' | transloco }}</button>
+          @if (item.submissionType === 'property') {
+            <button type="button" class="btn btn--approve" (click)="validate(item)"><i class="ti ti-check" aria-hidden="true"></i>{{ 'verification.validate' | transloco }}</button>
+            <button type="button" class="btn btn--reject" (click)="startReject(item)"><i class="ti ti-x" aria-hidden="true"></i>{{ 'verification.reject' | transloco }}</button>
+            <button type="button" class="btn btn--ghost" (click)="requestCorrection(item)"><i class="ti ti-rotate" aria-hidden="true"></i>{{ 'verification.requestCorrection' | transloco }}</button>
+          } @else {
+            <button type="button" class="btn btn--approve" (click)="approveSuggestion(item)"><i class="ti ti-check" aria-hidden="true"></i>{{ 'verification.approve' | transloco }}</button>
+            <button type="button" class="btn btn--reject" (click)="startReject(item)"><i class="ti ti-x" aria-hidden="true"></i>{{ 'verification.reject' | transloco }}</button>
+          }
         </div>
       }
     </section>

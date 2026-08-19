@@ -689,24 +689,31 @@
   "verification": {
     "eyebrow": "Field submissions awaiting decision",
     "all": "All",
-    "validation": "Validation",
-    "geoConfidence": "Geo confidence",
     "gpsAccuracy": "GPS accuracy",
+    "distance": "Distance from parcel",
     "photos": "Photos",
+    "viewPhotos": "View {{count}} photos",
+    "mockLocationWarning": "Simulated GPS location detected",
+    "notSurveyable": "Not surveyable",
+    "suggestedName": "Suggested name",
+    "comment": "Comment",
+    "validate": "Validate",
     "approve": "Approve",
     "reject": "Reject",
-    "requestResurvey": "Request resurvey",
+    "requestCorrection": "Request correction",
     "confirmReject": "Confirm rejection",
-    "reasonPlaceholder": "Reason (optional)…",
+    "reasonPlaceholder": "Rejection reason…",
     "empty": "Queue empty — nothing to verify",
     "type": {
       "property": "Parcel",
-      "street": "Street"
+      "street": "Street",
+      "block": "Block"
     },
-    "reason": {
-      "photo_retake": "Retake photos",
-      "gps_recheck": "Recheck GPS",
-      "other": "Other"
+    "notSurveyableReason": {
+      "demolished": "Demolished",
+      "inaccessible": "Inaccessible",
+      "refused": "Access refused",
+      "notfound": "Not found"
     }
   },
   "period": {

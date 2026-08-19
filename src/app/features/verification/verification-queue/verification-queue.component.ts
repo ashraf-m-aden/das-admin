@@ -5,7 +5,7 @@ import { TranslocoModule } from '@jsverse/transloco';
 import { ReviewFacade } from '../../../core/review/store/review.facade';
 import { PageHeaderComponent } from '../../../core/layout/page-header/page-header.component';
 import { DasDatePipe } from '../../../core/i18n/das-locale.pipes';
-import { ReviewItem, RejectReasonPreset } from '../../../core/review/models/review.models';
+import { ReviewItem } from '../../../core/review/models/review.models';
 import { RedoSubmissionType } from '../../../core/models/das.models';
 
 @Component({
@@ -17,7 +17,7 @@ import { RedoSubmissionType } from '../../../core/models/das.models';
 })
 export class VerificationQueueComponent implements OnInit {
   private fb = inject(FormBuilder);
-  private facade = inject(ReviewFacade);
+  protected facade = inject(ReviewFacade);
 
   protected readonly items$ = this.facade.items$;
   protected readonly isLoading$ = this.facade.isListLoading$;
@@ -25,40 +25,60 @@ export class VerificationQueueComponent implements OnInit {
 
   protected readonly typeFilter = signal<RedoSubmissionType | null>(null);
   protected readonly rejectingId = signal<string | null>(null);
+  protected readonly expandedPhotosId = signal<string | null>(null);
 
-  protected readonly rejectForm = this.fb.nonNullable.group({
-    preset: ['photo_retake' as RejectReasonPreset],
-    reason: [''],
-  });
+  protected readonly rejectForm = this.fb.nonNullable.group({ reason: [''] });
 
-  ngOnInit(): void { this.facade.load(); }
+  ngOnInit(): void {
+    this.facade.load();
+  }
 
   filterType(type: RedoSubmissionType | null): void {
     this.typeFilter.set(type);
     this.facade.setFilters({ submissionType: type });
   }
 
-  approve(item: ReviewItem): void { this.facade.approve(item.id, item.submissionType); }
+  validate(item: ReviewItem): void {
+    this.facade.validate(item.id);
+  }
+
+  approveSuggestion(item: ReviewItem): void {
+    if (item.submissionType === 'property') return;
+    this.facade.approveSuggestion(item.id, item.submissionType);
+  }
 
   startReject(item: ReviewItem): void {
-    this.rejectForm.reset({ preset: 'photo_retake', reason: '' });
+    this.rejectForm.reset({ reason: '' });
     this.rejectingId.set(item.id);
   }
-  cancelReject(): void { this.rejectingId.set(null); }
-
-  confirmReject(item: ReviewItem): void {
-    const v = this.rejectForm.getRawValue();
-    this.facade.reject(item.id, item.submissionType, { preset: v.preset, reason: v.reason.trim() });
+  cancelReject(): void {
     this.rejectingId.set(null);
   }
 
- requestResurvey(item: ReviewItem): void { this.facade.requestResurvey(item.id, item.submissionType); }
-
-  scoreColor(score: number | null): string {
-    if (score === null) return '#9aa3b5';
-    if (score >= 80) return '#16a34a';
-    if (score >= 60) return '#d97706';
-    return '#dc2626';
+  confirmReject(item: ReviewItem): void {
+    const reason = this.rejectForm.getRawValue().reason.trim();
+    this.facade.reject(item.id, item.submissionType, reason);
+    this.rejectingId.set(null);
   }
-  typeLabelKey(t: RedoSubmissionType): string { return `verification.type.${t}`; }
+
+  requestCorrection(item: ReviewItem): void {
+    this.facade.requestCorrection(item.id);
+  }
+
+  togglePhotos(item: ReviewItem): void {
+    if (this.expandedPhotosId() === item.id) {
+      this.expandedPhotosId.set(null);
+      return;
+    }
+    this.expandedPhotosId.set(item.id);
+    this.facade.loadPhotos(item.id);
+  }
+
+  typeLabelKey(t: RedoSubmissionType): string {
+    return `verification.type.${t}`;
+  }
+
+  notSurveyableReasonKey(reason: string): string {
+    return `verification.notSurveyableReason.${reason.toLowerCase()}`;
+  }
 }

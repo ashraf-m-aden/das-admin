@@ -73,7 +73,7 @@
 
     {
       "id": "adresses-circle",
-      "type": "circle",
+      "type": "line",
       "source": "adresses",
       "source-layer": "adresses_tiles",
       "minzoom": 12,

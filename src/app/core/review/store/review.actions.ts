@@ -1,6 +1,6 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { RedoSubmissionType, UUID } from '../../models/das.models';
-import { RejectPayload, ReviewItem } from '../models/review.models';
+import { ReviewItem, ReviewPhoto } from '../models/review.models';
 import { ReviewFilters } from './review.state';
 
 export const ReviewActions = createActionGroup({
@@ -12,16 +12,24 @@ export const ReviewActions = createActionGroup({
 
     'Set Filters': props<{ filters: Partial<ReviewFilters> }>(),
 
-    Approve: props<{ id: UUID; submissionType: RedoSubmissionType }>(),
-    'Approve Success': props<{ item: ReviewItem }>(),
-    'Approve Failure': props<{ errorMessageKey: string }>(),
+    Validate: props<{ id: UUID }>(),
+    'Validate Success': props<{ id: UUID }>(),
+    'Validate Failure': props<{ errorMessageKey: string }>(),
 
-    Reject: props<{ id: UUID; submissionType: RedoSubmissionType; payload: RejectPayload }>(),
-    'Reject Success': props<{ item: ReviewItem }>(),
+    Reject: props<{ id: UUID; submissionType: RedoSubmissionType; rejectionReason: string }>(),
+    'Reject Success': props<{ id: UUID }>(),
     'Reject Failure': props<{ errorMessageKey: string }>(),
 
-    'Request Resurvey': props<{ id: UUID; submissionType: RedoSubmissionType }>(),
-    'Request Resurvey Success': props<{ item: ReviewItem }>(),
-    'Request Resurvey Failure': props<{ errorMessageKey: string }>(),
+    'Request Correction': props<{ id: UUID }>(),
+    'Request Correction Success': props<{ id: UUID }>(),
+    'Request Correction Failure': props<{ errorMessageKey: string }>(),
+
+    'Approve Suggestion': props<{ id: UUID; submissionType: 'block' | 'street' }>(),
+    'Approve Suggestion Success': props<{ id: UUID }>(),
+    'Approve Suggestion Failure': props<{ errorMessageKey: string }>(),
+
+    'Load Photos': props<{ surveyId: UUID }>(),
+    'Load Photos Success': props<{ surveyId: UUID; photos: ReviewPhoto[] }>(),
+    'Load Photos Failure': props<{ surveyId: UUID; errorMessageKey: string }>(),
   },
 });

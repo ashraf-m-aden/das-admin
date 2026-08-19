@@ -1,44 +1,38 @@
-import { UUID, ISODateTime, RedoSubmissionType, SubmissionStatus } from '../../models/das.models';
+import { UUID, ISODateTime } from '../../models/das.models';
+
+export type SurveyOutcome = 'Surveyed' | 'NotSurveyable';
+export type NotSurveyableReason = 'Demolished' | 'Inaccessible' | 'Refused' | 'NotFound';
+
+/** Un relevé soumis (`GET /api/surveys?status=Submitted`) — pas de nom d'agent ni de code adresse : l'API ne renvoie que des ids. */
+export interface SurveyReviewItem {
+  submissionType: 'property';
+  id: UUID;
+  adresseId: UUID;
+  agentId: UUID;
+  capturedAtUtc: ISODateTime;
+  outcome: SurveyOutcome;
+  notSurveyableReason: NotSurveyableReason | null;
+  gpsAccuracyM: number | null;
+  distanceFromAddressM: number | null;
+  photoCount: number;
+  isMockLocation: boolean;
+}
+
+/** Une suggestion de nom de bloc ou de rue en attente (`GET /api/{blocs,streets}/suggestions?status=Pending`). */
+export interface SuggestionReviewItem {
+  submissionType: 'street' | 'block';
+  id: UUID;
+  /** blocId ou streetId visé — pas envoyé au back sur la décision, l'id de la suggestion suffit. */
+  targetId: UUID;
+  suggestedName: string;
+  comment: string | null;
+  proposedAtUtc: ISODateTime;
+}
+
+export type ReviewItem = SurveyReviewItem | SuggestionReviewItem;
 
 export interface ReviewPhoto {
   id: UUID;
-  photoType: string;
-  s3Key: string;
+  readUrl: string;
+  uploadedAtUtc: ISODateTime;
 }
-
-export interface ReviewItem {
-  id: UUID;
-  submissionType: RedoSubmissionType;
-  code: string;
-  submittedByName: string;
-  submittedAt: ISODateTime;
-  status: SubmissionStatus;
-  gpsAccuracy: number | null;
-  photos: ReviewPhoto[];
-  notes: string | null;
-}
-
-export interface ReviewQueueQuery {
-  submissionType: RedoSubmissionType | null;
-}
-
-
-export interface RejectPayload {
-  preset: RejectReasonPreset;
-  reason: string;
-}
-export interface ReviewItem {
-  id: UUID;
-  submissionType: RedoSubmissionType;
-  code: string;
-  submittedByName: string;
-  submittedAt: ISODateTime;
-  status: SubmissionStatus;
-  gpsAccuracy: number | null;
-  validationScore: number | null;   // 0–100
-  geoConfidence: number | null;      // 0–100
-  photos: ReviewPhoto[];
-  notes: string | null;
-}
-
-export type RejectReasonPreset = 'photo_retake' | 'gps_recheck' | 'resurvey' | 'other';

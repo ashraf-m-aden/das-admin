@@ -34,14 +34,14 @@ export class AddressingFacade {
   isSavingBlock$(id: UUID) { return this.store.select(selectIsSavingBlock(id)); }
   setBlockName(id: UUID, name: string): void { this.store.dispatch(AddressingActions.setBlockName({ id, name })); }
   approveBlockSuggestion(id: UUID, suggestionId: UUID): void { this.store.dispatch(AddressingActions.approveBlockSuggestion({ id, suggestionId })); }
-  rejectBlockSuggestion(id: UUID, suggestionId: UUID, reason: string): void { this.store.dispatch(AddressingActions.rejectBlockSuggestion({ id, suggestionId, reason })); }
+  rejectBlockSuggestion(id: UUID, suggestionId: UUID, rejectionReason: string): void { this.store.dispatch(AddressingActions.rejectBlockSuggestion({ id, suggestionId, rejectionReason })); }
 
   loadStreetsToName(): void { this.store.dispatch(AddressingActions.loadStreetsToName()); }
   setStreetFilters(filters: Partial<StreetNamingQuery>): void { this.store.dispatch(AddressingActions.setStreetFilters({ filters })); }
   isSavingStreet$(id: UUID) { return this.store.select(selectIsSavingStreet(id)); }
   setStreetName(id: UUID, name: string): void { this.store.dispatch(AddressingActions.setStreetName({ id, name })); }
   approveStreetSuggestion(id: UUID, suggestionId: UUID): void { this.store.dispatch(AddressingActions.approveStreetSuggestion({ id, suggestionId })); }
-  rejectStreetSuggestion(id: UUID, suggestionId: UUID, reason: string): void { this.store.dispatch(AddressingActions.rejectStreetSuggestion({ id, suggestionId, reason })); }
+  rejectStreetSuggestion(id: UUID, suggestionId: UUID, rejectionReason: string): void { this.store.dispatch(AddressingActions.rejectStreetSuggestion({ id, suggestionId, rejectionReason })); }
 
   loadPropertiesToNumber(query: PropertyNumberingQuery): void { this.store.dispatch(AddressingActions.loadPropertiesToNumber({ query })); }
   isSavingProperty$(id: UUID) { return this.store.select(selectIsSavingProperty(id)); }

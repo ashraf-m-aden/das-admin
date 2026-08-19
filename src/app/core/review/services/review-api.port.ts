@@ -1,10 +1,12 @@
 import { Observable } from 'rxjs';
-import { RedoSubmissionType, UUID } from '../../models/das.models';
-import { RejectPayload, ReviewItem, ReviewQueueQuery } from '../models/review.models';
+import { UUID } from '../../models/das.models';
+import { ReviewPhoto, SurveyReviewItem } from '../models/review.models';
 
+/** Ne couvre que les relevés (`/api/surveys`) — les suggestions de nom passent par AddressingApiPort. */
 export abstract class ReviewApiPort {
-  abstract listQueue(query: ReviewQueueQuery): Observable<ReviewItem[]>;
-  abstract approve(id: UUID, submissionType: RedoSubmissionType): Observable<ReviewItem>;
-  abstract reject(id: UUID, submissionType: RedoSubmissionType, payload: RejectPayload): Observable<ReviewItem>;
-  abstract requestResurvey(id: UUID, submissionType: RedoSubmissionType): Observable<ReviewItem>;
+  abstract listSubmittedSurveys(): Observable<SurveyReviewItem[]>;
+  abstract validateSurvey(id: UUID): Observable<void>;
+  abstract rejectSurvey(id: UUID, rejectionReason: string): Observable<void>;
+  abstract requestSurveyCorrection(id: UUID): Observable<void>;
+  abstract getSurveyPhotos(id: UUID): Observable<ReviewPhoto[]>;
 }

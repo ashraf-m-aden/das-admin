@@ -1,51 +1,61 @@
 import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { Store } from '@ngrx/store';
-import { catchError, exhaustMap, map, of, withLatestFrom,mergeMap } from 'rxjs';
+import { catchError, exhaustMap, forkJoin, map, mergeMap, of } from 'rxjs';
 import { ReviewActions } from './review.actions';
-import { reviewFeature } from './review.reducer';
 import { ReviewApiPort } from '../services/review-api.port';
+import { AddressingApiPort } from '../../addressing/services/addressing-api.port';
+import { ReviewItem } from '../models/review.models';
 
 @Injectable()
 export class ReviewEffects {
   private actions$ = inject(Actions);
-  private store = inject(Store);
   private reviewApi = inject(ReviewApiPort);
+  private addressingApi = inject(AddressingApiPort);
 
   loadQueue$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ReviewActions.loadQueue),
-      withLatestFrom(this.store.select(reviewFeature.selectFilters)),
-      exhaustMap(([, filters]) =>
-        this.reviewApi.listQueue(filters).pipe(
-          map((items) => ReviewActions.loadQueueSuccess({ items })),
+      exhaustMap(() =>
+        forkJoin({
+          surveys: this.reviewApi.listSubmittedSurveys(),
+          blocSuggestions: this.addressingApi.listPendingBlockSuggestions(),
+          streetSuggestions: this.addressingApi.listPendingStreetSuggestions(),
+        }).pipe(
+          map(({ surveys, blocSuggestions, streetSuggestions }) => {
+            const items: ReviewItem[] = [
+              ...surveys,
+              ...blocSuggestions.map((s) => ({
+                submissionType: 'block' as const,
+                id: s.id,
+                targetId: s.blocId,
+                suggestedName: s.suggestedName,
+                comment: s.comment,
+                proposedAtUtc: s.proposedAtUtc,
+              })),
+              ...streetSuggestions.map((s) => ({
+                submissionType: 'street' as const,
+                id: s.id,
+                targetId: s.streetId,
+                suggestedName: s.suggestedName,
+                comment: s.comment,
+                proposedAtUtc: s.proposedAtUtc,
+              })),
+            ];
+            return ReviewActions.loadQueueSuccess({ items });
+          }),
           catchError(() => of(ReviewActions.loadQueueFailure({ errorMessageKey: 'common.error' }))),
         ),
       ),
     ),
   );
 
-requestResurvey$ = createEffect(() => this.actions$.pipe(
-    ofType(ReviewActions.requestResurvey),
-    mergeMap(({ id, submissionType }) => this.reviewApi.requestResurvey(id, submissionType).pipe(
-      map((item) => ReviewActions.requestResurveySuccess({ item })),
-      catchError(() => of(ReviewActions.requestResurveyFailure({ errorMessageKey: 'common.error' }))),
-    )),
-  ));
-  reloadOnFilterChange$ = createEffect(() =>
+  validate$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(ReviewActions.setFilters),
-      map(() => ReviewActions.loadQueue()),
-    ),
-  );
-
-  approve$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(ReviewActions.approve),
-      exhaustMap(({ id, submissionType }) =>
-        this.reviewApi.approve(id, submissionType).pipe(
-          map((item) => ReviewActions.approveSuccess({ item })),
-          catchError(() => of(ReviewActions.approveFailure({ errorMessageKey: 'common.error' }))),
+      ofType(ReviewActions.validate),
+      mergeMap(({ id }) =>
+        this.reviewApi.validateSurvey(id).pipe(
+          map(() => ReviewActions.validateSuccess({ id })),
+          catchError(() => of(ReviewActions.validateFailure({ errorMessageKey: 'common.error' }))),
         ),
       ),
     ),
@@ -54,10 +64,54 @@ requestResurvey$ = createEffect(() => this.actions$.pipe(
   reject$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ReviewActions.reject),
-      exhaustMap(({ id, submissionType, payload }) =>
-        this.reviewApi.reject(id, submissionType, payload).pipe(
-          map((item) => ReviewActions.rejectSuccess({ item })),
+      mergeMap(({ id, submissionType, rejectionReason }) => {
+        const decision$ =
+          submissionType === 'property'
+            ? this.reviewApi.rejectSurvey(id, rejectionReason)
+            : submissionType === 'block'
+              ? this.addressingApi.rejectBlockSuggestion(id, rejectionReason)
+              : this.addressingApi.rejectStreetSuggestion(id, rejectionReason);
+        return decision$.pipe(
+          map(() => ReviewActions.rejectSuccess({ id })),
           catchError(() => of(ReviewActions.rejectFailure({ errorMessageKey: 'common.error' }))),
+        );
+      }),
+    ),
+  );
+
+  requestCorrection$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(ReviewActions.requestCorrection),
+      mergeMap(({ id }) =>
+        this.reviewApi.requestSurveyCorrection(id).pipe(
+          map(() => ReviewActions.requestCorrectionSuccess({ id })),
+          catchError(() => of(ReviewActions.requestCorrectionFailure({ errorMessageKey: 'common.error' }))),
+        ),
+      ),
+    ),
+  );
+
+  approveSuggestion$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(ReviewActions.approveSuggestion),
+      mergeMap(({ id, submissionType }) => {
+        const decision$ =
+          submissionType === 'block' ? this.addressingApi.approveBlockSuggestion(id) : this.addressingApi.approveStreetSuggestion(id);
+        return decision$.pipe(
+          map(() => ReviewActions.approveSuggestionSuccess({ id })),
+          catchError(() => of(ReviewActions.approveSuggestionFailure({ errorMessageKey: 'common.error' }))),
+        );
+      }),
+    ),
+  );
+
+  loadPhotos$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(ReviewActions.loadPhotos),
+      mergeMap(({ surveyId }) =>
+        this.reviewApi.getSurveyPhotos(surveyId).pipe(
+          map((photos) => ReviewActions.loadPhotosSuccess({ surveyId, photos })),
+          catchError(() => of(ReviewActions.loadPhotosFailure({ surveyId, errorMessageKey: 'common.error' }))),
         ),
       ),
     ),

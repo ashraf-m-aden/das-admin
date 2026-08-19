@@ -17,16 +17,6 @@ export const reviewFeature = createFeature({
       items,
       listStatus: 'loaded' as const,
     })),
-    on(ReviewActions.requestResurveySuccess, (state, { item }) => ({
-      ...state,
-      items: state.items.filter((i) => i.id !== item.id),
-      isDeciding: false,
-    })),
-    on(ReviewActions.requestResurveyFailure, (state, { errorMessageKey }) => ({
-      ...state,
-      isDeciding: false,
-      decisionErrorMessageKey: errorMessageKey,
-    })),
     on(ReviewActions.loadQueueFailure, (state, { errorMessageKey }) => ({
       ...state,
       listStatus: 'error' as const,
@@ -38,23 +28,45 @@ export const reviewFeature = createFeature({
       filters: { ...state.filters, ...filters },
     })),
 
-    on(ReviewActions.approve, ReviewActions.reject, (state, action) => ({
-      ...state,
-      decidingId: action.id,
-      decisionErrorMessageKey: null,
-    })),
+    on(
+      ReviewActions.validate,
+      ReviewActions.reject,
+      ReviewActions.requestCorrection,
+      ReviewActions.approveSuggestion,
+      (state, action) => ({ ...state, decidingId: action.id, decisionErrorMessageKey: null }),
+    ),
 
-    on(ReviewActions.approveSuccess, ReviewActions.rejectSuccess, (state, { item }) => ({
-      ...state,
-      items: state.items.filter((i) => i.id !== item.id),
-      decidingId: null,
-    })),
+    on(
+      ReviewActions.validateSuccess,
+      ReviewActions.rejectSuccess,
+      ReviewActions.requestCorrectionSuccess,
+      ReviewActions.approveSuggestionSuccess,
+      (state, { id }) => ({
+        ...state,
+        items: state.items.filter((i) => i.id !== id),
+        decidingId: null,
+      }),
+    ),
 
-    on(ReviewActions.approveFailure, ReviewActions.rejectFailure, (state, { errorMessageKey }) => ({
+    on(
+      ReviewActions.validateFailure,
+      ReviewActions.rejectFailure,
+      ReviewActions.requestCorrectionFailure,
+      ReviewActions.approveSuggestionFailure,
+      (state, { errorMessageKey }) => ({
+        ...state,
+        decidingId: null,
+        decisionErrorMessageKey: errorMessageKey,
+      }),
+    ),
+
+    on(ReviewActions.loadPhotos, (state, { surveyId }) => ({ ...state, loadingPhotosId: surveyId })),
+    on(ReviewActions.loadPhotosSuccess, (state, { surveyId, photos }) => ({
       ...state,
-      decidingId: null,
-      decisionErrorMessageKey: errorMessageKey,
+      photosBySurveyId: { ...state.photosBySurveyId, [surveyId]: photos },
+      loadingPhotosId: null,
     })),
+    on(ReviewActions.loadPhotosFailure, (state) => ({ ...state, loadingPhotosId: null })),
   ),
 });
 
@@ -67,4 +79,6 @@ export const {
   selectFilters,
   selectDecidingId,
   selectDecisionErrorMessageKey,
+  selectPhotosBySurveyId,
+  selectLoadingPhotosId,
 } = reviewFeature;

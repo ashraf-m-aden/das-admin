@@ -688,24 +688,31 @@
   "verification": {
     "eyebrow": "Soumissions terrain en attente de décision",
     "all": "Toutes",
-    "validation": "Validation",
-    "geoConfidence": "Confiance géo",
     "gpsAccuracy": "Précision GPS",
+    "distance": "Écart à la parcelle",
     "photos": "Photos",
+    "viewPhotos": "Voir les {{count}} photos",
+    "mockLocationWarning": "Position GPS simulée détectée",
+    "notSurveyable": "Non relevable",
+    "suggestedName": "Nom proposé",
+    "comment": "Commentaire",
+    "validate": "Valider",
     "approve": "Approuver",
     "reject": "Rejeter",
-    "requestResurvey": "Redemander un levé",
+    "requestCorrection": "Renvoyer en correction",
     "confirmReject": "Confirmer le rejet",
-    "reasonPlaceholder": "Motif (optionnel)…",
+    "reasonPlaceholder": "Motif du rejet…",
     "empty": "File vide — rien à vérifier",
     "type": {
       "property": "Parcelle",
-      "street": "Rue"
+      "street": "Rue",
+      "block": "Bloc"
     },
-    "reason": {
-      "photo_retake": "Reprendre les photos",
-      "gps_recheck": "Revérifier le GPS",
-      "other": "Autre"
+    "notSurveyableReason": {
+      "demolished": "Démolie",
+      "inaccessible": "Inaccessible",
+      "refused": "Accès refusé",
+      "notfound": "Introuvable"
     }
   },
   "period": {

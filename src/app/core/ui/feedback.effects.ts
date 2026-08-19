@@ -45,7 +45,7 @@ export class FeedbackEffects {
   // ----- Revue -----
   reviewApproved$ = createEffect(
     () => this.actions$.pipe(
-      ofType(ReviewActions.approveSuccess),
+      ofType(ReviewActions.validateSuccess, ReviewActions.approveSuggestionSuccess),
       tap(() => this.toast.success('feedback.reviewApproved')),
     ),
     { dispatch: false },
@@ -53,7 +53,7 @@ export class FeedbackEffects {
 
   reviewRejected$ = createEffect(
     () => this.actions$.pipe(
-      ofType(ReviewActions.rejectSuccess),
+      ofType(ReviewActions.rejectSuccess, ReviewActions.requestCorrectionSuccess),
       tap(() => this.toast.success('feedback.reviewRejected')),
     ),
     { dispatch: false },
@@ -61,7 +61,12 @@ export class FeedbackEffects {
 
   reviewErrors$ = createEffect(
     () => this.actions$.pipe(
-      ofType(ReviewActions.approveFailure, ReviewActions.rejectFailure),
+      ofType(
+        ReviewActions.validateFailure,
+        ReviewActions.rejectFailure,
+        ReviewActions.requestCorrectionFailure,
+        ReviewActions.approveSuggestionFailure,
+      ),
       tap(({ errorMessageKey }) => this.toast.error(errorMessageKey || 'feedback.error')),
     ),
     { dispatch: false },
@@ -175,6 +180,8 @@ export class FeedbackEffects {
       ofType(
         AddressingActions.blockNameActionSuccess,
         AddressingActions.streetNameActionSuccess,
+        AddressingActions.blockSuggestionDecided,
+        AddressingActions.streetSuggestionDecided,
       ),
       tap(() => this.toast.success('feedback.saved')),
     ),

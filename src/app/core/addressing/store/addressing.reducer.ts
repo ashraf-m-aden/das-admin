@@ -18,6 +18,7 @@ export const addressingFeature = createFeature({
     on(AddressingActions.blockNameActionSuccess, (state, { item }) => ({
       ...state, blocks: state.blocks.map((b) => (b.id === item.id ? item : b)), savingBlockId: null,
     })),
+    on(AddressingActions.blockSuggestionDecided, (state) => ({ ...state, savingBlockId: null })),
     on(AddressingActions.blockNameActionFailure, (state, { errorMessageKey }) => ({
       ...state, savingBlockId: null, blockActionErrorMessageKey: errorMessageKey,
     })),
@@ -33,6 +34,7 @@ export const addressingFeature = createFeature({
     on(AddressingActions.streetNameActionSuccess, (state, { item }) => ({
       ...state, streets: state.streets.map((s) => (s.id === item.id ? item : s)), savingStreetId: null,
     })),
+    on(AddressingActions.streetSuggestionDecided, (state) => ({ ...state, savingStreetId: null })),
     on(AddressingActions.streetNameActionFailure, (state, { errorMessageKey }) => ({
       ...state, savingStreetId: null, streetActionErrorMessageKey: errorMessageKey,
     })),

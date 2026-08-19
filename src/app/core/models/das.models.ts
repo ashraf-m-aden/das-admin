@@ -155,7 +155,7 @@ export interface Task {
   deadline: ISODateTime | null; createdAt: ISODateTime; updatedAt: ISODateTime;
 }
 
-export type RedoSubmissionType = 'property' | 'street';
+export type RedoSubmissionType = 'property' | 'street' | 'block';
 export type RedoRequestStatus = 'pending' | 'resolved';
 export interface RedoRequest {
   id: UUID; submissionType: RedoSubmissionType; submissionId: UUID; requestedBy: UUID;

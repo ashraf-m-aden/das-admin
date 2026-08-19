@@ -45,22 +45,21 @@ export class SidebarComponent {
         { labelKey: 'nav.gisMap', path: '/blocks/map' },
       ],
     },
-    // { kind: 'link', labelKey: 'nav.verification', path: '/verification', icon: 'ti-checkup-list', allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
-    // { kind: 'link', labelKey: 'nav.fieldOps', path: '/field-operations', icon: 'ti-users-group', allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
-    // { kind: 'link', labelKey: 'nav.verification', path: '/review', icon: 'ti-checkup-list', allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
-    // { kind: 'link', labelKey: 'nav.postcodes', path: '/postcodes', icon: 'ti-mail-code', allowedRoles: ['Admin', 'Gestionnaire'] },
-    // { kind: 'link', labelKey: 'nav.dataQuality', path: '/data-quality', icon: 'ti-shield-check', allowedRoles: ['Admin', 'Superviseur'] },
-    // {
-    //   kind: 'group', key: 'reports', labelKey: 'nav.reports', icon: 'ti-chart-bar',
-    //   allowedRoles: ['Admin', 'Gestionnaire'],
-    //   children: [
-    //     { labelKey: 'nav.reportsOverview', path: '/reports' },
-    //     { labelKey: 'nav.auditLogs', path: '/reports/audit' },
-    //   ],
-    // },
-    // { kind: 'link', labelKey: 'nav.users', path: '/staff', icon: 'ti-users', allowedRoles: ['Admin'] },
-    // { kind: 'link', labelKey: 'nav.integrations', path: '/integrations', icon: 'ti-plug', allowedRoles: ['Admin'] },
-    // { kind: 'link', labelKey: 'nav.settings', path: '/settings', icon: 'ti-settings', allowedRoles: ['Admin'] },
+    { kind: 'link', labelKey: 'nav.verification', path: '/verification', icon: 'ti-checkup-list', allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
+    { kind: 'link', labelKey: 'nav.fieldOps', path: '/field-operations', icon: 'ti-users-group', allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
+    { kind: 'link', labelKey: 'nav.postcodes', path: '/postcodes', icon: 'ti-mail-code', allowedRoles: ['Admin', 'Gestionnaire'] },
+    { kind: 'link', labelKey: 'nav.dataQuality', path: '/data-quality', icon: 'ti-shield-check', allowedRoles: ['Admin', 'Superviseur'] },
+    {
+      kind: 'group', key: 'reports', labelKey: 'nav.reports', icon: 'ti-chart-bar',
+      allowedRoles: ['Admin', 'Gestionnaire'],
+      children: [
+        { labelKey: 'nav.reportsOverview', path: '/reports' },
+        { labelKey: 'nav.auditLogs', path: '/reports/audit' },
+      ],
+    },
+    { kind: 'link', labelKey: 'nav.users', path: '/staff', icon: 'ti-users', allowedRoles: ['Admin'] },
+    { kind: 'link', labelKey: 'nav.integrations', path: '/integrations', icon: 'ti-plug', allowedRoles: ['Admin'] },
+    { kind: 'link', labelKey: 'nav.settings', path: '/settings', icon: 'ti-settings', allowedRoles: ['Admin'] },
   ];
 
   isVisible(entry: NavEntry, roles: UserRole[]): boolean {
