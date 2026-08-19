@@ -127,32 +127,55 @@ export type StreetPhotoType = 'sign' | 'road_view';
 export interface StreetPhoto { id: UUID; streetId: UUID; photoType: StreetPhotoType; s3Key: string; uploadedAt: ISODateTime; }
 
 /* =============================================================================
- * OPÉRATIONS TERRAIN — équipes (maquettes Field Operations)
+ * OPÉRATIONS TERRAIN — campagnes (`/api/campaigns`, `/api/campaigns/{id}/blocs`,
+ * `/api/campaign-assignments`). Maille d'affectation : le BLOC, pas l'adresse
+ * (bascule backend du 2026-08-11) — `Assignment` ne stocke plus d'agent, il se
+ * déduit via Adresse → Bloc → CampaignBloc.
  * ========================================================================== */
 
-export type FieldTeamStatus = 'active' | 'en_route' | 'offline' | 'idle';
-export interface FieldTeam {
-  id: UUID;
-  name: string;                    // ex. "Team Alpha"
-  supervisorId: UUID;
-  supervisorName: string;
-  memberCount: number;
-  currentZoneId: UUID | null;
-  currentZoneName: string | null;
-  progressPercent: number;
-  status: FieldTeamStatus;
-  deviceOnline: boolean;
+export type CampaignStatus = 'Planned' | 'InProgress' | 'Closed';
+export type AssignmentStatus = 'ToDo' | 'Done' | 'Abandoned';
+
+export interface Campaign {
+  id: UUID; code: string; name: string; status: CampaignStatus;
+  /** Date seule (YYYY-MM-DD), pas un timestamp. */
+  deadline: string;
+  allowLateSurveys: boolean;
+  createdAtUtc: ISODateTime;
+  /** Fixé au démarrage (`POST /start`) — `null` tant que la campagne est `Planned`. */
+  openedAtUtc: ISODateTime | null;
+  closedAtUtc: ISODateTime | null;
 }
 
-export type TaskType = 'survey' | 'street_naming' | 'verification' | 'boundary_validation';
-export type TaskStatus = 'new' | 'in_progress' | 'awaiting_review' | 'completed';
-export type TaskPriority = 'low' | 'normal' | 'high';
-export interface Task {
-  id: UUID; blockId: UUID | null; redoRequestId: UUID | null; type: TaskType;
-  title: string; zoneName: string | null; addressCount: number | null;
-  assignedTeamId: UUID | null; assignedTeamName: string | null;
-  createdBy: UUID; status: TaskStatus; priority: TaskPriority; progressPercent: number;
-  deadline: ISODateTime | null; createdAt: ISODateTime; updatedAt: ISODateTime;
+/** Un bloc affecté à un agent, dans une campagne. LA seule maille d'affectation réelle. */
+export interface CampaignBloc {
+  id: UUID; campaignId: UUID; blocId: UUID; blocCode: string; blocName: string | null;
+  agentId: UUID; agentFullName: string;
+  assignedAtUtc: ISODateTime; reassignedAtUtc: ISODateTime | null;
+}
+
+/** Une ligne = un agent, dans le contexte de la progression d'une campagne. Charge (blocs) et production (relevés) sont volontairement séparées, jamais additionnées. */
+export interface AgentProgress {
+  agentId: UUID; agentFullName: string;
+  heldBlocs: number; total: number; toDo: number; done: number; abandoned: number;
+  surveysCaptured: number; surveysValidated: number;
+}
+
+export interface CampaignProgress {
+  campaignId: UUID; campaignCode: string; campaignName: string; status: CampaignStatus;
+  assignedBlocs: number; totalAssignments: number; toDo: number; done: number; abandoned: number;
+  surveysDraft: number; surveysSubmitted: number; surveysValidated: number; surveysRejected: number;
+  temporaryAwaitingRecheck: number; stalledSubmissions: number;
+  canBeClosed: boolean; byAgent: AgentProgress[];
+}
+
+/** Une ligne = une parcelle de la feuille de route. `agentId`/`agentFullName` sont déduits du bloc — `null` si le bloc a été retiré de la campagne. */
+export interface Assignment {
+  id: UUID; campaignId: UUID; adresseId: UUID;
+  agentId: UUID | null; agentFullName: string | null;
+  status: AssignmentStatus; abandonReason: string | null; abandonedAtUtc: ISODateTime | null;
+  /** Motif du dernier relevé rejeté sur cette adresse, toutes campagnes confondues. */
+  lastRejectionReason: string | null;
 }
 
 export type RedoSubmissionType = 'property' | 'street' | 'block';

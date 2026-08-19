@@ -82,6 +82,16 @@
   --color-status-approved-bg: var(--das-green-100);
   --color-status-needs-redo: #b91c1c;
   --color-status-needs-redo-bg: var(--das-red-100);
+  --color-status-planned: var(--das-ink-600);
+  --color-status-planned-bg: var(--das-surface-sunken);
+  --color-status-closed: var(--das-green-600);
+  --color-status-closed-bg: var(--das-green-100);
+  --color-status-todo: var(--das-ink-600);
+  --color-status-todo-bg: var(--das-surface-sunken);
+  --color-status-done: var(--das-green-600);
+  --color-status-done-bg: var(--das-green-100);
+  --color-status-abandoned: #b91c1c;
+  --color-status-abandoned-bg: var(--das-red-100);
 
   /* Sidebar sombre — tokens dédiés */
   --color-sidebar-bg: var(--das-navy-900);

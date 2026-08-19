@@ -41,6 +41,8 @@ import { DataQualityApiPort } from './core/dataquality/services/dataquality-api.
 import { MockDataQualityApiService } from './core/dataquality/services/mock-dataquality-api.service';
 import { FieldOpsApiPort } from './core/fieldops/services/fieldops-api.port';
 import { MockFieldOpsApiService } from './core/fieldops/services/mock-fieldops-api.service';
+import { fieldOpsFeature } from './core/fieldops/store/fieldops.reducer';
+import { FieldOpsEffects } from './core/fieldops/store/fieldops.effects';
 import { MockPostcodesApiService } from './core/postcodes/services/mock-postcodes-api.service';
 import { PostcodesApiPort } from './core/postcodes/services/postcodes-api.port';
 import { MockRegistryApiService } from './core/registry/services/mock-registry-api.service';
@@ -85,6 +87,7 @@ export const appConfig: ApplicationConfig = {
       [staffFeature.name]: staffFeature.reducer,
       [blocksFeature.name]: blocksFeature.reducer,
       [reviewFeature.name]: reviewFeature.reducer,
+      [fieldOpsFeature.name]: fieldOpsFeature.reducer,
       [notificationsFeature.name]: notificationsFeature.reducer,
       [settingsFeature.name]: settingsFeature.reducer,
       [addressingFeature.name]: addressingFeature.reducer,
@@ -96,6 +99,7 @@ export const appConfig: ApplicationConfig = {
       StaffEffects,
       BlocksEffects,
       ReviewEffects,
+      FieldOpsEffects,
       NotificationsEffects,
       SettingsEffects,
       AddressingEffects,

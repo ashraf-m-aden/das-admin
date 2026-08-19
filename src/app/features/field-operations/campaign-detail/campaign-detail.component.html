@@ -1,0 +1,217 @@
+<das-page-header [eyebrow]="'fieldops.eyebrow' | transloco" [title]="campaign()?.name ?? ''">
+  <a actions routerLink="/field-operations" class="detail-back"
+    ><i class="ti ti-arrow-left" aria-hidden="true"></i>{{ 'fieldops.backToList' | transloco }}</a
+  >
+</das-page-header>
+
+<div class="cd">
+  @if (campaign(); as c) {
+    <section class="das-card head">
+      @if (editingCampaign()) {
+        <form class="head__edit" [formGroup]="editForm" (ngSubmit)="confirmEditCampaign()">
+          <input type="text" formControlName="name" [attr.placeholder]="'fieldops.campaignNamePlaceholder' | transloco" />
+          <label class="head__edit-deadline">{{ 'fieldops.deadline' | transloco }} <input type="date" formControlName="deadline" /></label>
+          <button type="submit" class="btn btn--primary" [disabled]="editForm.invalid || (facade.isUpdatingCampaign$ | async)">{{ 'common.save' | transloco }}</button>
+          <button type="button" class="btn btn--ghost" (click)="cancelEditCampaign()">{{ 'common.cancel' | transloco }}</button>
+        </form>
+        @if (facade.updateCampaignErrorMessageKey$ | async; as err) { <div class="head__error">{{ err | transloco }}</div> }
+      } @else {
+        <span class="head__code mono">{{ c.code }}</span>
+        <span [class]="statusBadgeClass(c.status)">{{ ('fieldops.status.' + c.status.toLowerCase()) | transloco }}</span>
+        <span class="head__dates">
+          {{ 'fieldops.deadline' | transloco }} {{ c.deadline }}
+          @if (c.openedAtUtc) { · {{ 'fieldops.openedAt' | transloco }} {{ c.openedAtUtc | dasDate: 'long' }} }
+          @if (c.closedAtUtc) { · {{ 'fieldops.closedAt' | transloco }} {{ c.closedAtUtc | dasDate: 'long' }} }
+        </span>
+        <div class="head__actions">
+          @if (c.status !== 'Closed') {
+            <button type="button" class="btn btn--ghost" (click)="startEditCampaign()"><i class="ti ti-pencil" aria-hidden="true"></i>{{ 'fieldops.editCampaign' | transloco }}</button>
+          }
+          @if (c.status === 'Planned') {
+            <button type="button" class="btn btn--primary" [disabled]="campaignBlocs().length === 0 || (facade.isStarting$ | async)" (click)="startCampaign()">
+              {{ 'fieldops.start' | transloco }}
+            </button>
+            @if (campaignBlocs().length === 0) { <span class="head__hint">{{ 'fieldops.needsBlocsToStart' | transloco }}</span> }
+          }
+          @if (c.status === 'InProgress') {
+            <button type="button" class="btn btn--ghost" [attr.title]="'fieldops.regenerateHint' | transloco" [disabled]="(facade.isPopulating$ | async)" (click)="populateCampaign()">{{ 'fieldops.regenerate' | transloco }}</button>
+            <button type="button" class="btn btn--ghost" [disabled]="(facade.isClosing$ | async)" (click)="closeCampaign()">{{ 'fieldops.close' | transloco }}</button>
+          }
+          @if (c.status === 'Closed') {
+            <button type="button" class="btn btn--ghost" [disabled]="(facade.isExtending$ | async)" (click)="extendCampaign()">{{ 'fieldops.extend' | transloco }}</button>
+          }
+        </div>
+        @if (facade.lastPopulateResult$ | async; as result) {
+          <div class="head__result">{{ 'fieldops.populateResult' | transloco: { created: result.createdAssignments, total: result.totalAssignments } }}</div>
+        }
+      }
+    </section>
+
+    @if (campaignBlocs().length) {
+      <section class="das-card map-panel">
+        <div class="panel__title">{{ 'fieldops.mapTitle' | transloco }}</div>
+        <div class="map-panel__legend">
+          <button type="button" class="chip" [class.chip--on]="mapAgentFilter() === null" (click)="filterMapAgent(null)">{{ 'fieldops.all' | transloco }}</button>
+          @for (a of mapAgents(); track a.id) {
+            <button type="button" class="chip" [class.chip--on]="mapAgentFilter() === a.id" (click)="filterMapAgent(a.id)">
+              <span class="chip__dot" [style.background]="a.color"></span>{{ a.name }}
+            </button>
+          }
+        </div>
+        <div class="map-panel__canvas">
+          <das-map [tileLayers]="tileLayers" [tileFeatureStates]="tileFeatureStates()" [tileFilters]="tileFilters()" [fitBbox]="mapFitBbox()" [showLayerControl]="false" />
+        </div>
+      </section>
+    }
+
+    @if (progress(); as p) {
+      <section class="das-card progress">
+        <div class="panel__title">{{ 'fieldops.progress' | transloco }}</div>
+        <div class="progress__groups">
+          <div class="pgroup">
+            <div class="pgroup__title">{{ 'fieldops.assignmentsGroup' | transloco }}</div>
+            <div class="facts">
+              <div class="fact"><span class="fact__l">{{ 'fieldops.assignedBlocs' | transloco }}</span><span class="fact__v">{{ p.assignedBlocs }}</span></div>
+              <div class="fact"><span class="fact__l">{{ 'fieldops.status.todo' | transloco }}</span><span class="fact__v">{{ p.toDo }}</span></div>
+              <div class="fact"><span class="fact__l">{{ 'fieldops.status.done' | transloco }}</span><span class="fact__v">{{ p.done }}</span></div>
+              <div class="fact"><span class="fact__l">{{ 'fieldops.status.abandoned' | transloco }}</span><span class="fact__v">{{ p.abandoned }}</span></div>
+              <div class="fact"><span class="fact__l">{{ 'fieldops.total' | transloco }}</span><span class="fact__v">{{ p.totalAssignments }}</span></div>
+            </div>
+            @if (p.totalAssignments > 0) {
+              <div class="segbar">
+                <span class="segbar__seg segbar__seg--done" [style.width.%]="(p.done / p.totalAssignments) * 100"></span>
+                <span class="segbar__seg segbar__seg--todo" [style.width.%]="(p.toDo / p.totalAssignments) * 100"></span>
+                <span class="segbar__seg segbar__seg--abandoned" [style.width.%]="(p.abandoned / p.totalAssignments) * 100"></span>
+              </div>
+            }
+          </div>
+          <div class="pgroup">
+            <div class="pgroup__title">{{ 'fieldops.surveysGroup' | transloco }}</div>
+            <div class="facts">
+              <div class="fact"><span class="fact__l">{{ 'fieldops.survey.draft' | transloco }}</span><span class="fact__v">{{ p.surveysDraft }}</span></div>
+              <div class="fact"><span class="fact__l">{{ 'fieldops.survey.submitted' | transloco }}</span><span class="fact__v">{{ p.surveysSubmitted }}</span></div>
+              <div class="fact"><span class="fact__l">{{ 'fieldops.survey.validated' | transloco }}</span><span class="fact__v">{{ p.surveysValidated }}</span></div>
+              <div class="fact"><span class="fact__l">{{ 'fieldops.survey.rejected' | transloco }}</span><span class="fact__v">{{ p.surveysRejected }}</span></div>
+              <div class="fact"><span class="fact__l">{{ 'fieldops.awaitingRecheck' | transloco }}</span><span class="fact__v">{{ p.temporaryAwaitingRecheck }}</span></div>
+              <div class="fact"><span class="fact__l">{{ 'fieldops.stalled' | transloco }}</span><span class="fact__v">{{ p.stalledSubmissions }}</span></div>
+            </div>
+          </div>
+        </div>
+
+        @if (p.byAgent.length) {
+          <div class="agents">
+            <div class="ahead"><span>{{ 'fieldops.agent' | transloco }}</span><span>{{ 'fieldops.heldBlocs' | transloco }}</span><span>{{ 'fieldops.status.todo' | transloco }}</span><span>{{ 'fieldops.status.done' | transloco }}</span><span>{{ 'fieldops.status.abandoned' | transloco }}</span><span>{{ 'fieldops.surveysCaptured' | transloco }}</span></div>
+            @for (a of p.byAgent; track a.agentId) {
+              <div class="arow"><span class="arow__agent"><span class="dot" [style.background]="agentColor(a.agentId)"></span>{{ a.agentFullName }}</span><span>{{ a.heldBlocs }}</span><span>{{ a.toDo }}</span><span>{{ a.done }}</span><span>{{ a.abandoned }}</span><span>{{ a.surveysCaptured }}</span></div>
+            }
+          </div>
+        }
+      </section>
+    }
+
+    <section class="das-card assign-bloc">
+      <div class="panel__title">{{ 'fieldops.assignBlocs' | transloco }}</div>
+      <das-hierarchy-cascade (selectionChange)="onHierarchy($event)" />
+
+      @if (blocks().length) {
+        <div class="blocklist">
+          @for (b of blocks(); track b.id) {
+            <label class="blocklist__item" [class.blocklist__item--taken]="assignedBlocIds().has(b.id)">
+              <input type="checkbox" [checked]="selectedBlocIds().has(b.id)" [disabled]="assignedBlocIds().has(b.id)" (change)="toggleBloc(b.id)" />
+              <span>{{ b.code }}@if (b.name) { — {{ b.name }} }@if (assignedBlocIds().has(b.id)) { ({{ 'fieldops.alreadyAssigned' | transloco }}) }</span>
+            </label>
+          }
+        </div>
+      }
+
+      <form class="assign-bloc__form" [formGroup]="assignBlocForm" (ngSubmit)="submitAssignBlocs()">
+        <select formControlName="agentId">
+          <option value="">{{ 'fieldops.selectAgent' | transloco }}</option>
+          @for (a of agents(); track a.id) { <option [value]="a.id">{{ a.fullName }}</option> }
+        </select>
+        <button type="submit" class="btn btn--primary" [disabled]="(facade.isAssigningBloc$ | async)">{{ 'fieldops.assign' | transloco }}</button>
+      </form>
+      @if (facade.assignBlocErrorMessageKey$ | async; as err) { <div class="assign-bloc__error">{{ err | transloco }}</div> }
+
+      @if (campaignBlocs().length) {
+        <div class="blocs">
+          <div class="bhead"><span>{{ 'fieldops.bloc' | transloco }}</span><span>{{ 'fieldops.agent' | transloco }}</span><span>{{ 'fieldops.assignedAt' | transloco }}</span><span></span></div>
+          @for (cb of campaignBlocs(); track cb.id) {
+            <div class="brow">
+              <span>{{ cb.blocCode }}@if (cb.blocName) { — {{ cb.blocName }} }</span>
+              <span><span class="dot" [style.background]="agentColor(cb.agentId)"></span>{{ cb.agentFullName }}</span>
+              <span>{{ cb.assignedAtUtc | dasDate: 'short' }}</span>
+              @if (c.status !== 'Closed') {
+                @if (reassigningBlocId() === cb.blocId) {
+                  <form class="inline" [formGroup]="reassignBlocForm" (ngSubmit)="confirmReassignBloc(cb.blocId)">
+                    <select formControlName="agentId">
+                      <option value="">{{ 'fieldops.selectAgent' | transloco }}</option>
+                      @for (a of agents(); track a.id) { <option [value]="a.id">{{ a.fullName }}</option> }
+                    </select>
+                    <button type="submit" class="btn btn--ghost">{{ 'common.save' | transloco }}</button>
+                    <button type="button" class="btn btn--ghost" (click)="cancelReassignBloc()">{{ 'common.cancel' | transloco }}</button>
+                  </form>
+                } @else {
+                  <button type="button" class="btn btn--ghost" [disabled]="(facade.isDecidingBloc$(cb.blocId) | async)" (click)="startReassignBloc(cb.blocId)">{{ 'fieldops.reassign' | transloco }}</button>
+                }
+              }
+            </div>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="das-card assignments">
+      <div class="panel__title">{{ 'fieldops.assignmentsList' | transloco }}</div>
+      <div class="fo__tabs">
+        <button type="button" class="tab" (click)="filterAssignmentStatus(null)">{{ 'fieldops.all' | transloco }}</button>
+        @for (s of assignmentStatuses; track s) {
+          <button type="button" class="tab" (click)="filterAssignmentStatus(s)">{{ ('fieldops.status.' + s.toLowerCase()) | transloco }}</button>
+        }
+      </div>
+
+      @for (a of assignments(); track a.id) {
+        <div class="arow2">
+          <span class="arow2__adresse mono">{{ a.adresseId }}</span>
+          <span>@if (a.agentId) { <span class="dot" [style.background]="agentColor(a.agentId)"></span> }{{ a.agentFullName ?? ('fieldops.noAgent' | transloco) }}</span>
+          <span [class]="statusBadgeClass(a.status)">{{ ('fieldops.status.' + a.status.toLowerCase()) | transloco }}</span>
+          @if (a.abandonReason) { <span class="arow2__reason">{{ a.abandonReason }}</span> }
+          @if (a.lastRejectionReason) { <span class="arow2__reason">{{ 'fieldops.lastRejection' | transloco }} {{ a.lastRejectionReason }}</span> }
+
+          @if (a.status === 'ToDo') {
+            @if (abandoningId() === a.id) {
+              <form class="inline" [formGroup]="abandonForm" (ngSubmit)="confirmAbandon(a.id)">
+                <input type="text" formControlName="reason" [attr.placeholder]="'fieldops.abandonReasonPlaceholder' | transloco" />
+                <button type="submit" class="btn btn--reject">{{ 'fieldops.abandon' | transloco }}</button>
+                <button type="button" class="btn btn--ghost" (click)="cancelAbandon()">{{ 'common.cancel' | transloco }}</button>
+              </form>
+            } @else {
+              <button type="button" class="btn btn--reject" [disabled]="(facade.isDecidingAssignment$(a.id) | async)" (click)="startAbandon(a.id)">{{ 'fieldops.abandon' | transloco }}</button>
+            }
+          }
+        </div>
+      } @empty {
+        <div class="list__empty">@if (facade.isAssignmentsLoading$ | async) { {{ 'common.loading' | transloco }} } @else { {{ 'fieldops.empty' | transloco }} }</div>
+      }
+    </section>
+
+    <section class="das-card transfer">
+      <div class="panel__title">{{ 'fieldops.transferBlocs' | transloco }}</div>
+      <form class="transfer__form" [formGroup]="transferForm" (ngSubmit)="submitTransfer()">
+        <select formControlName="fromAgentId">
+          <option value="">{{ 'fieldops.transferFrom' | transloco }}</option>
+          @for (a of agents(); track a.id) { <option [value]="a.id">{{ a.fullName }}</option> }
+        </select>
+        <select formControlName="toAgentId">
+          <option value="">{{ 'fieldops.transferTo' | transloco }}</option>
+          @for (a of agents(); track a.id) { <option [value]="a.id">{{ a.fullName }}</option> }
+        </select>
+        <label class="checkbox"><input type="checkbox" formControlName="thisCampaignOnly" />{{ 'fieldops.thisCampaignOnly' | transloco }}</label>
+        <button type="submit" class="btn btn--ghost" [disabled]="(facade.isTransferringBlocs$ | async)">{{ 'fieldops.transfer' | transloco }}</button>
+      </form>
+      @if (facade.lastTransferResult$ | async; as r) { <div class="transfer__result">{{ 'fieldops.transferResult' | transloco: { count: r.transferredCount } }}</div> }
+    </section>
+  } @else {
+    <div class="cd__loading">{{ 'common.loading' | transloco }}</div>
+  }
+</div>

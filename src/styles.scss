@@ -44,4 +44,10 @@ button { font-family: inherit; @include m.focus-ring; }
   &--submitted { @include m.status-badge(submitted); }
   &--approved { @include m.status-badge(approved); }
   &--needs-redo { @include m.status-badge(needs-redo); }
+  &--planned { @include m.status-badge(planned); }
+  &--inprogress { @include m.status-badge(in-progress); }
+  &--closed { @include m.status-badge(closed); }
+  &--todo { @include m.status-badge(todo); }
+  &--done { @include m.status-badge(done); }
+  &--abandoned { @include m.status-badge(abandoned); }
 }

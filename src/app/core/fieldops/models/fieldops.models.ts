@@ -1,49 +1,42 @@
-import { UUID, ISODateTime, FieldTeam, Task, TaskStatus, TaskPriority, FieldTeamStatus, GeoJSONPoint, GeoJSONMultiPolygon } from '../../models/das.models';
+import { AssignmentStatus, Campaign, CampaignStatus, UUID } from '../../models/das.models';
 
-export interface FieldOpsKpis {
-  activeTeams: number;
-  tasksAssignedToday: number;
-  completedSurveys: number;
-  completedPct: number;
-  pendingVerifications: number;
-  offlineDevices: number;
-  escalations: number;
+export interface CampaignListQuery {
+  status: CampaignStatus | null;
 }
 
-export interface KanbanColumn {
-  status: TaskStatus;
-  tasks: Task[];
+export interface CreateCampaignPayload {
+  name: string;
+  /** Date seule (YYYY-MM-DD). */
+  deadline: string;
 }
 
-export interface VerificationReview {
-  taskId: string;
-  submittedBy: string;
-  submittedAt: ISODateTime;
-  latitude: number;
-  longitude: number;
-  locationLabel: string;
-  geoConfidence: number;
-  photoCount: number;
-}
-export interface ScheduleEntry {
-  id: string;
-  time: string;          // "07:30"
-  teamName: string;
-  titleKey: string;      // dataquality-style i18n key
-  locationKey: string;
-  done: boolean;
-}
-export interface FieldOpsData {
-  kpis: FieldOpsKpis;
-  teams: FieldTeam[];
-  columns: KanbanColumn[];
-  review: VerificationReview | null;
-  teamLocations: TeamLocation[];
-  zones: ZoneBoundary[];
-  schedule: ScheduleEntry[];
+export interface StartCampaignResult {
+  campaign: Campaign;
+  generatedAssignments: number;
 }
 
-export type { TaskPriority };
+export interface PopulateCampaignResult {
+  campaignId: UUID;
+  createdAssignments: number;
+  totalAssignments: number;
+}
 
-export interface TeamLocation { id: string; name: string; status: FieldTeamStatus; location: GeoJSONPoint; }
-export interface ZoneBoundary { id: string; name: string; geom: GeoJSONMultiPolygon; }
+export interface AddCampaignAddressesResult {
+  campaignId: UUID;
+  added: number;
+  alreadyPresent: UUID[];
+  notFound: UUID[];
+  rejectedUnassignedBloc: UUID[];
+}
+
+export interface AssignmentQuery {
+  campaignId: UUID | null;
+  agentId: UUID | null;
+  status: AssignmentStatus | null;
+}
+
+export interface TransferBlocsResult {
+  fromAgentId: UUID;
+  toAgentId: UUID;
+  transferredCount: number;
+}
