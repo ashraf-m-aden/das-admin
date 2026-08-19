@@ -64,12 +64,12 @@ protected readonly mapFeatures = computed<MapFeature[]>(() =>
 
   protected readonly trendLabels = computed(() => this.summary()?.registrationsTrend ?? []);
 private static readonly LEVEL_ROUTE: Record<string, string> = {
-    region: '/registry', ville: '/registry', commune: '/registry', quartier: '/registry',
-    bloc: '/blocks', rue: '/addressing', parcelle: '/registry',
+    region: '/adresse', ville: '/adresse', commune: '/adresse', quartier: '/adresse',
+    bloc: '/blocks', rue: '/addressing', parcelle: '/adresse',
   };
 
   levelRoute(level: string): string {
-    return DashboardComponent.LEVEL_ROUTE[level] ?? '/registry';
+    return DashboardComponent.LEVEL_ROUTE[level] ?? '/adresse';
   }onPickDate(): void { /* TODO: ouvrir le sélecteur de période (calendrier) */ }
   protected readonly donut = computed(() => {
     const v = this.summary()?.verification;

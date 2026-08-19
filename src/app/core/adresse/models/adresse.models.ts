@@ -52,7 +52,7 @@ export interface AddressDetail extends AddressListItem {
 }
 
 /** Filtres du registre. Déclaration UNIQUE (fin des doublons). */
-export interface RegistryFilters {
+export interface AdresseFilters {
   search: string;
   postcode: string | null;   // conservé (inutilisé) — filtrage géo déplacé vers la hiérarchie
   zone: string | null;       // idem
@@ -67,29 +67,29 @@ export interface RegistryFilters {
 }
 
 /** Options de filtre alimentant les selects. Déclaration UNIQUE. */
-export interface RegistryFilterOptions {
+export interface AdresseFilterOptions {
   postcodes: string[];
   zones: string[];
   regions: string[];
   teams: string[];
 }
 
-export interface RegistrySummary {
+export interface AdresseSummary {
   totalRecords: number;
   pendingReview: number;
   duplicatesFlagged: number;
   publishedToday: number;
 }
 
-export interface RegistryPageResult {
+export interface AdressePageResult {
   items: AddressListItem[];
   total: number;
   page: number;
   pageSize: number;
 }
 
-export interface RegistryQuery {
-  filters: RegistryFilters;
+export interface AdresseQuery {
+  filters: AdresseFilters;
   page: number;
   pageSize: number;
 }

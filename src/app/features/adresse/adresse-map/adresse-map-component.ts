@@ -3,12 +3,12 @@ import { AsyncPipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
-import { RegistryFacade } from '../../../core/registry/store/registry.facade';
+import { AdresseFacade } from '../../../core/adresse/store/adresse.facade';
 import { PageHeaderComponent } from '../../../core/layout/page-header/page-header.component';
 import { BasemapLayerGroup, DasMapComponent } from '../../../core/ui/map/das-map.component';
 import { MapFeature, MapLayerConfig } from '../../../core/ui/map/map.models';
 import { AddressDetailDrawerComponent } from '../address-detail-drawer/address-detail-drawer.component';
-import { AddressListItem, WORKFLOW_STAGES } from '../../../core/registry/models/registry.models';
+import { AddressListItem, WORKFLOW_STAGES } from '../../../core/adresse/models/adresse.models';
 import { AddressWorkflowStage } from '../../../core/models/das.models';
 
 const STAGE_COLORS: Record<AddressWorkflowStage, string> = {
@@ -16,14 +16,14 @@ const STAGE_COLORS: Record<AddressWorkflowStage, string> = {
 };
 
 @Component({
-  selector: 'das-registry-map',
+  selector: 'das-adresse-map',
   standalone: true,
   imports: [AsyncPipe, RouterLink, TranslocoModule, PageHeaderComponent, DasMapComponent, AddressDetailDrawerComponent],
-  templateUrl: './registry-map-component.html',
-  styleUrl: './registry-map-component.scss',
+  templateUrl: './adresse-map-component.html',
+  styleUrl: './adresse-map-component.scss',
 })
-export class RegistryMapComponent implements OnInit {
-  private facade = inject(RegistryFacade);
+export class AdresseMapComponent implements OnInit {
+  private facade = inject(AdresseFacade);
 
   protected readonly items = toSignal(this.facade.items$, { initialValue: [] as AddressListItem[] });
   protected readonly detailOpenId$ = this.facade.detailOpenId$;
@@ -34,13 +34,13 @@ export class RegistryMapComponent implements OnInit {
     this.items()
       .filter((a) => a.geom)
       .map((a) => ({
-        id: a.id, layerId: 'registry', geometry: a.geom,
+        id: a.id, layerId: 'adresse', geometry: a.geom,
         color: STAGE_COLORS[a.workflowStage], label: a.addressCode,
       })),
   );
 
   protected readonly mapLayers: MapLayerConfig[] = [
-    { id: 'registry', labelKey: 'nav.registry', type: 'fill', visible: true },
+    { id: 'adresse', labelKey: 'nav.adresse', type: 'fill', visible: true },
   ];
 
   /** Contours cadastraux du style de base, pilotables via le panneau des couches. */

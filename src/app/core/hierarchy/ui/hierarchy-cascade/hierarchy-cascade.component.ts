@@ -6,7 +6,7 @@ import { HierarchySelection } from '../../models/hierarchy.models';
 /**
  * Cascade City→Commune→Zone→Quartier(→Bloc). Découplée du module hôte : elle
  * pilote la HierarchyFacade et ÉMET la sélection ; l'hôte la route vers son
- * propre facade (Blocs, Registry…). `showBloc` active le 5e niveau.
+ * propre facade (Blocs, Adresse…). `showBloc` active le 5e niveau.
  */
 @Component({
   selector: 'das-hierarchy-cascade',

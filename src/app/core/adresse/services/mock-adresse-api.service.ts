@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';
-import { RegistryApiPort } from './registry-api.port';
+import { AdresseApiPort } from './adresse-api.port';
 import { AddressWorkflowStage, UUID } from '../../models/das.models';
 import {
   AddressDetail, AddressListItem, BulkUpdatePayload,
-  RegistryFilterOptions, RegistryPageResult, RegistryQuery, RegistrySummary,
-} from '../models/registry.models';
+  AdresseFilterOptions, AdressePageResult, AdresseQuery, AdresseSummary,
+} from '../models/adresse.models';
 
 const QUARTIERS = ['Balbala', 'Héron', 'Centre-ville', 'Le Plateau', 'Arhiba'];
 const POSTCODE_BY_QUARTIER: Record<string, string> = {
@@ -31,7 +31,7 @@ function squareMulti(lng: number, lat: number, size: number): GeoJSONMultiPolygo
   };
 }
 @Injectable({ providedIn: 'root' })
-export class MockRegistryApiService extends RegistryApiPort {
+export class MockAdresseApiService extends AdresseApiPort {
   private static readonly LATENCY = 380;
 
   private records: AddressListItem[] = Array.from({ length: 47 }, (_, i) => {
@@ -55,7 +55,7 @@ export class MockRegistryApiService extends RegistryApiPort {
     };
   });
 
-  override summary(): Observable<RegistrySummary> {
+  override summary(): Observable<AdresseSummary> {
     const pending = this.records.filter((r) => r.workflowStage === 'surveyed' || r.workflowStage === 'registered').length;
     const published = this.records.filter((r) => r.workflowStage === 'published').length;
     return of({
@@ -63,10 +63,10 @@ export class MockRegistryApiService extends RegistryApiPort {
       pendingReview: pending,
       duplicatesFlagged: 3,
       publishedToday: published,
-    }).pipe(delay(MockRegistryApiService.LATENCY));
+    }).pipe(delay(MockAdresseApiService.LATENCY));
   }
 
-  override filterOptions(): Observable<RegistryFilterOptions> {
+  override filterOptions(): Observable<AdresseFilterOptions> {
     return of({
       postcodes: [...new Set(this.records.map((r) => r.postcode!).filter(Boolean))].sort(),
       zones: [...new Set(this.records.map((r) => r.zone!).filter(Boolean))].sort(),
@@ -75,7 +75,7 @@ export class MockRegistryApiService extends RegistryApiPort {
     }).pipe(delay(200));
   }
 
-  override list(query: RegistryQuery): Observable<RegistryPageResult> {
+  override list(query: AdresseQuery): Observable<AdressePageResult> {
     const { filters, page, pageSize } = query;
     const search = filters.search.trim().toLowerCase();
     const filtered = this.records.filter((r) => {
@@ -93,7 +93,7 @@ export class MockRegistryApiService extends RegistryApiPort {
       total: filtered.length,
       page,
       pageSize,
-    }).pipe(delay(MockRegistryApiService.LATENCY));
+    }).pipe(delay(MockAdresseApiService.LATENCY));
   }
 
   override getDetail(id: UUID): Observable<AddressDetail> {
@@ -116,7 +116,7 @@ export class MockRegistryApiService extends RegistryApiPort {
         { id: `${id}-l2`, kind: 'team', label: base.assignedTeamName ?? '—' },
       ],
     };
-    return of(detail).pipe(delay(MockRegistryApiService.LATENCY));
+    return of(detail).pipe(delay(MockAdresseApiService.LATENCY));
   }
 
   override bulkUpdate(payload: BulkUpdatePayload): Observable<void> {

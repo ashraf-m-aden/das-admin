@@ -1,0 +1,64 @@
+<div class="scrim" (click)="close()"></div>
+<aside class="drawer">
+  @if (isLoading$ | async) {
+    <div class="drawer__loading">{{ 'common.loading' | transloco }}</div>
+  } @else if (detail$ | async; as d) {
+    <header class="drawer__head">
+      <div>
+        <div class="drawer__eyebrow">{{ d.addressCode }}</div>
+        <div class="drawer__title">{{ d.quartier }}</div>
+      </div>
+      <span class="stage" [style.color]="stageColor(d.workflowStage)"><span class="stage__dot" [style.background]="stageColor(d.workflowStage)"></span>{{ stageLabelKey(d.workflowStage) | transloco }}</span>
+      <button type="button" class="drawer__close" (click)="close()" aria-label="Fermer"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </header>
+
+    <nav class="tabs">
+      <button type="button" class="tabs__tab" [class.tabs__tab--active]="tab() === 'details'" (click)="setTab('details')">{{ 'adresse.tabDetails' | transloco }}</button>
+      <button type="button" class="tabs__tab" [class.tabs__tab--active]="tab() === 'linked'" (click)="setTab('linked')">{{ 'adresse.tabLinked' | transloco }}</button>
+    </nav>
+
+    <div class="drawer__body">
+      @switch (tab()) {
+        @case ('details') {
+          <div class="section">
+            <div class="section__title">{{ 'adresse.components' | transloco }}</div>
+            <dl class="kv">
+              <div><dt>{{ 'adresse.colQuartier' | transloco }}</dt><dd>{{ d.components.quartierNom }}</dd></div>
+              <div><dt>{{ 'adresse.zone' | transloco }}</dt><dd>{{ d.components.zone }}</dd></div>
+              <div><dt>{{ 'addressing.commune' | transloco }}</dt><dd>{{ d.components.commune }}</dd></div>
+              <div><dt>{{ 'addressing.region' | transloco }}</dt><dd>{{ d.components.region }}</dd></div>
+              <div><dt>{{ 'adresse.colPostcode' | transloco }}</dt><dd>{{ d.components.postcode }}</dd></div>
+            </dl>
+          </div>
+          <div class="section">
+            <div class="section__title">{{ 'adresse.location' | transloco }}</div>
+            <dl class="kv">
+              <div><dt>{{ 'adresse.latitude' | transloco }}</dt><dd>{{ d.location.latitude | number: '1.5-5' }}</dd></div>
+              <div><dt>{{ 'adresse.longitude' | transloco }}</dt><dd>{{ d.location.longitude | number: '1.5-5' }}</dd></div>
+              <div><dt>{{ 'adresse.parcelNumber' | transloco }}</dt><dd class="mono">{{ d.location.parcelNumber }}</dd></div>
+            </dl>
+          </div>
+          <div class="section">
+            <div class="section__title">{{ 'adresse.propertyInfo' | transloco }}</div>
+            <dl class="kv">
+              <div><dt>{{ 'adresse.colType' | transloco }}</dt><dd>{{ d.propertyInfo.propertyType }}</dd></div>
+              <div><dt>{{ 'adresse.occupancyCol' | transloco }}</dt><dd>{{ occupancyLabelKey(d.propertyInfo.occupancyType) | transloco }}</dd></div>
+              @if (d.propertyInfo.buildingUse) { <div><dt>{{ 'adresse.buildingUse' | transloco }}</dt><dd>{{ d.propertyInfo.buildingUse }}</dd></div> }
+            </dl>
+          </div>
+          <div class="actions">
+            <button type="button" class="abtn"><i class="ti ti-map-pin" aria-hidden="true"></i>{{ 'adresse.viewOnMap' | transloco }}</button>
+            <button type="button" class="abtn"><i class="ti ti-pencil" aria-hidden="true"></i>{{ 'adresse.editAddress' | transloco }}</button>
+          </div>
+        }
+        @case ('linked') {
+          <div class="linked">
+            @for (l of d.linked; track l.id) {
+              <div class="linked__item"><i class="ti ti-link" aria-hidden="true"></i><span class="linked__kind">{{ ('adresse.linked.' + l.kind) | transloco }}</span><span class="linked__label">{{ l.label }}</span></div>
+            }
+          </div>
+        }
+      }
+    </div>
+  }
+</aside>

@@ -1,7 +1,7 @@
 {
   "nav": {
     "dashboard": "Dashboard",
-    "registry": "Address Registry",
+    "adresse": "Address Adresse",
     "gis": "GIS & Mapping",
     "gisMap": "Map",
     "gisBoundaries": "Boundaries",
@@ -146,7 +146,7 @@
       },
       "published": {
         "title": "Addresses published",
-        "desc": "{{count}} addresses published to registry"
+        "desc": "{{count}} addresses published to adresse"
       }
     },
     "layerAddresses": "Addresses"
@@ -340,7 +340,7 @@
     "help": "Help",
     "language": "Language"
   },
-  "registry": {
+  "adresse": {
     "eyebrow": "Manage official addresses, parcels and postcode records",
     "import": "Import",
     "merge": "Merge Duplicates",
@@ -595,7 +595,7 @@
     "quickActions": "Quick actions",
     "qa": {
       "runScan": "Run quality scan",
-      "runScanDesc": "Execute data quality rules across the national registry.",
+      "runScanDesc": "Execute data quality rules across the national adresse.",
       "exportNational": "Export national report",
       "exportNationalDesc": "Download comprehensive quality and performance report.",
       "schedule": "Schedule monthly report",

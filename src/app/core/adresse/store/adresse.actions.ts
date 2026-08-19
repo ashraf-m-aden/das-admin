@@ -2,23 +2,23 @@ import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { UUID } from '../../models/das.models';
 import {
   AddressDetail, AddressListItem, BulkUpdatePayload,
-  RegistryFilterOptions, RegistryFilters, RegistrySummary,
-} from '../models/registry.models';
+  AdresseFilterOptions, AdresseFilters, AdresseSummary,
+} from '../models/adresse.models';
 
-export const RegistryActions = createActionGroup({
-  source: 'Registry',
+export const AdresseActions = createActionGroup({
+  source: 'Adresse',
   events: {
     'Load Summary': emptyProps(),
-    'Load Summary Success': props<{ summary: RegistrySummary }>(),
+    'Load Summary Success': props<{ summary: AdresseSummary }>(),
     'Load Summary Failure': props<{ errorMessageKey: string }>(),
 
-    'Load Filter Options Success': props<{ options: RegistryFilterOptions }>(),
+    'Load Filter Options Success': props<{ options: AdresseFilterOptions }>(),
 
     'Load Page': emptyProps(),
     'Load Page Success': props<{ items: AddressListItem[]; total: number; page: number; pageSize: number }>(),
     'Load Page Failure': props<{ errorMessageKey: string }>(),
 
-    'Set Filters': props<{ filters: Partial<RegistryFilters> }>(),
+    'Set Filters': props<{ filters: Partial<AdresseFilters> }>(),
     'Set Page': props<{ page: number }>(),
     'Set Page Size': props<{ pageSize: number }>(),
 

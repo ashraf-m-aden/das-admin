@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { AsyncPipe, DecimalPipe } from '@angular/common';
 import { TranslocoModule } from '@jsverse/transloco';
-import { RegistryFacade } from '../../../core/registry/store/registry.facade';
+import { AdresseFacade } from '../../../core/adresse/store/adresse.facade';
 import { AddressWorkflowStage } from '../../../core/models/das.models';
 
 type Tab = 'details' | 'linked';
@@ -18,7 +18,7 @@ const STAGE_COLOR: Record<AddressWorkflowStage, string> = {
   styleUrl: './address-detail-drawer.component.scss',
 })
 export class AddressDetailDrawerComponent {
-  private facade = inject(RegistryFacade);
+  private facade = inject(AdresseFacade);
 
   protected readonly detail$ = this.facade.detail$;
   protected readonly isLoading$ = this.facade.isDetailLoading$;
@@ -30,5 +30,5 @@ export class AddressDetailDrawerComponent {
 
   stageColor(stage: AddressWorkflowStage): string { return STAGE_COLOR[stage]; }
   stageLabelKey(stage: AddressWorkflowStage): string { return `status.stage.${stage}`; }
-  occupancyLabelKey(occ: string): string { return `registry.occupancy.${occ}`; }
+  occupancyLabelKey(occ: string): string { return `adresse.occupancy.${occ}`; }
 }

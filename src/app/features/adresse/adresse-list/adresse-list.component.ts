@@ -5,15 +5,15 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslocoModule } from '@jsverse/transloco';
 import type { ExpressionSpecification, FilterSpecification } from 'maplibre-gl';
-import { RegistryFacade } from '../../../core/registry/store/registry.facade';
+import { AdresseFacade } from '../../../core/adresse/store/adresse.facade';
 import { PageHeaderComponent } from '../../../core/layout/page-header/page-header.component';
 import { DasDatePipe } from '../../../core/i18n/das-locale.pipes';
 import { BasemapLayerGroup, DasMapComponent } from '../../../core/ui/map/das-map.component';
 import { MapFeature, MapLayerConfig, TileFilter, TileLayerBinding } from '../../../core/ui/map/map.models';
 import { MapLegendComponent, LegendEntry } from '../../../core/ui/map/map-legend/map-legend.component';
 import { AddressDetailDrawerComponent } from '../address-detail-drawer/address-detail-drawer.component';
-import { AddressListItem, WORKFLOW_STAGES } from '../../../core/registry/models/registry.models';
-import { initialRegistryFilters } from '../../../core/registry/store/registry.state';
+import { AddressListItem, WORKFLOW_STAGES } from '../../../core/adresse/models/adresse.models';
+import { initialAdresseFilters } from '../../../core/adresse/store/adresse.state';
 import { AddressWorkflowStage } from '../../../core/models/das.models';
 import { HierarchySelection } from '../../../core/hierarchy/models/hierarchy.models';
 import { HierarchyFacade } from '../../../core/hierarchy/store/hierarchy.facade';
@@ -25,23 +25,23 @@ const STAGE_COLOR: Record<AddressWorkflowStage, string> = {
 };
 
 const ADRESSES_TILE: TileLayerBinding = {
-  id: 'adresses', labelKey: 'registry.layerParcels', source: 'adresses', sourceLayer: 'adresses_tiles',
+  id: 'adresses', labelKey: 'adresse.layerParcels', source: 'adresses', sourceLayer: 'adresses_tiles',
   styleLayerIds: ['adresses-fill', 'adresses-line'], interactiveLayerId: 'adresses-fill', visible: true,
 };
 
 @Component({
-  selector: 'das-registry-list',
+  selector: 'das-adresse-list',
   standalone: true,
   imports: [
     AsyncPipe, ReactiveFormsModule, TranslocoModule, DasDatePipe, PageHeaderComponent,
     AddressDetailDrawerComponent, DasMapComponent, HierarchyCascadeComponent, MapLegendComponent,
   ],
-  templateUrl: './registry-list.component.html',
-  styleUrl: './registry-list.component.scss',
+  templateUrl: './adresse-list.component.html',
+  styleUrl: './adresse-list.component.scss',
 })
-export class RegistryListComponent implements OnInit {
+export class AdresseListComponent implements OnInit {
   private fb = inject(FormBuilder);
-  private facade = inject(RegistryFacade);
+  private facade = inject(AdresseFacade);
   private hierarchy = inject(HierarchyFacade);
   private route = inject(ActivatedRoute);
   private readonly isMock = inject(AppConfigService).get('useMockApi');
@@ -56,7 +56,7 @@ export class RegistryListComponent implements OnInit {
   protected readonly detailOpenId$ = this.facade.detailOpenId$;
   protected readonly isMutating$ = this.facade.isMutating$;
 
-  private readonly filters = toSignal(this.facade.filters$, { initialValue: initialRegistryFilters });
+  private readonly filters = toSignal(this.facade.filters$, { initialValue: initialAdresseFilters });
 
   /** Emprise du niveau hiérarchique sélectionné → recadrage carte. */
   protected readonly selectedBbox = this.hierarchy.selectedBbox;
@@ -76,7 +76,7 @@ export class RegistryListComponent implements OnInit {
   );
 
   protected readonly mapLayers: MapLayerConfig[] = this.isMock
-    ? [{ id: 'parcels', labelKey: 'registry.layerParcels', type: 'fill', visible: true }]
+    ? [{ id: 'parcels', labelKey: 'adresse.layerParcels', type: 'fill', visible: true }]
     : [];
 
   protected readonly tileLayers: TileLayerBinding[] = this.isMock ? [] : [ADRESSES_TILE];

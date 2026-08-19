@@ -16,8 +16,8 @@ export const routes: Routes = [
         loadComponent: () => import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
       },
       {
-        path: 'registry',
-        loadChildren: () => import('./features/registry/registry.routes').then((m) => m.registryRoutes),
+        path: 'adresse',
+        loadChildren: () => import('./features/adresse/adresse.routes').then((m) => m.adresseRoutes),
       },
       {
         path: 'blocks',
@@ -79,7 +79,7 @@ export const routes: Routes = [
         canActivate: [roleGuard(['Admin'])],
         loadChildren: () => import('./features/settings/settings.routes').then((m) => m.settingsRoutes),
       },
-      { path: '', pathMatch: 'full', redirectTo: 'registry' },
+      { path: '', pathMatch: 'full', redirectTo: 'adresse' },
     ],
   },
   { path: '**', redirectTo: 'login' },

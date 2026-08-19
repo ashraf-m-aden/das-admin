@@ -1,7 +1,7 @@
 {
   "nav": {
     "dashboard": "Tableau de bord",
-    "registry": "Registre des adresses",
+    "adresse": "Registre des adresses",
     "gis": "SIG & Cartographie",
     "gisMap": "Carte",
     "gisBoundaries": "Limites",
@@ -340,7 +340,7 @@
     "help": "Aide",
     "language": "Langue"
   },
-  "registry": {
+  "adresse": {
     "eyebrow": "Gérer les adresses, parcelles et codes postaux officiels",
     "import": "Importer",
     "merge": "Fusionner doublons",

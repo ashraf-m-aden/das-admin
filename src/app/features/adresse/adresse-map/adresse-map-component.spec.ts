@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { RegistryMapComponent } from './registry-map-component';
+import { AdresseMapComponent } from './adresse-map-component';
 
-describe('RegistryMapComponent', () => {
-  let component: RegistryMapComponent;
-  let fixture: ComponentFixture<RegistryMapComponent>;
+describe('AdresseMapComponent', () => {
+  let component: AdresseMapComponent;
+  let fixture: ComponentFixture<AdresseMapComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [RegistryMapComponent],
+      imports: [AdresseMapComponent],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(RegistryMapComponent);
+    fixture = TestBed.createComponent(AdresseMapComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

@@ -1,16 +1,16 @@
-<das-page-header [eyebrow]="'registry.eyebrow' | transloco" [title]="'nav.registry' | transloco">
+<das-page-header [eyebrow]="'adresse.eyebrow' | transloco" [title]="'nav.adresse' | transloco">
   <div actions class="reg-actions">
     <button type="button" class="rbtn">
-      <i class="ti ti-upload" aria-hidden="true"></i>{{ 'registry.import' | transloco }}
+      <i class="ti ti-upload" aria-hidden="true"></i>{{ 'adresse.import' | transloco }}
     </button>
     <button type="button" class="rbtn">
-      <i class="ti ti-git-merge" aria-hidden="true"></i>{{ 'registry.merge' | transloco }}
+      <i class="ti ti-git-merge" aria-hidden="true"></i>{{ 'adresse.merge' | transloco }}
     </button>
     <button type="button" class="rbtn rbtn--primary">
-      <i class="ti ti-plus" aria-hidden="true"></i>{{ 'registry.create' | transloco }}
+      <i class="ti ti-plus" aria-hidden="true"></i>{{ 'adresse.create' | transloco }}
     </button>
     <button type="button" class="rbtn">
-      <i class="ti ti-download" aria-hidden="true"></i>{{ 'registry.export' | transloco }}
+      <i class="ti ti-download" aria-hidden="true"></i>{{ 'adresse.export' | transloco }}
     </button>
   </div>
 </das-page-header>
@@ -19,19 +19,19 @@
   @if (summary$ | async; as s) {
   <div class="kpis">
     <div class="kpi">
-      <div class="kpi__label">{{ 'registry.kpi.total' | transloco }}</div>
+      <div class="kpi__label">{{ 'adresse.kpi.total' | transloco }}</div>
       <div class="kpi__value">{{ s.totalRecords }}</div>
     </div>
     <div class="kpi">
-      <div class="kpi__label">{{ 'registry.kpi.pending' | transloco }}</div>
+      <div class="kpi__label">{{ 'adresse.kpi.pending' | transloco }}</div>
       <div class="kpi__value">{{ s.pendingReview }}</div>
     </div>
     <div class="kpi">
-      <div class="kpi__label">{{ 'registry.kpi.duplicates' | transloco }}</div>
+      <div class="kpi__label">{{ 'adresse.kpi.duplicates' | transloco }}</div>
       <div class="kpi__value">{{ s.duplicatesFlagged }}</div>
     </div>
     <div class="kpi">
-      <div class="kpi__label">{{ 'registry.kpi.published' | transloco }}</div>
+      <div class="kpi__label">{{ 'adresse.kpi.published' | transloco }}</div>
       <div class="kpi__value">{{ s.publishedToday }}</div>
     </div>
   </div>
@@ -40,13 +40,13 @@
   <div class="filters das-card" [formGroup]="filterForm">
     <label class="filters__search">
       <i class="ti ti-search" aria-hidden="true"></i>
-      <input type="text" formControlName="search" [attr.placeholder]="'registry.searchPlaceholder' | transloco" />
+      <input type="text" formControlName="search" [attr.placeholder]="'adresse.searchPlaceholder' | transloco" />
     </label>
 
     <das-hierarchy-cascade [showBloc]="true" (selectionChange)="onHierarchy($event)" />
 
     <select formControlName="status">
-      <option [ngValue]="null">{{ 'registry.allStatuses' | transloco }}</option>
+      <option [ngValue]="null">{{ 'adresse.allStatuses' | transloco }}</option>
       @for (st of stages; track st) {
       <option [ngValue]="st">{{ stageLabelKey(st) | transloco }}</option>
       }
@@ -54,7 +54,7 @@
 
     @if (filterOptions$ | async; as opt) {
     <select formControlName="team">
-      <option [ngValue]="null">{{ 'registry.allTeams' | transloco }}</option>
+      <option [ngValue]="null">{{ 'adresse.allTeams' | transloco }}</option>
       @for (t of opt.teams; track t) {
       <option [ngValue]="t">{{ t }}</option>
       }
@@ -70,12 +70,12 @@
     @if (selectedCount$ | async; as count) {
     @if (count > 0) {
     <div class="bulk">
-      <span class="bulk__count">{{ 'registry.selected' | transloco: { count } }}</span>
+      <span class="bulk__count">{{ 'adresse.selected' | transloco: { count } }}</span>
       <button type="button" class="bulk__btn" (click)="approveSelected()" [disabled]="isMutating$ | async">
-        <i class="ti ti-circle-check" aria-hidden="true"></i>{{ 'registry.approveSelected' | transloco }}
+        <i class="ti ti-circle-check" aria-hidden="true"></i>{{ 'adresse.approveSelected' | transloco }}
       </button>
       <button type="button" class="bulk__btn" (click)="bulkPublish()" [disabled]="isMutating$ | async">
-        <i class="ti ti-send" aria-hidden="true"></i>{{ 'registry.publishSelected' | transloco }}
+        <i class="ti ti-send" aria-hidden="true"></i>{{ 'adresse.publishSelected' | transloco }}
       </button>
       <button type="button" class="bulk__btn bulk__btn--ghost" (click)="clearSelection()">
         {{ 'common.cancel' | transloco }}
@@ -86,13 +86,13 @@
 
     <div class="thead">
       <span class="col-check"><input type="checkbox" [checked]="allOnPageSelected()" (change)="toggleAll()" /></span>
-      <span>{{ 'registry.colId' | transloco }}</span>
-      <span>{{ 'registry.colPostcode' | transloco }}</span>
-      <span>{{ 'registry.colQuartier' | transloco }}</span>
-      <span>{{ 'registry.colType' | transloco }}</span>
-      <span>{{ 'registry.colStatus' | transloco }}</span>
-      <span>{{ 'registry.colUpdated' | transloco }}</span>
-      <span>{{ 'registry.colTeam' | transloco }}</span>
+      <span>{{ 'adresse.colId' | transloco }}</span>
+      <span>{{ 'adresse.colPostcode' | transloco }}</span>
+      <span>{{ 'adresse.colQuartier' | transloco }}</span>
+      <span>{{ 'adresse.colType' | transloco }}</span>
+      <span>{{ 'adresse.colStatus' | transloco }}</span>
+      <span>{{ 'adresse.colUpdated' | transloco }}</span>
+      <span>{{ 'adresse.colTeam' | transloco }}</span>
     </div>
 
     @for (a of items(); track a.id) {
@@ -113,7 +113,7 @@
       @if (isLoading$ | async) {
       {{ 'common.loading' | transloco }}
       } @else {
-      {{ 'registry.empty' | transloco }}
+      {{ 'adresse.empty' | transloco }}
       }
     </div>
     }
@@ -121,7 +121,7 @@
     @if (pageInfo$ | async; as pi) {
     <div class="pager">
       <label class="pager__size">
-        {{ 'registry.rowsPerPage' | transloco }}
+        {{ 'adresse.rowsPerPage' | transloco }}
         <select (change)="changePageSize($any($event.target).value)">
           <option value="10">10</option>
           <option value="25">25</option>
@@ -129,7 +129,7 @@
         </select>
       </label>
       <span class="pager__range">{{
-        'registry.pageRange' | transloco: { from: pi.from, to: pi.to, total: pi.total }
+        'adresse.pageRange' | transloco: { from: pi.from, to: pi.to, total: pi.total }
         }}</span>
       <div class="pager__nav">
         <button type="button" (click)="goToPage(pi.page - 1)" [disabled]="pi.page <= 1">

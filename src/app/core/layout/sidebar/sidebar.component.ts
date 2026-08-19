@@ -37,7 +37,7 @@ export class SidebarComponent {
 
   protected readonly entries: NavEntry[] = [
     // { kind: 'link', labelKey: 'nav.dashboard', path: '/dashboard', icon: 'ti-layout-dashboard' },
-    { kind: 'link', labelKey: 'nav.registry', path: '/registry', icon: 'ti-address-book' },
+    { kind: 'link', labelKey: 'nav.adresse', path: '/adresse', icon: 'ti-address-book' },
     {
       kind: 'group', key: 'gis', labelKey: 'nav.gis', icon: 'ti-map-2',
       allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'],

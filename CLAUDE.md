@@ -59,7 +59,7 @@ Ces règles priment sur les habitudes génériques.
 
 ## 4. Architecture front
 
-**Feature NgRx + facade** (module `registry` = écran adresses, cf. §7) :
+**Feature NgRx + facade** (module `adresse` = écran adresses, cf. §7) :
 `models/` · `services/` (`*-api.port.ts` abstrait + `*-api.service.ts` HTTP) ·
 `store/` (`*.actions.ts`, `*.reducer.ts` via `createFeature`, `*.effects.ts`, `*.selectors.ts`,
 `*.state.ts`, `*.facade.ts`).
@@ -147,32 +147,22 @@ back-office. Un relevé **rejeté retombe sur `registered`**, pas `surveyed`.
 
 ---
 
-## 7. Le module « adresses » (dossiers `registry.*`)
+## 7. Le module « adresses » (dossiers `adresse.*`)
 
-L'écran adresses vit historiquement sous le nom de code **`registry`** (`registry.models.ts`,
-`RegistryFacade`, `das-registry-list`, clés i18n `registry.*`).
+L'écran adresses portait historiquement le nom de code `registry` — dette **résorbée le
+2026-08-19** : module entier passé en `adresse` au singulier (fichiers, dossiers, `Registry*` →
+`Adresse*`, clés i18n `registry.*` → `adresse.*`, sélecteur `das-registry-list` →
+`das-adresse-list`, route `/registry` → `/adresse`), via un refactor mécanique scopé à `src/`
+uniquement (jamais la racine, qui porte aussi le mot « registry » pour Docker/Jenkins/CI).
 
-> ### ❗ Dette à résorber : renommer `registry → adresse`
-> Le nom de code `registry` **ne correspond plus au domaine** (« registry » était le vocabulaire
-> de l'écran, pas la ressource — l'entité réelle est `Adresse`, la route `/api/adresses`). Ce
-> décalage est une **dette à résorber** : à terme, tout le module doit passer en `adresse.*`.
-> - **Décision** : renommage du **module entier** (fichiers, dossiers, `Registry*` → `Adresse*`,
->   clés i18n `registry.*` → `adresse.*`, sélecteur `das-registry-list` → `das-adresse-list`),
->   en **`adresse` au singulier**.
-> - **Statut** : décidé, **en pause** — planifié comme un lot séparé, à ne pas mélanger avec du
->   travail de logique (un renommage noyé dans une refonte fonctionnelle rend la revue infaisable).
-> - **Contrainte d'exécution** : refactor mécanique **scopé à `src/` uniquement**, via un script
->   bash avec **dry-run** d'abord. **Jamais à la racine du repo** : on y réécrirait les références
->   Docker/DockerHub/Jenkins/CI qui portent aussi le mot `registry`.
-> - **Ricochets à surveiller** : `nav.registry` → `nav.adresse`, un éventuel `path: 'registry'` de
->   route (**l'URL passe de `/registry` à `/adresse`**), et les types `Address*` qui ne bougent
->   PAS d'eux-mêmes (ne contiennent pas « registry »).
-> - **Convention de graphie (coexistence assumée)** : les **artefacts Angular** (composant,
->   facade, feature, i18n, sélecteur) passent en **`Adresse*` / `adresse.*`** (français, aligné sur
->   la route). Les **types de modèle qui calquent le payload** restent en **`Address*`** (anglais)
->   jusqu'à un éventuel second passage `Address* → Adresse*`, optionnel et plus délicat. Donc
->   `AdresseListComponent` (écran) et `AddressListItem` (modèle) **cohabitent par règle**, pas par
->   accident — ne pas « corriger » l'un sans l'autre au fil de l'eau.
+> ### Convention de graphie (coexistence assumée, durable)
+> Les **artefacts Angular** (composant, facade, feature, i18n, sélecteur) sont en
+> **`Adresse*` / `adresse.*`** (français, aligné sur la route). Les **types de modèle qui
+> calquent le payload** restent en **`Address*`** (anglais) — `AdresseListComponent` (écran) et
+> `AddressListItem` (modèle) **cohabitent par règle**, pas par accident : ne pas « corriger »
+> l'un sans l'autre au fil de l'eau. Un second passage `Address* → Adresse*` reste possible mais
+> **n'est pas planifié** — plus délicat (touche les DTO), à ne pas confondre avec le renommage
+> déjà fait.
 
 Faits durables du contrat de cet écran (`/api/adresses`, guide §5) :
 
@@ -193,7 +183,7 @@ Faits durables du contrat de cet écran (`/api/adresses`, guide §5) :
   au nombre réel de colonnes — une colonne retirée sans ajuster la grille décale tout l'alignement.
 - **`geom` toujours `null`** (la carte vient des tuiles).
 - **`propertyType`** = **libellé FR d'un catalogue** (« Villa », « Immeuble mixte »…), pas un enum
-  fermé. Affiché **brut** en attendant une clé stable back (décision C.4) ; pas de `registry.type.*`.
+  fermé. Affiché **brut** en attendant une clé stable back (décision C.4) ; pas de `adresse.type.*`.
 - **`validation.score`** = **nombre de relevés** de l'agent (pas une note /100) ; `percentage`
   **peut dépasser 100**. Bloc **masqué** dans le drawer (décision C.2) — et surtout **retirer le
   rendu `[style.width.%]="d.validation.score"`**, qui traitait `score` comme un pourcentage.
@@ -231,5 +221,7 @@ Faits durables du contrat de cet écran (`/api/adresses`, guide §5) :
 - ❌ Traiter `validation.score` comme un pourcentage (c'est un décompte de relevés).
 - ❌ Migrer `list()` en `GET` — le contrat est `POST /search`.
 - ❌ Rajouter des clés i18n dans une seule langue.
-- ❌ Lancer le renommage `registry → adresse` à la racine du repo.
+- ❌ Faire un refactor mécanique de nommage sur la racine du repo (Docker/Jenkins/CI y portent
+  aussi des mots du domaine, ex. `registry`) — scoper `src/` uniquement, comme pour le
+  renommage `registry → adresse` déjà fait.
 - ❌ Ajouter de l'import de données géo côté front.

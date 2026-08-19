@@ -45,9 +45,9 @@ import { fieldOpsFeature } from './core/fieldops/store/fieldops.reducer';
 import { FieldOpsEffects } from './core/fieldops/store/fieldops.effects';
 import { MockPostcodesApiService } from './core/postcodes/services/mock-postcodes-api.service';
 import { PostcodesApiPort } from './core/postcodes/services/postcodes-api.port';
-import { MockRegistryApiService } from './core/registry/services/mock-registry-api.service';
-import { RegistryApiPort } from './core/registry/services/registry-api.port';
-import { RegistryApiService } from './core/registry/services/registry-api.service';
+import { MockAdresseApiService } from './core/adresse/services/mock-adresse-api.service';
+import { AdresseApiPort } from './core/adresse/services/adresse-api.port';
+import { AdresseApiService } from './core/adresse/services/adresse-api.service';
 import { MockReportsApiService } from './core/reports/services/mock-reports-api.service';
 import { ReportsApiPort } from './core/reports/services/reports-api.port';
 import { IntegrationsApiPort } from './core/integrations/services/integrations-api.port';
@@ -119,8 +119,8 @@ export const appConfig: ApplicationConfig = {
     { provide: IntegrationsApiPort, useFactory: () => useMock() ? inject(MockIntegrationsApiService) : inject(IntegrationsApiService) },
     { provide: AuditApiPort, useFactory: () => useMock() ? inject(MockAuditApiService) : inject(AuditApiService) },
     {
-      provide: RegistryApiPort,
-      useFactory: () => (useMock() ? inject(MockRegistryApiService) : inject(RegistryApiService)),
+      provide: AdresseApiPort,
+      useFactory: () => (useMock() ? inject(MockAdresseApiService) : inject(AdresseApiService)),
     },
 
     { provide: ENVIRONMENT_INITIALIZER, multi: true, useValue: () => inject(ThemeService) },
