@@ -21,8 +21,8 @@ export class HierarchyMockService extends HierarchyApiPort {
   override zones(communeId: UUID): Observable<HierarchyNode[]> {
     return of([{ id: this.zoneId, level: 'zone', code: 'Z-Q7', name: 'Zone Quartier 7', parentId: communeId, bbox: this.boulaos } as HierarchyNode]);
   }
-  override quartiers(zoneId: UUID): Observable<HierarchyNode[]> {
-    return of([{ id: this.quartier7Id, level: 'quartier', code: 'Q7', name: 'Quartier 7', parentId: zoneId, bbox: this.boulaos } as HierarchyNode]);
+  override quartiers(cityId: UUID, communeId?: UUID | null, zoneId?: UUID | null): Observable<HierarchyNode[]> {
+    return of([{ id: this.quartier7Id, level: 'quartier', code: 'Q7', name: 'Quartier 7', parentId: zoneId ?? communeId ?? cityId, bbox: this.boulaos } as HierarchyNode]);
   }
   override blocs(quartierId: UUID): Observable<HierarchyNode[]> {
     return of([

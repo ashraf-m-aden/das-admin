@@ -20,7 +20,7 @@
     }
   </select>
 
-  <select class="cascade__select" [disabled]="!selection().zoneId" (change)="onQuartier($any($event.target).value)">
+  <select class="cascade__select" [disabled]="!selection().cityId" (change)="onQuartier($any($event.target).value)">
     <option value="">{{ 'hierarchy.allQuartiers' | transloco }}</option>
     @for (q of quartiers(); track q.id) {
     <option [value]="q.id" [selected]="q.id === selection().quartierId">{{ q.nom }}</option>

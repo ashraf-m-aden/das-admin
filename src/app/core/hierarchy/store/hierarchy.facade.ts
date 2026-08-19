@@ -44,18 +44,31 @@ export class HierarchyFacade {
     this._selection.set({ cityId, communeId: null, zoneId: null, quartierId: null, blocId: null });
     this._communes.set([]); this._zones.set([]); this._quartiers.set([]); this._blocs.set([]);
     if (cityId) this.api.communes(cityId).subscribe((c) => this._communes.set(c));
+    this.reloadQuartiers();
   }
 
   selectCommune(communeId: UUID | null): void {
     this._selection.update((s) => ({ ...s, communeId, zoneId: null, quartierId: null, blocId: null }));
-    this._zones.set([]); this._quartiers.set([]); this._blocs.set([]);
+    this._zones.set([]); this._blocs.set([]);
     if (communeId) this.api.zones(communeId).subscribe((z) => this._zones.set(z));
+    this.reloadQuartiers();
   }
 
   selectZone(zoneId: UUID | null): void {
     this._selection.update((s) => ({ ...s, zoneId, quartierId: null, blocId: null }));
-    this._quartiers.set([]); this._blocs.set([]);
-    if (zoneId) this.api.quartiers(zoneId).subscribe((q) => this._quartiers.set(q));
+    this._blocs.set([]);
+    this.reloadQuartiers();
+  }
+
+  /**
+   * Quartiers de la ville sélectionnée, affinés par commune/zone si choisies.
+   * Commune et Zone sont facultatives (une ville sans commune n'a pas de zone) : en mode
+   * « tous » sur les deux, seul `cityId` part au back — pas de select quartier bloqué.
+   */
+  private reloadQuartiers(): void {
+    const { cityId, communeId, zoneId } = this._selection();
+    if (!cityId) { this._quartiers.set([]); return; }
+    this.api.quartiers(cityId, communeId, zoneId).subscribe((q) => this._quartiers.set(q));
   }
 
   selectQuartier(quartierId: UUID | null): void {
