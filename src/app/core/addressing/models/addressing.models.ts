@@ -1,26 +1,18 @@
-import { UUID, ISODateTime, BlockStatus } from '../../models/das.models';
+import { UUID, ISODateTime, UpdateBlockPayload } from '../../models/das.models';
 
-export type SuggestionStatus = 'pending' | 'approved' | 'rejected';
-
-/** Une proposition de nom (agent terrain), en attente ou déjà traitée par un superviseur/admin. */
-export interface NameSuggestion {
-  id: UUID;
-  suggestedName: string;
-  comment: string | null;
-  status: SuggestionStatus;
-  proposedByName: string;
-  proposedAt: ISODateTime;
-  reviewedByName: string | null;
-  reviewedAt: ISODateTime | null;
-  rejectionReason: string | null;
-}
-
+/**
+ * Bloc à nommer directement par un admin — `GET /api/blocs` filtré côté front, à l'EXCLUSION
+ * des blocs ayant une suggestion terrain en attente : ceux-là se traitent dans la file de
+ * validation unifiée (`/verification`), pas ici. Pas de `status` : ce champ n'existe pas sur
+ * `BlocResponse`.
+ */
 export interface BlockToName {
   id: UUID;
   code: string;
   name: string | null;
-  pendingSuggestion: NameSuggestion | null;
-  status: BlockStatus;
+  /** `null` sur les blocs antérieurs au 2026-08-18 — renommage refusé tant qu'il n'est pas repris (cf. `blocks.missingNumberHint`). */
+  number: number | null;
+  boundaryWkt: string | null;
 }
 
 export interface BlockNamingQuery {
@@ -28,7 +20,7 @@ export interface BlockNamingQuery {
   onlyUnnamed: boolean;
 }
 
-/** Ligne de la file plate `/api/blocs/suggestions?status=Pending` — consommée par l'écran review. */
+/** Ligne de la file plate `/api/blocs/suggestions?status=Pending` — consommée par l'écran review, et par le nommage direct pour exclure les blocs déjà en attente de décision. */
 export interface PendingBlockSuggestion {
   id: UUID;
   blocId: UUID;
@@ -40,12 +32,13 @@ export interface PendingBlockSuggestion {
 /** Reprend l'enum backend (Streets.Type). */
 export type StreetType = 'Rue' | 'Avenue' | 'Boulevard' | 'Piste' | 'Impasse' | 'Route';
 
+/** Rue à nommer directement par un admin — mêmes règles que `BlockToName` (§ ci-dessus). */
 export interface StreetToName {
   id: UUID;
   code: string;
   name: string | null;
   type: StreetType;
-  pendingSuggestion: NameSuggestion | null;
+  boundaryWkt: string | null;
 }
 
 export interface StreetNamingQuery {
@@ -53,7 +46,7 @@ export interface StreetNamingQuery {
   onlyUnnamed: boolean;
 }
 
-/** Ligne de la file plate `/api/streets/suggestions?status=Pending` — consommée par l'écran review. */
+/** Ligne de la file plate `/api/streets/suggestions?status=Pending` — consommée par l'écran review, et par le nommage direct pour exclure les rues déjà en attente de décision. */
 export interface PendingStreetSuggestion {
   id: UUID;
   streetId: UUID;
@@ -61,6 +54,16 @@ export interface PendingStreetSuggestion {
   comment: string | null;
   proposedAtUtc: ISODateTime;
 }
+
+/** `PATCH /api/streets/{id}` — dossier complet (lecture-modification-écriture, comme les blocs). */
+export interface UpdateStreetNamePayload {
+  code: string;
+  name: string | null;
+  type: StreetType;
+  boundaryWkt: string | null;
+}
+
+export type { UpdateBlockPayload };
 
 /** Hiérarchie de rattachement — Region → Ville → Commune → Quartier (plus d'arrondissement). */
 export interface AdminHierarchy {

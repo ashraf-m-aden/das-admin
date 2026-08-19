@@ -32,41 +32,13 @@ export class AddressingEffects {
   setBlockName$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AddressingActions.setBlockName),
-      mergeMap(({ id, name }) =>
-        this.addressingApi.setBlockName(id, name).pipe(
-          map((item) => AddressingActions.blockNameActionSuccess({ item })),
-          catchError(() => of(AddressingActions.blockNameActionFailure({ errorMessageKey: 'common.error' }))),
+      mergeMap(({ id, payload }) =>
+        this.addressingApi.setBlockName(id, payload).pipe(
+          map((item) => AddressingActions.setBlockNameSuccess({ item })),
+          catchError(() => of(AddressingActions.setBlockNameFailure({ errorMessageKey: 'common.error' }))),
         ),
       ),
     ),
-  );
-
-  approveBlockSuggestion$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(AddressingActions.approveBlockSuggestion),
-      mergeMap(({ suggestionId }) =>
-        this.addressingApi.approveBlockSuggestion(suggestionId).pipe(
-          map(() => AddressingActions.blockSuggestionDecided()),
-          catchError(() => of(AddressingActions.blockNameActionFailure({ errorMessageKey: 'common.error' }))),
-        ),
-      ),
-    ),
-  );
-
-  rejectBlockSuggestion$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(AddressingActions.rejectBlockSuggestion),
-      mergeMap(({ suggestionId, rejectionReason }) =>
-        this.addressingApi.rejectBlockSuggestion(suggestionId, rejectionReason).pipe(
-          map(() => AddressingActions.blockSuggestionDecided()),
-          catchError(() => of(AddressingActions.blockNameActionFailure({ errorMessageKey: 'common.error' }))),
-        ),
-      ),
-    ),
-  );
-
-  reloadBlocksAfterSuggestionDecision$ = createEffect(() =>
-    this.actions$.pipe(ofType(AddressingActions.blockSuggestionDecided), map(() => AddressingActions.loadBlocksToName())),
   );
 
   loadStreetsToName$ = createEffect(() =>
@@ -89,41 +61,13 @@ export class AddressingEffects {
   setStreetName$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AddressingActions.setStreetName),
-      mergeMap(({ id, name }) =>
-        this.addressingApi.setStreetName(id, name).pipe(
-          map((item) => AddressingActions.streetNameActionSuccess({ item })),
-          catchError(() => of(AddressingActions.streetNameActionFailure({ errorMessageKey: 'common.error' }))),
+      mergeMap(({ id, payload }) =>
+        this.addressingApi.setStreetName(id, payload).pipe(
+          map((item) => AddressingActions.setStreetNameSuccess({ item })),
+          catchError(() => of(AddressingActions.setStreetNameFailure({ errorMessageKey: 'common.error' }))),
         ),
       ),
     ),
-  );
-
-  approveStreetSuggestion$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(AddressingActions.approveStreetSuggestion),
-      mergeMap(({ suggestionId }) =>
-        this.addressingApi.approveStreetSuggestion(suggestionId).pipe(
-          map(() => AddressingActions.streetSuggestionDecided()),
-          catchError(() => of(AddressingActions.streetNameActionFailure({ errorMessageKey: 'common.error' }))),
-        ),
-      ),
-    ),
-  );
-
-  rejectStreetSuggestion$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(AddressingActions.rejectStreetSuggestion),
-      mergeMap(({ suggestionId, rejectionReason }) =>
-        this.addressingApi.rejectStreetSuggestion(suggestionId, rejectionReason).pipe(
-          map(() => AddressingActions.streetSuggestionDecided()),
-          catchError(() => of(AddressingActions.streetNameActionFailure({ errorMessageKey: 'common.error' }))),
-        ),
-      ),
-    ),
-  );
-
-  reloadStreetsAfterSuggestionDecision$ = createEffect(() =>
-    this.actions$.pipe(ofType(AddressingActions.streetSuggestionDecided), map(() => AddressingActions.loadStreetsToName())),
   );
 
   loadPropertiesToNumber$ = createEffect(() =>

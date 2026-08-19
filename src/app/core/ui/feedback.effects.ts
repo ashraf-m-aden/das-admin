@@ -169,12 +169,7 @@ export class FeedbackEffects {
   // ----- Adressage -----
   addressingNamed$ = createEffect(
     () => this.actions$.pipe(
-      ofType(
-        AddressingActions.blockNameActionSuccess,
-        AddressingActions.streetNameActionSuccess,
-        AddressingActions.blockSuggestionDecided,
-        AddressingActions.streetSuggestionDecided,
-      ),
+      ofType(AddressingActions.setBlockNameSuccess, AddressingActions.setStreetNameSuccess),
       tap(() => this.toast.success('feedback.saved')),
     ),
     { dispatch: false },
@@ -191,8 +186,8 @@ export class FeedbackEffects {
   addressingErrors$ = createEffect(
     () => this.actions$.pipe(
       ofType(
-        AddressingActions.blockNameActionFailure,
-        AddressingActions.streetNameActionFailure,
+        AddressingActions.setBlockNameFailure,
+        AddressingActions.setStreetNameFailure,
         AddressingActions.assignHouseNumberFailure,
       ),
       tap(({ errorMessageKey }) => this.toast.error(errorMessageKey || 'feedback.error')),

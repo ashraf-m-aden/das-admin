@@ -2,18 +2,18 @@ import { Injectable } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { AddressingApiPort } from './addressing-api.port';
-import { UUID } from '../../models/das.models';
+import { UUID, UpdateBlockPayload } from '../../models/das.models';
 import {
   AssignHouseNumberPayload,
   BlockNamingQuery,
   BlockToName,
-  NameSuggestion,
   PendingBlockSuggestion,
   PendingStreetSuggestion,
   PropertyNumberingQuery,
   PropertyToNumber,
   StreetNamingQuery,
   StreetToName,
+  UpdateStreetNamePayload,
 } from '../models/addressing.models';
 
 @Injectable({ providedIn: 'root' })
@@ -21,67 +21,35 @@ export class MockAddressingApiService extends AddressingApiPort {
   private static readonly SIMULATED_LATENCY_MS = 400;
 
   private blocks: BlockToName[] = [
+    { id: 'block-0001', code: 'BLK-Q7-021', name: null, number: 21, boundaryWkt: null },
+    { id: 'block-0002', code: 'BLK-Q3-014', name: null, number: 14, boundaryWkt: null },
+    { id: 'block-0003', code: 'BLK-RD-002', name: null, number: null, boundaryWkt: null },
+    { id: 'block-0004', code: 'BLK-EIN-007', name: 'Rue des Palmiers', number: 7, boundaryWkt: null },
+  ];
+
+  /** Suggestions en attente — source distincte, comme côté réel (`GET /api/blocs/suggestions?status=Pending`). */
+  private blockSuggestions: PendingBlockSuggestion[] = [
     {
-      id: 'block-0001',
-      code: 'BLK-Q7-021',
-      name: null,
-      status: 'approved',
-      pendingSuggestion: {
-        id: 'sugg-block-0001',
-        suggestedName: 'Avenue Nasser',
-        comment: 'Écrit sur une pancarte au coin de la rue',
-        status: 'pending',
-        proposedByName: 'Idriss Agent',
-        proposedAt: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString(),
-        reviewedByName: null,
-        reviewedAt: null,
-        rejectionReason: null,
-      },
+      id: 'sugg-block-0001', blocId: 'block-0001', suggestedName: 'Avenue Nasser',
+      comment: 'Écrit sur une pancarte au coin de la rue',
+      proposedAtUtc: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString(),
     },
-    { id: 'block-0002', code: 'BLK-Q3-014', name: null, status: 'approved', pendingSuggestion: null },
-    {
-      id: 'block-0003',
-      code: 'BLK-RD-002',
-      name: null,
-      status: 'approved',
-      pendingSuggestion: {
-        id: 'sugg-block-0003',
-        suggestedName: 'Rue du Marché',
-        comment: null,
-        status: 'pending',
-        proposedByName: 'Warsama Robleh',
-        proposedAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-        reviewedByName: null,
-        reviewedAt: null,
-        rejectionReason: null,
-      },
-    },
-    { id: 'block-0004', code: 'BLK-EIN-007', name: 'Rue des Palmiers', status: 'approved', pendingSuggestion: null },
   ];
 
   private streets: StreetToName[] = [
-    {
-      id: 'street-0001',
-      code: 'STR-0001',
-      name: null,
-      type: 'Impasse',
-      pendingSuggestion: {
-        id: 'sugg-street-0001',
-        suggestedName: 'Impasse Saint-Pierre',
-        comment: null,
-        status: 'pending',
-        proposedByName: 'Idriss Agent',
-        proposedAt: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(),
-        reviewedByName: null,
-        reviewedAt: null,
-        rejectionReason: null,
-      },
-    },
-    { id: 'street-0002', code: 'STR-0002', name: null, type: 'Piste', pendingSuggestion: null },
-    { id: 'street-0003', code: 'STR-0003', name: 'Impasse du Puits', type: 'Impasse', pendingSuggestion: null },
+    { id: 'street-0001', code: 'STR-0001', name: null, type: 'Impasse', boundaryWkt: null },
+    { id: 'street-0002', code: 'STR-0002', name: null, type: 'Piste', boundaryWkt: null },
+    { id: 'street-0003', code: 'STR-0003', name: 'Impasse du Puits', type: 'Impasse', boundaryWkt: null },
   ];
 
-private properties: PropertyToNumber[] = [
+  private streetSuggestions: PendingStreetSuggestion[] = [
+    {
+      id: 'sugg-street-0001', streetId: 'street-0001', suggestedName: 'Impasse Saint-Pierre', comment: null,
+      proposedAtUtc: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(),
+    },
+  ];
+
+  private properties: PropertyToNumber[] = [
     {
       id: 'property-0001',
       blockCode: 'BLK-Q7-021',
@@ -111,118 +79,97 @@ private properties: PropertyToNumber[] = [
   // --- Blocs ---------------------------------------------------------------
 
   override listBlocksToName(query: BlockNamingQuery): Observable<BlockToName[]> {
+    const pendingBlocIds = new Set(this.blockSuggestions.map((s) => s.blocId));
     const search = query.search.trim().toLowerCase();
-    const filtered = this.blocks.filter((b) => {
-      if (query.onlyUnnamed && b.name) return false;
-      if (!search) return true;
-      return (
-        b.code.toLowerCase().includes(search) ||
-        (b.name ?? '').toLowerCase().includes(search) ||
-        (b.pendingSuggestion?.suggestedName ?? '').toLowerCase().includes(search)
-      );
-    });
+    const filtered = this.blocks
+      .filter((b) => !pendingBlocIds.has(b.id))
+      .filter((b) => !query.onlyUnnamed || !b.name)
+      .filter((b) => !search || b.code.toLowerCase().includes(search) || (b.name ?? '').toLowerCase().includes(search));
     return of(filtered).pipe(delay(MockAddressingApiService.SIMULATED_LATENCY_MS));
   }
 
-  override setBlockName(id: UUID, name: string): Observable<BlockToName> {
+  override setBlockName(id: UUID, payload: UpdateBlockPayload): Observable<BlockToName> {
     const existing = this.blocks.find((b) => b.id === id);
     if (!existing) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
-    const updated: BlockToName = { ...existing, name, pendingSuggestion: null };
+    const updated: BlockToName = { ...existing, ...payload };
     this.blocks = this.blocks.map((b) => (b.id === id ? updated : b));
-    this.propagateBlockName(existing.code, name);
+    if (payload.name) this.propagateBlockName(existing.code, payload.name);
     return of(updated).pipe(delay(MockAddressingApiService.SIMULATED_LATENCY_MS));
   }
 
   override approveBlockSuggestion(suggestionId: UUID): Observable<void> {
-    const existing = this.blocks.find((b) => b.pendingSuggestion?.id === suggestionId);
-    if (!existing?.pendingSuggestion) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
-    const name = existing.pendingSuggestion.suggestedName;
-    const updated: BlockToName = { ...existing, name, pendingSuggestion: null };
-    this.blocks = this.blocks.map((b) => (b.id === existing.id ? updated : b));
-    this.propagateBlockName(existing.code, name);
+    const suggestion = this.blockSuggestions.find((s) => s.id === suggestionId);
+    if (!suggestion) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
+    const block = this.blocks.find((b) => b.id === suggestion.blocId);
+    if (block) {
+      this.blocks = this.blocks.map((b) => (b.id === block.id ? { ...b, name: suggestion.suggestedName } : b));
+      this.propagateBlockName(block.code, suggestion.suggestedName);
+    }
+    this.blockSuggestions = this.blockSuggestions.filter((s) => s.id !== suggestionId);
     return of(undefined).pipe(delay(300));
   }
 
   override rejectBlockSuggestion(suggestionId: UUID, rejectionReason: string): Observable<void> {
-    const existing = this.blocks.find((b) => b.pendingSuggestion?.id === suggestionId);
-    if (!existing?.pendingSuggestion) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
+    if (!this.blockSuggestions.some((s) => s.id === suggestionId)) {
+      return throwError(() => ({ code: 'not_found', message: 'common.error' }));
+    }
     // En mock, on retire simplement la suggestion — en réel elle reste en base avec status='Rejected' (historique conservé).
-    const updated: BlockToName = { ...existing, pendingSuggestion: null };
-    this.blocks = this.blocks.map((b) => (b.id === existing.id ? updated : b));
+    void rejectionReason;
+    this.blockSuggestions = this.blockSuggestions.filter((s) => s.id !== suggestionId);
     return of(undefined).pipe(delay(300));
   }
 
   override listPendingBlockSuggestions(): Observable<PendingBlockSuggestion[]> {
-    const items = this.blocks
-      .filter((b) => b.pendingSuggestion)
-      .map((b) => ({
-        id: b.pendingSuggestion!.id,
-        blocId: b.id,
-        suggestedName: b.pendingSuggestion!.suggestedName,
-        comment: b.pendingSuggestion!.comment,
-        proposedAtUtc: b.pendingSuggestion!.proposedAt,
-      }));
-    return of(items).pipe(delay(MockAddressingApiService.SIMULATED_LATENCY_MS));
+    return of(this.blockSuggestions).pipe(delay(MockAddressingApiService.SIMULATED_LATENCY_MS));
   }
 
   private propagateBlockName(blockCode: string, name: string): void {
     this.properties = this.properties.map((p) =>
       p.blockCode === blockCode
-? { ...p, blockName: name, formattedAddress: `${p.numero} ${name}, ${p.quartierName}, ${p.cityName}` }        : p,
+        ? { ...p, blockName: name, formattedAddress: `${p.numero} ${name}, ${p.quartierName}, ${p.cityName}` }
+        : p,
     );
   }
 
   // --- Rues (liste plate, aucun regroupement par bloc — voir décision) ------
 
   override listStreetsToName(query: StreetNamingQuery): Observable<StreetToName[]> {
+    const pendingStreetIds = new Set(this.streetSuggestions.map((s) => s.streetId));
     const search = query.search.trim().toLowerCase();
-    const filtered = this.streets.filter((s) => {
-      if (query.onlyUnnamed && s.name) return false;
-      if (!search) return true;
-      return (
-        s.code.toLowerCase().includes(search) ||
-        (s.name ?? '').toLowerCase().includes(search) ||
-        (s.pendingSuggestion?.suggestedName ?? '').toLowerCase().includes(search)
-      );
-    });
+    const filtered = this.streets
+      .filter((s) => !pendingStreetIds.has(s.id))
+      .filter((s) => !query.onlyUnnamed || !s.name)
+      .filter((s) => !search || s.code.toLowerCase().includes(search) || (s.name ?? '').toLowerCase().includes(search));
     return of(filtered).pipe(delay(MockAddressingApiService.SIMULATED_LATENCY_MS));
   }
 
-  override setStreetName(id: UUID, name: string): Observable<StreetToName> {
+  override setStreetName(id: UUID, payload: UpdateStreetNamePayload): Observable<StreetToName> {
     const existing = this.streets.find((s) => s.id === id);
     if (!existing) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
-    const updated: StreetToName = { ...existing, name, pendingSuggestion: null };
+    const updated: StreetToName = { ...existing, ...payload };
     this.streets = this.streets.map((s) => (s.id === id ? updated : s));
     return of(updated).pipe(delay(MockAddressingApiService.SIMULATED_LATENCY_MS));
   }
 
   override approveStreetSuggestion(suggestionId: UUID): Observable<void> {
-    const existing = this.streets.find((s) => s.pendingSuggestion?.id === suggestionId);
-    if (!existing?.pendingSuggestion) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
-    const updated: StreetToName = { ...existing, name: existing.pendingSuggestion.suggestedName, pendingSuggestion: null };
-    this.streets = this.streets.map((s) => (s.id === existing.id ? updated : s));
+    const suggestion = this.streetSuggestions.find((s) => s.id === suggestionId);
+    if (!suggestion) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
+    this.streets = this.streets.map((s) => (s.id === suggestion.streetId ? { ...s, name: suggestion.suggestedName } : s));
+    this.streetSuggestions = this.streetSuggestions.filter((s) => s.id !== suggestionId);
     return of(undefined).pipe(delay(300));
   }
 
   override rejectStreetSuggestion(suggestionId: UUID, rejectionReason: string): Observable<void> {
-    const existing = this.streets.find((s) => s.pendingSuggestion?.id === suggestionId);
-    if (!existing?.pendingSuggestion) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
-    const updated: StreetToName = { ...existing, pendingSuggestion: null };
-    this.streets = this.streets.map((s) => (s.id === existing.id ? updated : s));
+    if (!this.streetSuggestions.some((s) => s.id === suggestionId)) {
+      return throwError(() => ({ code: 'not_found', message: 'common.error' }));
+    }
+    void rejectionReason;
+    this.streetSuggestions = this.streetSuggestions.filter((s) => s.id !== suggestionId);
     return of(undefined).pipe(delay(300));
   }
 
   override listPendingStreetSuggestions(): Observable<PendingStreetSuggestion[]> {
-    const items = this.streets
-      .filter((s) => s.pendingSuggestion)
-      .map((s) => ({
-        id: s.pendingSuggestion!.id,
-        streetId: s.id,
-        suggestedName: s.pendingSuggestion!.suggestedName,
-        comment: s.pendingSuggestion!.comment,
-        proposedAtUtc: s.pendingSuggestion!.proposedAt,
-      }));
-    return of(items).pipe(delay(MockAddressingApiService.SIMULATED_LATENCY_MS));
+    return of(this.streetSuggestions).pipe(delay(MockAddressingApiService.SIMULATED_LATENCY_MS));
   }
 
   // --- Propriétés ------------------------------------------------------------
@@ -236,7 +183,7 @@ private properties: PropertyToNumber[] = [
     const existing = this.properties.find((p) => p.id === id);
     if (!existing) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
     const blockPart = existing.blockName ? ` ${existing.blockName}` : '';
-   const updated: PropertyToNumber = {
+    const updated: PropertyToNumber = {
       ...existing,
       numero: payload.numero,
       addressCode: existing.addressCode.replace(/-\d+(-BIS)?$/i, `-${payload.numero}`),

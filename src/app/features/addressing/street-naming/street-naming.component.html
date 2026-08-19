@@ -24,41 +24,12 @@
         <span class="item__type">{{ s.type }}</span>
       </div>
 
-      @if (s.pendingSuggestion; as sug) {
-        <div class="suggestion">
-          <div class="suggestion__main">
-            <span class="suggestion__icon"><i class="ti ti-bulb" aria-hidden="true"></i></span>
-            <div class="suggestion__text">
-              <div class="suggestion__name">{{ sug.suggestedName }}</div>
-              <div class="suggestion__meta">{{ 'addressing.proposedBy' | transloco: { name: sug.proposedByName } }} · {{ sug.proposedAt | dasDate }}</div>
-            </div>
-          </div>
-
-          @if (openRejectId() === s.id) {
-            <form class="reject" [formGroup]="rejectFormFor(s.id)" (ngSubmit)="confirmReject(s)">
-              <input type="text" formControlName="reason" [attr.placeholder]="'addressing.rejectReason' | transloco" />
-              <button type="submit" class="btn btn--danger">{{ 'addressing.confirmReject' | transloco }}</button>
-              <button type="button" class="btn btn--ghost" (click)="closeReject()">{{ 'common.cancel' | transloco }}</button>
-            </form>
-          } @else {
-            <div class="suggestion__actions">
-              <button type="button" class="btn btn--approve" (click)="approve(s)" [disabled]="(isSaving$(s.id) | async)">
-                <i class="ti ti-check" aria-hidden="true"></i>{{ 'addressing.approve' | transloco }}
-              </button>
-              <button type="button" class="btn btn--ghost" (click)="openReject(s.id)">
-                <i class="ti ti-x" aria-hidden="true"></i>{{ 'addressing.reject' | transloco }}
-              </button>
-            </div>
-          }
-        </div>
-      } @else {
-        <form class="direct" [formGroup]="nameFormFor(s.id)" (ngSubmit)="submitDirectName(s)">
-          <input type="text" formControlName="name" [attr.placeholder]="'addressing.namePlaceholder' | transloco" />
-          <button type="submit" class="btn btn--primary" [disabled]="(isSaving$(s.id) | async)">
-            @if (isSaving$(s.id) | async) { {{ 'common.saving' | transloco }} } @else { {{ 'addressing.assignName' | transloco }} }
-          </button>
-        </form>
-      }
+      <form class="direct" [formGroup]="nameFormFor(s.id)" (ngSubmit)="submitDirectName(s)">
+        <input type="text" formControlName="name" [attr.placeholder]="'addressing.namePlaceholder' | transloco" />
+        <button type="submit" class="btn btn--primary" [disabled]="(isSaving$(s.id) | async)">
+          @if (isSaving$(s.id) | async) { {{ 'common.saving' | transloco }} } @else { {{ 'addressing.assignName' | transloco }} }
+        </button>
+      </form>
     </section>
   } @empty {
     <div class="naming__empty">

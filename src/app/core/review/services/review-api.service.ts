@@ -12,7 +12,7 @@ interface RawSurveyResponse {
   adresseId: string;
   agentId: string;
   outcome: 'Surveyed' | 'NotSurveyable';
-  notSurveyableReason: 'Demolished' | 'Inaccessible' | 'Refused' | 'NotFound' | null;
+  notSurveyableReason: 'Demolished' | 'Inaccessible' | 'Refused' | 'NotFound' | 'VacantLand' | 'OutOfTime' | null;
   gpsAccuracyM: number | string | null;
   distanceFromAddressM: number | string | null;
   photoCount: number | string;

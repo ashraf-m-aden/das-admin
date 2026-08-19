@@ -21,36 +21,10 @@
           <span class="item__code">{{ b.code }}</span>
           @if (b.name) { <span class="item__name">{{ b.name }}</span> }
         </div>
-        <span [class]="statusBadgeClass(b.status)">{{ statusLabelKey(b.status) | transloco }}</span>
       </div>
 
-      @if (b.pendingSuggestion; as sug) {
-        <div class="suggestion">
-          <div class="suggestion__main">
-            <span class="suggestion__icon"><i class="ti ti-bulb" aria-hidden="true"></i></span>
-            <div class="suggestion__text">
-              <div class="suggestion__name">{{ sug.suggestedName }}</div>
-              <div class="suggestion__meta">{{ 'addressing.proposedBy' | transloco: { name: sug.proposedByName } }} · {{ sug.proposedAt | dasDate }}</div>
-            </div>
-          </div>
-
-          @if (openRejectId() === b.id) {
-            <form class="reject" [formGroup]="rejectFormFor(b.id)" (ngSubmit)="confirmReject(b)">
-              <input type="text" formControlName="reason" [attr.placeholder]="'addressing.rejectReason' | transloco" />
-              <button type="submit" class="btn btn--danger">{{ 'addressing.confirmReject' | transloco }}</button>
-              <button type="button" class="btn btn--ghost" (click)="closeReject()">{{ 'common.cancel' | transloco }}</button>
-            </form>
-          } @else {
-            <div class="suggestion__actions">
-              <button type="button" class="btn btn--approve" (click)="approve(b)" [disabled]="(isSaving$(b.id) | async)">
-                <i class="ti ti-check" aria-hidden="true"></i>{{ 'addressing.approve' | transloco }}
-              </button>
-              <button type="button" class="btn btn--ghost" (click)="openReject(b.id)">
-                <i class="ti ti-x" aria-hidden="true"></i>{{ 'addressing.reject' | transloco }}
-              </button>
-            </div>
-          }
-        </div>
+      @if (b.number === null) {
+        <div class="naming__hint">{{ 'blocks.missingNumberHint' | transloco }}</div>
       } @else {
         <form class="direct" [formGroup]="nameFormFor(b.id)" (ngSubmit)="submitDirectName(b)">
           <input type="text" formControlName="name" [attr.placeholder]="'addressing.namePlaceholder' | transloco" />

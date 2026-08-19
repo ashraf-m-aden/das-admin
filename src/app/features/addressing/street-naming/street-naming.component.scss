@@ -42,26 +42,9 @@
   }
 }
 
-.suggestion {
-  display: flex; align-items: center; justify-content: space-between; gap: v.$space-3;
-  padding: v.$space-3;
-  background: var(--color-info-bg);
-  border-radius: v.$radius-md;
+.direct { display: flex; gap: v.$space-2; }
 
-  &__main { display: flex; align-items: center; gap: v.$space-2; min-width: 0; }
-  &__icon {
-    width: 30px; height: 30px; flex-shrink: 0; border-radius: v.$radius-sm;
-    background: var(--das-indigo-100); color: var(--das-indigo-700);
-    @include m.flex-center; font-size: 16px;
-  }
-  &__name { font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; color: var(--color-text-primary); }
-  &__meta { font-size: v.$font-size-xs; color: var(--color-text-muted); }
-  &__actions { display: flex; gap: v.$space-2; flex-shrink: 0; }
-}
-
-.direct, .reject { display: flex; gap: v.$space-2; }
-
-.direct input, .reject input {
+.direct input {
   flex: 1; height: 34px; padding: 0 v.$space-3;
   border: 1px solid var(--color-border); border-radius: v.$radius-sm;
   font: inherit; font-size: v.$font-size-sm; color: var(--color-text-primary); outline: none;
@@ -76,8 +59,5 @@
   white-space: nowrap;
   &:disabled { opacity: 0.55; cursor: default; }
 
-  &--primary, &--approve { background: var(--color-accent); color: var(--color-on-accent); }
-  &--approve { background: var(--color-success); }
-  &--danger { background: var(--color-danger); color: #fff; }
-  &--ghost { background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text-secondary); }
+  &--primary { background: var(--color-accent); color: var(--color-on-accent); }
 }

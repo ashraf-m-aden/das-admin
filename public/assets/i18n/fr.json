@@ -175,11 +175,6 @@
     "streetNaming": "Nommage des rues",
     "propertyNumbering": "Numérotation",
     "onlyUnnamed": "Sans nom uniquement",
-    "proposedBy": "Proposé par {{name}}",
-    "rejectReason": "Motif du rejet…",
-    "confirmReject": "Confirmer le rejet",
-    "approve": "Approuver",
-    "reject": "Rejeter",
     "namePlaceholder": "ex. Avenue du Corail",
     "assignName": "Attribuer le nom",
     "emptyBlocks": "Aucun bloc à nommer",
@@ -700,7 +695,9 @@
       "demolished": "Démolie",
       "inaccessible": "Inaccessible",
       "refused": "Accès refusé",
-      "notfound": "Introuvable"
+      "notfound": "Introuvable",
+      "vacantland": "Terrain non bâti",
+      "outoftime": "Non traitée (temps insuffisant)"
     }
   },
   "period": {

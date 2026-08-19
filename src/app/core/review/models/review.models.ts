@@ -1,7 +1,7 @@
 import { UUID, ISODateTime } from '../../models/das.models';
 
 export type SurveyOutcome = 'Surveyed' | 'NotSurveyable';
-export type NotSurveyableReason = 'Demolished' | 'Inaccessible' | 'Refused' | 'NotFound';
+export type NotSurveyableReason = 'Demolished' | 'Inaccessible' | 'Refused' | 'NotFound' | 'VacantLand' | 'OutOfTime';
 
 /** Un relevé soumis (`GET /api/surveys?status=Submitted`) — pas de nom d'agent ni de code adresse : l'API ne renvoie que des ids. */
 export interface SurveyReviewItem {

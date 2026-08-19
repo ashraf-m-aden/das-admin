@@ -1,19 +1,20 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoModule } from '@jsverse/transloco';
 import { AddressingFacade } from '../../../core/addressing/store/addressing.facade';
-import { DasDatePipe } from '../../../core/i18n/das-locale.pipes';
 import { BlockToName } from '../../../core/addressing/models/addressing.models';
-import { BlockStatus } from '../../../core/models/das.models';
 
 type NameForm = FormGroup<{ name: FormControl<string> }>;
-type RejectForm = FormGroup<{ reason: FormControl<string> }>;
 
+/**
+ * Nommage direct par un admin — les blocs avec une suggestion terrain en attente n'apparaissent
+ * pas ici, ils se traitent dans la file de validation unifiée (`/verification`).
+ */
 @Component({
   selector: 'das-block-naming',
   standalone: true,
-  imports: [AsyncPipe, ReactiveFormsModule, TranslocoModule, DasDatePipe],
+  imports: [AsyncPipe, ReactiveFormsModule, TranslocoModule],
   templateUrl: './block-naming.component.html',
   styleUrl: './block-naming.component.scss',
 })
@@ -28,8 +29,6 @@ export class BlockNamingComponent implements OnInit {
   protected readonly filterForm = this.fb.nonNullable.group({ search: [''], onlyUnnamed: [true] });
 
   protected readonly nameForms = new Map<string, NameForm>();
-  protected readonly rejectForms = new Map<string, RejectForm>();
-  protected readonly openRejectId = signal<string | null>(null);
 
   ngOnInit(): void {
     this.facade.loadBlocksToName();
@@ -38,40 +37,21 @@ export class BlockNamingComponent implements OnInit {
     );
     this.facade.blocks$.subscribe((blocks) => {
       this.nameForms.clear();
-      this.rejectForms.clear();
       for (const b of blocks) {
         this.nameForms.set(b.id, this.fb.nonNullable.group({ name: ['', [Validators.required]] }));
-        this.rejectForms.set(b.id, this.fb.nonNullable.group({ reason: ['', [Validators.required]] }));
       }
     });
   }
 
   nameFormFor(id: string): NameForm { return this.nameForms.get(id)!; }
-  rejectFormFor(id: string): RejectForm { return this.rejectForms.get(id)!; }
   isSaving$(id: string) { return this.facade.isSavingBlock$(id); }
 
   submitDirectName(block: BlockToName): void {
+    if (block.number === null) return; // garde-fou : bouton masqué côté template, cf. blocks.missingNumberHint
     const form = this.nameFormFor(block.id);
     if (form.invalid) { form.markAllAsTouched(); return; }
-    this.facade.setBlockName(block.id, form.getRawValue().name);
+    this.facade.setBlockName(block.id, {
+      code: block.code, name: form.getRawValue().name, number: block.number, boundaryWkt: block.boundaryWkt,
+    });
   }
-
-  approve(block: BlockToName): void {
-    if (!block.pendingSuggestion) return;
-    this.facade.approveBlockSuggestion(block.id, block.pendingSuggestion.id);
-  }
-
-  openReject(id: string): void { this.openRejectId.set(id); }
-  closeReject(): void { this.openRejectId.set(null); }
-
-  confirmReject(block: BlockToName): void {
-    if (!block.pendingSuggestion) return;
-    const form = this.rejectFormFor(block.id);
-    if (form.invalid) { form.markAllAsTouched(); return; }
-    this.facade.rejectBlockSuggestion(block.id, block.pendingSuggestion.id, form.getRawValue().reason);
-    this.openRejectId.set(null);
-  }
-
-  statusBadgeClass(status: BlockStatus): string { return `das-badge das-badge--${status.replace('_', '-')}`; }
-  statusLabelKey(status: BlockStatus): string { return `status.block.${status}`; }
 }

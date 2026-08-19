@@ -12,14 +12,13 @@ export const addressingFeature = createFeature({
     on(AddressingActions.loadBlocksToNameFailure, (state, { errorMessageKey }) => ({ ...state, blocksStatus: 'error' as const, blocksErrorMessageKey: errorMessageKey })),
     on(AddressingActions.setBlockFilters, (state, { filters }) => ({ ...state, blockFilters: { ...state.blockFilters, ...filters } })),
 
-    on(AddressingActions.setBlockName, AddressingActions.approveBlockSuggestion, AddressingActions.rejectBlockSuggestion, (state, action) => ({
-      ...state, savingBlockId: action.id, blockActionErrorMessageKey: null,
+    on(AddressingActions.setBlockName, (state, { id }) => ({
+      ...state, savingBlockId: id, blockActionErrorMessageKey: null,
     })),
-    on(AddressingActions.blockNameActionSuccess, (state, { item }) => ({
+    on(AddressingActions.setBlockNameSuccess, (state, { item }) => ({
       ...state, blocks: state.blocks.map((b) => (b.id === item.id ? item : b)), savingBlockId: null,
     })),
-    on(AddressingActions.blockSuggestionDecided, (state) => ({ ...state, savingBlockId: null })),
-    on(AddressingActions.blockNameActionFailure, (state, { errorMessageKey }) => ({
+    on(AddressingActions.setBlockNameFailure, (state, { errorMessageKey }) => ({
       ...state, savingBlockId: null, blockActionErrorMessageKey: errorMessageKey,
     })),
 
@@ -28,14 +27,13 @@ export const addressingFeature = createFeature({
     on(AddressingActions.loadStreetsToNameFailure, (state, { errorMessageKey }) => ({ ...state, streetsStatus: 'error' as const, streetsErrorMessageKey: errorMessageKey })),
     on(AddressingActions.setStreetFilters, (state, { filters }) => ({ ...state, streetFilters: { ...state.streetFilters, ...filters } })),
 
-    on(AddressingActions.setStreetName, AddressingActions.approveStreetSuggestion, AddressingActions.rejectStreetSuggestion, (state, action) => ({
-      ...state, savingStreetId: action.id, streetActionErrorMessageKey: null,
+    on(AddressingActions.setStreetName, (state, { id }) => ({
+      ...state, savingStreetId: id, streetActionErrorMessageKey: null,
     })),
-    on(AddressingActions.streetNameActionSuccess, (state, { item }) => ({
+    on(AddressingActions.setStreetNameSuccess, (state, { item }) => ({
       ...state, streets: state.streets.map((s) => (s.id === item.id ? item : s)), savingStreetId: null,
     })),
-    on(AddressingActions.streetSuggestionDecided, (state) => ({ ...state, savingStreetId: null })),
-    on(AddressingActions.streetNameActionFailure, (state, { errorMessageKey }) => ({
+    on(AddressingActions.setStreetNameFailure, (state, { errorMessageKey }) => ({
       ...state, savingStreetId: null, streetActionErrorMessageKey: errorMessageKey,
     })),
 

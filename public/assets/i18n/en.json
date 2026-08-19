@@ -175,11 +175,6 @@
     "streetNaming": "Street naming",
     "propertyNumbering": "Numbering",
     "onlyUnnamed": "Unnamed only",
-    "proposedBy": "Proposed by {{name}}",
-    "rejectReason": "Rejection reason…",
-    "confirmReject": "Confirm rejection",
-    "approve": "Approve",
-    "reject": "Reject",
     "namePlaceholder": "e.g. Corail Avenue",
     "assignName": "Assign name",
     "emptyBlocks": "No closes to name",
@@ -701,7 +696,9 @@
       "demolished": "Demolished",
       "inaccessible": "Inaccessible",
       "refused": "Access refused",
-      "notfound": "Not found"
+      "notfound": "Not found",
+      "vacantland": "Vacant land",
+      "outoftime": "Not processed (out of time)"
     }
   },
   "period": {
