@@ -119,6 +119,7 @@ export class MockAdresseApiService extends AdresseApiPort {
         { id: `${id}-l1`, kind: 'postcode', label: base.postcode ?? '—' },
         { id: `${id}-l2`, kind: 'team', label: base.assignedTeamName ?? '—' },
       ],
+      units: [], // écrasé par le forkJoin de AdresseEffects.openDetail$ (MockUnitsApiService) — placeholder pour respecter AddressDetail.
     };
     return of(detail).pipe(delay(MockAdresseApiService.LATENCY));
   }

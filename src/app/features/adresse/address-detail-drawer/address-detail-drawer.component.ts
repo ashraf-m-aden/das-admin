@@ -3,6 +3,7 @@ import { AsyncPipe, DecimalPipe } from '@angular/common';
 import { TranslocoModule } from '@jsverse/transloco';
 import { AdresseFacade } from '../../../core/adresse/store/adresse.facade';
 import { AddressWorkflowStage } from '../../../core/models/das.models';
+import { UnitType } from '../../../core/units/models/units.models';
 
 type Tab = 'details' | 'linked';
 
@@ -31,4 +32,10 @@ export class AddressDetailDrawerComponent {
   stageColor(stage: AddressWorkflowStage): string { return STAGE_COLOR[stage]; }
   stageLabelKey(stage: AddressWorkflowStage): string { return `status.stage.${stage}`; }
   occupancyLabelKey(occ: string): string { return `adresse.occupancy.${occ}`; }
+
+  private static readonly UNIT_TYPE_ICON: Record<UnitType, string> = {
+    Apartment: 'ti ti-door', Shop: 'ti ti-building-store', Office: 'ti ti-briefcase',
+  };
+  unitTypeIcon(type: UnitType): string { return AddressDetailDrawerComponent.UNIT_TYPE_ICON[type]; }
+  unitTypeLabelKey(type: UnitType): string { return `adresse.unitType.${type.toLowerCase()}`; }
 }

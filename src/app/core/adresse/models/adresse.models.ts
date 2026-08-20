@@ -1,6 +1,7 @@
 import {
   UUID, ISODateTime, AddressWorkflowStage, OccupancyType, GeoJSONMultiPolygon,
 } from '../../models/das.models';
+import { AddressUnit } from '../../units/models/units.models';
 
 /**
  * Ligne du registre des adresses.
@@ -49,6 +50,8 @@ export interface AddressDetail extends AddressListItem {
   propertyInfo: AddressPropertyInfo;
   validation: AddressValidation;
   linked: LinkedRecord[];
+  /** Unités de l'immeuble (`/api/units?adresseId=`) — vide pour une maison individuelle. */
+  units: AddressUnit[];
 }
 
 /** Filtres du registre. Déclaration UNIQUE (fin des doublons). */

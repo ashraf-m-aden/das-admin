@@ -42,3 +42,10 @@
   &__kind { color: var(--color-text-muted); font-size: v.$font-size-xs; text-transform: capitalize; }
   &__label { margin-left: auto; color: var(--color-text-primary); }
 }
+
+.units { display: flex; flex-direction: column; gap: v.$space-1;
+  &__item { display: flex; align-items: center; gap: v.$space-2; padding: v.$space-2 v.$space-3; background: var(--color-surface-alt); border-radius: v.$radius-sm; font-size: v.$font-size-sm; i { color: var(--color-text-muted); } }
+  &__number { font-weight: v.$font-weight-medium; color: var(--color-text-primary); }
+  &__floor { color: var(--color-text-muted); font-size: v.$font-size-xs; }
+  &__type { margin-left: auto; color: var(--color-text-secondary); font-size: v.$font-size-xs; }
+}

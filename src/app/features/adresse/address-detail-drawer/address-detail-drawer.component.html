@@ -46,6 +46,21 @@
               @if (d.propertyInfo.buildingUse) { <div><dt>{{ 'adresse.buildingUse' | transloco }}</dt><dd>{{ d.propertyInfo.buildingUse }}</dd></div> }
             </dl>
           </div>
+          @if (d.units.length > 0) {
+            <div class="section">
+              <div class="section__title">{{ 'adresse.units' | transloco: { count: d.units.length } }}</div>
+              <div class="units">
+                @for (u of d.units; track u.id) {
+                  <div class="units__item">
+                    <i [class]="unitTypeIcon(u.type)" aria-hidden="true"></i>
+                    <span class="units__number">{{ u.number }}</span>
+                    <span class="units__floor">{{ 'adresse.unitFloor' | transloco: { floor: u.floor } }}</span>
+                    <span class="units__type">{{ unitTypeLabelKey(u.type) | transloco }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
           <div class="actions">
             <button type="button" class="abtn"><i class="ti ti-map-pin" aria-hidden="true"></i>{{ 'adresse.viewOnMap' | transloco }}</button>
             <button type="button" class="abtn"><i class="ti ti-pencil" aria-hidden="true"></i>{{ 'adresse.editAddress' | transloco }}</button>

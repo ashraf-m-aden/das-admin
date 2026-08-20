@@ -323,6 +323,13 @@
     "parcelNumber": "N° de parcelle",
     "propertyInfo": "Propriété",
     "buildingUse": "Usage du bâtiment",
+    "units": "Unités ({{count}})",
+    "unitFloor": "Étage {{floor}}",
+    "unitType": {
+      "apartment": "Appartement",
+      "shop": "Commerce",
+      "office": "Bureau"
+    },
     "viewOnMap": "Voir sur la carte",
     "editAddress": "Modifier",
     "occupancy.occupied": "Occupé",

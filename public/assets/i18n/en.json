@@ -323,6 +323,13 @@
     "parcelNumber": "Parcel number",
     "propertyInfo": "Property",
     "buildingUse": "Building use",
+    "units": "Units ({{count}})",
+    "unitFloor": "Floor {{floor}}",
+    "unitType": {
+      "apartment": "Apartment",
+      "shop": "Shop",
+      "office": "Office"
+    },
     "viewOnMap": "View on map",
     "editAddress": "Edit",
     "occupancy.occupied": "Occupied",
