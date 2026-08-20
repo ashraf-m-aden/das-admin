@@ -1,5 +1,6 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
 import { AuthFacade } from '../../auth/store/auth.facade';
@@ -12,6 +13,10 @@ interface NavItem {
   path: string;
   allowedRoles?: UserRole[];
 }
+
+const ROLE_LABEL: Record<UserRole, string> = {
+  Admin: 'Admin', Gestionnaire: 'Gestionnaire', Superviseur: 'Superviseur', AgentTerrain: 'Agent Terrain',
+};
 
 @Component({
   selector: 'das-header',
@@ -27,6 +32,20 @@ export class HeaderComponent {
   protected readonly fullName$ = this.authFacade.fullName$;
   protected readonly roles$ = this.authFacade.roles$;
   protected readonly unreadCount$ = this.notificationsFacade.unreadCount$;
+
+  private readonly fullNameSig = toSignal(this.fullName$, { initialValue: null as string | null });
+  private readonly rolesSig = toSignal(this.roles$, { initialValue: [] as UserRole[] });
+
+  protected readonly initials = computed(() => {
+    const name = this.fullNameSig();
+    if (!name) return '';
+    return name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? '').join('');
+  });
+
+  protected readonly primaryRoleLabel = computed(() => {
+    const role = this.rolesSig()[0];
+    return role ? ROLE_LABEL[role] : '';
+  });
 
   protected readonly navItems: NavItem[] = [
     { labelKey: 'nav.dashboard', path: '/dashboard' },

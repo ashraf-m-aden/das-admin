@@ -164,6 +164,7 @@
   },
   "clients": {
     "eyebrow": "Commercial module",
+    "selectZone": "Select a zone…",
     "add": "Add client",
     "company": "Company",
     "contact": "Contact",
@@ -292,6 +293,8 @@
   },
   "adresse": {
     "eyebrow": "Manage official addresses, parcels and postcode records",
+    "viewList": "List",
+    "viewMap": "Map",
     "import": "Import",
     "merge": "Merge Duplicates",
     "create": "Create Address",

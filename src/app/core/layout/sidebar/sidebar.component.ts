@@ -36,7 +36,7 @@ export class SidebarComponent {
   protected readonly openGroups = signal<Set<string>>(new Set());
 
   protected readonly entries: NavEntry[] = [
-    // { kind: 'link', labelKey: 'nav.dashboard', path: '/dashboard', icon: 'ti-layout-dashboard' },
+     { kind: 'link', labelKey: 'nav.dashboard', path: '/dashboard', icon: 'ti-layout-dashboard' },
     { kind: 'link', labelKey: 'nav.adresse', path: '/adresse', icon: 'ti-address-book' },
     {
       kind: 'group', key: 'gis', labelKey: 'nav.gis', icon: 'ti-map-2',

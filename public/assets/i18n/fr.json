@@ -164,6 +164,7 @@
   },
   "clients": {
     "eyebrow": "Module commercial",
+    "selectZone": "Choisir une zone…",
     "add": "Ajouter un client",
     "company": "Société",
     "contact": "Contact",
@@ -292,6 +293,8 @@
   },
   "adresse": {
     "eyebrow": "Gérer les adresses, parcelles et codes postaux officiels",
+    "viewList": "Liste",
+    "viewMap": "Carte",
     "import": "Importer",
     "merge": "Fusionner doublons",
     "create": "Créer une adresse",
