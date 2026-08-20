@@ -287,7 +287,7 @@
     "authority": "D.A.S Authority"
   },
   "topbar": {
-    "search": "Search addresses, postcodes, parcels, teams…",
+    "search": "Search an address (quartier, code)…",
     "help": "Help",
     "language": "Language"
   },

@@ -1,7 +1,7 @@
 <header class="tb">
   <label class="tb__search">
     <i class="ti ti-search" aria-hidden="true"></i>
-    <input type="text" [attr.placeholder]="'topbar.search' | transloco" />
+    <input type="text" #searchInput [attr.placeholder]="'topbar.search' | transloco" (keyup.enter)="search(searchInput.value)" />
     <span class="tb__kbd">⌘K</span>
   </label>
 
@@ -23,11 +23,11 @@
 
     <div class="tb__profile">
     <a class="tb__profile-link" routerLink="/profile">
+        <span class="tb__avatar" aria-hidden="true">{{ initials$ | async }}</span>
         <div class="tb__profile-text">
           <span class="tb__profile-name">{{ fullName$ | async }}</span>
           @if ((roles$ | async)?.[0]; as role) { <span class="tb__profile-role">{{ ('roles.' + role) | transloco }}</span> }
         </div>
-        <span class="tb__avatar">{{ initials$ | async }}</span>
       </a>
       <button type="button" class="tb__icon-btn tb__logout" (click)="logout()" [attr.aria-label]="'nav.logout' | transloco">
         <i class="ti ti-logout" aria-hidden="true"></i>

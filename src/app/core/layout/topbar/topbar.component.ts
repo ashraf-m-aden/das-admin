@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { AsyncPipe, UpperCasePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { map } from 'rxjs';
 import { AuthFacade } from '../../auth/store/auth.facade';
@@ -17,6 +17,7 @@ export class TopbarComponent {
   private authFacade = inject(AuthFacade);
   private notificationsFacade = inject(NotificationsFacade);
   private transloco = inject(TranslocoService);
+  private router = inject(Router);
 
   protected readonly fullName$ = this.authFacade.fullName$;
   protected readonly roles$ = this.authFacade.roles$;
@@ -45,5 +46,12 @@ export class TopbarComponent {
 
   logout(): void {
     this.authFacade.logout();
+  }
+
+  /** Renvoie vers la liste des adresses avec le terme en filtre `search` — seule entité réellement filtrable par texte à ce jour. */
+  search(term: string): void {
+    const q = term.trim();
+    if (!q) return;
+    this.router.navigate(['/adresse'], { queryParams: { search: q } });
   }
 }

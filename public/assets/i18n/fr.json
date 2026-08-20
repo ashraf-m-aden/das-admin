@@ -287,7 +287,7 @@
     "authority": "Autorité D.A.S"
   },
   "topbar": {
-    "search": "Rechercher adresses, codes postaux, parcelles, équipes…",
+    "search": "Rechercher une adresse (quartier, code)…",
     "help": "Aide",
     "language": "Langue"
   },

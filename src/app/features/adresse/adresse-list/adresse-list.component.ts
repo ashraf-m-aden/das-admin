@@ -125,6 +125,8 @@ export class AdresseListComponent implements OnInit {
     this.facade.init();
     const blocId = this.route.snapshot.queryParamMap.get('blocId');
     if (blocId) this.facade.setFilters({ blocId });
+    const search = this.route.snapshot.queryParamMap.get('search');
+    if (search) this.filterForm.patchValue({ search });
     this.filterForm.valueChanges.subscribe((v) => this.facade.setFilters({
       search: v.search ?? '', status: v.status ?? null, team: v.team ?? null,
     }));
