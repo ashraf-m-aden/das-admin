@@ -21,54 +21,86 @@
       </div>
     </div>
 
+    <section class="das-card panel">
+      <div class="panel__title">{{ 'dashboard.workflowProgress' | transloco }}</div>
+      <div class="stepper">
+        @for (w of workflowFunnel(); track w.stage; let last = $last) {
+          <div class="step">
+            <div class="step__ic" [style.background]="stageColor(w.stage)"><i [class]="stageIcon(w.stage)" aria-hidden="true"></i></div>
+            <div class="step__value">{{ w.count | number }}</div>
+            <div class="step__label">{{ stageLabelKey(w.stage) | transloco }}</div>
+            <div class="step__pct">{{ w.percent }}%</div>
+          </div>
+          @if (!last) { <div class="step__line"></div> }
+        }
+      </div>
+    </section>
+
     <div class="grid">
       <section class="das-card panel">
-        <div class="panel__title">{{ 'dashboard.workflowProgress' | transloco }}</div>
-        <div class="segbar">
-          @for (w of workflowSegments(); track w.stage) {
-            <span class="segbar__seg" [style.width.%]="w.percent" [style.background]="stageColor(w.stage)"></span>
-          }
+        <div class="panel__title">{{ 'dashboard.addressMap' | transloco }}</div>
+        <div class="map-canvas">
+          <das-map [zoom]="11.5" [fitToData]="false" [showLayerControl]="false" />
         </div>
-        <ul class="legend">
-          @for (w of workflowSegments(); track w.stage) {
-            <li><span class="legend__dot" [style.background]="stageColor(w.stage)"></span>{{ stageLabelKey(w.stage) | transloco }} <b>{{ w.count | number }}</b> <span class="legend__pct">{{ w.percent }} %</span></li>
+        <ul class="legend legend--row">
+          @for (st of workflowFunnel(); track st.stage) {
+            <li><span class="legend__dot" [style.background]="stageColor(st.stage)"></span>{{ stageLabelKey(st.stage) | transloco }}</li>
           }
         </ul>
       </section>
 
       <section class="das-card panel">
-        <div class="panel__title">{{ 'dashboard.activeCampaign' | transloco }}</div>
-        @if (s.activeCampaign; as c) {
-          <div class="camp">
-            <div class="camp__head">
-              <span class="camp__name">{{ c.name }}</span>
-              <span class="camp__code mono">{{ c.code }}</span>
-            </div>
-            <div class="camp__deadline">{{ 'fieldops.deadline' | transloco }} {{ c.deadline }}</div>
-
-            <div class="camp__block">
-              <div class="camp__block-head"><span>{{ 'dashboard.charge' | transloco }}</span><span>{{ chargePercent() }} %</span></div>
-              <div class="segbar segbar--single"><span class="segbar__seg" [style.width.%]="chargePercent()"></span></div>
-              <div class="camp__block-meta">{{ c.charge.done | number }} / {{ c.charge.total | number }}</div>
-            </div>
-
-            <div class="camp__production">
-              <span class="camp__block-head">{{ 'dashboard.production' | transloco }}</span>
-              <div class="camp__prod-row">
-                <span>{{ 'fieldops.survey.draft' | transloco }} <b>{{ c.production.draft }}</b></span>
-                <span>{{ 'fieldops.survey.submitted' | transloco }} <b>{{ c.production.submitted }}</b></span>
-                <span>{{ 'fieldops.survey.validated' | transloco }} <b>{{ c.production.validated }}</b></span>
-                <span>{{ 'fieldops.survey.rejected' | transloco }} <b>{{ c.production.rejected }}</b></span>
+        <div class="panel__title">{{ 'dashboard.verificationCompletion' | transloco }}</div>
+        @if (verificationDonut(); as v) {
+          <div class="donut-row">
+            <div class="donut" [style.background]="donutGradient()">
+              <div class="donut__hole">
+                <span class="donut__pct">{{ v.verifiedPct }}%</span>
+                <span class="donut__label">{{ 'dashboard.verified' | transloco }}</span>
               </div>
             </div>
-
-            <a class="btn btn--ghost" routerLink="/field-operations">{{ 'dashboard.viewCampaign' | transloco }}</a>
+            <ul class="legend">
+              <li><span class="legend__dot" style="background:#16a34a"></span>{{ 'dashboard.verified' | transloco }} <b>{{ v.verified | number }}</b> <span class="legend__pct">{{ v.verifiedPct }} %</span></li>
+              <li><span class="legend__dot" style="background:#d97706"></span>{{ 'dashboard.pendingVerification' | transloco }} <b>{{ v.pending | number }}</b> <span class="legend__pct">{{ v.pendingPct }} %</span></li>
+              <li><span class="legend__dot" style="background:#6b7280"></span>{{ 'dashboard.unverified' | transloco }} <b>{{ v.unverified | number }}</b> <span class="legend__pct">{{ v.unverifiedPct }} %</span></li>
+            </ul>
           </div>
-        } @else {
-          <div class="camp__empty">{{ 'dashboard.noActiveCampaign' | transloco }}</div>
         }
       </section>
     </div>
+
+    <section class="das-card panel">
+      <div class="panel__title">{{ 'dashboard.activeCampaign' | transloco }}</div>
+      @if (s.activeCampaign; as c) {
+        <div class="camp">
+          <div class="camp__head">
+            <span class="camp__name">{{ c.name }}</span>
+            <span class="camp__code mono">{{ c.code }}</span>
+          </div>
+          <div class="camp__deadline">{{ 'fieldops.deadline' | transloco }} {{ c.deadline }}</div>
+
+          <div class="camp__block">
+            <div class="camp__block-head"><span>{{ 'dashboard.charge' | transloco }}</span><span>{{ chargePercent() }} %</span></div>
+            <div class="segbar segbar--single"><span class="segbar__seg" [style.width.%]="chargePercent()"></span></div>
+            <div class="camp__block-meta">{{ c.charge.done | number }} / {{ c.charge.total | number }}</div>
+          </div>
+
+          <div class="camp__production">
+            <span class="camp__block-head">{{ 'dashboard.production' | transloco }}</span>
+            <div class="camp__prod-row">
+              <span>{{ 'fieldops.survey.draft' | transloco }} <b>{{ c.production.draft }}</b></span>
+              <span>{{ 'fieldops.survey.submitted' | transloco }} <b>{{ c.production.submitted }}</b></span>
+              <span>{{ 'fieldops.survey.validated' | transloco }} <b>{{ c.production.validated }}</b></span>
+              <span>{{ 'fieldops.survey.rejected' | transloco }} <b>{{ c.production.rejected }}</b></span>
+            </div>
+          </div>
+
+          <a class="btn btn--ghost" routerLink="/field-operations">{{ 'dashboard.viewCampaign' | transloco }}</a>
+        </div>
+      } @else {
+        <div class="camp__empty">{{ 'dashboard.noActiveCampaign' | transloco }}</div>
+      }
+    </section>
 
     <section class="das-card panel">
       <div class="panel__title">{{ 'dashboard.quickActions' | transloco }}</div>

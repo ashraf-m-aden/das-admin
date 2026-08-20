@@ -88,7 +88,12 @@
   },
   "dashboard": {
     "eyebrow": "Vue d'ensemble",
-    "workflowProgress": "Répartition par étape",
+    "workflowProgress": "Avancement du traitement",
+    "addressMap": "Carte des adresses",
+    "verificationCompletion": "Taux de vérification",
+    "verified": "Vérifié",
+    "pendingVerification": "En attente",
+    "unverified": "Non vérifié",
     "activeCampaign": "Campagne en cours",
     "noActiveCampaign": "Aucune campagne en cours",
     "charge": "Charge (blocs affectés)",

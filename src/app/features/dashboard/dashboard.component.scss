@@ -32,6 +32,27 @@
   b { margin-left: auto; color: var(--color-text-primary); }
   &__dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   &__pct { font-size: v.$font-size-xs; color: var(--color-text-muted); min-width: 40px; text-align: right; }
+  &--row { flex-direction: row; flex-wrap: wrap; gap: v.$space-3; margin-top: v.$space-3;
+    li { gap: v.$space-1; }
+  }
+}
+
+.stepper { display: flex; align-items: flex-start; }
+.step { display: flex; flex-direction: column; align-items: center; gap: v.$space-1; flex: 1; min-width: 0;
+  &__ic { width: 40px; height: 40px; border-radius: 50%; @include m.flex-center; color: #fff; font-size: 18px; }
+  &__value { font-size: v.$font-size-lg; font-weight: v.$font-weight-semibold; color: var(--color-text-primary); margin-top: v.$space-1; }
+  &__label { font-size: v.$font-size-xs; color: var(--color-text-secondary); text-align: center; }
+  &__pct { font-size: v.$font-size-xs; color: var(--color-text-muted); }
+  &__line { flex: 0 0 auto; width: 100%; max-width: 60px; height: 2px; background: var(--color-border); margin-top: 20px; }
+}
+
+.map-canvas { height: 300px; border-radius: v.$radius-md; overflow: hidden; }
+
+.donut-row { display: flex; align-items: center; gap: v.$space-5; }
+.donut { position: relative; width: 140px; height: 140px; border-radius: 50%; flex-shrink: 0;
+  &__hole { position: absolute; inset: 16px; border-radius: 50%; background: var(--color-surface); @include m.flex-center; flex-direction: column; }
+  &__pct { font-size: v.$font-size-xl; font-weight: v.$font-weight-semibold; color: var(--color-text-primary); }
+  &__label { font-size: v.$font-size-xs; color: var(--color-text-muted); }
 }
 
 .camp {
