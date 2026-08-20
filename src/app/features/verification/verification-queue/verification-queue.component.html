@@ -25,6 +25,17 @@
       </div>
 
       @if (item.submissionType === 'property') {
+        @if (item.outcome === 'Surveyed') {
+          @if (item.name) { <div class="card__building">{{ item.name }}</div> }
+          <div class="facts">
+            @if (typeOccupationLabel(item.typeOccupationId); as t) { <div class="fact"><span class="fact__l">{{ 'verification.typeOccupation' | transloco }}</span><span class="fact__v">{{ t }}</span></div> }
+            @if (etatOccupationLabel(item.etatOccupationId); as e) { <div class="fact"><span class="fact__l">{{ 'verification.etatOccupation' | transloco }}</span><span class="fact__v">{{ e }}</span></div> }
+            <div class="fact"><span class="fact__l">{{ 'verification.floors' | transloco }}</span><span class="fact__v">{{ item.floorCount }}</span></div>
+            @if (item.apartmentCount > 0) { <div class="fact"><span class="fact__l">{{ 'verification.apartments' | transloco }}</span><span class="fact__v">{{ item.apartmentCount }}</span></div> }
+            @if (item.shopCount > 0) { <div class="fact"><span class="fact__l">{{ 'verification.shops' | transloco }}</span><span class="fact__v">{{ item.shopCount }}</span></div> }
+            @if (item.wheelchairAccessible) { <div class="fact"><span class="fact__l">{{ 'verification.wheelchairAccessible' | transloco }}</span><span class="fact__v"><i class="ti ti-wheelchair" aria-hidden="true"></i></span></div> }
+          </div>
+        }
         <div class="facts">
           @if (item.gpsAccuracyM !== null) { <div class="fact"><span class="fact__l">{{ 'verification.gpsAccuracy' | transloco }}</span><span class="fact__v">±{{ item.gpsAccuracyM }} m</span></div> }
           @if (item.distanceFromAddressM !== null) { <div class="fact"><span class="fact__l">{{ 'verification.distance' | transloco }}</span><span class="fact__v">{{ item.distanceFromAddressM }} m</span></div> }

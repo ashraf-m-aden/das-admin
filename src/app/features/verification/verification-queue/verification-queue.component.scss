@@ -12,10 +12,11 @@
   &__head { @include m.flex-between; align-items: flex-start; }
   &__type { font-size: v.$font-size-xs; color: var(--color-accent); text-transform: uppercase; letter-spacing: 0.04em; }
   &__suggestion { font-size: v.$font-size-base; color: var(--color-text-primary); font-weight: v.$font-weight-semibold; margin-top: 2px; }
+  &__building { font-size: v.$font-size-base; color: var(--color-text-primary); font-weight: v.$font-weight-semibold; }
   &__meta { font-size: v.$font-size-xs; color: var(--color-text-muted); margin-top: 2px; }
 }
 
-.facts { display: flex; gap: v.$space-5; }
+.facts { display: flex; flex-wrap: wrap; gap: v.$space-5 v.$space-4; }
 .fact { display: flex; flex-direction: column; &__l { font-size: v.$font-size-xs; color: var(--color-text-muted); } &__v { font-size: v.$font-size-sm; color: var(--color-text-primary); } }
 
 .notes { display: flex; align-items: center; gap: v.$space-2; padding: v.$space-2 v.$space-3; background: var(--color-warning-bg); color: #92400e; border-radius: v.$radius-sm; font-size: v.$font-size-sm;

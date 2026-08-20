@@ -2,12 +2,17 @@ import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { RedoSubmissionType, UUID } from '../../models/das.models';
 import { ReviewItem, ReviewPhoto } from '../models/review.models';
 import { ReviewFilters } from './review.state';
+import { OccupationCatalogItem } from '../../reference/models/reference.models';
 
 export const ReviewActions = createActionGroup({
   source: 'Review',
   events: {
     'Load Queue': emptyProps(),
-    'Load Queue Success': props<{ items: ReviewItem[] }>(),
+    'Load Queue Success': props<{
+      items: ReviewItem[];
+      typeOccupationOptions: OccupationCatalogItem[];
+      etatOccupationOptions: OccupationCatalogItem[];
+    }>(),
     'Load Queue Failure': props<{ errorMessageKey: string }>(),
 
     'Set Filters': props<{ filters: Partial<ReviewFilters> }>(),

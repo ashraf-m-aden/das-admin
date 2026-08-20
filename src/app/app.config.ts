@@ -64,6 +64,9 @@ import { IntegrationsApiService } from './core/integrations/services/integration
 import { HierarchyMockService } from './core/hierarchy/services/hierarchy-api.mock';
 import { HierarchyApiPort } from './core/hierarchy/services/hierarchy-api.port';
 import { HierarchyApiService } from './core/hierarchy/services/hierarchy-api.service';
+import { ReferenceApiPort } from './core/reference/services/reference-api.port';
+import { ReferenceApiService } from './core/reference/services/reference-api.service';
+import { MockReferenceApiService } from './core/reference/services/mock-reference-api.service';
 const useMock = () => inject(AppConfigService).get('useMockApi');
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -122,6 +125,7 @@ export const appConfig: ApplicationConfig = {
       provide: AdresseApiPort,
       useFactory: () => (useMock() ? inject(MockAdresseApiService) : inject(AdresseApiService)),
     },
+    { provide: ReferenceApiPort, useFactory: () => useMock() ? inject(MockReferenceApiService) : inject(ReferenceApiService) },
 
     { provide: ENVIRONMENT_INITIALIZER, multi: true, useValue: () => inject(ThemeService) },
     provideStoreDevtools({ maxAge: 25, logOnly: false }),

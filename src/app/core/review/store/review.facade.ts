@@ -21,6 +21,8 @@ export class ReviewFacade {
   isListLoading$ = this.store.select(selectIsReviewListLoading);
   listErrorMessageKey$ = this.store.select(reviewFeature.selectListErrorMessageKey);
   decisionErrorMessageKey$ = this.store.select(reviewFeature.selectDecisionErrorMessageKey);
+  typeOccupationOptions$ = this.store.select(reviewFeature.selectTypeOccupationOptions);
+  etatOccupationOptions$ = this.store.select(reviewFeature.selectEtatOccupationOptions);
 
   load(): void {
     this.store.dispatch(ReviewActions.loadQueue());

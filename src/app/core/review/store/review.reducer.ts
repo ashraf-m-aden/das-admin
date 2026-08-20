@@ -12,9 +12,11 @@ export const reviewFeature = createFeature({
       listStatus: 'loading' as const,
       listErrorMessageKey: null,
     })),
-    on(ReviewActions.loadQueueSuccess, (state, { items }) => ({
+    on(ReviewActions.loadQueueSuccess, (state, { items, typeOccupationOptions, etatOccupationOptions }) => ({
       ...state,
       items,
+      typeOccupationOptions,
+      etatOccupationOptions,
       listStatus: 'loaded' as const,
     })),
     on(ReviewActions.loadQueueFailure, (state, { errorMessageKey }) => ({
@@ -81,4 +83,6 @@ export const {
   selectDecisionErrorMessageKey,
   selectPhotosBySurveyId,
   selectLoadingPhotosId,
+  selectTypeOccupationOptions,
+  selectEtatOccupationOptions,
 } = reviewFeature;

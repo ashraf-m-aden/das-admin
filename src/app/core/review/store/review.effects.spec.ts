@@ -7,14 +7,21 @@ import { ReviewEffects } from './review.effects';
 import { ReviewActions } from './review.actions';
 import { ReviewApiPort } from '../services/review-api.port';
 import { AddressingApiPort } from '../../addressing/services/addressing-api.port';
+import { ReferenceApiPort } from '../../reference/services/reference-api.port';
 import { SurveyReviewItem } from '../models/review.models';
+import { OccupationCatalogItem } from '../../reference/models/reference.models';
 import { PendingBlockSuggestion, PendingStreetSuggestion } from '../../addressing/models/addressing.models';
 
 const survey: SurveyReviewItem = {
   submissionType: 'property', id: 's1', adresseId: 'addr-1', agentId: 'agent-1',
   capturedAtUtc: '2026-08-19T10:00:00Z', outcome: 'Surveyed', notSurveyableReason: null,
+  typeOccupationId: 'type-1', etatOccupationId: 'etat-1', name: null,
+  floorCount: 1, apartmentCount: 0, shopCount: 0, wheelchairAccessible: false,
   gpsAccuracyM: 4, distanceFromAddressM: 2, photoCount: 3, isMockLocation: false,
 };
+
+const typeOccupationOptions: OccupationCatalogItem[] = [{ id: 'type-1', nom: 'Villa' }];
+const etatOccupationOptions: OccupationCatalogItem[] = [{ id: 'etat-1', nom: 'Bon état' }];
 
 const blocSuggestion: PendingBlockSuggestion = {
   id: 'bs1', blocId: 'bloc-1', suggestedName: 'Avenue Nasser', comment: null, proposedAtUtc: '2026-08-19T09:00:00Z',
@@ -32,6 +39,7 @@ describe('ReviewEffects — loadQueue$', () => {
   let actions$: Observable<unknown>;
   let reviewApi: ReviewApiPort;
   let addressingApi: AddressingApiPort;
+  let referenceApi: ReferenceApiPort;
 
   function setup() {
     TestBed.configureTestingModule({
@@ -40,6 +48,7 @@ describe('ReviewEffects — loadQueue$', () => {
         provideMockActions(() => actions$),
         { provide: ReviewApiPort, useValue: reviewApi },
         { provide: AddressingApiPort, useValue: addressingApi },
+        { provide: ReferenceApiPort, useValue: referenceApi },
       ],
     });
     return TestBed.inject(ReviewEffects);
@@ -53,9 +62,12 @@ describe('ReviewEffects — loadQueue$', () => {
       'listBlocksToName', 'setBlockName', 'listStreetsToName', 'setStreetName',
       'listPropertiesToNumber', 'assignHouseNumber',
     ]);
+    referenceApi = stubApi<ReferenceApiPort>(['getTypesOccupation', 'getEtatsOccupation']);
+    vi.mocked(referenceApi.getTypesOccupation).mockReturnValue(of(typeOccupationOptions));
+    vi.mocked(referenceApi.getEtatsOccupation).mockReturnValue(of(etatOccupationOptions));
   });
 
-  it('fusionne les 3 sources (relevés + suggestions bloc + suggestions rue) en une seule file', async () => {
+  it('fusionne les 3 sources (relevés + suggestions bloc + suggestions rue) en une seule file, avec les catalogues d\'occupation', async () => {
     vi.mocked(reviewApi.listSubmittedSurveys).mockReturnValue(of([survey]));
     vi.mocked(addressingApi.listPendingBlockSuggestions).mockReturnValue(of([blocSuggestion]));
     vi.mocked(addressingApi.listPendingStreetSuggestions).mockReturnValue(of([streetSuggestion]));
@@ -71,11 +83,13 @@ describe('ReviewEffects — loadQueue$', () => {
           { submissionType: 'block', id: 'bs1', targetId: 'bloc-1', suggestedName: 'Avenue Nasser', comment: null, proposedAtUtc: '2026-08-19T09:00:00Z' },
           { submissionType: 'street', id: 'ss1', targetId: 'street-1', suggestedName: 'Rue du Marché', comment: null, proposedAtUtc: '2026-08-19T08:00:00Z' },
         ],
+        typeOccupationOptions,
+        etatOccupationOptions,
       }),
     ]);
   });
 
-  it('émet loadQueueFailure si une des trois sources échoue', async () => {
+  it('émet loadQueueFailure si une des sources échoue', async () => {
     vi.mocked(reviewApi.listSubmittedSurveys).mockReturnValue(of([survey]));
     vi.mocked(addressingApi.listPendingBlockSuggestions).mockReturnValue(throwError(() => new Error('boom')));
     vi.mocked(addressingApi.listPendingStreetSuggestions).mockReturnValue(of([]));

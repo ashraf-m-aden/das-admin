@@ -4,6 +4,7 @@ import { catchError, exhaustMap, forkJoin, map, mergeMap, of } from 'rxjs';
 import { ReviewActions } from './review.actions';
 import { ReviewApiPort } from '../services/review-api.port';
 import { AddressingApiPort } from '../../addressing/services/addressing-api.port';
+import { ReferenceApiPort } from '../../reference/services/reference-api.port';
 import { ReviewItem } from '../models/review.models';
 
 @Injectable()
@@ -11,6 +12,7 @@ export class ReviewEffects {
   private actions$ = inject(Actions);
   private reviewApi = inject(ReviewApiPort);
   private addressingApi = inject(AddressingApiPort);
+  private referenceApi = inject(ReferenceApiPort);
 
   loadQueue$ = createEffect(() =>
     this.actions$.pipe(
@@ -20,8 +22,10 @@ export class ReviewEffects {
           surveys: this.reviewApi.listSubmittedSurveys(),
           blocSuggestions: this.addressingApi.listPendingBlockSuggestions(),
           streetSuggestions: this.addressingApi.listPendingStreetSuggestions(),
+          typeOccupationOptions: this.referenceApi.getTypesOccupation(),
+          etatOccupationOptions: this.referenceApi.getEtatsOccupation(),
         }).pipe(
-          map(({ surveys, blocSuggestions, streetSuggestions }) => {
+          map(({ surveys, blocSuggestions, streetSuggestions, typeOccupationOptions, etatOccupationOptions }) => {
             const items: ReviewItem[] = [
               ...surveys,
               ...blocSuggestions.map((s) => ({
@@ -41,7 +45,7 @@ export class ReviewEffects {
                 proposedAtUtc: s.proposedAtUtc,
               })),
             ];
-            return ReviewActions.loadQueueSuccess({ items });
+            return ReviewActions.loadQueueSuccess({ items, typeOccupationOptions, etatOccupationOptions });
           }),
           catchError(() => of(ReviewActions.loadQueueFailure({ errorMessageKey: 'common.error' }))),
         ),

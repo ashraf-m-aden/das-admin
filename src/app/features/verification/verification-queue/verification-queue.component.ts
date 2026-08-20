@@ -1,12 +1,14 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { TranslocoModule } from '@jsverse/transloco';
 import { ReviewFacade } from '../../../core/review/store/review.facade';
 import { PageHeaderComponent } from '../../../core/layout/page-header/page-header.component';
 import { DasDatePipe } from '../../../core/i18n/das-locale.pipes';
 import { ReviewItem } from '../../../core/review/models/review.models';
-import { RedoSubmissionType } from '../../../core/models/das.models';
+import { RedoSubmissionType, UUID } from '../../../core/models/das.models';
 
 @Component({
   selector: 'das-verification-queue',
@@ -28,6 +30,15 @@ export class VerificationQueueComponent implements OnInit {
   protected readonly expandedPhotosId = signal<string | null>(null);
 
   protected readonly rejectForm = this.fb.nonNullable.group({ reason: [''] });
+
+  private readonly typeOccupationMap = toSignal(
+    this.facade.typeOccupationOptions$.pipe(map((options) => new Map(options.map((o) => [o.id, o.nom])))),
+    { initialValue: new Map<UUID, string>() },
+  );
+  private readonly etatOccupationMap = toSignal(
+    this.facade.etatOccupationOptions$.pipe(map((options) => new Map(options.map((o) => [o.id, o.nom])))),
+    { initialValue: new Map<UUID, string>() },
+  );
 
   ngOnInit(): void {
     this.facade.load();
@@ -80,5 +91,13 @@ export class VerificationQueueComponent implements OnInit {
 
   notSurveyableReasonKey(reason: string): string {
     return `verification.notSurveyableReason.${reason.toLowerCase()}`;
+  }
+
+  typeOccupationLabel(id: UUID | null): string | null {
+    return id ? (this.typeOccupationMap().get(id) ?? id) : null;
+  }
+
+  etatOccupationLabel(id: UUID | null): string | null {
+    return id ? (this.etatOccupationMap().get(id) ?? id) : null;
   }
 }

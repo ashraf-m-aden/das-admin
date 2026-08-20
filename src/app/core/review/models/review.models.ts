@@ -12,6 +12,13 @@ export interface SurveyReviewItem {
   capturedAtUtc: ISODateTime;
   outcome: SurveyOutcome;
   notSurveyableReason: NotSurveyableReason | null;
+  typeOccupationId: UUID | null;
+  etatOccupationId: UUID | null;
+  name: string | null;
+  floorCount: number;
+  apartmentCount: number;
+  shopCount: number;
+  wheelchairAccessible: boolean;
   gpsAccuracyM: number | null;
   distanceFromAddressM: number | null;
   photoCount: number;

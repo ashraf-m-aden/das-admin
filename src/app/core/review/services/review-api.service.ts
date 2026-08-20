@@ -13,6 +13,13 @@ interface RawSurveyResponse {
   agentId: string;
   outcome: 'Surveyed' | 'NotSurveyable';
   notSurveyableReason: 'Demolished' | 'Inaccessible' | 'Refused' | 'NotFound' | 'VacantLand' | 'OutOfTime' | null;
+  typeOccupationId: string | null;
+  etatOccupationId: string | null;
+  name: string | null;
+  floorCount: number | string;
+  apartmentCount: number | string;
+  shopCount: number | string;
+  wheelchairAccessible: boolean;
   gpsAccuracyM: number | string | null;
   distanceFromAddressM: number | string | null;
   photoCount: number | string;
@@ -35,6 +42,13 @@ function toSurveyReviewItem(raw: RawSurveyResponse): SurveyReviewItem {
     capturedAtUtc: raw.capturedAtUtc,
     outcome: raw.outcome,
     notSurveyableReason: raw.notSurveyableReason,
+    typeOccupationId: raw.typeOccupationId,
+    etatOccupationId: raw.etatOccupationId,
+    name: raw.name,
+    floorCount: Number(raw.floorCount),
+    apartmentCount: Number(raw.apartmentCount),
+    shopCount: Number(raw.shopCount),
+    wheelchairAccessible: raw.wheelchairAccessible,
     gpsAccuracyM: raw.gpsAccuracyM === null ? null : Number(raw.gpsAccuracyM),
     distanceFromAddressM: raw.distanceFromAddressM === null ? null : Number(raw.distanceFromAddressM),
     photoCount: Number(raw.photoCount),
