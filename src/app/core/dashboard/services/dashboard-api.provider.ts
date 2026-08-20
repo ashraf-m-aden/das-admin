@@ -1,16 +1,11 @@
-import { Provider, inject } from '@angular/core';
+import { Provider } from '@angular/core';
 import { DashboardApiPort } from './dashboard-api.port';
 import { DashboardApiService } from './dashboard-api.service';
-import { MockDashboardApiService } from './mock-dashboard-api.service';
-import { AppConfigService } from '../../config/app-config.service';
 
-/** Même bascule mock/réel que provideAuthApi(), pilotée par config.useMockApi. */
+/**
+ * Pas de bascule mock/réel ici : `DashboardApiService` ne fait que composer `AdresseApiPort`
+ * et `FieldOpsApiPort`, qui basculent déjà chacun individuellement selon `useMockApi()`.
+ */
 export function provideDashboardApi(): Provider {
-  return {
-    provide: DashboardApiPort,
-    useFactory: () => {
-      const useMock = inject(AppConfigService).get('useMockApi');
-      return useMock ? inject(MockDashboardApiService) : inject(DashboardApiService);
-    },
-  };
+  return { provide: DashboardApiPort, useClass: DashboardApiService };
 }

@@ -87,69 +87,14 @@
     "block_stalled": "Close {{code}} stalled"
   },
   "dashboard": {
-    "eyebrow": "Republic of Djibouti · national view",
-    "vs30d": "30 d",
-    "ofTotal": "of total",
-    "requiresAttention": "requires attention",
-    "teamsInField": "{{count}} teams in the field",
-    "kpi": {
-      "total": "Registered properties",
-      "verified": "Verified addresses",
-      "pending": "Pending field verification",
-      "teams": "Active field teams",
-      "postcodes": "New postcodes issued",
-      "alerts": "Data quality alerts"
-    },
-    "workflowProgress": "Address workflow progress",
-    "nationalHierarchy": "National address hierarchy",
-    "nationalMap": "National map",
-    "mapNote": "Preview — interactive map in GIS & Mapping",
-    "recentActivity": "Recent activity",
-    "viewAll": "View all",
-    "registrationsTrend": "Registrations trend",
-    "verificationCompletion": "Verification completion",
-    "verified": "Verified",
-    "pending": "Pending",
-    "unverified": "Unverified",
-    "quickActions": "Quick actions",
-    "qa": {
-      "createAddress": "Create address",
-      "assignTeam": "Assign survey team",
-      "approveBatch": "Approve batch",
-      "generateReport": "Generate report"
-    },
-    "level": {
-      "region": "Region",
-      "ville": "City",
-      "commune": "Commune",
-      "quartier": "Quarter",
-      "bloc": "Block",
-      "rue": "Street",
-      "parcelle": "Parcel"
-    },
-    "activity": {
-      "batchApproved": {
-        "title": "Address batch approved",
-        "desc": "Batch {{code}} approved"
-      },
-      "postcodeCreated": {
-        "title": "New postcode created",
-        "desc": "{{code}} created for {{area}}"
-      },
-      "surveyUploaded": {
-        "title": "Field survey uploaded",
-        "desc": "{{team}} uploaded {{count}} survey records"
-      },
-      "duplicateFlagged": {
-        "title": "Duplicate address flagged",
-        "desc": "Potential duplicate at {{location}}"
-      },
-      "published": {
-        "title": "Addresses published",
-        "desc": "{{count}} addresses published to adresse"
-      }
-    },
-    "layerAddresses": "Addresses"
+    "eyebrow": "Overview",
+    "workflowProgress": "Breakdown by stage",
+    "activeCampaign": "Active campaign",
+    "noActiveCampaign": "No campaign in progress",
+    "charge": "Load (blocs assigned)",
+    "production": "Production (surveys)",
+    "viewCampaign": "View campaign",
+    "quickActions": "Quick access"
   },
   "blocks": {
     "eyebrow": "Djibouti City · Boulaos",

@@ -87,69 +87,14 @@
     "block_stalled": "Bloc {{code}} à l'arrêt"
   },
   "dashboard": {
-    "eyebrow": "République de Djibouti · vue nationale",
-    "vs30d": "30 j",
-    "ofTotal": "du total",
-    "requiresAttention": "requiert attention",
-    "teamsInField": "{{count}} équipes sur le terrain",
-    "kpi": {
-      "total": "Propriétés enregistrées",
-      "verified": "Adresses vérifiées",
-      "pending": "Vérif. terrain en attente",
-      "teams": "Équipes actives",
-      "postcodes": "Codes postaux émis",
-      "alerts": "Alertes qualité"
-    },
-    "workflowProgress": "Progression du workflow",
-    "nationalHierarchy": "Hiérarchie nationale",
-    "nationalMap": "Carte nationale",
-    "mapNote": "Aperçu — carte interactive dans SIG & Cartographie",
-    "recentActivity": "Activité récente",
-    "viewAll": "Tout voir",
-    "registrationsTrend": "Tendance des enregistrements",
-    "verificationCompletion": "Vérification",
-    "verified": "Vérifiées",
-    "pending": "En attente",
-    "unverified": "Non vérifiées",
-    "quickActions": "Actions rapides",
-    "qa": {
-      "createAddress": "Créer une adresse",
-      "assignTeam": "Assigner une équipe",
-      "approveBatch": "Approuver un lot",
-      "generateReport": "Générer un rapport"
-    },
-    "level": {
-      "region": "Région",
-      "ville": "Ville",
-      "commune": "Commune",
-      "quartier": "Quartier",
-      "bloc": "Bloc",
-      "rue": "Rue",
-      "parcelle": "Parcelle"
-    },
-    "activity": {
-      "batchApproved": {
-        "title": "Lot d'adresses approuvé",
-        "desc": "Lot {{code}} approuvé"
-      },
-      "postcodeCreated": {
-        "title": "Code postal créé",
-        "desc": "{{code}} créé pour {{area}}"
-      },
-      "surveyUploaded": {
-        "title": "Levé terrain importé",
-        "desc": "{{team}} a importé {{count}} enregistrements"
-      },
-      "duplicateFlagged": {
-        "title": "Doublon signalé",
-        "desc": "Doublon potentiel à {{location}}"
-      },
-      "published": {
-        "title": "Adresses publiées",
-        "desc": "{{count}} adresses publiées au registre"
-      }
-    },
-    "layerAddresses": "Adresses"
+    "eyebrow": "Vue d'ensemble",
+    "workflowProgress": "Répartition par étape",
+    "activeCampaign": "Campagne en cours",
+    "noActiveCampaign": "Aucune campagne en cours",
+    "charge": "Charge (blocs affectés)",
+    "production": "Production (relevés)",
+    "viewCampaign": "Voir la campagne",
+    "quickActions": "Accès rapide"
   },
   "blocks": {
     "eyebrow": "Djibouti-ville · Boulaos",

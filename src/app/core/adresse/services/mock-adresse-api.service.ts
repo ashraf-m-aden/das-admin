@@ -58,11 +58,15 @@ export class MockAdresseApiService extends AdresseApiPort {
   override summary(): Observable<AdresseSummary> {
     const pending = this.records.filter((r) => r.workflowStage === 'surveyed' || r.workflowStage === 'registered').length;
     const published = this.records.filter((r) => r.workflowStage === 'published').length;
+    const workflowBreakdown = STAGES.map((stage) => ({
+      stage, count: this.records.filter((r) => r.workflowStage === stage).length,
+    }));
     return of({
       totalRecords: this.records.length,
       pendingReview: pending,
       duplicatesFlagged: 3,
       publishedToday: published,
+      workflowBreakdown,
     }).pipe(delay(MockAdresseApiService.LATENCY));
   }
 

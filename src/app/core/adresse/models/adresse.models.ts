@@ -74,11 +74,18 @@ export interface AdresseFilterOptions {
   teams: string[];
 }
 
+/** Une des 5 étapes, toujours renvoyée même à 0 — la somme des `count` vaut exactement `totalRecords`. */
+export interface WorkflowStageCount {
+  stage: AddressWorkflowStage;
+  count: number;
+}
+
 export interface AdresseSummary {
   totalRecords: number;
   pendingReview: number;
   duplicatesFlagged: number;
   publishedToday: number;
+  workflowBreakdown: WorkflowStageCount[];
 }
 
 export interface AdressePageResult {

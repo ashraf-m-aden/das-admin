@@ -1,143 +1,85 @@
-<das-page-header [eyebrow]="'dashboard.eyebrow' | transloco" [title]="'nav.dashboard' | transloco">
-<das-date-range-button actions /></das-page-header>
+<das-page-header [eyebrow]="'dashboard.eyebrow' | transloco" [title]="'nav.dashboard' | transloco" />
+
 @if (summary(); as s) {
   <div class="dash">
-    <!-- KPI bandeau -->
     <div class="kpis">
       <div class="kpi">
-        <div class="kpi__top"><span class="kpi__label">{{ 'dashboard.kpi.total' | transloco }}</span><span class="kpi__ic kpi__ic--blue"><i class="ti ti-home" aria-hidden="true"></i></span></div>
-        <div class="kpi__value">{{ s.kpis.totalProperties | number }}</div>
-        <div class="kpi__delta kpi__delta--{{ s.kpis.totalPropertiesDelta.direction }}"><i class="ti {{ deltaIcon(s.kpis.totalPropertiesDelta.direction) }}" aria-hidden="true"></i>{{ s.kpis.totalPropertiesDelta.value }} % · {{ 'dashboard.vs30d' | transloco }}</div>
+        <div class="kpi__top"><span class="kpi__label">{{ 'adresse.kpi.total' | transloco }}</span><span class="kpi__ic kpi__ic--blue"><i class="ti ti-home" aria-hidden="true"></i></span></div>
+        <div class="kpi__value">{{ s.totalRecords | number }}</div>
       </div>
       <div class="kpi">
-        <div class="kpi__top"><span class="kpi__label">{{ 'dashboard.kpi.verified' | transloco }}</span><span class="kpi__ic kpi__ic--green"><i class="ti ti-shield-check" aria-hidden="true"></i></span></div>
-        <div class="kpi__value">{{ s.kpis.verifiedAddresses | number }}</div>
-        <div class="kpi__sub">{{ s.kpis.verifiedPct }} % {{ 'dashboard.ofTotal' | transloco }}</div>
+        <div class="kpi__top"><span class="kpi__label">{{ 'adresse.kpi.pending' | transloco }}</span><span class="kpi__ic kpi__ic--amber"><i class="ti ti-clipboard-list" aria-hidden="true"></i></span></div>
+        <div class="kpi__value">{{ s.pendingReview | number }}</div>
       </div>
       <div class="kpi">
-        <div class="kpi__top"><span class="kpi__label">{{ 'dashboard.kpi.pending' | transloco }}</span><span class="kpi__ic kpi__ic--amber"><i class="ti ti-clipboard-list" aria-hidden="true"></i></span></div>
-        <div class="kpi__value">{{ s.kpis.pendingVerification | number }}</div>
-        <div class="kpi__sub">{{ s.kpis.pendingPct }} % {{ 'dashboard.ofTotal' | transloco }}</div>
+        <div class="kpi__top"><span class="kpi__label">{{ 'adresse.kpi.duplicates' | transloco }}</span><span class="kpi__ic kpi__ic--red"><i class="ti ti-alert-triangle" aria-hidden="true"></i></span></div>
+        <div class="kpi__value">{{ s.duplicatesFlagged | number }}</div>
       </div>
       <div class="kpi">
-        <div class="kpi__top"><span class="kpi__label">{{ 'dashboard.kpi.teams' | transloco }}</span><span class="kpi__ic kpi__ic--blue"><i class="ti ti-users-group" aria-hidden="true"></i></span></div>
-        <div class="kpi__value">{{ s.kpis.activeFieldTeams }}</div>
-        <div class="kpi__sub">{{ 'dashboard.teamsInField' | transloco: { count: s.kpis.teamsInField } }}</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi__top"><span class="kpi__label">{{ 'dashboard.kpi.postcodes' | transloco }}</span><span class="kpi__ic kpi__ic--teal"><i class="ti ti-mail-code" aria-hidden="true"></i></span></div>
-        <div class="kpi__value">{{ s.kpis.newPostcodes }}</div>
-        <div class="kpi__delta kpi__delta--{{ s.kpis.newPostcodesDelta.direction }}"><i class="ti {{ deltaIcon(s.kpis.newPostcodesDelta.direction) }}" aria-hidden="true"></i>{{ s.kpis.newPostcodesDelta.value }} · {{ 'dashboard.vs30d' | transloco }}</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi__top"><span class="kpi__label">{{ 'dashboard.kpi.alerts' | transloco }}</span><span class="kpi__ic kpi__ic--red"><i class="ti ti-alert-triangle" aria-hidden="true"></i></span></div>
-        <div class="kpi__value">{{ s.kpis.dataQualityAlerts }}</div>
-        <div class="kpi__sub">{{ 'dashboard.requiresAttention' | transloco }}</div>
+        <div class="kpi__top"><span class="kpi__label">{{ 'adresse.kpi.published' | transloco }}</span><span class="kpi__ic kpi__ic--teal"><i class="ti ti-send" aria-hidden="true"></i></span></div>
+        <div class="kpi__value">{{ s.publishedToday | number }}</div>
       </div>
     </div>
 
     <div class="grid">
-      <!-- Colonne gauche -->
-      <div class="grid__left">
-        <section class="das-card panel">
-          <div class="panel__title">{{ 'dashboard.workflowProgress' | transloco }}</div>
-          <div class="stepper">
-            @for (w of s.workflow; track w.stage; let last = $last) {
-              <div class="step">
-                <span class="step__dot" [style.background]="stageColor(w.stage)"></span>
-                <span class="step__label">{{ stageLabelKey(w.stage) | transloco }}</span>
-                <span class="step__count">{{ w.count | number }}</span>
-                <span class="step__pct">{{ w.percent }} %</span>
-              </div>
-              @if (!last) { <div class="step__link"></div> }
-            }
-          </div>
-        </section>
-
-        <section class="das-card panel">
-          <div class="panel__title">{{ 'dashboard.nationalHierarchy' | transloco }}</div>
-      <div class="hier">
-            @for (h of s.hierarchy; track h.levelKey) {
-              <a class="hier__row" [routerLink]="levelRoute(h.levelKey)">
-                <span class="hier__label">{{ levelLabelKey(h.levelKey) | transloco }}</span>
-                <span class="hier__count">{{ h.count | number }}</span>
-                <i class="ti ti-chevron-right hier__chev" aria-hidden="true"></i>
-              </a>
-            }
-          </div>
-        </section>
-      </div>
-
-    <section class="das-card map-card">
-        <div class="panel__title">{{ 'dashboard.nationalMap' | transloco }}</div>
-        <div class="map-card__canvas"><das-map [features]="mapFeatures()" [layers]="mapLayers" /></div>
-      </section>
-
-      <!-- Colonne droite : activité récente -->
       <section class="das-card panel">
-        <div class="panel__head">
-          <span class="panel__title">{{ 'dashboard.recentActivity' | transloco }}</span>
-          <a class="panel__link" routerLink="/notifications">{{ 'dashboard.viewAll' | transloco }}</a>
+        <div class="panel__title">{{ 'dashboard.workflowProgress' | transloco }}</div>
+        <div class="segbar">
+          @for (w of workflowSegments(); track w.stage) {
+            <span class="segbar__seg" [style.width.%]="w.percent" [style.background]="stageColor(w.stage)"></span>
+          }
         </div>
-        <ul class="feed">
-          @for (a of s.recentActivity; track a.id) {
-            <li class="feed__item">
-              <span class="feed__ic" [style.background]="activityIcon(a.kind).bg" [style.color]="activityIcon(a.kind).color"><i class="ti {{ activityIcon(a.kind).icon }}" aria-hidden="true"></i></span>
-              <div class="feed__body">
-                <div class="feed__title">{{ a.titleKey | transloco }}</div>
-                <div class="feed__desc">{{ a.descriptionKey | transloco: a.params }}</div>
-              </div>
-              <span class="feed__time">{{ a.at | dasDate: 'long' }}</span>
-            </li>
+        <ul class="legend">
+          @for (w of workflowSegments(); track w.stage) {
+            <li><span class="legend__dot" [style.background]="stageColor(w.stage)"></span>{{ stageLabelKey(w.stage) | transloco }} <b>{{ w.count | number }}</b> <span class="legend__pct">{{ w.percent }} %</span></li>
           }
         </ul>
       </section>
-    </div>
-
-    <!-- Bas : tendance + donut + actions -->
-    <div class="grid-bottom">
-      <section class="das-card panel">
-        <div class="panel__title">{{ 'dashboard.registrationsTrend' | transloco }}</div>
-        <svg class="trend" viewBox="0 0 300 110" preserveAspectRatio="none">
-          <polyline [attr.points]="trendPoints()" fill="none" stroke="var(--das-blue-600)" stroke-width="2" />
-        </svg>
-        <div class="trend__labels">
-          @for (p of trendLabels(); track p.label) { <span>{{ p.label }}</span> }
-        </div>
-      </section>
 
       <section class="das-card panel">
-        <div class="panel__title">{{ 'dashboard.verificationCompletion' | transloco }}</div>
-        <div class="donut-wrap">
-          <svg class="donut" viewBox="0 0 140 140">
-            <circle cx="70" cy="70" [attr.r]="radius" fill="none" stroke="#eef1f6" stroke-width="16" />
-            @for (seg of donut(); track $index) {
-              <circle cx="70" cy="70" [attr.r]="radius" fill="none" [attr.stroke]="seg.color" stroke-width="16"
-                      [attr.stroke-dasharray]="seg.dasharray" [attr.stroke-dashoffset]="seg.offset"
-                      transform="rotate(-90 70 70)" stroke-linecap="butt" />
-            }
-            <text x="70" y="66" text-anchor="middle" class="donut__num">{{ verifiedPct() }} %</text>
-            <text x="70" y="84" text-anchor="middle" class="donut__cap">{{ 'status.stage.verified' | transloco }}</text>
-          </svg>
-          <ul class="legend">
-            <li><span class="legend__dot" style="background:#16a34a"></span>{{ 'dashboard.verified' | transloco }} <b>{{ s.verification.verified | number }}</b></li>
-            <li><span class="legend__dot" style="background:#d97706"></span>{{ 'dashboard.pending' | transloco }} <b>{{ s.verification.pending | number }}</b></li>
-            <li><span class="legend__dot" style="background:#cbd5e1"></span>{{ 'dashboard.unverified' | transloco }} <b>{{ s.verification.unverified | number }}</b></li>
-          </ul>
-        </div>
-      </section>
+        <div class="panel__title">{{ 'dashboard.activeCampaign' | transloco }}</div>
+        @if (s.activeCampaign; as c) {
+          <div class="camp">
+            <div class="camp__head">
+              <span class="camp__name">{{ c.name }}</span>
+              <span class="camp__code mono">{{ c.code }}</span>
+            </div>
+            <div class="camp__deadline">{{ 'fieldops.deadline' | transloco }} {{ c.deadline }}</div>
 
-      <section class="das-card panel">
-        <div class="panel__title">{{ 'dashboard.quickActions' | transloco }}</div>
-        <div class="qa">
-          <a class="qa__btn" routerLink="/adresse"><i class="ti ti-plus" aria-hidden="true"></i>{{ 'dashboard.qa.createAddress' | transloco }}</a>
-          <a class="qa__btn" routerLink="/field-operations"><i class="ti ti-users-group" aria-hidden="true"></i>{{ 'dashboard.qa.assignTeam' | transloco }}</a>
-          <a class="qa__btn" routerLink="/review"><i class="ti ti-circle-check" aria-hidden="true"></i>{{ 'dashboard.qa.approveBatch' | transloco }}</a>
-          <a class="qa__btn" routerLink="/reports"><i class="ti ti-file-analytics" aria-hidden="true"></i>{{ 'dashboard.qa.generateReport' | transloco }}</a>
-        </div>
+            <div class="camp__block">
+              <div class="camp__block-head"><span>{{ 'dashboard.charge' | transloco }}</span><span>{{ chargePercent() }} %</span></div>
+              <div class="segbar segbar--single"><span class="segbar__seg" [style.width.%]="chargePercent()"></span></div>
+              <div class="camp__block-meta">{{ c.charge.done | number }} / {{ c.charge.total | number }}</div>
+            </div>
+
+            <div class="camp__production">
+              <span class="camp__block-head">{{ 'dashboard.production' | transloco }}</span>
+              <div class="camp__prod-row">
+                <span>{{ 'fieldops.survey.draft' | transloco }} <b>{{ c.production.draft }}</b></span>
+                <span>{{ 'fieldops.survey.submitted' | transloco }} <b>{{ c.production.submitted }}</b></span>
+                <span>{{ 'fieldops.survey.validated' | transloco }} <b>{{ c.production.validated }}</b></span>
+                <span>{{ 'fieldops.survey.rejected' | transloco }} <b>{{ c.production.rejected }}</b></span>
+              </div>
+            </div>
+
+            <a class="btn btn--ghost" routerLink="/field-operations">{{ 'dashboard.viewCampaign' | transloco }}</a>
+          </div>
+        } @else {
+          <div class="camp__empty">{{ 'dashboard.noActiveCampaign' | transloco }}</div>
+        }
       </section>
     </div>
+
+    <section class="das-card panel">
+      <div class="panel__title">{{ 'dashboard.quickActions' | transloco }}</div>
+      <div class="qa">
+        <a class="qa__btn" routerLink="/adresse"><i class="ti ti-address-book" aria-hidden="true"></i>{{ 'nav.adresse' | transloco }}</a>
+        <a class="qa__btn" routerLink="/field-operations"><i class="ti ti-users-group" aria-hidden="true"></i>{{ 'nav.fieldOps' | transloco }}</a>
+        <a class="qa__btn" routerLink="/verification"><i class="ti ti-checkup-list" aria-hidden="true"></i>{{ 'nav.verification' | transloco }}</a>
+        <a class="qa__btn" routerLink="/blocks"><i class="ti ti-map-2" aria-hidden="true"></i>{{ 'nav.blocks' | transloco }}</a>
+      </div>
+    </section>
   </div>
 } @else {
-  <div class="dash__loading">{{ 'common.loading' | transloco }}</div>
+  <div class="dash__loading">@if (isLoading$ | async) { {{ 'common.loading' | transloco }} }</div>
 }
