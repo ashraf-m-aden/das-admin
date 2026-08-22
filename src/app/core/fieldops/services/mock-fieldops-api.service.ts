@@ -13,8 +13,8 @@ import {
 } from '../models/fieldops.models';
 
 const AGENTS: Record<UUID, string> = {
-  'agent-idriss': 'Idriss Agent',
-  'agent-warsama': 'Warsama Robleh',
+  'mock-surveyor-0001': 'Idriss Agent',
+  'mock-surveyor-0002': 'Warsama Robleh',
 };
 
 const BLOCS: Record<UUID, { code: string; name: string | null }> = {
@@ -30,11 +30,16 @@ const BLOC_BOUNDARIES_WKT: Record<UUID, string> = {
   'bloc-0003': 'POLYGON((43.130 11.600, 43.135 11.600, 43.135 11.605, 43.130 11.605, 43.130 11.600))',
 };
 
-/** blocId démo -> parcelles qu'il contient. */
+/**
+ * blocId démo -> parcelles qu'il contient.
+ * Les adresses sont choisies pour que leur `workflowStage` (mock adresse : STAGES[i % 5])
+ * reste cohérent avec le statut de l'affectation portée dessus : `Done` sur une adresse
+ * `verified`, `ToDo`/`Abandoned` sur des adresses `registered`.
+ */
 const BLOC_ADRESSES: Record<UUID, UUID[]> = {
-  'bloc-0001': ['adresse-0001', 'adresse-0002', 'adresse-0003'],
-  'bloc-0002': ['adresse-0004', 'adresse-0005'],
-  'bloc-0003': ['adresse-0006', 'adresse-0007', 'adresse-0008'],
+  'bloc-0001': ['addr-12347', 'addr-12350', 'addr-12355'],
+  'bloc-0002': ['addr-12360', 'addr-12365'],
+  'bloc-0003': ['addr-12370', 'addr-12375', 'addr-12380'],
 };
 
 @Injectable({ providedIn: 'root' })
@@ -61,22 +66,23 @@ export class MockFieldOpsApiService extends FieldOpsApiPort {
   private campaignBlocs: CampaignBloc[] = [
     {
       id: 'cb-0001', campaignId: 'campaign-0001', blocId: 'bloc-0001', blocCode: BLOCS['bloc-0001'].code, blocName: BLOCS['bloc-0001'].name,
-      agentId: 'agent-idriss', agentFullName: AGENTS['agent-idriss'],
+      agentId: 'mock-surveyor-0001', agentFullName: AGENTS['mock-surveyor-0001'],
       assignedAtUtc: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), reassignedAtUtc: null,
     },
     {
       id: 'cb-0002', campaignId: 'campaign-0001', blocId: 'bloc-0002', blocCode: BLOCS['bloc-0002'].code, blocName: BLOCS['bloc-0002'].name,
-      agentId: 'agent-warsama', agentFullName: AGENTS['agent-warsama'],
+      agentId: 'mock-surveyor-0002', agentFullName: AGENTS['mock-surveyor-0002'],
       assignedAtUtc: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), reassignedAtUtc: null,
     },
   ];
 
   private assignments: Assignment[] = [
-    { id: 'assign-0001', campaignId: 'campaign-0001', adresseId: 'adresse-0001', agentId: 'agent-idriss', agentFullName: AGENTS['agent-idriss'], status: 'Done', abandonReason: null, abandonedAtUtc: null, lastRejectionReason: null },
-    { id: 'assign-0002', campaignId: 'campaign-0001', adresseId: 'adresse-0002', agentId: 'agent-idriss', agentFullName: AGENTS['agent-idriss'], status: 'ToDo', abandonReason: null, abandonedAtUtc: null, lastRejectionReason: null },
-    { id: 'assign-0003', campaignId: 'campaign-0001', adresseId: 'adresse-0003', agentId: 'agent-idriss', agentFullName: AGENTS['agent-idriss'], status: 'ToDo', abandonReason: null, abandonedAtUtc: null, lastRejectionReason: 'Photo de façade illisible' },
-    { id: 'assign-0004', campaignId: 'campaign-0001', adresseId: 'adresse-0004', agentId: 'agent-warsama', agentFullName: AGENTS['agent-warsama'], status: 'ToDo', abandonReason: null, abandonedAtUtc: null, lastRejectionReason: null },
-    { id: 'assign-0005', campaignId: 'campaign-0001', adresseId: 'adresse-0005', agentId: 'agent-warsama', agentFullName: AGENTS['agent-warsama'], status: 'Abandoned', abandonReason: 'Parcelle démolie, inaccessible', abandonedAtUtc: new Date().toISOString(), lastRejectionReason: null },
+    { id: 'assign-0001', campaignId: 'campaign-0001', adresseId: 'addr-12347', agentId: 'mock-surveyor-0001', agentFullName: AGENTS['mock-surveyor-0001'], status: 'Done', abandonReason: null, abandonedAtUtc: null, lastRejectionReason: null },
+    { id: 'assign-0002', campaignId: 'campaign-0001', adresseId: 'addr-12350', agentId: 'mock-surveyor-0001', agentFullName: AGENTS['mock-surveyor-0001'], status: 'ToDo', abandonReason: null, abandonedAtUtc: null, lastRejectionReason: null },
+    // Relevé rejeté : l'adresse retombe sur `registered` (cf. §5 CLAUDE.md), pas `surveyed`.
+    { id: 'assign-0003', campaignId: 'campaign-0001', adresseId: 'addr-12355', agentId: 'mock-surveyor-0001', agentFullName: AGENTS['mock-surveyor-0001'], status: 'ToDo', abandonReason: null, abandonedAtUtc: null, lastRejectionReason: 'Photo de façade illisible' },
+    { id: 'assign-0004', campaignId: 'campaign-0001', adresseId: 'addr-12360', agentId: 'mock-surveyor-0002', agentFullName: AGENTS['mock-surveyor-0002'], status: 'ToDo', abandonReason: null, abandonedAtUtc: null, lastRejectionReason: null },
+    { id: 'assign-0005', campaignId: 'campaign-0001', adresseId: 'addr-12365', agentId: 'mock-surveyor-0002', agentFullName: AGENTS['mock-surveyor-0002'], status: 'Abandoned', abandonReason: 'Parcelle démolie, inaccessible', abandonedAtUtc: new Date().toISOString(), lastRejectionReason: null },
   ];
 
   private nextCampaignSeq = 3;

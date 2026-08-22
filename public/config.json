@@ -4,5 +4,5 @@
   "cognitoUserPoolId": "",
   "cognitoClientId": "",
   "environment": "development",
-  "useMockApi": false
+  "useMockApi": true
 }

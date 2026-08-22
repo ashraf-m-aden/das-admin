@@ -69,6 +69,36 @@ export const reviewFeature = createFeature({
       loadingPhotosId: null,
     })),
     on(ReviewActions.loadPhotosFailure, (state) => ({ ...state, loadingPhotosId: null })),
+
+    on(ReviewActions.loadStalled, (state) => ({ ...state, isStalledLoading: true, stalledErrorMessageKey: null })),
+    on(ReviewActions.loadStalledSuccess, (state, { items }) => ({
+      ...state,
+      stalledItems: items,
+      isStalledLoading: false,
+    })),
+    on(ReviewActions.loadStalledFailure, (state, { errorMessageKey }) => ({
+      ...state,
+      isStalledLoading: false,
+      stalledErrorMessageKey: errorMessageKey,
+    })),
+
+    on(ReviewActions.loadCurrentSurveys, (state) => ({
+      ...state,
+      isCurrentSurveysLoading: true,
+      currentSurveysErrorMessageKey: null,
+    })),
+    on(ReviewActions.loadCurrentSurveysSuccess, (state, { items, typeOccupationOptions, etatOccupationOptions }) => ({
+      ...state,
+      currentSurveys: items,
+      typeOccupationOptions,
+      etatOccupationOptions,
+      isCurrentSurveysLoading: false,
+    })),
+    on(ReviewActions.loadCurrentSurveysFailure, (state, { errorMessageKey }) => ({
+      ...state,
+      isCurrentSurveysLoading: false,
+      currentSurveysErrorMessageKey: errorMessageKey,
+    })),
   ),
 });
 
@@ -85,4 +115,10 @@ export const {
   selectLoadingPhotosId,
   selectTypeOccupationOptions,
   selectEtatOccupationOptions,
+  selectStalledItems,
+  selectIsStalledLoading,
+  selectStalledErrorMessageKey,
+  selectCurrentSurveys,
+  selectIsCurrentSurveysLoading,
+  selectCurrentSurveysErrorMessageKey,
 } = reviewFeature;

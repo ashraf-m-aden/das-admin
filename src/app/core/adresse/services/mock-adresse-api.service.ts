@@ -16,7 +16,8 @@ const ZONE_BY_QUARTIER: Record<string, string> = {
   'Balbala': 'Zone Sud', 'Héron': 'Zone Nord', 'Centre-ville': 'Zone Centre', 'Le Plateau': 'Zone Centre', 'Arhiba': 'Zone Nord',
 };
 const REGIONS = ['Djibouti', 'Arta', 'Dikhil', 'Tadjourah', 'Obock'];
-const TEAMS = ['Team North', 'Team Central', 'Team South'];
+// assignedTeamName = nom d'un AGENT (pas d'équipe), lecture seule — cf. §7 CLAUDE.md.
+const TEAMS = ['Idriss Agent', 'Warsama Robleh', 'Fatouma Osman'];
 // Libellés FR bruts d'un catalogue back — pas un enum fermé (cf. §7 CLAUDE.md).
 const TYPES = ['Villa', 'Immeuble mixte', 'Appartement', 'Local commercial', 'Entrepôt', 'Terrain vacant'];
 const STAGES: AddressWorkflowStage[] = ['registered', 'surveyed', 'verified', 'approved', 'published'];
@@ -40,15 +41,18 @@ export class MockAdresseApiService extends AdresseApiPort {
     const lng = 43.134 + (i % 8) * 0.0045;
     const lat = 11.588 + Math.floor(i / 8) * 0.0045;
     const quartier = QUARTIERS[i % QUARTIERS.length];
+    const workflowStage = STAGES[i % STAGES.length];
 
     return {
       id: `addr-${n}`,
-      addressCode: `ADDR-${String(n).padStart(8, '0')}`,
+      // null tant que pas validé Definitive : seule l'étape `published` porte un code.
+      addressCode: workflowStage === 'published' ? `ADDR-${String(n).padStart(8, '0')}` : null,
+      libelle: `${quartier}, parcelle ${n}`,
       quartier,
       postcode: POSTCODE_BY_QUARTIER[quartier],
       zone: ZONE_BY_QUARTIER[quartier],
       propertyType: TYPES[i % TYPES.length],
-      workflowStage: STAGES[i % STAGES.length],
+      workflowStage,
       lastUpdate: new Date(2026, 6, 1 + (i % 28), 9, (i * 7) % 60).toISOString(),
       assignedTeamName: TEAMS[i % TEAMS.length],
       geom: squareMulti(lng, lat, 0.0028),
@@ -83,7 +87,7 @@ export class MockAdresseApiService extends AdresseApiPort {
     const { filters, page, pageSize } = query;
     const search = filters.search.trim().toLowerCase();
     const filtered = this.records.filter((r) => {
-      if (search && !r.quartier.toLowerCase().includes(search) && !r.addressCode.toLowerCase().includes(search)) return false;
+      if (search && !r.quartier.toLowerCase().includes(search) && !r.libelle.toLowerCase().includes(search) && !(r.addressCode?.toLowerCase().includes(search) ?? false)) return false;
       if (filters.postcode && r.postcode !== filters.postcode) return false;
       if (filters.zone && r.zone !== filters.zone) return false;
       if (filters.status && r.workflowStage !== filters.status) return false;
@@ -114,7 +118,8 @@ export class MockAdresseApiService extends AdresseApiPort {
       },
       location: { latitude: 11.6004 + Math.random() * 0.01, longitude: 43.1456 + Math.random() * 0.01, parcelNumber: `PAR-${base.postcode?.replace(/\D/g, '')}-${base.id.slice(-4)}` },
       propertyInfo: { propertyType: base.propertyType, occupancyType: 'occupied', buildingUse: base.propertyType === 'Villa' ? 'Single Family' : null },
-      validation: { score: 82 + (base.id.charCodeAt(base.id.length - 1) % 18), notes: 'Adresse vérifiée sur site. Numéro de bâtiment visible.' },
+      // score = nombre de relevés de l'agent (pas un pourcentage) — cf. §7 CLAUDE.md.
+      validation: { score: 1 + (base.id.charCodeAt(base.id.length - 1) % 6), notes: 'Adresse vérifiée sur site. Numéro de bâtiment visible.' },
       linked: [
         { id: `${id}-l1`, kind: 'postcode', label: base.postcode ?? '—' },
         { id: `${id}-l2`, kind: 'team', label: base.assignedTeamName ?? '—' },

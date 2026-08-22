@@ -1,5 +1,5 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
-import { CreateStaffPayload, SetRolesPayload, StaffMember } from '../models/staff.models';
+import { AgentProductivity, CreateStaffPayload, SetRolesPayload, StaffMember } from '../models/staff.models';
 import { UUID, UserRole } from '../../models/das.models';
 
 export const StaffActions = createActionGroup({
@@ -22,5 +22,9 @@ export const StaffActions = createActionGroup({
     'Set Active': props<{ id: UUID; isActive: boolean }>(),
     'Set Active Success': props<{ id: UUID; isActive: boolean }>(),
     'Set Active Failure': props<{ errorMessageKey: string }>(),
+
+    'Load Productivity': props<{ campaignId: UUID | null; agentId: UUID | null }>(),
+    'Load Productivity Success': props<{ items: AgentProductivity[] }>(),
+    'Load Productivity Failure': props<{ errorMessageKey: string }>(),
   },
 });

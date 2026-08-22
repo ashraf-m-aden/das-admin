@@ -12,16 +12,30 @@ export class HierarchyMockService extends HierarchyApiPort {
   private readonly quartier7Id = 'deadd2cc-fefc-403b-af2a-b7fcb9b6769f';
   private readonly boulaos: Bbox4326 = [43.13, 11.57, 43.16, 11.60];
 
+  // Seule Djibouti-ville est découpée en communes (§5 CLAUDE.md) : une deuxième ville sans
+  // commune ni zone illustre l'état normal et définitif d'un quartier directement sous sa ville.
+  private readonly aliSabiehCityId = '44444444-4444-4444-4444-444444444444';
+  private readonly aliSabiehQuartierId = '55555555-5555-5555-5555-555555555555';
+  private readonly aliSabieh: Bbox4326 = [42.70, 11.14, 42.75, 11.18];
+
   override cities(): Observable<HierarchyNode[]> {
-    return of([{ id: this.cityId, level: 'city', code: 'DJ', name: 'Djibouti', parentId: null, bbox: [42.9, 11.45, 43.35, 11.75] } as HierarchyNode]);
+    return of([
+      { id: this.cityId, level: 'city', code: 'DJ', name: 'Djibouti', parentId: null, bbox: [42.9, 11.45, 43.35, 11.75] } as HierarchyNode,
+      { id: this.aliSabiehCityId, level: 'city', code: 'AS', name: 'Ali Sabieh', parentId: null, bbox: this.aliSabieh } as HierarchyNode,
+    ]);
   }
   override communes(cityId: UUID): Observable<HierarchyNode[]> {
+    if (cityId === this.aliSabiehCityId) return of([]); // ville non découpée en communes
     return of([{ id: this.communeId, level: 'commune', code: 'BLS', name: 'Boulaos', parentId: cityId, bbox: this.boulaos } as HierarchyNode]);
   }
   override zones(communeId: UUID): Observable<HierarchyNode[]> {
+    if (communeId !== this.communeId) return of([]);
     return of([{ id: this.zoneId, level: 'zone', code: 'Z-Q7', name: 'Zone Quartier 7', parentId: communeId, bbox: this.boulaos } as HierarchyNode]);
   }
   override quartiers(cityId: UUID, communeId?: UUID | null, zoneId?: UUID | null): Observable<HierarchyNode[]> {
+    if (cityId === this.aliSabiehCityId) {
+      return of([{ id: this.aliSabiehQuartierId, level: 'quartier', code: 'AS-C', name: 'Ali Sabieh Centre', parentId: cityId, bbox: this.aliSabieh } as HierarchyNode]);
+    }
     return of([{ id: this.quartier7Id, level: 'quartier', code: 'Q7', name: 'Quartier 7', parentId: zoneId ?? communeId ?? cityId, bbox: this.boulaos } as HierarchyNode]);
   }
   override blocs(quartierId: UUID): Observable<HierarchyNode[]> {

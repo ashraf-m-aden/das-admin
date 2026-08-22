@@ -29,6 +29,16 @@ export const staffFeature = createFeature({
     on(StaffActions.setActiveSuccess, (state, { id, isActive }) => ({
       ...state, items: state.items.map((s) => (s.id === id ? { ...s, isActive } : s)),
     })),
+
+    on(StaffActions.loadProductivity, (state) => ({
+      ...state, isProductivityLoading: true, productivityErrorMessageKey: null,
+    })),
+    on(StaffActions.loadProductivitySuccess, (state, { items }) => ({
+      ...state, productivity: items, isProductivityLoading: false,
+    })),
+    on(StaffActions.loadProductivityFailure, (state, { errorMessageKey }) => ({
+      ...state, isProductivityLoading: false, productivityErrorMessageKey: errorMessageKey,
+    })),
   ),
 });
 
@@ -37,4 +47,5 @@ export const {
   reducer: staffReducer,
   selectItems, selectListStatus, selectListErrorMessageKey, selectFilters,
   selectFormStatus, selectFormErrorMessageKey,
+  selectProductivity, selectIsProductivityLoading, selectProductivityErrorMessageKey,
 } = staffFeature;

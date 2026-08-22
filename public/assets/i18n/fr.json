@@ -108,7 +108,8 @@
     "colNumber": "Numéro",
     "unnamed": "Sans nom",
     "empty": "Aucun bloc",
-    "summary": "{{total}} bloc(s), dont {{unnamed}} sans nom",
+    "summaryOne": "{{total}} bloc, dont {{unnamed}} sans nom",
+    "summary": "{{total}} blocs, dont {{unnamed}} sans nom",
     "backToList": "Retour",
     "viewParcels": "Voir les adresses",
     "missingNumberHint": "Ce bloc n'a pas encore de numéro (repris avant le 18/08/2026) — il doit être renuméroté avant de pouvoir être renommé.",
@@ -116,7 +117,13 @@
     "namePlaceholder": "ex. Avenue du Corail",
     "saveName": "Enregistrer",
     "viewList": "Liste",
-    "viewMap": "Carte"
+    "viewMap": "Carte",
+    "coverage": {
+      "title": "État des relevés",
+      "empty": "Aucun relevé validé sur ce bloc",
+      "surveyed": "Relevées",
+      "notSurveyable": "Non relevables"
+    }
   },
   "addressing": {
     "title": "Adressage",
@@ -219,7 +226,18 @@
     "create": "Créer",
     "editRoles": "Modifier les rôles",
     "toggleActive": "Activer / Suspendre",
-    "empty": "Aucun membre"
+    "empty": "Aucun membre",
+    "productivity": {
+      "toggle": "Productivité",
+      "campaign": "Campagne",
+      "agent": "Agent",
+      "total": "Total",
+      "draft": "Brouillon",
+      "submitted": "Soumis",
+      "validated": "Validé",
+      "rejected": "Rejeté",
+      "empty": "Aucune donnée de productivité"
+    }
   },
   "notifications": {
     "unreadCount": "{{count}} non lues",
@@ -310,7 +328,8 @@
     "allRegions": "Toutes les régions",
     "allStatuses": "Tous les statuts",
     "allTeams": "Toutes les équipes",
-    "selected": "{{count}} sélectionné(s)",
+    "selectedOne": "{{count}} sélectionné",
+    "selected": "{{count}} sélectionnés",
     "approveSelected": "Approuver",
     "publishSelected": "Publier",
     "colId": "ID adresse",
@@ -428,7 +447,8 @@
     "alreadyAssigned": "déjà affecté",
     "selectAgent": "Choisir un agent…",
     "assign": "Affecter",
-    "populateResult": "{{created}} affectation(s) créée(s) sur {{total}} au total",
+    "populateResultOne": "{{created}} affectation créée sur {{total}} au total",
+    "populateResult": "{{created}} affectations créées sur {{total}} au total",
     "bloc": "Bloc",
     "assignedAt": "Affecté le",
     "reassign": "Réaffecter",
@@ -442,83 +462,21 @@
     "transferFrom": "Agent source…",
     "transferTo": "Agent cible…",
     "thisCampaignOnly": "Limiter à cette campagne",
-    "transferResult": "{{count}} bloc(s) transféré(s)"
+    "transferResultOne": "{{count}} bloc transféré",
+    "transferResult": "{{count}} blocs transférés"
   },
   "dataquality": {
-    "eyebrow": "Règles qualité, alertes et détection de doublons",
-    "runScan": "Lancer un scan",
-    "scanning": "Scan en cours…",
-    "kpi": {
-      "coverage": "Taux de couverture",
-      "accuracy": "Score de précision",
-      "duplicate": "Taux de doublons",
-      "openCases": "Cas qualité ouverts"
-    },
-    "alerts": "Alertes qualité",
-    "issueType": "Type d'anomalie",
-    "ruleTriggered": "Règle déclenchée",
-    "impacted": "Enregistrements impactés",
-    "reviewer": "Reviewer",
-    "statusCol": "Statut",
-    "severity.high": "Haute",
-    "severity.medium": "Moyenne",
-    "severity.low": "Basse",
-    "caseStatus.new": "Nouveau",
-    "caseStatus.in_review": "En revue",
-    "caseStatus.resolved": "Résolu",
-    "issue": {
-      "duplicate_candidate": "Doublon potentiel",
-      "missing_coordinates": "Coordonnées manquantes",
-      "inconsistent_street": "Nom de rue incohérent",
-      "out_of_boundary": "Propriété hors limite",
-      "missing_building_type": "Type de bâtiment manquant"
-    },
-    "trigger": {
-      "duplicate_detected": "Adresse en doublon détectée",
-      "coordinates_missing": "Coordonnées absentes",
-      "street_standardization": "Standardisation des noms de rue",
-      "outside_boundary": "Hors des limites administratives",
-      "building_type_required": "Type de bâtiment requis"
-    },
-    "autoRules": "Règles automatisées",
-    "impactedShort": "impactés",
-    "rule": {
-      "missing_coordinates": {
-        "name": "Coordonnées manquantes",
-        "desc": "Signale les adresses sans latitude/longitude valide."
-      },
-      "duplicate_coordinate": {
-        "name": "Coordonnée en doublon",
-        "desc": "Détecte les candidats doublons d'adresse."
-      },
-      "inconsistent_street": {
-        "name": "Nom de rue incohérent",
-        "desc": "Identifie les noms de rue non conformes."
-      },
-      "out_of_boundary": {
-        "name": "Propriété hors limite",
-        "desc": "Signale les parcelles hors des limites définies."
-      },
-      "missing_building_type": {
-        "name": "Type de bâtiment manquant",
-        "desc": "Identifie les adresses sans type de bâtiment."
-      }
-    },
-    "coverageByRegion": "Couverture par région",
-    "duplicates": "Doublons détectés",
-    "dupKind": "Type",
-    "dupA": "Adresse A",
-    "dupB": "Adresse B",
-    "dupScore": "Score",
-    "merge": "Fusionner",
-    "dismiss": "Ignorer",
-    "noDuplicates": "Aucun doublon détecté",
-    "kind": {
-      "spatial": "Spatial",
-      "textual": "Textuel"
-    },
-    "severityCol": "Sévérité",
-    "quartier": "Quartier"
+    "eyebrow": "File de contrôle anti-fraude — signaux terrain",
+    "suspicious": "Relevés signalés",
+    "capturedAt": "Capturé le",
+    "distance": "Écart à l'adresse",
+    "photos": "Photos",
+    "reasons": "Signaux",
+    "noSuspicious": "Aucun relevé signalé",
+    "pushedAfterClose": "Remontées après clôture par agent",
+    "agent": "Agent",
+    "pushedCount": "Relevés remontés",
+    "noPushedAfterClose": "Aucune remontée après clôture"
   },
   "map": {
     "layers": "Couches",
@@ -640,6 +598,7 @@
     "shops": "Commerces",
     "wheelchairAccessible": "Accessible fauteuil roulant",
     "photos": "Photos",
+    "viewPhotosOne": "Voir la photo",
     "viewPhotos": "Voir les {{count}} photos",
     "mockLocationWarning": "Position GPS simulée détectée",
     "notSurveyable": "Non relevable",
@@ -664,6 +623,15 @@
       "notfound": "Introuvable",
       "vacantland": "Terrain non bâti",
       "outoftime": "Non traitée (temps insuffisant)"
+    },
+    "stalled": {
+      "bannerOne": "{{count}} relevé en souffrance — campagne clôturée, décision en attente",
+      "banner": "{{count}} relevés en souffrance — campagne clôturée, décision en attente",
+      "campaign": "Campagne",
+      "agent": "Agent",
+      "capturedAt": "Capturé le",
+      "daysWaiting": "En attente depuis",
+      "days": "{{count}} j"
     }
   },
   "period": {

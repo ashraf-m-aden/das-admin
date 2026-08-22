@@ -42,7 +42,7 @@
           }
         </div>
         @if (facade.lastPopulateResult$ | async; as result) {
-          <div class="head__result">{{ 'fieldops.populateResult' | transloco: { created: result.createdAssignments, total: result.totalAssignments } }}</div>
+          <div class="head__result">{{ (result.createdAssignments === 1 ? 'fieldops.populateResultOne' : 'fieldops.populateResult') | transloco: { created: result.createdAssignments, total: result.totalAssignments } }}</div>
         }
       }
     </section>
@@ -209,7 +209,7 @@
         <label class="checkbox"><input type="checkbox" formControlName="thisCampaignOnly" />{{ 'fieldops.thisCampaignOnly' | transloco }}</label>
         <button type="submit" class="btn btn--ghost" [disabled]="(facade.isTransferringBlocs$ | async)">{{ 'fieldops.transfer' | transloco }}</button>
       </form>
-      @if (facade.lastTransferResult$ | async; as r) { <div class="transfer__result">{{ 'fieldops.transferResult' | transloco: { count: r.transferredCount } }}</div> }
+      @if (facade.lastTransferResult$ | async; as r) { <div class="transfer__result">{{ (r.transferredCount === 1 ? 'fieldops.transferResultOne' : 'fieldops.transferResult') | transloco: { count: r.transferredCount } }}</div> }
     </section>
   } @else {
     <div class="cd__loading">{{ 'common.loading' | transloco }}</div>

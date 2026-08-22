@@ -1,5 +1,5 @@
 import { UserRole } from '../../models/das.models';
-import { StaffMember } from '../models/staff.models';
+import { AgentProductivity, StaffMember } from '../models/staff.models';
 
 export type ListStatus = 'idle' | 'loading' | 'loaded' | 'error';
 export type FormStatus = 'idle' | 'saving' | 'error';
@@ -16,6 +16,10 @@ export interface StaffState {
   filters: StaffFilters;
   formStatus: FormStatus;
   formErrorMessageKey: string | null;
+
+  productivity: AgentProductivity[];
+  isProductivityLoading: boolean;
+  productivityErrorMessageKey: string | null;
 }
 
 export const initialStaffState: StaffState = {
@@ -25,4 +29,8 @@ export const initialStaffState: StaffState = {
   filters: { search: '', role: null },
   formStatus: 'idle',
   formErrorMessageKey: null,
+
+  productivity: [],
+  isProductivityLoading: false,
+  productivityErrorMessageKey: null,
 };

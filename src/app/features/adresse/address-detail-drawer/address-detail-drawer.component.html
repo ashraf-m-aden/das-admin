@@ -5,7 +5,7 @@
   } @else if (detail$ | async; as d) {
     <header class="drawer__head">
       <div>
-        <div class="drawer__eyebrow">{{ d.addressCode }}</div>
+        <div class="drawer__eyebrow">{{ d.addressCode ?? d.libelle }}</div>
         <div class="drawer__title">{{ d.quartier }}</div>
       </div>
       <span class="stage" [style.color]="stageColor(d.workflowStage)"><span class="stage__dot" [style.background]="stageColor(d.workflowStage)"></span>{{ stageLabelKey(d.workflowStage) | transloco }}</span>

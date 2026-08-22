@@ -70,7 +70,7 @@
     @if (selectedCount$ | async; as count) {
     @if (count > 0) {
     <div class="bulk">
-      <span class="bulk__count">{{ 'adresse.selected' | transloco: { count } }}</span>
+      <span class="bulk__count">{{ (count === 1 ? 'adresse.selectedOne' : 'adresse.selected') | transloco: { count } }}</span>
       <button type="button" class="bulk__btn" (click)="approveSelected()" [disabled]="isMutating$ | async">
         <i class="ti ti-circle-check" aria-hidden="true"></i>{{ 'adresse.approveSelected' | transloco }}
       </button>
@@ -99,7 +99,7 @@
     <div class="trow" [class.trow--active]="(detailOpenId$ | async) === a.id" (click)="open(a.id)">
       <span class="col-check"><input type="checkbox" [checked]="isSelected(a.id)"
           (click)="toggle(a.id, $event)" /></span>
-      <span class="trow__id">{{ a.addressCode }}</span>
+      <span class="trow__id">{{ a.addressCode ?? a.libelle }}</span>
       <span class="trow__pc">{{ a.postcode }}</span>
       <span>{{ a.quartier }}</span> <span>{{ a.propertyType }}</span>
       <span><span class="stage" [style.color]="stageColor(a.workflowStage)"><span class="stage__dot"

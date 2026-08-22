@@ -29,6 +29,10 @@ export class StaffListComponent implements OnInit {
   protected readonly editingRolesId = signal<string | null>(null);
   protected readonly editingRolesDraft = signal<UserRole[]>([]);
 
+  protected readonly showProductivity = signal(false);
+  protected readonly productivity$ = this.facade.productivity$;
+  protected readonly isProductivityLoading$ = this.facade.isProductivityLoading$;
+
   protected readonly filterForm = this.fb.nonNullable.group({ search: [''] });
 
   protected readonly createForm = this.fb.nonNullable.group({
@@ -49,6 +53,12 @@ initialsOf(name: string): string {
 
   toggleCreateForm(): void {
     this.showCreateForm.set(!this.showCreateForm());
+  }
+
+  toggleProductivity(): void {
+    const next = !this.showProductivity();
+    this.showProductivity.set(next);
+    if (next) this.facade.loadProductivity();
   }
 
   toggleCreateRole(role: UserRole): void {
@@ -96,10 +106,4 @@ initialsOf(name: string): string {
   toggleActive(member: StaffMember): void {
     this.facade.setActive(member.id, !member.isActive);
   }
-
-  initials(name: string): string {
-    const parts = name.trim().split(/\s+/).filter(Boolean);
-    return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || '?';
-  }
-
 }

@@ -212,22 +212,6 @@ export interface Postcode {
   issuedAt: ISODateTime; createdBy: UUID;
 }
 
-/* =============================================================================
- * QUALITÉ DES DONNÉES (module Data Quality)
- * ========================================================================== */
-
-export type QualitySeverity = 'low' | 'medium' | 'high';
-export type QualityCaseStatus = 'new' | 'in_review' | 'resolved';
-export interface QualityRule {
-  id: UUID; code: string; nameKey: string; descriptionKey: string;
-  enabled: boolean; impactedCount: number;
-}
-export interface QualityAlert {
-  id: UUID; ruleId: UUID; issueType: string; severity: QualitySeverity;
-  adminUnitName: string; ruleTriggered: string; impactedRecords: number;
-  assignedReviewer: string | null; status: QualityCaseStatus; createdAt: ISODateTime;
-}
-
 export type UserRole = 'Admin' | 'Gestionnaire' | 'Superviseur' | 'AgentTerrain';
 
 export interface User {

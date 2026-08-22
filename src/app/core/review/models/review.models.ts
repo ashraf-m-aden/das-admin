@@ -43,3 +43,27 @@ export interface ReviewPhoto {
   readUrl: string;
   uploadedAtUtc: ISODateTime;
 }
+
+/** Relevé soumis d'une campagne clôturée, jamais tranché (`GET /api/surveys/stalled`). */
+export interface StalledSurveyItem {
+  surveyId: UUID;
+  adresseId: UUID;
+  agentId: UUID;
+  agentFullName: string;
+  campaignId: UUID;
+  campaignCode: string;
+  capturedAtUtc: ISODateTime;
+  /** Depuis combien de jours le relevé attend une décision — c'est le chiffre qui alerte. */
+  daysWaiting: number;
+}
+
+/** Dernier relevé validé d'une adresse (`GET /api/surveys/current`) — état terrain courant, pas la file de décision. */
+export interface CurrentSurveyItem {
+  id: UUID;
+  adresseId: UUID;
+  outcome: SurveyOutcome;
+  notSurveyableReason: NotSurveyableReason | null;
+  typeOccupationId: UUID | null;
+  etatOccupationId: UUID | null;
+  capturedAtUtc: ISODateTime;
+}

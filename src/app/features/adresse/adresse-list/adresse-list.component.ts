@@ -71,7 +71,7 @@ export class AdresseListComponent implements OnInit {
     this.isMock
       ? this.items()
         .filter((a) => a.geom)
-        .map((a) => ({ id: a.id, layerId: 'parcels', geometry: a.geom!, color: STAGE_COLOR[a.workflowStage], label: a.addressCode }))
+        .map((a) => ({ id: a.id, layerId: 'parcels', geometry: a.geom!, color: STAGE_COLOR[a.workflowStage], label: a.addressCode ?? a.libelle }))
       : [],
   );
 

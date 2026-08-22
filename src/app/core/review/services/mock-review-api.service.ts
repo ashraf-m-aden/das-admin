@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { ReviewApiPort } from './review-api.port';
-import { ReviewPhoto, SurveyReviewItem } from '../models/review.models';
+import { CurrentSurveyItem, ReviewPhoto, StalledSurveyItem, SurveyReviewItem } from '../models/review.models';
 import { UUID } from '../../models/das.models';
 
 @Injectable({ providedIn: 'root' })
@@ -13,8 +13,8 @@ export class MockReviewApiService extends ReviewApiPort {
     {
       submissionType: 'property',
       id: 'survey-0001',
-      adresseId: 'adresse-0001',
-      agentId: 'agent-idriss',
+      adresseId: 'addr-12346',
+      agentId: 'mock-surveyor-0001',
       capturedAtUtc: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
       outcome: 'Surveyed',
       notSurveyableReason: null,
@@ -33,8 +33,8 @@ export class MockReviewApiService extends ReviewApiPort {
     {
       submissionType: 'property',
       id: 'survey-0002',
-      adresseId: 'adresse-0002',
-      agentId: 'agent-idriss',
+      adresseId: 'addr-12351',
+      agentId: 'mock-surveyor-0001',
       capturedAtUtc: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
       outcome: 'Surveyed',
       notSurveyableReason: null,
@@ -53,8 +53,8 @@ export class MockReviewApiService extends ReviewApiPort {
     {
       submissionType: 'property',
       id: 'survey-0003',
-      adresseId: 'adresse-0003',
-      agentId: 'agent-warsama',
+      adresseId: 'addr-12356',
+      agentId: 'mock-surveyor-0002',
       capturedAtUtc: new Date(Date.now() - 30 * 60 * 60 * 1000).toISOString(),
       outcome: 'NotSurveyable',
       notSurveyableReason: 'Demolished',
@@ -107,5 +107,57 @@ export class MockReviewApiService extends ReviewApiPort {
 
   override getSurveyPhotos(id: UUID): Observable<ReviewPhoto[]> {
     return of(this.photosBySurveyId[id] ?? []).pipe(delay(MockReviewApiService.SIMULATED_LATENCY_MS));
+  }
+
+  private stalledSurveys: StalledSurveyItem[] = [
+    {
+      surveyId: 'survey-stalled-0001',
+      adresseId: 'addr-12361',
+      agentId: 'mock-surveyor-0002',
+      agentFullName: 'Warsama Robleh',
+      campaignId: 'campaign-0001',
+      campaignCode: 'C2026-1',
+      capturedAtUtc: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+      daysWaiting: 12,
+    },
+  ];
+
+  private currentSurveys: CurrentSurveyItem[] = [
+    {
+      id: 'survey-0001',
+      adresseId: 'addr-12346',
+      outcome: 'Surveyed',
+      notSurveyableReason: null,
+      typeOccupationId: 'type-occ-villa',
+      etatOccupationId: 'etat-occ-bon',
+      capturedAtUtc: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'survey-0002',
+      adresseId: 'addr-12351',
+      outcome: 'Surveyed',
+      notSurveyableReason: null,
+      typeOccupationId: 'type-occ-immeuble',
+      etatOccupationId: 'etat-occ-degrade',
+      capturedAtUtc: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'survey-0003',
+      adresseId: 'addr-12356',
+      outcome: 'NotSurveyable',
+      notSurveyableReason: 'Demolished',
+      typeOccupationId: null,
+      etatOccupationId: null,
+      capturedAtUtc: new Date(Date.now() - 30 * 60 * 60 * 1000).toISOString(),
+    },
+  ];
+
+  override listStalledSurveys(): Observable<StalledSurveyItem[]> {
+    return of(this.stalledSurveys).pipe(delay(MockReviewApiService.SIMULATED_LATENCY_MS));
+  }
+
+  override listCurrentSurveys(blocId: UUID | null, surveyedOnly: boolean): Observable<CurrentSurveyItem[]> {
+    const items = surveyedOnly ? this.currentSurveys.filter((s) => s.outcome === 'Surveyed') : this.currentSurveys;
+    return of(items).pipe(delay(MockReviewApiService.SIMULATED_LATENCY_MS));
   }
 }

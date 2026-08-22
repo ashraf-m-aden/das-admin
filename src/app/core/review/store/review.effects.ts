@@ -120,4 +120,34 @@ export class ReviewEffects {
       ),
     ),
   );
+
+  loadStalled$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(ReviewActions.loadStalled),
+      exhaustMap(() =>
+        this.reviewApi.listStalledSurveys().pipe(
+          map((items) => ReviewActions.loadStalledSuccess({ items })),
+          catchError(() => of(ReviewActions.loadStalledFailure({ errorMessageKey: 'common.error' }))),
+        ),
+      ),
+    ),
+  );
+
+  loadCurrentSurveys$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(ReviewActions.loadCurrentSurveys),
+      exhaustMap(({ blocId, surveyedOnly }) =>
+        forkJoin({
+          items: this.reviewApi.listCurrentSurveys(blocId, surveyedOnly),
+          typeOccupationOptions: this.referenceApi.getTypesOccupation(),
+          etatOccupationOptions: this.referenceApi.getEtatsOccupation(),
+        }).pipe(
+          map(({ items, typeOccupationOptions, etatOccupationOptions }) =>
+            ReviewActions.loadCurrentSurveysSuccess({ items, typeOccupationOptions, etatOccupationOptions }),
+          ),
+          catchError(() => of(ReviewActions.loadCurrentSurveysFailure({ errorMessageKey: 'common.error' }))),
+        ),
+      ),
+    ),
+  );
 }

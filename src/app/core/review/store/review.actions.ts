@@ -1,6 +1,6 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { RedoSubmissionType, UUID } from '../../models/das.models';
-import { ReviewItem, ReviewPhoto } from '../models/review.models';
+import { CurrentSurveyItem, ReviewItem, ReviewPhoto, StalledSurveyItem } from '../models/review.models';
 import { ReviewFilters } from './review.state';
 import { OccupationCatalogItem } from '../../reference/models/reference.models';
 
@@ -36,5 +36,17 @@ export const ReviewActions = createActionGroup({
     'Load Photos': props<{ surveyId: UUID }>(),
     'Load Photos Success': props<{ surveyId: UUID; photos: ReviewPhoto[] }>(),
     'Load Photos Failure': props<{ surveyId: UUID; errorMessageKey: string }>(),
+
+    'Load Stalled': emptyProps(),
+    'Load Stalled Success': props<{ items: StalledSurveyItem[] }>(),
+    'Load Stalled Failure': props<{ errorMessageKey: string }>(),
+
+    'Load Current Surveys': props<{ blocId: UUID | null; surveyedOnly: boolean }>(),
+    'Load Current Surveys Success': props<{
+      items: CurrentSurveyItem[];
+      typeOccupationOptions: OccupationCatalogItem[];
+      etatOccupationOptions: OccupationCatalogItem[];
+    }>(),
+    'Load Current Surveys Failure': props<{ errorMessageKey: string }>(),
   },
 });

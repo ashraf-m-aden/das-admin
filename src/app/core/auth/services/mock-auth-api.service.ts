@@ -15,6 +15,16 @@ export class MockAuthApiService extends AuthApiPort {
     { id: 'mock-surveyor-0001', username: 'agent', fullName: 'Idriss Agent', roles: ['AgentTerrain'] },
   ];
 
+  // Refresh token courant par compte — un refresh en fait rotation (§6 CLAUDE.md) :
+  // l'ancien token n'est plus valide une fois le nouveau émis.
+  private readonly currentRefreshTokens = new Map<string, string>();
+
+  private issueRefreshToken(accountId: string): string {
+    const token = `mock-refresh.${accountId}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}`;
+    this.currentRefreshTokens.set(accountId, token);
+    return token;
+  }
+
 override login(credentials: LoginCredentials): Observable<AuthResponse> {
     const account = MockAuthApiService.MOCK_ACCOUNTS.find(
       (a) => a.username.toLowerCase() === credentials.username.trim().toLowerCase(),
@@ -28,7 +38,7 @@ override login(credentials: LoginCredentials): Observable<AuthResponse> {
 
     const response: AuthResponse = {
       token: `mock.${account.id}.${Date.now()}`,
-      refreshToken: `mock-refresh.${account.id}`,
+      refreshToken: this.issueRefreshToken(account.id),
       refreshTokenExpiresAtUtc: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
       userId: account.id,
       fullName: account.fullName,
@@ -39,13 +49,15 @@ override login(credentials: LoginCredentials): Observable<AuthResponse> {
   }
 
   override refresh(refreshToken: string): Observable<AuthResponse> {
-    const account = MockAuthApiService.MOCK_ACCOUNTS.find((a) => `mock-refresh.${a.id}` === refreshToken);
+    const account = MockAuthApiService.MOCK_ACCOUNTS.find(
+      (a) => this.currentRefreshTokens.get(a.id) === refreshToken,
+    );
     if (!account) {
       return throwError(() => ({ code: 'invalid_credentials' as const, message: 'Session expirée' }));
     }
     const response: AuthResponse = {
       token: `mock.${account.id}.${Date.now()}`,
-      refreshToken,
+      refreshToken: this.issueRefreshToken(account.id),
       refreshTokenExpiresAtUtc: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
       userId: account.id,
       fullName: account.fullName,

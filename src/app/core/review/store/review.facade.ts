@@ -63,4 +63,18 @@ export class ReviewFacade {
   isLoadingPhotos$(surveyId: UUID) {
     return this.store.select(selectIsLoadingPhotos(surveyId));
   }
+
+  stalledItems$ = this.store.select(reviewFeature.selectStalledItems);
+  isStalledLoading$ = this.store.select(reviewFeature.selectIsStalledLoading);
+
+  loadStalled(): void {
+    this.store.dispatch(ReviewActions.loadStalled());
+  }
+
+  currentSurveys$ = this.store.select(reviewFeature.selectCurrentSurveys);
+  isCurrentSurveysLoading$ = this.store.select(reviewFeature.selectIsCurrentSurveysLoading);
+
+  loadCurrentSurveys(blocId: UUID | null, surveyedOnly: boolean): void {
+    this.store.dispatch(ReviewActions.loadCurrentSurveys({ blocId, surveyedOnly }));
+  }
 }

@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { ReviewApiPort } from './review-api.port';
 import { AppConfigService } from '../../config/app-config.service';
-import { ReviewPhoto, SurveyReviewItem } from '../models/review.models';
+import { CurrentSurveyItem, ReviewPhoto, StalledSurveyItem, SurveyReviewItem } from '../models/review.models';
 import { UUID } from '../../models/das.models';
 
 /** Forme brute de `SurveyResponse` (guide §4.4 / OpenAPI) — seuls les champs utiles à la file de validation. */
@@ -31,6 +31,43 @@ interface RawSurveyPhotoResponse {
   id: string;
   readUrl: string;
   uploadedAtUtc: string;
+}
+
+/** Forme brute de `StalledSurveyResponse` (`GET /api/surveys/stalled`). */
+interface RawStalledSurveyResponse {
+  surveyId: string;
+  adresseId: string;
+  agentId: string;
+  agentFullName: string;
+  campaignId: string;
+  campaignCode: string;
+  capturedAtUtc: string;
+  daysWaiting: number | string;
+}
+
+function toStalledSurveyItem(raw: RawStalledSurveyResponse): StalledSurveyItem {
+  return {
+    surveyId: raw.surveyId,
+    adresseId: raw.adresseId,
+    agentId: raw.agentId,
+    agentFullName: raw.agentFullName,
+    campaignId: raw.campaignId,
+    campaignCode: raw.campaignCode,
+    capturedAtUtc: raw.capturedAtUtc,
+    daysWaiting: Number(raw.daysWaiting),
+  };
+}
+
+function toCurrentSurveyItem(raw: RawSurveyResponse): CurrentSurveyItem {
+  return {
+    id: raw.id,
+    adresseId: raw.adresseId,
+    outcome: raw.outcome,
+    notSurveyableReason: raw.notSurveyableReason,
+    typeOccupationId: raw.typeOccupationId,
+    etatOccupationId: raw.etatOccupationId,
+    capturedAtUtc: raw.capturedAtUtc,
+  };
 }
 
 function toSurveyReviewItem(raw: RawSurveyResponse): SurveyReviewItem {
@@ -84,5 +121,19 @@ export class ReviewApiService extends ReviewApiPort {
     return this.http
       .get<RawSurveyPhotoResponse[]>(`${this.baseUrl}/${id}/photos`)
       .pipe(map((photos) => photos.map((p) => ({ id: p.id, readUrl: p.readUrl, uploadedAtUtc: p.uploadedAtUtc }))));
+  }
+
+  override listStalledSurveys(): Observable<StalledSurveyItem[]> {
+    return this.http
+      .get<RawStalledSurveyResponse[]>(`${this.baseUrl}/stalled`)
+      .pipe(map((items) => items.map(toStalledSurveyItem)));
+  }
+
+  override listCurrentSurveys(blocId: UUID | null, surveyedOnly: boolean): Observable<CurrentSurveyItem[]> {
+    const params: Record<string, string> = { surveyedOnly: String(surveyedOnly) };
+    if (blocId) params['blocId'] = blocId;
+    return this.http
+      .get<RawSurveyResponse[]>(`${this.baseUrl}/current`, { params })
+      .pipe(map((items) => items.map(toCurrentSurveyItem)));
   }
 }

@@ -1,85 +1,53 @@
-<das-page-header [eyebrow]="'dataquality.eyebrow' | transloco" [title]="'nav.dataQuality' | transloco">
-  <button actions type="button" class="scan-btn" (click)="runScan()" [disabled]="facade.scanning()">
-    <i class="ti ti-scan" aria-hidden="true"></i>@if (facade.scanning()) { {{ 'dataquality.scanning' | transloco }} } @else { {{ 'dataquality.runScan' | transloco }} }
-  </button>
-</das-page-header>
+<das-page-header [eyebrow]="'dataquality.eyebrow' | transloco" [title]="'nav.dataQuality' | transloco" />
 
 <div class="dq">
-  @if (facade.data(); as d) {
-    <div class="kpis">
-      <div class="kpi"><span class="kpi__l">{{ 'dataquality.kpi.coverage' | transloco }}</span><span class="kpi__v">{{ d.kpis.coverageRate }} %</span><span class="kpi__d kpi__d--up">▲ {{ d.kpis.coverageDelta }} %</span></div>
-      <div class="kpi"><span class="kpi__l">{{ 'dataquality.kpi.accuracy' | transloco }}</span><span class="kpi__v">{{ d.kpis.accuracyScore }}<small>/100</small></span><span class="kpi__d kpi__d--up">▲ {{ d.kpis.accuracyDelta }}</span></div>
-      <div class="kpi"><span class="kpi__l">{{ 'dataquality.kpi.duplicate' | transloco }}</span><span class="kpi__v">{{ d.kpis.duplicateRate }} %</span><span class="kpi__d kpi__d--down">▼ {{ d.kpis.duplicateDelta }} %</span></div>
-      <div class="kpi"><span class="kpi__l">{{ 'dataquality.kpi.openCases' | transloco }}</span><span class="kpi__v">{{ d.kpis.openCases }}</span><span class="kpi__d kpi__d--down">▼ {{ d.kpis.openCasesDelta }}</span></div>
-    </div>
-
-    <!-- Alertes -->
+  @if (facade.loading()) {
+    <div class="dq__loading">{{ 'common.loading' | transloco }}</div>
+  } @else {
     <section class="das-card panel">
-      <div class="panel__title">{{ 'dataquality.alerts' | transloco }} <span class="badge">{{ facade.alerts().length }}</span></div>
-      <div class="thead"><span>{{ 'dataquality.issueType' | transloco }}</span><span>{{ 'dataquality.severity' | transloco }}</span><span>{{ 'dataquality.quartier' | transloco }}</span><span>{{ 'dataquality.ruleTriggered' | transloco }}</span><span>{{ 'dataquality.impacted' | transloco }}</span><span>{{ 'dataquality.reviewer' | transloco }}</span><span>{{ 'dataquality.statusCol' | transloco }}</span></div>
-      @for (a of facade.alerts(); track a.id) {
+      <div class="panel__title">{{ 'dataquality.suspicious' | transloco }} <span class="badge">{{ facade.surveys().length }}</span></div>
+      <div class="thead">
+        <span>{{ 'dataquality.capturedAt' | transloco }}</span>
+        <span>{{ 'dataquality.distance' | transloco }}</span>
+        <span>{{ 'dataquality.photos' | transloco }}</span>
+        <span>{{ 'dataquality.reasons' | transloco }}</span>
+      </div>
+      @for (s of facade.surveys(); track s.id) {
         <div class="trow">
-          <span class="trow__issue">{{ a.issueTypeKey | transloco }}</span>
-          <span><span class="chip" [style.color]="severity(a.severity).color" [style.background]="severity(a.severity).bg">{{ severityLabelKey(a.severity) | transloco }}</span></span>
-          <span>{{ 'dataquality.quartier' | transloco }}</span>
-          <span class="trow__rule">{{ a.ruleTriggeredKey | transloco }}</span>
-          <span class="trow__num">{{ a.impactedRecords | number }}</span>
-          <span>{{ a.assignedReviewer ?? '—' }}</span>
-          <span><span class="chip" [style.color]="caseStatus(a.status).color" [style.background]="caseStatus(a.status).bg">{{ caseStatusLabelKey(a.status) | transloco }}</span></span>
-        </div>
-      }
-    </section>
-
-    <div class="dq__row">
-      <!-- Règles à toggles -->
-      <section class="das-card panel">
-        <div class="panel__title">{{ 'dataquality.autoRules' | transloco }}</div>
-        @for (r of facade.rules(); track r.id) {
-          <div class="rule">
-            <span class="rule__ic"><i class="ti {{ r.icon }}" aria-hidden="true"></i></span>
-            <div class="rule__body">
-              <div class="rule__name">{{ r.nameKey | transloco }}</div>
-              <div class="rule__desc">{{ r.descriptionKey | transloco }}</div>
-            </div>
-            <div class="rule__impact"><span class="rule__count">{{ r.impactedCount | number }}</span><span class="rule__count-l">{{ 'dataquality.impactedShort' | transloco }}</span></div>
-            <button type="button" class="toggle" [class.toggle--on]="r.enabled" (click)="toggle(r.id, r.enabled)" [attr.aria-pressed]="r.enabled" [attr.aria-label]="r.nameKey | transloco"><span class="toggle__knob"></span></button>
-          </div>
-        }
-      </section>
-
-      <!-- Couverture par région -->
-      <section class="das-card panel">
-        <div class="panel__title">{{ 'dataquality.coverageByRegion' | transloco }}</div>
-        <div class="cov">
-          @for (c of facade.regionCoverage(); track c.region) {
-            <div class="cov__row">
-              <span class="cov__name">{{ c.region }}</span>
-              <span class="cov__track"><span class="cov__fill" [style.width.%]="c.coveragePct" [style.background]="coverageColor(c.coveragePct)"></span></span>
-              <span class="cov__pct">{{ c.coveragePct }} %</span>
-            </div>
-          }
-        </div>
-      </section>
-    </div>
-
-    <!-- Doublons détectés -->
-    <section class="das-card panel">
-      <div class="panel__title">{{ 'dataquality.duplicates' | transloco }}</div>
-      <div class="dhead"><span>{{ 'dataquality.dupKind' | transloco }}</span><span>{{ 'dataquality.dupA' | transloco }}</span><span>{{ 'dataquality.dupB' | transloco }}</span><span>{{ 'dataquality.quartier' | transloco }}</span><span>{{ 'dataquality.dupScore' | transloco }}</span><span></span></div>
-      @for (dup of facade.duplicates(); track dup.id) {
-        <div class="drow">
-          <span class="chip chip--kind"><i class="ti" [class.ti-map-pin]="dup.kind === 'spatial'" [class.ti-abc]="dup.kind === 'textual'" aria-hidden="true"></i>{{ ('dataquality.kind.' + dup.kind) | transloco }}</span>
-          <span class="drow__addr">{{ dup.addressA }}</span>
-          <span class="drow__addr">{{ dup.addressB }}</span>
-          <span>{{ dup.quartier }}</span>
-          <span class="drow__score" [class.drow__score--high]="dup.scorePct >= 95">{{ dup.scorePct }} %</span>
-          <span class="drow__actions"><button type="button" class="link-btn">{{ 'dataquality.merge' | transloco }}</button><button type="button" class="link-btn link-btn--muted">{{ 'dataquality.dismiss' | transloco }}</button></span>
+          <span>
+            {{ s.capturedAtUtc | dasDate: 'long' }}
+            @if (s.outcome === 'NotSurveyable' && s.notSurveyableReason) {
+              <div class="trow__meta">{{ notSurveyableReasonKey(s.notSurveyableReason) | transloco }}</div>
+            }
+          </span>
+          <span class="trow__num">
+            @if (s.isMockLocation) { <span class="chip chip--danger">{{ 'verification.mockLocationWarning' | transloco }}</span> }
+            @if (s.distanceFromAddressM !== null) { {{ s.distanceFromAddressM }} m }
+          </span>
+          <span class="trow__num">{{ s.photoCount }}</span>
+          <span class="trow__reasons">
+            @for (r of s.reasons; track r) { <div class="reason">{{ r }}</div> }
+          </span>
         </div>
       } @empty {
-        <div class="empty">{{ 'dataquality.noDuplicates' | transloco }}</div>
+        <div class="empty">{{ 'dataquality.noSuspicious' | transloco }}</div>
       }
     </section>
-  } @else {
-    <div class="dq__loading">{{ 'common.loading' | transloco }}</div>
+
+    <section class="das-card panel">
+      <div class="panel__title">{{ 'dataquality.pushedAfterClose' | transloco }}</div>
+      <div class="ahead">
+        <span>{{ 'dataquality.agent' | transloco }}</span>
+        <span>{{ 'dataquality.pushedCount' | transloco }}</span>
+      </div>
+      @for (a of facade.pushedAfterCloseByAgent(); track a.agentId) {
+        <div class="arow">
+          <span>{{ a.agentFullName }}</span>
+          <span class="arow__num">{{ a.pushedAfterClose }}</span>
+        </div>
+      } @empty {
+        <div class="empty">{{ 'dataquality.noPushedAfterClose' | transloco }}</div>
+      }
+    </section>
   }
 </div>

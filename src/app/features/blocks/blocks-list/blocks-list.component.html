@@ -16,7 +16,7 @@
     <das-hierarchy-cascade (selectionChange)="onHierarchy($event)" />
   </section>
 
-  <div class="blocks__summary">{{ 'blocks.summary' | transloco: { total: totalCount(), unnamed: unnamedCount() } }}</div>
+  <div class="blocks__summary">{{ (totalCount() === 1 ? 'blocks.summaryOne' : 'blocks.summary') | transloco: { total: totalCount(), unnamed: unnamedCount() } }}</div>
 
   <section class="das-card blocks__table">
     <div class="tbl">

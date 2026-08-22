@@ -57,6 +57,42 @@
           }
         </form>
       </section>
+
+      <section class="das-card detail__coverage">
+        <div class="coverage__title">{{ 'blocks.coverage.title' | transloco }}</div>
+        @if (isCurrentSurveysLoading$ | async) {
+          <div class="coverage__loading">{{ 'common.loading' | transloco }}</div>
+        } @else if (currentSurveys().length === 0) {
+          <div class="coverage__empty">{{ 'blocks.coverage.empty' | transloco }}</div>
+        } @else {
+          <div class="coverage__summary">
+            <div class="coverage__stat">
+              <span class="coverage__stat-val">{{ surveyedCount() }}</span>
+              <span class="coverage__stat-label">{{ 'blocks.coverage.surveyed' | transloco }}</span>
+            </div>
+            @if (notSurveyableCount() > 0) {
+              <div class="coverage__stat">
+                <span class="coverage__stat-val">{{ notSurveyableCount() }}</span>
+                <span class="coverage__stat-label">{{ 'blocks.coverage.notSurveyable' | transloco }}</span>
+              </div>
+            }
+          </div>
+          @if (byEtatOccupation().length > 0) {
+            <div class="coverage__chips">
+              @for (e of byEtatOccupation(); track e.label) {
+                <span class="chip">{{ e.label }} · {{ e.count }}</span>
+              }
+            </div>
+          }
+          @if (byNotSurveyableReason().length > 0) {
+            <div class="coverage__chips">
+              @for (r of byNotSurveyableReason(); track r.reason) {
+                <span class="chip chip--muted">{{ notSurveyableReasonKey(r.reason) | transloco }} · {{ r.count }}</span>
+              }
+            </div>
+          }
+        }
+      </section>
     </div>
   } @else if (isLoading$ | async) {
     <div class="detail__loading">{{ 'common.loading' | transloco }}</div>

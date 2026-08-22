@@ -16,7 +16,8 @@ export class MockNotificationsApiService extends NotificationsApiPort {
       messageKey: 'notifications.task_completed',
       messageParams: { agent: 'Idriss Agent', code: 'BLK-Q3-014' },
       relatedEntityType: 'task',
-      relatedEntityId: 'task-0002',
+      // 'task' = une affectation terrain (module fieldops) — assign-0001 est bien 'Done'.
+      relatedEntityId: 'assign-0001',
       readAt: null,
       createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
     },
@@ -36,7 +37,8 @@ export class MockNotificationsApiService extends NotificationsApiPort {
       messageKey: 'notifications.property_needs_redo',
       messageParams: { code: 'DJ-BOU-ARR2-Q3-B014-B-012' },
       relatedEntityType: 'property',
-      relatedEntityId: 'review-property-0002',
+      // 'property' = un relevé terrain (module review) — survey-0003 est le relevé problématique du mock.
+      relatedEntityId: 'survey-0003',
       readAt: null,
       createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
     },
@@ -46,7 +48,9 @@ export class MockNotificationsApiService extends NotificationsApiPort {
       messageKey: 'notifications.redo_resolved',
       messageParams: { code: 'DJ-BOU-ARR2-Q7-B012-A-045', agent: 'Idriss Agent' },
       relatedEntityType: 'redo_request',
-      relatedEntityId: 'redo-0001',
+      // Pas de registre "demande de reprise" séparé dans l'app : la reprise résolue
+      // concerne le même relevé que celui signalé plus haut (survey-0003).
+      relatedEntityId: 'survey-0003',
       readAt: new Date(Date.now() - 20 * 60 * 60 * 1000).toISOString(),
       createdAt: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString(),
     },
@@ -56,7 +60,8 @@ export class MockNotificationsApiService extends NotificationsApiPort {
       messageKey: 'notifications.property_approved',
       messageParams: { code: 'DJ-BOU-ARR2-Q7-B012-A-046' },
       relatedEntityType: 'property',
-      relatedEntityId: 'property-0099',
+      // Approbation = décision au niveau adresse (module adresse) — addr-12348 est au stade 'approved' dans son mock.
+      relatedEntityId: 'addr-12348',
       readAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
       createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     },

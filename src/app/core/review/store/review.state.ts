@@ -1,5 +1,5 @@
 import { RedoSubmissionType, UUID } from '../../models/das.models';
-import { ReviewItem, ReviewPhoto } from '../models/review.models';
+import { CurrentSurveyItem, ReviewItem, ReviewPhoto, StalledSurveyItem } from '../models/review.models';
 import { OccupationCatalogItem } from '../../reference/models/reference.models';
 
 export type ReviewListStatus = 'idle' | 'loading' | 'loaded' | 'error';
@@ -20,6 +20,16 @@ export interface ReviewState {
   /** Catalogues seedés au démarrage, chargés une fois avec la file (résolution du libellé de `typeOccupationId`/`etatOccupationId`). */
   typeOccupationOptions: OccupationCatalogItem[];
   etatOccupationOptions: OccupationCatalogItem[];
+
+  /** Relevés en souffrance (`GET /api/surveys/stalled`) — indépendant de la file de décision. */
+  stalledItems: StalledSurveyItem[];
+  isStalledLoading: boolean;
+  stalledErrorMessageKey: string | null;
+
+  /** État terrain courant (`GET /api/surveys/current`) — consommé depuis l'écran bloc, pas la file de décision. */
+  currentSurveys: CurrentSurveyItem[];
+  isCurrentSurveysLoading: boolean;
+  currentSurveysErrorMessageKey: string | null;
 }
 
 export const initialReviewState: ReviewState = {
@@ -33,4 +43,12 @@ export const initialReviewState: ReviewState = {
   loadingPhotosId: null,
   typeOccupationOptions: [],
   etatOccupationOptions: [],
+
+  stalledItems: [],
+  isStalledLoading: false,
+  stalledErrorMessageKey: null,
+
+  currentSurveys: [],
+  isCurrentSurveysLoading: false,
+  currentSurveysErrorMessageKey: null,
 };

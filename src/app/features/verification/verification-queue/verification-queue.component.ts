@@ -28,8 +28,11 @@ export class VerificationQueueComponent implements OnInit {
   protected readonly typeFilter = signal<RedoSubmissionType | null>(null);
   protected readonly rejectingId = signal<string | null>(null);
   protected readonly expandedPhotosId = signal<string | null>(null);
+  protected readonly showStalled = signal(false);
 
   protected readonly rejectForm = this.fb.nonNullable.group({ reason: [''] });
+
+  protected readonly stalledItems$ = this.facade.stalledItems$;
 
   private readonly typeOccupationMap = toSignal(
     this.facade.typeOccupationOptions$.pipe(map((options) => new Map(options.map((o) => [o.id, o.nom])))),
@@ -42,6 +45,11 @@ export class VerificationQueueComponent implements OnInit {
 
   ngOnInit(): void {
     this.facade.load();
+    this.facade.loadStalled();
+  }
+
+  toggleStalled(): void {
+    this.showStalled.set(!this.showStalled());
   }
 
   filterType(type: RedoSubmissionType | null): void {

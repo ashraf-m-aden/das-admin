@@ -58,4 +58,16 @@ export class StaffEffects {
       ),
     ),
   );
+
+  loadProductivity$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StaffActions.loadProductivity),
+      exhaustMap(({ campaignId, agentId }) =>
+        this.staffApi.getProductivity(campaignId, agentId).pipe(
+          map((items) => StaffActions.loadProductivitySuccess({ items })),
+          catchError(() => of(StaffActions.loadProductivityFailure({ errorMessageKey: 'common.error' }))),
+        ),
+      ),
+    ),
+  );
 }

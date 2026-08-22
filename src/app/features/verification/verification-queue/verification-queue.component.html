@@ -10,6 +10,36 @@
 
   @if (decisionError$ | async; as err) { <div class="vq__error">{{ err | transloco }}</div> }
 
+  @if ((stalledItems$ | async); as stalled) {
+    @if (stalled.length > 0) {
+      <div class="stalled">
+        <button type="button" class="stalled__toggle" (click)="toggleStalled()">
+          <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+          {{ (stalled.length === 1 ? 'verification.stalled.bannerOne' : 'verification.stalled.banner') | transloco: { count: stalled.length } }}
+          <i class="ti" [class.ti-chevron-down]="!showStalled()" [class.ti-chevron-up]="showStalled()" aria-hidden="true"></i>
+        </button>
+        @if (showStalled()) {
+          <div class="stalled__list">
+            <div class="stalled__head">
+              <span>{{ 'verification.stalled.campaign' | transloco }}</span>
+              <span>{{ 'verification.stalled.agent' | transloco }}</span>
+              <span>{{ 'verification.stalled.capturedAt' | transloco }}</span>
+              <span>{{ 'verification.stalled.daysWaiting' | transloco }}</span>
+            </div>
+            @for (s of stalled; track s.surveyId) {
+              <div class="stalled__row">
+                <span>{{ s.campaignCode }}</span>
+                <span>{{ s.agentFullName }}</span>
+                <span>{{ s.capturedAtUtc | dasDate: 'long' }}</span>
+                <span class="stalled__days">{{ 'verification.stalled.days' | transloco: { count: s.daysWaiting } }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  }
+
   @for (item of (items$ | async) ?? []; track item.id) {
     <section class="das-card card">
       <div class="card__head">
@@ -49,7 +79,7 @@
 
         @if (item.photoCount > 0) {
           <button type="button" class="btn btn--ghost" (click)="togglePhotos(item)">
-            <i class="ti ti-photo" aria-hidden="true"></i>{{ 'verification.viewPhotos' | transloco: { count: item.photoCount } }}
+            <i class="ti ti-photo" aria-hidden="true"></i>{{ (item.photoCount === 1 ? 'verification.viewPhotosOne' : 'verification.viewPhotos') | transloco: { count: item.photoCount } }}
           </button>
           @if (expandedPhotosId() === item.id) {
             <div class="photos">

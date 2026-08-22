@@ -1,7 +1,7 @@
 {
   "nav": {
     "dashboard": "Dashboard",
-    "adresse": "Address Adresse",
+    "adresse": "Address Registry",
     "gis": "GIS & Mapping",
     "gisMap": "Map",
     "gisBoundaries": "Boundaries",
@@ -17,7 +17,7 @@
     "settings": "Settings",
     "notifications": "Notifications",
     "logout": "Logout",
-    "blocks": "Closes",
+    "blocks": "Blocks",
     "addressing": "Addressing",
     "review": "Data review",
     "staff": "Staff",
@@ -108,7 +108,8 @@
     "colNumber": "Number",
     "unnamed": "Unnamed",
     "empty": "No blocks",
-    "summary": "{{total}} block(s), {{unnamed}} unnamed",
+    "summaryOne": "{{total}} block, {{unnamed}} unnamed",
+    "summary": "{{total}} blocks, {{unnamed}} unnamed",
     "backToList": "Back",
     "viewParcels": "View addresses",
     "missingNumberHint": "This block has no number yet (predates 2026-08-18 backfill) — it must be renumbered before it can be renamed.",
@@ -116,7 +117,13 @@
     "namePlaceholder": "e.g. Corail Avenue",
     "saveName": "Save",
     "viewList": "List",
-    "viewMap": "Map"
+    "viewMap": "Map",
+    "coverage": {
+      "title": "Survey coverage",
+      "empty": "No validated survey on this block",
+      "surveyed": "Surveyed",
+      "notSurveyable": "Not surveyable"
+    }
   },
   "addressing": {
     "title": "Addressing",
@@ -127,7 +134,7 @@
     "onlyUnnamed": "Unnamed only",
     "namePlaceholder": "e.g. Corail Avenue",
     "assignName": "Assign name",
-    "emptyBlocks": "No closes to name",
+    "emptyBlocks": "No blocks to name",
     "emptyStreets": "No streets to name",
     "emptyProperties": "No properties to number",
     "numero": "Number",
@@ -219,7 +226,18 @@
     "create": "Create",
     "editRoles": "Edit roles",
     "toggleActive": "Enable / Suspend",
-    "empty": "No members"
+    "empty": "No members",
+    "productivity": {
+      "toggle": "Productivity",
+      "campaign": "Campaign",
+      "agent": "Agent",
+      "total": "Total",
+      "draft": "Draft",
+      "submitted": "Submitted",
+      "validated": "Validated",
+      "rejected": "Rejected",
+      "empty": "No productivity data"
+    }
   },
   "notifications": {
     "unreadCount": "{{count}} unread",
@@ -249,7 +267,7 @@
     "imported": "{{count}} items imported",
     "skipped": "{{count}} skipped",
     "target": {
-      "blocks": "Closes",
+      "blocks": "Blocks",
       "admin": "Administrative units"
     },
     "roadCode": {
@@ -310,6 +328,7 @@
     "allRegions": "All regions",
     "allStatuses": "All statuses",
     "allTeams": "All teams",
+    "selectedOne": "{{count}} selected",
     "selected": "{{count}} selected",
     "approveSelected": "Approve",
     "publishSelected": "Publish",
@@ -428,7 +447,8 @@
     "alreadyAssigned": "already assigned",
     "selectAgent": "Select an agent…",
     "assign": "Assign",
-    "populateResult": "{{created}} assignment(s) created out of {{total}} total",
+    "populateResultOne": "{{created}} assignment created out of {{total}} total",
+    "populateResult": "{{created}} assignments created out of {{total}} total",
     "bloc": "Bloc",
     "assignedAt": "Assigned on",
     "reassign": "Reassign",
@@ -442,83 +462,21 @@
     "transferFrom": "From agent…",
     "transferTo": "To agent…",
     "thisCampaignOnly": "Limit to this campaign",
-    "transferResult": "{{count}} bloc(s) transferred"
+    "transferResultOne": "{{count}} block transferred",
+    "transferResult": "{{count}} blocks transferred"
   },
   "dataquality": {
-    "eyebrow": "Quality rules, alerts and duplicate detection",
-    "runScan": "Run quality scan",
-    "scanning": "Scanning…",
-    "kpi": {
-      "coverage": "Coverage rate",
-      "accuracy": "Address accuracy score",
-      "duplicate": "Duplicate rate",
-      "openCases": "Open quality cases"
-    },
-    "alerts": "Data quality alerts",
-    "issueType": "Issue type",
-    "ruleTriggered": "Rule triggered",
-    "impacted": "Impacted records",
-    "reviewer": "Reviewer",
-    "statusCol": "Status",
-    "severity.high": "High",
-    "severity.medium": "Medium",
-    "severity.low": "Low",
-    "caseStatus.new": "New",
-    "caseStatus.in_review": "In review",
-    "caseStatus.resolved": "Resolved",
-    "issue": {
-      "duplicate_candidate": "Duplicate candidate",
-      "missing_coordinates": "Missing coordinates",
-      "inconsistent_street": "Inconsistent street naming",
-      "out_of_boundary": "Out-of-boundary property",
-      "missing_building_type": "Missing building type"
-    },
-    "trigger": {
-      "duplicate_detected": "Duplicate address detected",
-      "coordinates_missing": "Coordinates missing",
-      "street_standardization": "Street name standardization",
-      "outside_boundary": "Outside admin boundary",
-      "building_type_required": "Building type required"
-    },
-    "autoRules": "Automated quality rules",
-    "impactedShort": "impacted",
-    "rule": {
-      "missing_coordinates": {
-        "name": "Missing coordinates",
-        "desc": "Flags addresses without valid latitude/longitude."
-      },
-      "duplicate_coordinate": {
-        "name": "Duplicate coordinate",
-        "desc": "Detects potential duplicate address candidates."
-      },
-      "inconsistent_street": {
-        "name": "Inconsistent street naming",
-        "desc": "Identifies street names that do not match standards."
-      },
-      "out_of_boundary": {
-        "name": "Out-of-boundary property",
-        "desc": "Flags properties located outside defined boundaries."
-      },
-      "missing_building_type": {
-        "name": "Missing building type",
-        "desc": "Identifies addresses without a valid building type."
-      }
-    },
-    "coverageByRegion": "Coverage by region",
-    "duplicates": "Detected duplicates",
-    "dupKind": "Type",
-    "dupA": "Address A",
-    "dupB": "Address B",
-    "dupScore": "Score",
-    "merge": "Merge",
-    "dismiss": "Dismiss",
-    "noDuplicates": "No duplicates detected",
-    "kind": {
-      "spatial": "Spatial",
-      "textual": "Textual"
-    },
-    "severityCol": "Severity",
-    "quartier": "Quarter"
+    "eyebrow": "Anti-fraud control queue — field signals",
+    "suspicious": "Flagged surveys",
+    "capturedAt": "Captured on",
+    "distance": "Distance from address",
+    "photos": "Photos",
+    "reasons": "Signals",
+    "noSuspicious": "No flagged survey",
+    "pushedAfterClose": "Post-closure submissions by agent",
+    "agent": "Agent",
+    "pushedCount": "Surveys pushed",
+    "noPushedAfterClose": "No post-closure submission"
   },
   "map": {
     "layers": "Layers",
@@ -641,6 +599,7 @@
     "shops": "Shops",
     "wheelchairAccessible": "Wheelchair accessible",
     "photos": "Photos",
+    "viewPhotosOne": "View the photo",
     "viewPhotos": "View {{count}} photos",
     "mockLocationWarning": "Simulated GPS location detected",
     "notSurveyable": "Not surveyable",
@@ -665,6 +624,15 @@
       "notfound": "Not found",
       "vacantland": "Vacant land",
       "outoftime": "Not processed (out of time)"
+    },
+    "stalled": {
+      "bannerOne": "{{count}} survey stalled — campaign closed, decision pending",
+      "banner": "{{count}} surveys stalled — campaign closed, decision pending",
+      "campaign": "Campaign",
+      "agent": "Agent",
+      "capturedAt": "Captured on",
+      "daysWaiting": "Waiting since",
+      "days": "{{count}} d"
     }
   },
   "period": {

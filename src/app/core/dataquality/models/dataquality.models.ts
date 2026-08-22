@@ -1,52 +1,30 @@
-import { UUID, QualitySeverity, QualityCaseStatus } from '../../models/das.models';
+import { UUID, ISODateTime } from '../../models/das.models';
+import { NotSurveyableReason, SurveyOutcome } from '../../review/models/review.models';
 
-export interface QualityKpis {
-  coverageRate: number;        // %
-  coverageDelta: number;
-  accuracyScore: number;       // /100
-  accuracyDelta: number;
-  duplicateRate: number;       // %
-  duplicateDelta: number;
-  openCases: number;
-  openCasesDelta: number;
-}
-
-export interface QualityRuleRow {
+/** Un relevé signalé par `GET /api/surveys/suspicious`. */
+export interface SuspiciousSurveyItem {
   id: UUID;
-  code: string;
-  nameKey: string;             // dataquality.rule.<code>.name
-  descriptionKey: string;      // dataquality.rule.<code>.desc
-  icon: string;                // tabler icon
-  enabled: boolean;
-  impactedCount: number;
+  adresseId: UUID;
+  agentId: UUID;
+  outcome: SurveyOutcome;
+  notSurveyableReason: NotSurveyableReason | null;
+  capturedAtUtc: ISODateTime;
+  distanceFromAddressM: number | null;
+  gpsAccuracyM: number | null;
+  isMockLocation: boolean;
+  photoCount: number;
+  /** Phrases déjà composées côté back (chiffres interpolés) — affichées telles quelles, sans clé i18n. */
+  reasons: string[];
 }
 
-export interface QualityAlertRow {
-  id: UUID;
-  issueTypeKey: string;        // dataquality.issue.<code>
-  severity: QualitySeverity;
-  quartier: string;
-  ruleTriggeredKey: string;    // dataquality.trigger.<code>
-  impactedRecords: number;
-  assignedReviewer: string | null;
-  status: QualityCaseStatus;
+/** Volume de relevés remontés après clôture, par agent — le signal porte sur le volume, pas la ligne individuelle. */
+export interface AgentPushVolumeItem {
+  agentId: UUID;
+  agentFullName: string;
+  pushedAfterClose: number;
 }
 
-export interface RegionCoverage { region: string; coveragePct: number; }
-
-export interface DuplicateCandidate {
-  id: UUID;
-  kind: 'spatial' | 'textual';
-  addressA: string;
-  addressB: string;
-  scorePct: number;            // similarité / recouvrement
-  quartier: string;
-}
-
-export interface DataQualityData {
-  kpis: QualityKpis;
-  rules: QualityRuleRow[];
-  alerts: QualityAlertRow[];
-  regionCoverage: RegionCoverage[];
-  duplicates: DuplicateCandidate[];
+export interface SuspiciousSurveysData {
+  surveys: SuspiciousSurveyItem[];
+  pushedAfterCloseByAgent: AgentPushVolumeItem[];
 }

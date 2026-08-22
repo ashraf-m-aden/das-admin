@@ -12,7 +12,8 @@ import { AddressUnit } from '../../units/models/units.models';
  */
 export interface AddressListItem {
   id: UUID;
-  addressCode: string;
+  addressCode: string | null; // null tant que pas validé Definitive (cf. §5 CLAUDE.md)
+  libelle: string;            // libellé humain, toujours présent — repli d'affichage quand addressCode est null
   postcode: string | null;   // code postal du quartier de l'adresse
   zone: string | null;       // zone (regroupe des quartiers)
   quartier: string;

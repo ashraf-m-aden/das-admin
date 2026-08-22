@@ -1,9 +1,7 @@
 import { Observable } from 'rxjs';
-import { UUID } from '../../models/das.models';
-import { DataQualityData, QualityRuleRow } from '../models/dataquality.models';
+import { SuspiciousSurveysData } from '../models/dataquality.models';
 
+/** File de contrôle anti-fraude — ne couvre que `/api/surveys/suspicious`, aucune règle configurable côté back. */
 export abstract class DataQualityApiPort {
-  abstract load(): Observable<DataQualityData>;
-  abstract toggleRule(id: UUID, enabled: boolean): Observable<QualityRuleRow>;
-  abstract runScan(): Observable<void>;
+  abstract load(): Observable<SuspiciousSurveysData>;
 }

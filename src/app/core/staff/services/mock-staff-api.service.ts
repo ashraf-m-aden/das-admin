@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { StaffApiPort } from './staff-api.port';
-import { CreateStaffPayload, SetRolesPayload, StaffListQuery, StaffMember } from '../models/staff.models';
+import { AgentProductivity, CreateStaffPayload, SetRolesPayload, StaffListQuery, StaffMember } from '../models/staff.models';
 import { UUID } from '../../models/das.models';
 
 @Injectable({ providedIn: 'root' })
@@ -58,5 +58,33 @@ export class MockStaffApiService extends StaffApiPort {
     const updated: StaffMember = { ...existing, isActive };
     this.staff = this.staff.map((s) => (s.id === id ? updated : s));
     return of(updated).pipe(delay(300));
+  }
+
+  private productivity: AgentProductivity[] = [
+    {
+      campaignId: 'campaign-0001',
+      campaignCode: 'C2026-1',
+      campaignName: 'Recensement Boulaos 2026',
+      agentId: 'mock-surveyor-0001',
+      agentFullName: 'Idriss Agent',
+      total: 42,
+      byStatus: { draft: 4, submitted: 8, validated: 28, rejected: 2 },
+    },
+    {
+      campaignId: 'campaign-0001',
+      campaignCode: 'C2026-1',
+      campaignName: 'Recensement Boulaos 2026',
+      agentId: 'mock-surveyor-0002',
+      agentFullName: 'Warsama Robleh',
+      total: 17,
+      byStatus: { draft: 1, submitted: 3, validated: 11, rejected: 2 },
+    },
+  ];
+
+  override getProductivity(campaignId: UUID | null, agentId: UUID | null): Observable<AgentProductivity[]> {
+    const items = this.productivity.filter(
+      (p) => (!campaignId || p.campaignId === campaignId) && (!agentId || p.agentId === agentId),
+    );
+    return of(items).pipe(delay(MockStaffApiService.SIMULATED_LATENCY_MS));
   }
 }

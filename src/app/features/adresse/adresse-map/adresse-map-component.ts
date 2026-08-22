@@ -35,7 +35,7 @@ export class AdresseMapComponent implements OnInit {
       .filter((a) => a.geom)
       .map((a) => ({
         id: a.id, layerId: 'adresse', geometry: a.geom,
-        color: STAGE_COLORS[a.workflowStage], label: a.addressCode,
+        color: STAGE_COLORS[a.workflowStage], label: a.addressCode ?? a.libelle,
       })),
   );
 

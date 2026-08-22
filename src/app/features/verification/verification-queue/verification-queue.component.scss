@@ -5,6 +5,15 @@
 .vq__error { padding: v.$space-3 v.$space-4; background: var(--color-danger-bg); color: var(--color-danger); border-radius: v.$radius-md; font-size: v.$font-size-sm; }
 
 .vq__tabs { display: inline-flex; padding: 3px; gap: 2px; background: var(--color-surface-alt); border: 1px solid var(--color-border); border-radius: v.$radius-sm; align-self: flex-start; }
+
+.stalled { border: 1px solid var(--color-warning); background: var(--color-warning-bg); border-radius: v.$radius-md; overflow: hidden; }
+.stalled__toggle { width: 100%; display: flex; align-items: center; gap: v.$space-2; padding: v.$space-3 v.$space-4; background: none; border: none; font: inherit; font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; color: #92400e; cursor: pointer;
+  i:last-child { margin-left: auto; } }
+.stalled__list { border-top: 1px solid var(--color-warning); padding: 0 v.$space-4; }
+.stalled__head, .stalled__row { display: grid; grid-template-columns: 1fr 1.4fr 1.2fr 1fr; gap: v.$space-2; padding: v.$space-2 0; font-size: v.$font-size-sm; }
+.stalled__head { font-size: v.$font-size-xs; color: #92400e; opacity: 0.8; border-bottom: 1px solid var(--color-warning); }
+.stalled__row { color: var(--color-text-primary); border-bottom: 1px solid var(--color-warning); &:last-child { border-bottom: none; } }
+.stalled__days { font-weight: v.$font-weight-medium; color: var(--color-danger); }
 .tab { height: 30px; padding: 0 v.$space-3; border: none; background: transparent; border-radius: calc(#{v.$radius-sm} - 2px); font: inherit; font-size: v.$font-size-sm; color: var(--color-text-secondary); cursor: pointer;
   &--on { background: var(--color-surface); color: var(--color-accent); font-weight: v.$font-weight-medium; } }
 

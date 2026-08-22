@@ -1,10 +1,12 @@
 import { Observable } from 'rxjs';
 import { UUID } from '../../models/das.models';
-import { CreateStaffPayload, SetRolesPayload, StaffListQuery, StaffMember } from '../models/staff.models';
+import { AgentProductivity, CreateStaffPayload, SetRolesPayload, StaffListQuery, StaffMember } from '../models/staff.models';
 
 export abstract class StaffApiPort {
   abstract list(query: StaffListQuery): Observable<StaffMember[]>;
   abstract create(payload: CreateStaffPayload): Observable<StaffMember>;
   abstract setRoles(id: UUID, payload: SetRolesPayload): Observable<StaffMember>;
   abstract setActive(id: UUID, isActive: boolean): Observable<StaffMember>;
+  /** Relevés par agent, ventilés par statut — période bornée par la campagne, pas par des dates. */
+  abstract getProductivity(campaignId: UUID | null, agentId: UUID | null): Observable<AgentProductivity[]>;
 }

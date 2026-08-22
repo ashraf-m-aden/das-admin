@@ -1,11 +1,41 @@
 <das-page-header [eyebrow]="'staff.eyebrow' | transloco" [title]="'nav.users' | transloco">
   <div actions class="st-actions" [formGroup]="filterForm">
     <label class="st-search"><i class="ti ti-search" aria-hidden="true"></i><input type="text" formControlName="search" [attr.placeholder]="'common.search' | transloco" /></label>
+    <button type="button" class="st-productivity" [class.st-productivity--on]="showProductivity()" (click)="toggleProductivity()"><i class="ti ti-chart-bar" aria-hidden="true"></i>{{ 'staff.productivity.toggle' | transloco }}</button>
     <button type="button" class="st-new" (click)="toggleCreateForm()"><i class="ti ti-plus" aria-hidden="true"></i>{{ 'staff.add' | transloco }}</button>
   </div>
 </das-page-header>
 
 <div class="staff">
+  @if (showProductivity()) {
+    <section class="das-card table-card">
+      <div class="phead">
+        <span>{{ 'staff.productivity.campaign' | transloco }}</span>
+        <span>{{ 'staff.productivity.agent' | transloco }}</span>
+        <span>{{ 'staff.productivity.total' | transloco }}</span>
+        <span>{{ 'staff.productivity.draft' | transloco }}</span>
+        <span>{{ 'staff.productivity.submitted' | transloco }}</span>
+        <span>{{ 'staff.productivity.validated' | transloco }}</span>
+        <span>{{ 'staff.productivity.rejected' | transloco }}</span>
+      </div>
+      @if (isProductivityLoading$ | async) {
+        <div class="empty">{{ 'common.loading' | transloco }}</div>
+      } @else {
+        @for (p of (productivity$ | async) ?? []; track p.campaignId + p.agentId) {
+          <div class="prow">
+            <span>{{ p.campaignCode }}</span>
+            <span>{{ p.agentFullName }}</span>
+            <span class="prow__num">{{ p.total }}</span>
+            <span class="prow__num">{{ p.byStatus.draft }}</span>
+            <span class="prow__num">{{ p.byStatus.submitted }}</span>
+            <span class="prow__num prow__num--ok">{{ p.byStatus.validated }}</span>
+            <span class="prow__num prow__num--bad">{{ p.byStatus.rejected }}</span>
+          </div>
+        } @empty { <div class="empty">{{ 'staff.productivity.empty' | transloco }}</div> }
+      }
+    </section>
+  }
+
   @if (showCreateForm()) {
     <section class="das-card create" [formGroup]="createForm">
       <div class="create__grid">
