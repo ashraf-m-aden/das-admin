@@ -35,7 +35,7 @@ export class DashboardComponent implements OnInit {
     const s = this.summary();
     if (!s) return [];
     const total = s.totalRecords || 1;
-    const byStage = new Map(s.workflowBreakdown.map((w) => [w.stage, w.count]));
+    const byStage = new Map((s.workflowBreakdown ?? []).map((w) => [w.stage, w.count]));
     return WORKFLOW_STAGES.map((stage, i) => {
       const cumulative = WORKFLOW_STAGES.slice(i).reduce((sum, st) => sum + (byStage.get(st) ?? 0), 0);
       return { stage, count: cumulative, percent: Math.round((cumulative / total) * 100) };
@@ -47,7 +47,7 @@ export class DashboardComponent implements OnInit {
     const s = this.summary();
     if (!s) return null;
     const total = s.totalRecords || 1;
-    const byStage = new Map(s.workflowBreakdown.map((w) => [w.stage, w.count]));
+    const byStage = new Map((s.workflowBreakdown ?? []).map((w) => [w.stage, w.count]));
     const verified = (byStage.get('verified') ?? 0) + (byStage.get('approved') ?? 0) + (byStage.get('published') ?? 0);
     const pending = byStage.get('surveyed') ?? 0;
     const unverified = byStage.get('registered') ?? 0;

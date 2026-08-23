@@ -17,6 +17,26 @@ const HIGHLIGHT = '#2563eb';
 const NONE = '___none___';
 
 /**
+ * Couches de voirie du fond de carte à CONSERVER quand `basemapRoadsOnly` est actif.
+ * Testé sur l'id de couche : les schémas OpenMapTiles (CARTO Positron) nomment
+ * `road_*`, mais aussi `bridge_*` / `tunnel_*` pour les mêmes tronçons — les omettre
+ * troue le réseau aux ponts et tunnels. Les libellés de rue (`roadname_*`) sont des
+ * couches `symbol` : elles matchent aussi et sont conservées.
+ */
+const BASEMAP_ROAD_LAYER_ID = /road|street|highway|motorway|trunk|primary|secondary|tertiary|bridge|tunnel/i;
+
+/** Voie ferrée / ferry / téléphérique : matchent `tunnel_*` ou `bridge_*` sans être de la voirie. */
+const BASEMAP_NON_ROAD_LAYER_ID = /rail|ferry|aerialway|pier/i;
+
+/**
+ * Sources de DONNÉES D.A.S dans `map-style.json` (à distinguer du fond de carte).
+ * Aucune couche adossée à ces sources n'est jamais masquée par `basemapRoadsOnly` :
+ * plusieurs écrans (dashboard, rapports) affichent ces tuiles SANS déclarer de
+ * `TileLayerBinding` — s'appuyer sur les seuls bindings les ferait disparaître.
+ */
+const DAS_TILE_SOURCES = new Set(['blocs', 'adresses']);
+
+/**
  * Groupe de couches issues du STYLE DE BASE (map-style.json) que l'on peut
  * afficher/masquer ensemble via une seule case à cocher.
  * À distinguer de MapLayerConfig, qui pilote l'overlay GeoJSON dynamique.
@@ -60,6 +80,12 @@ export class DasMapComponent implements OnInit, OnDestroy {
   readonly fitBbox = input<[number, number, number, number] | null>(null);
   readonly selectedId = input<string | null>(null);
   readonly showLayerControl = input<boolean>(true);
+  /**
+   * Réduit le fond de carte à la seule voirie : toutes les autres couches du style
+   * de base (bâti, POI, eau, limites, libellés) passent en `visibility: none`.
+   * Ne touche jamais aux couches de D.A.S (overlays GeoJSON, tuiles Martin).
+   */
+  readonly basemapRoadsOnly = input<boolean>(true);
 
   readonly featureSelect = output<string>();
 
@@ -163,6 +189,9 @@ export class DasMapComponent implements OnInit, OnDestroy {
     this.resizeObserver.observe(this.mapContainer().nativeElement);
 
     map.on('load', () => {
+      // AVANT buildLayers : à ce stade le style ne contient que le fond de carte,
+      // aucune de nos couches overlay ne peut être masquée par erreur.
+      if (this.basemapRoadsOnly()) this.hideNonRoadBasemapLayers();
       this.buildLayers();
       this.wireTileInteractions();
       this.loaded = true;
@@ -175,6 +204,36 @@ export class DasMapComponent implements OnInit, OnDestroy {
       const bbox = this.fitBbox();
       if (bbox) this.applyFitBbox(bbox);
     });
+  }
+
+  /**
+   * Masque toutes les couches du STYLE DE BASE sauf la voirie : les lignes de
+   * tronçons ET les libellés de rue (`roadname_*`, couches `symbol`).
+   * - `background` est conservé (sinon le canvas devient transparent) ;
+   * - les couches déclarées par `tileLayers` / `basemapLayers` (Blocs, Adresses,
+   *   contours cadastraux) sont exclues : leur visibilité reste pilotée par le
+   *   panneau des couches, pas par ce filtre.
+   * En mode réel le style maison ne porte aucune voirie : la méthode est un no-op utile
+   * (il n'y a que `bg` + nos couches), le rendu ne change pas.
+   */
+  private hideNonRoadBasemapLayers(): void {
+    const map = this.map!;
+    const ours = new Set<string>([
+      ...this.tileLayers().flatMap((t) => t.styleLayerIds),
+      ...this.basemapLayers().flatMap((b) => b.styleLayerIds),
+    ]);
+
+    for (const layer of map.getStyle().layers ?? []) {
+      if (layer.type === 'background' || ours.has(layer.id)) continue;
+      const source = 'source' in layer ? layer.source : undefined;
+      if (typeof source === 'string' && DAS_TILE_SOURCES.has(source)) continue;
+
+      const isRoad =
+        (layer.type === 'line' || layer.type === 'symbol') &&
+        BASEMAP_ROAD_LAYER_ID.test(layer.id) &&
+        !BASEMAP_NON_ROAD_LAYER_ID.test(layer.id);
+      if (!isRoad) map.setLayoutProperty(layer.id, 'visibility', 'none');
+    }
   }
 
   /** Crée une source (vide) + les couches de rendu et de highlight pour chaque couche déclarée. */
