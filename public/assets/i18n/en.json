@@ -33,7 +33,18 @@
     "cancel": "Cancel",
     "back": "Back",
     "error": "Something went wrong",
-    "apply": "Apply"
+    "apply": "Apply",
+    "mockBadge": "Mock",
+    "mockBadgeHint": "This screen shows demo data: no backend wired yet."
+  },
+  "mockBadge": {
+    "postcodes": "The backend doesn't compute postcodes through an exposed contract yet — demo data.",
+    "notifications": "No /api/notifications route on the backend — event mapping awaiting a business decision.",
+    "reports": "No reporting route on the backend.",
+    "audit": "No /api/audit route on the backend — no audit log exposed.",
+    "clients": "No /api/clients route on the backend — commercial API module, outside current backend scope.",
+    "integrations": "No /api/integrations route on the backend.",
+    "settings": "No /api/road-types or /api/map-import route on the backend."
   },
   "auth": {
     "title": "Sign in",

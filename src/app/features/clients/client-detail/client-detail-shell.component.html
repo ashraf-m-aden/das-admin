@@ -1,5 +1,5 @@
 @if (client$ | async; as client) {
-  <das-page-header [eyebrow]="client.contactName + ' · ' + client.email" [title]="client.companyName">
+  <das-page-header [eyebrow]="client.contactName + ' · ' + client.email" [title]="client.companyName" feature="clients">
     <div actions class="cd-actions">
       <a class="cd-btn" [routerLink]="['/clients', clientId, 'edit']"><i class="ti ti-pencil" aria-hidden="true"></i>{{ 'clients.edit' | transloco }}</a>
       <a class="cd-btn cd-btn--ghost" routerLink="/clients"><i class="ti ti-arrow-left" aria-hidden="true"></i>{{ 'common.back' | transloco }}</a>

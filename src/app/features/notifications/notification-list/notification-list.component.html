@@ -1,4 +1,4 @@
-<das-page-header [eyebrow]="(('notifications.unreadCount' | transloco: { count: ((unreadCount$ | async) ?? 0) }))" [title]="'nav.notifications' | transloco">
+<das-page-header [eyebrow]="(('notifications.unreadCount' | transloco: { count: ((unreadCount$ | async) ?? 0) }))" [title]="'nav.notifications' | transloco" feature="notifications">
   <button actions type="button" class="nt-mark" (click)="markAllAsRead()"><i class="ti ti-checks" aria-hidden="true"></i>{{ 'notifications.markAll' | transloco }}</button>
 </das-page-header>
 

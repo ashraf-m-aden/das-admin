@@ -17,6 +17,12 @@
     letter-spacing: 0.2px;
   }
 
+  &__title-row {
+    display: flex;
+    align-items: center;
+    gap: v.$space-2;
+  }
+
   &__title {
     margin: 0;
     font-size: v.$font-size-lg;

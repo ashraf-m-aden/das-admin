@@ -33,7 +33,18 @@
     "cancel": "Annuler",
     "back": "Retour",
     "error": "Une erreur est survenue",
-    "apply": "Appliquer"
+    "apply": "Appliquer",
+    "mockBadge": "Mock",
+    "mockBadgeHint": "Cet écran affiche des données de démonstration : aucun backend câblé pour l'instant."
+  },
+  "mockBadge": {
+    "postcodes": "Le back ne calcule pas encore les codes postaux via un contrat exposé — écran en données de démonstration.",
+    "notifications": "Aucune route /api/notifications côté backend — mapping des événements en attente d'arbitrage métier.",
+    "reports": "Aucune route de rapports côté backend.",
+    "audit": "Aucune route /api/audit côté backend — pas de journal d'audit exposé.",
+    "clients": "Aucune route /api/clients côté backend — module de l'API commerciale, hors périmètre backend actuel.",
+    "integrations": "Aucune route /api/integrations côté backend.",
+    "settings": "Aucune route /api/road-types ni /api/map-import côté backend."
   },
   "auth": {
     "title": "Connexion",

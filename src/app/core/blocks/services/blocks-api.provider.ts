@@ -2,14 +2,11 @@ import { Provider, inject } from '@angular/core';
 import { BlocksApiPort } from './blocks-api.port';
 import { BlocksApiService } from './blocks-api.service';
 import { MockBlocksApiService } from './mock-blocks-api.service';
-import { AppConfigService } from '../../config/app-config.service';
+import { shouldUseMock } from '../../config/backend-readiness';
 
 export function provideBlocksApi(): Provider {
   return {
     provide: BlocksApiPort,
-    useFactory: () => {
-      const useMock = inject(AppConfigService).get('useMockApi');
-      return useMock ? inject(MockBlocksApiService) : inject(BlocksApiService);
-    },
+    useFactory: () => shouldUseMock('blocks') ? inject(MockBlocksApiService) : inject(BlocksApiService),
   };
 }

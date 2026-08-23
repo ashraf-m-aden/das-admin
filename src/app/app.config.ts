@@ -36,7 +36,6 @@ import { provideClientsApi } from './core/clients/services/clients-api.provider'
 import { clientsFeature } from './core/clients/store/clients.reducer';
 import { ClientsEffects } from './core/clients/store/clients.effects';
 import { FeedbackEffects } from './core/ui/feedback.effects';
-import { AppConfigService } from './core/config/app-config.service';
 import { DataQualityApiPort } from './core/dataquality/services/dataquality-api.port';
 import { MockDataQualityApiService } from './core/dataquality/services/mock-dataquality-api.service';
 import { FieldOpsApiPort } from './core/fieldops/services/fieldops-api.port';
@@ -70,7 +69,7 @@ import { MockReferenceApiService } from './core/reference/services/mock-referenc
 import { UnitsApiPort } from './core/units/services/units-api.port';
 import { UnitsApiService } from './core/units/services/units-api.service';
 import { MockUnitsApiService } from './core/units/services/mock-units-api.service';
-const useMock = () => inject(AppConfigService).get('useMockApi');
+import { shouldUseMock } from './core/config/backend-readiness';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideHttpClient(withInterceptors([authInterceptor])),
@@ -112,24 +111,22 @@ export const appConfig: ApplicationConfig = {
       ClientsEffects,
       FeedbackEffects
     ]),
-    { provide: PostcodesApiPort, useFactory: () => useMock() ? inject(MockPostcodesApiService) : inject(PostcodesApiService) },
+    { provide: PostcodesApiPort, useFactory: () => shouldUseMock('postcodes') ? inject(MockPostcodesApiService) : inject(PostcodesApiService) },
     {
       provide: HierarchyApiPort,
-      useFactory: (config: AppConfigService, mock: HierarchyMockService, real: HierarchyApiService) =>
-        config.get('useMockApi') ? mock : real,
-      deps: [AppConfigService, HierarchyMockService, HierarchyApiService],
+      useFactory: () => shouldUseMock('hierarchy') ? inject(HierarchyMockService) : inject(HierarchyApiService),
     },
-    { provide: FieldOpsApiPort, useFactory: () => useMock() ? inject(MockFieldOpsApiService) : inject(FieldOpsApiService) },
-    { provide: DataQualityApiPort, useFactory: () => useMock() ? inject(MockDataQualityApiService) : inject(DataQualityApiService) },
-    { provide: ReportsApiPort, useFactory: () => useMock() ? inject(MockReportsApiService) : inject(ReportsApiService) },
-    { provide: IntegrationsApiPort, useFactory: () => useMock() ? inject(MockIntegrationsApiService) : inject(IntegrationsApiService) },
-    { provide: AuditApiPort, useFactory: () => useMock() ? inject(MockAuditApiService) : inject(AuditApiService) },
+    { provide: FieldOpsApiPort, useFactory: () => shouldUseMock('fieldops') ? inject(MockFieldOpsApiService) : inject(FieldOpsApiService) },
+    { provide: DataQualityApiPort, useFactory: () => shouldUseMock('dataquality') ? inject(MockDataQualityApiService) : inject(DataQualityApiService) },
+    { provide: ReportsApiPort, useFactory: () => shouldUseMock('reports') ? inject(MockReportsApiService) : inject(ReportsApiService) },
+    { provide: IntegrationsApiPort, useFactory: () => shouldUseMock('integrations') ? inject(MockIntegrationsApiService) : inject(IntegrationsApiService) },
+    { provide: AuditApiPort, useFactory: () => shouldUseMock('audit') ? inject(MockAuditApiService) : inject(AuditApiService) },
     {
       provide: AdresseApiPort,
-      useFactory: () => (useMock() ? inject(MockAdresseApiService) : inject(AdresseApiService)),
+      useFactory: () => (shouldUseMock('adresse') ? inject(MockAdresseApiService) : inject(AdresseApiService)),
     },
-    { provide: ReferenceApiPort, useFactory: () => useMock() ? inject(MockReferenceApiService) : inject(ReferenceApiService) },
-    { provide: UnitsApiPort, useFactory: () => useMock() ? inject(MockUnitsApiService) : inject(UnitsApiService) },
+    { provide: ReferenceApiPort, useFactory: () => shouldUseMock('reference') ? inject(MockReferenceApiService) : inject(ReferenceApiService) },
+    { provide: UnitsApiPort, useFactory: () => shouldUseMock('units') ? inject(MockUnitsApiService) : inject(UnitsApiService) },
 
     { provide: ENVIRONMENT_INITIALIZER, multi: true, useValue: () => inject(ThemeService) },
     provideStoreDevtools({ maxAge: 25, logOnly: false }),

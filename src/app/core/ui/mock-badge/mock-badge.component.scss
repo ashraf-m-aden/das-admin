@@ -1,0 +1,17 @@
+@use "styles/variables" as v;
+
+.mock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: v.$space-1;
+  height: 22px;
+  padding: 0 v.$space-2;
+  border-radius: v.$radius-full;
+  background: var(--das-amber-100);
+  color: #b45309;
+  font-size: v.$font-size-xs;
+  font-weight: v.$font-weight-medium;
+  cursor: help;
+
+  i { font-size: 12px; }
+}
