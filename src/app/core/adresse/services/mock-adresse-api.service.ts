@@ -37,11 +37,15 @@ function squareWkt(lng: number, lat: number, size: number): string {
   return `MULTIPOLYGON(((${ring.map(([x, y]) => `${x} ${y}`).join(', ')})))`;
 }
 
-/** Champs supplémentaires que le back renvoie déjà sur `AdresseResponse` (numero, boundaryWkt), pas encore utiles à la liste. `blocId` : concept interne au mock, pour reproduire l'unicité « numéro dans le bloc » sur `update()`. */
+/**
+ * Champs supplémentaires que le back renvoie déjà sur `AdresseResponse` (numero, boundaryWkt),
+ * pas encore utiles à la liste. `closeId` : concept interne au mock, pour reproduire l'unicité
+ * « numéro de maison dans la CLOSE » (décision du 2026-08-23, cf. docs/plans/adressage.md §2.3).
+ */
 interface MockAddressRecord extends AddressListItem {
   numero: number;
   boundaryWkt: string;
-  blocId: string;
+  closeId: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -71,7 +75,7 @@ export class MockAdresseApiService extends AdresseApiPort {
       geom: squareMulti(lng, lat, 0.0028),
       numero: (i % 30) + 1,
       boundaryWkt: squareWkt(lng, lat, 0.0028),
-      blocId: `bloc-${quartier}-${Math.floor(i / 6)}`,
+      closeId: `close-${quartier}-${Math.floor(i / 6)}`,
     };
   });
 
@@ -149,9 +153,9 @@ export class MockAdresseApiService extends AdresseApiPort {
     const base = this.records.find((r) => r.id === id);
     if (!base) return throwError(() => ({ code: 'Adresses.NotFound', message: 'Adresse introuvable.' }));
 
-    const numeroTaken = this.records.some((r) => r.blocId === base.blocId && r.numero === payload.numero && r.id !== id);
+    const numeroTaken = this.records.some((r) => r.closeId === base.closeId && r.numero === payload.numero && r.id !== id);
     if (numeroTaken) {
-      return throwError(() => ({ code: 'Adresses.NumeroTaken', message: "Ce numéro d'adresse est déjà utilisé dans ce bloc." }))
+      return throwError(() => ({ code: 'Adresses.NumeroTaken', message: "Ce numéro d'adresse est déjà utilisé dans cette close." }))
         .pipe(delay(MockAdresseApiService.LATENCY));
     }
 

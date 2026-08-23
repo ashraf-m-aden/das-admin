@@ -46,7 +46,7 @@ export interface LinkedRecord { id: UUID; kind: LinkedRecordKind; label: string;
 
 /** Adresse enrichie pour le tiroir de détail (details / linked). Pas d'onglet historique : `history` toujours vide côté back. */
 export interface AddressDetail extends AddressListItem {
-  /** Numéro de l'adresse dans son bloc — champ à éditer via `update()`. */
+  /** Numéro de l'adresse, unique dans sa CLOSE depuis le 2026-08-23 (plus dans le bloc) — champ à éditer via `update()`. */
   numero: number;
   /**
    * Emprise MULTIPOLYGON/POLYGON WKT (SRID 4326) telle que renvoyée par le back.
