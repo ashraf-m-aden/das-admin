@@ -270,6 +270,13 @@ existent (`GpsAccuracyM`, `DistanceFromAddressM`, `IsMockLocation`), la formule 
 
 ### 3.7 `addressCode` (`DJ-BLS-Q7-0042`) — n'existe pas, mais est presque dérivable
 
+> ⚠️ **SECTION PÉRIMÉE (constat du 2026-08-23).** Le format décrit ci-dessous — alphanumérique,
+> avec préfixe pays `DJ` et code de commune — **a été abandonné le 2026-08-18**. Le format réel
+> est **entièrement numérique** (`77-007-7-42`), sans préfixe pays ni segment commune, et il
+> **existe** : implémenté dans `AddressCodeGenerator`, figé à la validation `Definitive` d'un
+> relevé. Voir **`docs/plans/adressage.md`**, qui fait autorité sur le sujet. La suite de cette
+> section n'est conservée que comme trace de l'analyse d'origine.
+
 On a `Adresse.Numero` (int) et le `Libelle` composé. Le format proposé se décompose :
 `BLS` = `Commune.Code` ✅, `Q7` = `Quartier.Code` ✅, `0042` = `Numero` ✅, et **`DJ` =
 l'indicatif pays ISO 3166** de Djibouti — donc une **constante**, pas une donnée à modéliser.

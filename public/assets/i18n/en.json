@@ -18,6 +18,7 @@
     "notifications": "Notifications",
     "logout": "Logout",
     "blocks": "Blocks",
+    "closes": "Closes",
     "addressing": "Addressing",
     "review": "Data review",
     "staff": "Staff",
@@ -38,6 +39,7 @@
     "mockBadgeHint": "This screen shows demo data: no backend wired yet."
   },
   "mockBadge": {
+    "closes": "No /api/closes route on the backend — the entity does not exist yet (see docs/plans/adressage.md §3.3).",
     "notifications": "No /api/notifications route on the backend — event mapping awaiting a business decision.",
     "reports": "No reporting route on the backend.",
     "audit": "No /api/audit route on the backend — no audit log exposed.",
@@ -94,7 +96,7 @@
   "alerts": {
     "redo_overdue": "Redo overdue on {{code}}",
     "task_overdue": "Task overdue on {{code}}",
-    "block_stalled": "Close {{code}} stalled"
+    "block_stalled": "Block {{code}} stalled"
   },
   "dashboard": {
     "eyebrow": "Overview",
@@ -110,6 +112,28 @@
     "production": "Production (surveys)",
     "viewCampaign": "View campaign",
     "quickActions": "Quick access"
+  },
+  "closes": {
+    "eyebrow": "Groups of blocks — the number is part of the address code",
+    "pickQuartier": "Pick a quarter to see its closes.",
+    "listTitle": "Closes in this quarter",
+    "new": "New close",
+    "newTitle": "New close",
+    "editTitle": "Edit close",
+    "name": "Name",
+    "namePlaceholder": "e.g. Cité du Corail",
+    "number": "Number",
+    "numberHint": "Unique within the quarter. It is the 3rd segment of the address code (77-007-3-7-42).",
+    "pickBlocs": "Blocks in this close ({{count}})",
+    "pickBlocsHint": "Tick them in the list, or click a block directly on the map.",
+    "blocCount": "{{count}} block(s)",
+    "blocTaken": "already taken",
+    "noBlocs": "No block in this quarter",
+    "empty": "No close in this quarter",
+    "legendSelected": "Selected",
+    "legendTaken": "Taken by another close",
+    "errorNumberUsed": "A close already uses this number in this quarter.",
+    "errorBlocTaken": "One of the blocks already belongs to another close."
   },
   "blocks": {
     "eyebrow": "Djibouti City · Boulaos",
@@ -138,7 +162,7 @@
   "addressing": {
     "title": "Addressing",
     "eyebrow": "Djibouti City · Boulaos",
-    "blockNaming": "Close naming",
+    "blockNaming": "Block naming",
     "streetNaming": "Street naming",
     "propertyNumbering": "Numbering",
     "onlyUnnamed": "Unnamed only",
@@ -254,7 +278,7 @@
     "markAll": "Mark all read",
     "empty": "No notifications",
     "task_completed": "Task completed on {{code}}",
-    "block_submitted": "Close {{code}} submitted",
+    "block_submitted": "Block {{code}} submitted",
     "property_approved": "Property {{code}} approved",
     "property_needs_redo": "Property {{code}} needs redo",
     "redo_resolved": "Redo resolved on {{code}}"
@@ -293,8 +317,8 @@
   "feedback": {
     "saved": "Saved",
     "error": "Action failed",
-    "blockAssigned": "Close assigned",
-    "blockNamed": "Close name saved",
+    "blockAssigned": "Block assigned",
+    "blockNamed": "Block name saved",
     "reviewApproved": "Submission approved",
     "reviewRejected": "Sent back for redo",
     "clientCreated": "Client created",

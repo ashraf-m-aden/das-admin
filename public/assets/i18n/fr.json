@@ -18,6 +18,7 @@
     "notifications": "Notifications",
     "logout": "Déconnexion",
     "blocks": "Blocs",
+    "closes": "Closes",
     "addressing": "Adressage",
     "review": "Revue des données",
     "staff": "Personnel",
@@ -38,6 +39,7 @@
     "mockBadgeHint": "Cet écran affiche des données de démonstration : aucun backend câblé pour l'instant."
   },
   "mockBadge": {
+    "closes": "Aucune route /api/closes côté backend — l'entité n'existe pas encore (cf. docs/plans/adressage.md §3.3).",
     "notifications": "Aucune route /api/notifications côté backend — mapping des événements en attente d'arbitrage métier.",
     "reports": "Aucune route de rapports côté backend.",
     "audit": "Aucune route /api/audit côté backend — pas de journal d'audit exposé.",
@@ -110,6 +112,28 @@
     "production": "Production (relevés)",
     "viewCampaign": "Voir la campagne",
     "quickActions": "Accès rapide"
+  },
+  "closes": {
+    "eyebrow": "Regroupements de blocs — le numéro entre dans le code d'adresse",
+    "pickQuartier": "Choisissez un quartier pour voir ses closes.",
+    "listTitle": "Closes du quartier",
+    "new": "Nouvelle close",
+    "newTitle": "Nouvelle close",
+    "editTitle": "Modifier la close",
+    "name": "Nom",
+    "namePlaceholder": "ex. Cité du Corail",
+    "number": "Numéro",
+    "numberHint": "Unique dans le quartier. C'est le 3e segment du code d'adresse (77-007-3-7-42).",
+    "pickBlocs": "Blocs de la close ({{count}})",
+    "pickBlocsHint": "Cochez dans la liste ou cliquez directement un bloc sur la carte.",
+    "blocCount": "{{count}} bloc(s)",
+    "blocTaken": "déjà pris",
+    "noBlocs": "Aucun bloc dans ce quartier",
+    "empty": "Aucune close dans ce quartier",
+    "legendSelected": "Sélectionnés",
+    "legendTaken": "Pris par une autre close",
+    "errorNumberUsed": "Une close porte déjà ce numéro dans ce quartier.",
+    "errorBlocTaken": "Un des blocs appartient déjà à une autre close."
   },
   "blocks": {
     "eyebrow": "Djibouti-ville · Boulaos",

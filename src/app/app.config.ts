@@ -69,6 +69,9 @@ import { MockReferenceApiService } from './core/reference/services/mock-referenc
 import { UnitsApiPort } from './core/units/services/units-api.port';
 import { UnitsApiService } from './core/units/services/units-api.service';
 import { MockUnitsApiService } from './core/units/services/mock-units-api.service';
+import { ClosesApiPort } from './core/closes/services/closes-api.port';
+import { ClosesApiService } from './core/closes/services/closes-api.service';
+import { MockClosesApiService } from './core/closes/services/mock-closes-api.service';
 import { shouldUseMock } from './core/config/backend-readiness';
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -127,6 +130,7 @@ export const appConfig: ApplicationConfig = {
     },
     { provide: ReferenceApiPort, useFactory: () => shouldUseMock('reference') ? inject(MockReferenceApiService) : inject(ReferenceApiService) },
     { provide: UnitsApiPort, useFactory: () => shouldUseMock('units') ? inject(MockUnitsApiService) : inject(UnitsApiService) },
+    { provide: ClosesApiPort, useFactory: () => shouldUseMock('closes') ? inject(MockClosesApiService) : inject(ClosesApiService) },
 
     { provide: ENVIRONMENT_INITIALIZER, multi: true, useValue: () => inject(ThemeService) },
     provideStoreDevtools({ maxAge: 25, logOnly: false }),

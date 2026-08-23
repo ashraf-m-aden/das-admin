@@ -40,6 +40,11 @@ export const routes: Routes = [
       },
       { path: 'review', redirectTo: 'verification', pathMatch: 'full' },
       {
+        path: 'closes',
+        canActivate: [roleGuard(['Admin', 'Superviseur', 'Gestionnaire'])],
+        loadChildren: () => import('./features/closes/closes.routes').then((m) => m.closesRoutes),
+      },
+      {
         path: 'postcodes',
         canActivate: [roleGuard(['Admin', 'Gestionnaire'])],
         loadChildren: () => import('./features/postcodes/postcodes.routes').then((m) => m.postcodesRoutes),
