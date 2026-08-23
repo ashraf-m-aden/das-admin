@@ -42,6 +42,10 @@ export const adresseFeature = createFeature({
       (s) => ({ ...s, isMutating: true })),
     on(AdresseActions.mutationSuccess, (s) => ({ ...s, isMutating: false, selectedIds: [] })),
     on(AdresseActions.mutationFailure, (s) => ({ ...s, isMutating: false })),
+
+    on(AdresseActions.updateAdresse, (s) => ({ ...s, isMutating: true, updateErrorMessageKey: null })),
+    on(AdresseActions.updateAdresseSuccess, (s) => ({ ...s, isMutating: false })),
+    on(AdresseActions.updateAdresseFailure, (s, { errorMessageKey }) => ({ ...s, isMutating: false, updateErrorMessageKey: errorMessageKey })),
   ),
 });
 
@@ -52,4 +56,5 @@ export const {
   selectItems, selectTotal, selectPage, selectPageSize, selectListStatus,
   selectFilters, selectFilterOptions, selectSelectedIds,
   selectDetailOpenId, selectDetail, selectDetailStatus, selectIsMutating,
+  selectUpdateErrorMessageKey,
 } = adresseFeature;

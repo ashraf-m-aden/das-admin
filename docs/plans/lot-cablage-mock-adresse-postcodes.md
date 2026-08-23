@@ -237,6 +237,21 @@ autres rôles plutôt que de laisser un bouton qui finit en 403.
   → **Les quatre partent.** Un bouton mort dans une barre d'action est un bug d'interface : il
   promet une fonction qui n'existe pas.
 
+### 2.3 Implémenté — précisions
+
+- Code d'erreur réel vérifié dans `UpdateAdresseHandler.cs` : **`Adresses.NumeroTaken`** (pas
+  `NumeroAlreadyUsed` comme deviné avant lecture — l'effet et le mock utilisent la vraie valeur).
+- `MockAdresseApiService` gagne un `blocId` synthétique par enregistrement (interne au mock,
+  regroupement de ~6 adresses factices par bloc) pour reproduire l'unicité « numéro dans le
+  bloc » — ce champ n'existe pas dans `AddressListItem`/`AddressDetail`, il ne sert qu'au 409 mock.
+- Édition réservée à `Admin`/`Gestionnaire` (masquée pour les autres rôles dans le tiroir) —
+  première utilisation de `AuthFacade.roles$` pour gater une action dans un écran de liste/détail
+  (jusqu'ici seuls sidebar/topbar gataient par rôle, au niveau de la navigation entière).
+- `errorCode()` (lecture `err.error.code` réel / `err.code` mock direct) introduit dans
+  `AdresseEffects.updateAdresse$` — même mécanisme que celui posé dans `PostcodesFacade` en
+  partie 3, désormais dupliqué deux fois. À factoriser dans un utilitaire partagé si un
+  troisième écran a besoin de la même règle de mapping d'erreur.
+
 ---
 
 ## Partie 3 — Écran « Codes postaux » (refonte complète)
@@ -362,12 +377,11 @@ est en lecture seule sur cet écran : masquer les actions d'édition selon le r�
 ## Ordre d'exécution
 
 1. ✅ **Partie 1** (registre + badge) — commit `1add8ec`.
-2. ✅ **Partie 3** (codes postaux) — voir §3.6.
-3. **Partie 2** (édition d'adresse) — reste à faire. Débloquée depuis l'arbitrage du 2026-08-23 ;
-   le prérequis est d'exposer `boundaryWkt` sur `AddressDetail`.
+2. ✅ **Partie 3** (codes postaux) — voir §3.6, commit `af15fee`.
+3. ✅ **Partie 2** (édition d'adresse) — voir §2.3.
 
-Aucune modification de `dasApi` n'est nécessaire dans ce lot : les trois parties tiennent sur des
-routes existantes.
+**Lot terminé.** Les trois parties sont livrées, sans aucune modification de `dasApi` : tout
+tenait sur des routes déjà exposées.
 
 ## Vérification (à chaque partie)
 

@@ -32,8 +32,14 @@ export class AdresseEffects {
   ));
 
   triggerReload$ = createEffect(() => this.actions$.pipe(
-    ofType(AdresseActions.setFilters, AdresseActions.setPage, AdresseActions.setPageSize, AdresseActions.mutationSuccess),
+    ofType(AdresseActions.setFilters, AdresseActions.setPage, AdresseActions.setPageSize, AdresseActions.mutationSuccess, AdresseActions.updateAdresseSuccess),
     map(() => AdresseActions.loadPage()),
+  ));
+
+  /** Le numéro affiché dans le tiroir doit refléter la valeur enregistrée, pas celle saisie avant validation. */
+  refreshDetailOnUpdate$ = createEffect(() => this.actions$.pipe(
+    ofType(AdresseActions.updateAdresseSuccess),
+    map(({ id }) => AdresseActions.openDetail({ id })),
   ));
 
   loadPage$ = createEffect(() => this.actions$.pipe(
@@ -76,6 +82,21 @@ export class AdresseEffects {
     switchMap(({ payload }) => this.api.bulkUpdate(payload).pipe(
       map(() => AdresseActions.mutationSuccess()),
       catchError(() => of(AdresseActions.mutationFailure({ errorMessageKey: 'common.error' }))),
+    )),
+  ));
+
+  updateAdresse$ = createEffect(() => this.actions$.pipe(
+    ofType(AdresseActions.updateAdresse),
+    switchMap(({ id, payload }) => this.api.update(id, payload).pipe(
+      map(() => AdresseActions.updateAdresseSuccess({ id })),
+      // Erreur mappée par `code`, jamais par `message` (CLAUDE.md §6) — `.error.code` en HTTP réel,
+      // `.code` en direct pour le mock (throwError ne s'enveloppe pas dans `.error`, cf. mock-review-api).
+      catchError((err: unknown) => {
+        const code = (err as { error?: { code?: string }; code?: string })?.error?.code
+          ?? (err as { code?: string })?.code;
+        const errorMessageKey = code === 'Adresses.NumeroTaken' ? 'adresse.errorNumeroTaken' : 'common.error';
+        return of(AdresseActions.updateAdresseFailure({ errorMessageKey }));
+      }),
     )),
   ));
 }

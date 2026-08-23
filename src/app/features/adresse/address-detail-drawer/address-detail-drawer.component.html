@@ -36,7 +36,20 @@
               <div><dt>{{ 'adresse.latitude' | transloco }}</dt><dd>{{ d.location.latitude | number: '1.5-5' }}</dd></div>
               <div><dt>{{ 'adresse.longitude' | transloco }}</dt><dd>{{ d.location.longitude | number: '1.5-5' }}</dd></div>
               <div><dt>{{ 'adresse.parcelNumber' | transloco }}</dt><dd class="mono">{{ d.location.parcelNumber }}</dd></div>
+              <div>
+                <dt>{{ 'adresse.numero' | transloco }}</dt>
+                @if (editingNumero()) {
+                  <dd class="edit-numero">
+                    <input type="number" min="1" class="einput" [ngModel]="editNumeroValue()" (ngModelChange)="editNumeroValue.set($event)" />
+                    <button type="button" class="abtn abtn--save" [disabled]="isMutating$ | async" (click)="saveNumero(d)">{{ 'common.save' | transloco }}</button>
+                    <button type="button" class="abtn" (click)="cancelEditNumero()">{{ 'common.cancel' | transloco }}</button>
+                  </dd>
+                } @else {
+                  <dd class="mono">{{ d.numero }}</dd>
+                }
+              </div>
             </dl>
+            @if (updateErrorMessageKey$ | async; as err) { <div class="notes notes--warning">{{ err | transloco }}</div> }
           </div>
           <div class="section">
             <div class="section__title">{{ 'adresse.propertyInfo' | transloco }}</div>
@@ -63,7 +76,9 @@
           }
           <div class="actions">
             <button type="button" class="abtn"><i class="ti ti-map-pin" aria-hidden="true"></i>{{ 'adresse.viewOnMap' | transloco }}</button>
-            <button type="button" class="abtn"><i class="ti ti-pencil" aria-hidden="true"></i>{{ 'adresse.editAddress' | transloco }}</button>
+            @if (canEdit()) {
+              <button type="button" class="abtn" (click)="startEditNumero(d)"><i class="ti ti-pencil" aria-hidden="true"></i>{{ 'adresse.editAddress' | transloco }}</button>
+            }
           </div>
         }
         @case ('linked') {

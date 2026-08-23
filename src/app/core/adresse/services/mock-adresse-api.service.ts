@@ -5,7 +5,7 @@ import { AdresseApiPort } from './adresse-api.port';
 import { AddressWorkflowStage, UUID } from '../../models/das.models';
 import {
   AddressDetail, AddressListItem, BulkUpdatePayload,
-  AdresseFilterOptions, AdressePageResult, AdresseQuery, AdresseSummary,
+  AdresseFilterOptions, AdressePageResult, AdresseQuery, AdresseSummary, UpdateAdressePayload,
 } from '../models/adresse.models';
 
 const QUARTIERS = ['Balbala', 'Héron', 'Centre-ville', 'Le Plateau', 'Arhiba'];
@@ -31,11 +31,24 @@ function squareMulti(lng: number, lat: number, size: number): GeoJSONMultiPolygo
     ]]]
   };
 }
+function squareWkt(lng: number, lat: number, size: number): string {
+  const h = size / 2;
+  const ring = [[lng - h, lat - h], [lng + h, lat - h], [lng + h, lat + h], [lng - h, lat + h], [lng - h, lat - h]];
+  return `MULTIPOLYGON(((${ring.map(([x, y]) => `${x} ${y}`).join(', ')})))`;
+}
+
+/** Champs supplémentaires que le back renvoie déjà sur `AdresseResponse` (numero, boundaryWkt), pas encore utiles à la liste. `blocId` : concept interne au mock, pour reproduire l'unicité « numéro dans le bloc » sur `update()`. */
+interface MockAddressRecord extends AddressListItem {
+  numero: number;
+  boundaryWkt: string;
+  blocId: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class MockAdresseApiService extends AdresseApiPort {
   private static readonly LATENCY = 380;
 
-  private records: AddressListItem[] = Array.from({ length: 47 }, (_, i) => {
+  private records: MockAddressRecord[] = Array.from({ length: 47 }, (_, i) => {
 
     const n = 12345 + i;
     const lng = 43.134 + (i % 8) * 0.0045;
@@ -56,6 +69,9 @@ export class MockAdresseApiService extends AdresseApiPort {
       lastUpdate: new Date(2026, 6, 1 + (i % 28), 9, (i * 7) % 60).toISOString(),
       assignedTeamName: TEAMS[i % TEAMS.length],
       geom: squareMulti(lng, lat, 0.0028),
+      numero: (i % 30) + 1,
+      boundaryWkt: squareWkt(lng, lat, 0.0028),
+      blocId: `bloc-${quartier}-${Math.floor(i / 6)}`,
     };
   });
 
@@ -127,6 +143,22 @@ export class MockAdresseApiService extends AdresseApiPort {
       units: [], // écrasé par le forkJoin de AdresseEffects.openDetail$ (MockUnitsApiService) — placeholder pour respecter AddressDetail.
     };
     return of(detail).pipe(delay(MockAdresseApiService.LATENCY));
+  }
+
+  override update(id: UUID, payload: UpdateAdressePayload): Observable<void> {
+    const base = this.records.find((r) => r.id === id);
+    if (!base) return throwError(() => ({ code: 'Adresses.NotFound', message: 'Adresse introuvable.' }));
+
+    const numeroTaken = this.records.some((r) => r.blocId === base.blocId && r.numero === payload.numero && r.id !== id);
+    if (numeroTaken) {
+      return throwError(() => ({ code: 'Adresses.NumeroTaken', message: "Ce numéro d'adresse est déjà utilisé dans ce bloc." }))
+        .pipe(delay(MockAdresseApiService.LATENCY));
+    }
+
+    this.records = this.records.map((r) => (r.id === id
+      ? { ...r, numero: payload.numero, boundaryWkt: payload.boundaryWkt, lastUpdate: new Date().toISOString() }
+      : r));
+    return of(void 0).pipe(delay(MockAdresseApiService.LATENCY));
   }
 
   override bulkUpdate(payload: BulkUpdatePayload): Observable<void> {

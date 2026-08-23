@@ -6,7 +6,7 @@ import { AppConfigService } from '../../config/app-config.service';
 import { UUID } from '../../models/das.models';
 import {
   AddressDetail, BulkUpdatePayload, AdresseFilterOptions,
-  AdressePageResult, AdresseQuery, AdresseSummary,
+  AdressePageResult, AdresseQuery, AdresseSummary, UpdateAdressePayload,
 } from '../models/adresse.models';
 
 @Injectable({ providedIn: 'root' })
@@ -27,5 +27,8 @@ export class AdresseApiService extends AdresseApiPort {
     return this.http.post<AdressePageResult>(`${this.baseUrl}/search`, query);
   }
   override getDetail(id: UUID): Observable<AddressDetail> { return this.http.get<AddressDetail>(`${this.baseUrl}/${id}`); }
+  override update(id: UUID, payload: UpdateAdressePayload): Observable<void> {
+    return this.http.patch<void>(`${this.baseUrl}/${id}`, payload);
+  }
   override bulkUpdate(payload: BulkUpdatePayload): Observable<void> { return this.http.patch<void>(`${this.baseUrl}/bulk`, payload); }
 }

@@ -35,6 +35,15 @@
 .actions { display: flex; flex-direction: column; gap: v.$space-2; }
 .abtn { display: inline-flex; align-items: center; gap: v.$space-2; height: 38px; padding: 0 v.$space-3; border: 1px solid var(--color-border); background: var(--color-surface); border-radius: v.$radius-sm; font: inherit; font-size: v.$font-size-sm; color: var(--color-text-secondary); cursor: pointer;
   &:hover { background: var(--color-surface-alt); }
+  &--save { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-on-accent); height: 30px; padding: 0 v.$space-2; &:hover { background: var(--color-accent); } }
+  &:disabled { opacity: 0.6; cursor: default; }
+}
+
+.edit-numero { display: flex; align-items: center; gap: v.$space-1; }
+.einput { width: 70px; height: 30px; padding: 0 v.$space-2; border: 1px solid var(--color-accent); border-radius: v.$radius-sm; font: inherit; font-size: v.$font-size-sm; outline: none; }
+
+.notes { display: flex; align-items: center; gap: v.$space-2; padding: v.$space-2 v.$space-3; border-radius: v.$radius-sm; font-size: v.$font-size-sm; margin-top: v.$space-2;
+  &--warning { background: var(--color-danger-bg); color: var(--color-danger); }
 }
 
 .linked { display: flex; flex-direction: column; gap: v.$space-2;

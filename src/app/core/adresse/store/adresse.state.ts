@@ -18,6 +18,8 @@ export interface AdresseState {
   detail: AddressDetail | null;
   detailStatus: LoadStatus;
   isMutating: boolean;
+  /** Erreur de `updateAdresse` — distincte des mutations en masse, affichée dans le tiroir de détail. */
+  updateErrorMessageKey: string | null;
 }
 export const initialAdresseFilters: AdresseFilters = {
   search: '', postcode: null, zone: null, region: null,
@@ -43,4 +45,5 @@ export const initialAdresseState: AdresseState = {
   detail: null,
   detailStatus: 'idle',
   isMutating: false,
+  updateErrorMessageKey: null,
 };

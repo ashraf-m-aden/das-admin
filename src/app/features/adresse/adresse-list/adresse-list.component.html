@@ -1,19 +1,4 @@
-<das-page-header [eyebrow]="'adresse.eyebrow' | transloco" [title]="'nav.adresse' | transloco">
-  <div actions class="reg-actions">
-    <button type="button" class="rbtn">
-      <i class="ti ti-upload" aria-hidden="true"></i>{{ 'adresse.import' | transloco }}
-    </button>
-    <button type="button" class="rbtn">
-      <i class="ti ti-git-merge" aria-hidden="true"></i>{{ 'adresse.merge' | transloco }}
-    </button>
-    <button type="button" class="rbtn rbtn--primary">
-      <i class="ti ti-plus" aria-hidden="true"></i>{{ 'adresse.create' | transloco }}
-    </button>
-    <button type="button" class="rbtn">
-      <i class="ti ti-download" aria-hidden="true"></i>{{ 'adresse.export' | transloco }}
-    </button>
-  </div>
-</das-page-header>
+<das-page-header [eyebrow]="'adresse.eyebrow' | transloco" [title]="'nav.adresse' | transloco" />
 
 <div class="reg">
   @if (summary$ | async; as s) {

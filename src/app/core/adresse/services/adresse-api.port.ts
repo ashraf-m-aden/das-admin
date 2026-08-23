@@ -2,7 +2,7 @@ import { Observable } from 'rxjs';
 import { UUID } from '../../models/das.models';
 import {
   AddressDetail, BulkUpdatePayload, AdresseFilterOptions,
-  AdressePageResult, AdresseQuery, AdresseSummary,
+  AdressePageResult, AdresseQuery, AdresseSummary, UpdateAdressePayload,
 } from '../models/adresse.models';
 
 export abstract class AdresseApiPort {
@@ -10,5 +10,6 @@ export abstract class AdresseApiPort {
   abstract filterOptions(): Observable<AdresseFilterOptions>;
   abstract list(query: AdresseQuery): Observable<AdressePageResult>;
   abstract getDetail(id: UUID): Observable<AddressDetail>;
+  abstract update(id: UUID, payload: UpdateAdressePayload): Observable<void>;
   abstract bulkUpdate(payload: BulkUpdatePayload): Observable<void>;
 }

@@ -46,6 +46,14 @@ export interface LinkedRecord { id: UUID; kind: LinkedRecordKind; label: string;
 
 /** Adresse enrichie pour le tiroir de détail (details / linked). Pas d'onglet historique : `history` toujours vide côté back. */
 export interface AddressDetail extends AddressListItem {
+  /** Numéro de l'adresse dans son bloc — champ à éditer via `update()`. */
+  numero: number;
+  /**
+   * Emprise MULTIPOLYGON/POLYGON WKT (SRID 4326) telle que renvoyée par le back.
+   * À ne JAMAIS reconstruire depuis la tuile vectorielle (simplifiée, découpée aux bords) —
+   * seule cette valeur est renvoyable telle quelle sur `PATCH /api/adresses/{id}`.
+   */
+  boundaryWkt: string;
   components: AddressComponents;
   location: AddressLocation;
   propertyInfo: AddressPropertyInfo;
@@ -53,6 +61,12 @@ export interface AddressDetail extends AddressListItem {
   linked: LinkedRecord[];
   /** Unités de l'immeuble (`/api/units?adresseId=`) — vide pour une maison individuelle. */
   units: AddressUnit[];
+}
+
+/** `PATCH /api/adresses/{id}` : remplacement complet malgré le verbe — `boundaryWkt` doit être renvoyé même inchangé. */
+export interface UpdateAdressePayload {
+  numero: number;
+  boundaryWkt: string;
 }
 
 /** Filtres du registre. Déclaration UNIQUE (fin des doublons). */

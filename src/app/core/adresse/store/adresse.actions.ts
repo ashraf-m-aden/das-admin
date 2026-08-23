@@ -2,7 +2,7 @@ import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { UUID } from '../../models/das.models';
 import {
   AddressDetail, AddressListItem, BulkUpdatePayload,
-  AdresseFilterOptions, AdresseFilters, AdresseSummary,
+  AdresseFilterOptions, AdresseFilters, AdresseSummary, UpdateAdressePayload,
 } from '../models/adresse.models';
 
 export const AdresseActions = createActionGroup({
@@ -35,5 +35,9 @@ export const AdresseActions = createActionGroup({
     'Bulk Update': props<{ payload: BulkUpdatePayload }>(),
     'Mutation Success': emptyProps(),
     'Mutation Failure': props<{ errorMessageKey: string }>(),
+
+    'Update Adresse': props<{ id: UUID; payload: UpdateAdressePayload }>(),
+    'Update Adresse Success': props<{ id: UUID }>(),
+    'Update Adresse Failure': props<{ errorMessageKey: string }>(),
   },
 });

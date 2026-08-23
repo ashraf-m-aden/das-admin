@@ -4,7 +4,7 @@ import { AdresseActions } from './adresse.actions';
 import { adresseFeature } from './adresse.reducer';
 import { selectIsDetailLoading, selectIsListLoading, selectPageInfo, selectSelectedCount } from './adresse.selectors';
 import { UUID } from '../../models/das.models';
-import { BulkUpdatePayload, AdresseFilters } from '../models/adresse.models';
+import { BulkUpdatePayload, AdresseFilters, UpdateAdressePayload } from '../models/adresse.models';
 
 @Injectable({ providedIn: 'root' })
 export class AdresseFacade {
@@ -24,6 +24,7 @@ export class AdresseFacade {
   detail$ = this.store.select(adresseFeature.selectDetail);
   isDetailLoading$ = this.store.select(selectIsDetailLoading);
   isMutating$ = this.store.select(adresseFeature.selectIsMutating);
+  updateErrorMessageKey$ = this.store.select(adresseFeature.selectUpdateErrorMessageKey);
 
   init(): void {
     this.store.dispatch(AdresseActions.loadSummary());
@@ -42,4 +43,5 @@ export class AdresseFacade {
 
   approveSelected(): void { this.store.dispatch(AdresseActions.approveSelected()); }
   bulkUpdate(payload: BulkUpdatePayload): void { this.store.dispatch(AdresseActions.bulkUpdate({ payload })); }
+  updateAdresse(id: UUID, payload: UpdateAdressePayload): void { this.store.dispatch(AdresseActions.updateAdresse({ id, payload })); }
 }
