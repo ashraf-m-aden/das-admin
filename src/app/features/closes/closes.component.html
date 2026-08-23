@@ -5,7 +5,7 @@
     <das-hierarchy-cascade (selectionChange)="onHierarchy($event)" />
   </div>
 
-  @if (facade.errorMessageKey(); as err) { <div class="cl__error">{{ err | transloco }}</div> }
+  @if (errorMessageKey$ | async; as err) { <div class="cl__error">{{ err | transloco }}</div> }
 
   @if (!quartierId()) {
     <div class="cl__empty">{{ 'closes.pickQuartier' | transloco }}</div>
@@ -22,20 +22,20 @@
             }
           </div>
 
-          @for (c of facade.closes(); track c.id) {
+          @for (c of closes(); track c.id) {
             <div class="row" (mouseenter)="highlight(c.id)" (mouseleave)="highlight(null)">
               <span class="row__num mono">{{ c.number }}</span>
               <span class="row__name">{{ c.name }}</span>
               <span class="row__count">{{ 'closes.blocCount' | transloco: { count: c.blocIds.length } }}</span>
               @if (canEdit()) {
                 <span class="row__actions">
-                  <button type="button" class="abtn" (click)="startEdit(c)" [attr.aria-label]="'common.save' | transloco"><i class="ti ti-pencil" aria-hidden="true"></i></button>
-                  <button type="button" class="abtn abtn--danger" [disabled]="facade.saving()" (click)="remove(c)"><i class="ti ti-trash" aria-hidden="true"></i></button>
+                  <button type="button" class="abtn" (click)="startEdit(c)"><i class="ti ti-pencil" aria-hidden="true"></i></button>
+                  <button type="button" class="abtn abtn--danger" [disabled]="isSaving$ | async" (click)="remove(c)"><i class="ti ti-trash" aria-hidden="true"></i></button>
                 </span>
               }
             </div>
           } @empty {
-            <div class="empty">@if (facade.loading()) { {{ 'common.loading' | transloco }} } @else { {{ 'closes.empty' | transloco }} }</div>
+            <div class="empty">@if (isListLoading$ | async) { {{ 'common.loading' | transloco }} } @else { {{ 'closes.empty' | transloco }} }</div>
           }
         } @else {
           <div class="panel__head">
@@ -52,13 +52,17 @@
               <input type="number" min="1" [ngModel]="formNumber()" (ngModelChange)="formNumber.set($event)" />
             </label>
           </div>
-          <p class="hint">{{ 'closes.numberHint' | transloco }}</p>
+          @if (numberCollision(); as owner) {
+            <p class="warn">{{ 'closes.numberTakenBy' | transloco: { name: owner.name } }}</p>
+          } @else {
+            <p class="hint">{{ 'closes.numberHint' | transloco }}</p>
+          }
 
           <div class="panel__title panel__title--sub">{{ 'closes.pickBlocs' | transloco: { count: formBlocIds().length } }}</div>
           <p class="hint">{{ 'closes.pickBlocsHint' | transloco }}</p>
 
           <div class="blocs">
-            @for (b of facade.blocs(); track b.id) {
+            @for (b of blocs(); track b.id) {
               <label class="bloc" [class.bloc--taken]="isBlocTaken()(b.id)" [class.bloc--on]="isSelected(b.id)">
                 <input type="checkbox" [checked]="isSelected(b.id)" [disabled]="isBlocTaken()(b.id)" (change)="toggleBloc(b.id)" />
                 <span class="bloc__name">{{ b.name ?? b.code }}</span>
@@ -71,8 +75,8 @@
           </div>
 
           <div class="form-actions">
-            <button type="button" class="btn btn--primary" [disabled]="!canSave() || facade.saving()" (click)="save()">
-              @if (facade.saving()) { {{ 'common.saving' | transloco }} } @else { {{ 'common.save' | transloco }} }
+            <button type="button" class="btn btn--primary" [disabled]="!canSave() || (isSaving$ | async)" (click)="save()">
+              @if (isSaving$ | async) { {{ 'common.saving' | transloco }} } @else { {{ 'common.save' | transloco }} }
             </button>
             <button type="button" class="btn" (click)="cancelEdit()">{{ 'common.cancel' | transloco }}</button>
           </div>

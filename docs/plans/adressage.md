@@ -188,7 +188,9 @@ contraint :
 
 1. créer les closes et y rattacher les **309 blocs** (`Bloc.CloseId` nullable en base, obligatoire
    à la saisie — **même schéma transitoire que `AreaNumber` et `Bloc.Number`**) ;
-2. renuméroter les **2512 adresses**, unicité par close ;
+2. renuméroter les **2512 adresses**, unicité par close — **automatique, côté backend**
+   (arbitrage du 2026-08-23 : les maisons sont numérotées par le back, séquentiel par close ;
+   l'ajustement manuel reste possible pour corriger, cf. `PATCH /api/adresses/{id}`) ;
 3. renseigner `Quartier.AreaNumber` (0/6), `Bloc.Number` (0/309), `City.Code` (1/2) ;
 4. **seulement ensuite**, laisser des codes se figer.
 
@@ -250,6 +252,17 @@ le premier module à naître directement en `status: 'mock'` dans `core/config/b
 badge « Mock » dès le premier jour, bascule en une ligne quand le back arrive.
 
 ### 4.1 Écran `/closes`
+
+Store **NgRx complet** (`actions`/`reducer`/`selectors`/`effects`/`facade`), fourni **au niveau de
+la route** comme `adresse` — le feature n'entre dans le store qu'à la visite de l'écran. Seul
+l'état du formulaire reste en signaux locaux : il meurt avec l'écran et n'a rien à faire dans le
+store. Deux points de conception :
+
+- `selectBlocOwner` (`blocId → close`) matérialise la règle « un bloc n'appartient qu'à une
+  close » — c'est elle qui grise les blocs déjà pris ;
+- `saveTick` s'incrémente **uniquement sur écriture réussie**. Le formulaire se referme dessus,
+  donc un 409 le laisse ouvert **avec la saisie intacte** — sans ce compteur, l'opérateur perdrait
+  son travail à chaque conflit de numéro.
 
 - **Liste** des closes (nom, numéro, quartier, nombre de blocs).
 - **Création / édition** : nom, numéro, quartier, puis sélection des blocs **de deux façons

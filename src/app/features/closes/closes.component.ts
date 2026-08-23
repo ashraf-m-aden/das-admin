@@ -1,4 +1,5 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
+import { AsyncPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslocoModule } from '@jsverse/transloco';
@@ -11,7 +12,7 @@ import { unionBounds, wktBounds } from '../../core/ui/map/wkt.util';
 import { HierarchyCascadeComponent } from '../../core/hierarchy/ui/hierarchy-cascade/hierarchy-cascade.component';
 import { HierarchySelection } from '../../core/hierarchy/models/hierarchy.models';
 import { Close } from '../../core/closes/models/closes.models';
-import { UUID, UserRole } from '../../core/models/das.models';
+import { Block, UUID, UserRole } from '../../core/models/das.models';
 
 const CAN_EDIT_ROLES: UserRole[] = ['Admin', 'Gestionnaire'];
 
@@ -28,24 +29,53 @@ const BLOCS_TILE: TileLayerBinding = {
 @Component({
   selector: 'das-closes',
   standalone: true,
-  imports: [FormsModule, TranslocoModule, PageHeaderComponent, DasMapComponent, HierarchyCascadeComponent],
+  imports: [AsyncPipe, FormsModule, TranslocoModule, PageHeaderComponent, DasMapComponent, HierarchyCascadeComponent],
   templateUrl: './closes.component.html',
   styleUrl: './closes.component.scss',
 })
 export class ClosesComponent {
-  protected facade = inject(ClosesFacade);
+  private facade = inject(ClosesFacade);
   private authFacade = inject(AuthFacade);
+
+  protected readonly isListLoading$ = this.facade.isListLoading$;
+  protected readonly isSaving$ = this.facade.isSaving$;
+  protected readonly errorMessageKey$ = this.facade.errorMessageKey$;
+
+  protected readonly closes = toSignal(this.facade.closes$, { initialValue: [] as Close[] });
+  protected readonly blocs = toSignal(this.facade.blocs$, { initialValue: [] as Block[] });
+  protected readonly quartierId = toSignal(this.facade.quartierId$, { initialValue: null as UUID | null });
+  private readonly blocOwner = toSignal(this.facade.blocOwner$, { initialValue: new Map<UUID, Close>() });
+  private readonly saving = toSignal(this.facade.isSaving$, { initialValue: false });
+  private readonly saveTick = toSignal(this.facade.saveTick$, { initialValue: 0 });
 
   private readonly roles = toSignal(this.authFacade.roles$, { initialValue: [] as UserRole[] });
   protected readonly canEdit = computed(() => this.roles().some((r) => CAN_EDIT_ROLES.includes(r)));
 
-  protected readonly quartierId = signal<UUID | null>(null);
-
-  /** `null` = aucun formulaire ouvert ; `'new'` = création ; sinon l'id de la close éditée. */
+  /** État purement local du formulaire — n'a pas sa place dans le store, il meurt avec l'écran. */
   protected readonly editing = signal<UUID | 'new' | null>(null);
   protected readonly formName = signal('');
   protected readonly formNumber = signal<number | null>(null);
   protected readonly formBlocIds = signal<UUID[]>([]);
+  protected readonly highlightedCloseId = signal<UUID | null>(null);
+
+  private readonly takenNumbers = toSignal(this.facade.takenNumbers$, { initialValue: new Map<number, Close>() });
+
+  /** Numéro déjà porté par une AUTRE close du quartier — signalé avant l'envoi plutôt qu'au 409. */
+  protected readonly numberCollision = computed(() => {
+    const n = this.formNumber();
+    if (n === null) return null;
+    const owner = this.takenNumbers().get(n);
+    return owner && owner.id !== this.editing() ? owner : null;
+  });
+
+  constructor() {
+    // Referme le formulaire UNIQUEMENT sur une écriture réussie : sur un 409 (numéro déjà pris,
+    // bloc déjà affecté) il reste ouvert avec la saisie intacte, l'opérateur corrige et renvoie.
+    effect(() => {
+      this.saveTick();
+      this.editing.set(null);
+    });
+  }
 
   protected readonly tileLayers: TileLayerBinding[] = [BLOCS_TILE];
 
@@ -61,7 +91,7 @@ export class ClosesComponent {
    */
   protected readonly tileFeatureStates = computed<Record<string, TileFeatureStateMap>>(() => {
     const states: TileFeatureStateMap = {};
-    const owner = this.facade.blocOwner();
+    const owner = this.blocOwner();
     const selfId = this.editing();
 
     if (selfId !== null) {
@@ -71,7 +101,7 @@ export class ClosesComponent {
       for (const id of this.formBlocIds()) states[id] = { colorOverride: SELECTED_COLOR, selected: true };
     } else {
       const highlighted = this.highlightedCloseId();
-      for (const c of this.facade.closes()) {
+      for (const c of this.closes()) {
         const color = c.id === highlighted ? SELECTED_COLOR : TAKEN_COLOR;
         for (const b of c.blocIds) states[b] = { colorOverride: color };
       }
@@ -79,20 +109,18 @@ export class ClosesComponent {
     return { 'closes-blocs': states };
   });
 
-  protected readonly highlightedCloseId = signal<UUID | null>(null);
-
   /** Cadrage sur l'union des blocs sélectionnés — c'est la seule « union » qu'on calcule, et elle est visuelle. */
   protected readonly mapFitBbox = computed(() => {
     const ids = this.editing() !== null
       ? this.formBlocIds()
-      : (this.facade.closes().find((c) => c.id === this.highlightedCloseId())?.blocIds ?? []);
+      : (this.closes().find((c) => c.id === this.highlightedCloseId())?.blocIds ?? []);
     if (ids.length === 0) return null;
-    const blocs = this.facade.blocs().filter((b) => ids.includes(b.id));
+    const blocs = this.blocs().filter((b) => ids.includes(b.id));
     return unionBounds(blocs.map((b) => (b.boundaryWkt ? wktBounds(b.boundaryWkt) : null)));
   });
 
   protected readonly isBlocTaken = computed(() => {
-    const owner = this.facade.blocOwner();
+    const owner = this.blocOwner();
     const selfId = this.editing();
     return (blocId: UUID) => {
       const c = owner.get(blocId);
@@ -100,11 +128,18 @@ export class ClosesComponent {
     };
   });
 
+  protected readonly canSave = computed(() =>
+    this.formName().trim().length > 0
+    && this.formNumber() !== null
+    && this.formNumber()! > 0
+    && this.formBlocIds().length > 0
+    && this.quartierId() !== null
+    && this.numberCollision() === null,
+  );
+
   onHierarchy(sel: HierarchySelection): void {
-    this.quartierId.set(sel.quartierId);
     this.cancelEdit();
-    this.facade.load(sel.quartierId);
-    this.facade.loadBlocs(sel.quartierId);
+    this.facade.selectQuartier(sel.quartierId);
   }
 
   highlight(id: UUID | null): void { this.highlightedCloseId.set(id); }
@@ -133,28 +168,19 @@ export class ClosesComponent {
 
   isSelected(blocId: UUID): boolean { return this.formBlocIds().includes(blocId); }
 
-  protected readonly canSave = computed(() =>
-    this.formName().trim().length > 0
-    && this.formNumber() !== null
-    && this.formNumber()! > 0
-    && this.formBlocIds().length > 0
-    && this.quartierId() !== null,
-  );
-
   save(): void {
     if (!this.canSave()) return;
     const id = this.editing();
     this.facade.save(
       id === 'new' ? null : id,
       { name: this.formName().trim(), number: this.formNumber()!, quartierId: this.quartierId()!, blocIds: this.formBlocIds() },
-      () => this.cancelEdit(),
     );
+    // Pas de cancelEdit() ici : la fermeture est pilotée par `saveTick` (constructeur), donc
+    // seulement en cas de succès.
   }
 
-  remove(c: Close): void { this.facade.remove(c.id, this.quartierId()); }
-
-  blocLabel(blocId: UUID): string {
-    const b = this.facade.blocs().find((x) => x.id === blocId);
-    return b ? (b.name ?? b.code) : blocId;
+  remove(c: Close): void {
+    if (this.saving()) return;
+    this.facade.remove(c.id);
   }
 }
