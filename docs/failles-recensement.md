@@ -4,18 +4,27 @@ Revue critique du processus de recensement tel que défini par [`docs/plans/sche
 
 **Usage** : document de travail, à reprendre faille par faille. Chaque entrée porte un identifiant stable (`A1`, `B3`…) pour être citée en discussion, en commit ou en issue. Les décisions prises ici sont répercutées dans la spec — ce fichier n'est pas la source de vérité de la conception, il en est la liste de contrôle.
 
+> **Révision du 2026-08-23.** Trois changements depuis la revue d'origine : `A1` est
+> **factuellement périmée** (le socle n'est pas vide, 28 474 parcelles cadastrales dorment en
+> base — voir sa fiche), `A3` était marquée `Résolue` au récapitulatif alors que sa fiche dit
+> `Partielle` (corrigé), et une **section `E`** est ajoutée pour l'introduction de la `Close`.
+> La conception de l'adressage vit désormais dans [`docs/plans/adressage.md`](plans/adressage.md),
+> qui fait autorité ; les entrées `E` n'en sont que la liste de contrôle.
+
 **Statuts** :
 - `Retenue` — piste choisie le 2026-08-09, à implémenter. Reportée dans la spec.
 - `Dette technique` — faille reconnue, correction non planifiée dans ce lot. Reste ouverte, assumée en connaissance de cause.
 - `Résolue` — implémentée et vérifiée.
+- `Requalifiée` — le constat d'origine ne décrit plus la réalité ; la fiche est réécrite (2026-08-23).
+- `À faire` — arbitrée, spécifiée, pas encore implémentée.
 
 ## Récapitulatif
 
 | ID | Faille | Gravité | Statut | Décision |
 |---|---|---|---|---|
-| **A1** | Les adresses doivent exister avant le terrain — processus circulaire | Bloquante | **Dette technique** | Socle alimenté à la main par le Gestionnaire |
+| **A1** | Les adresses doivent exister avant le terrain — processus circulaire | Bloquante | **Requalifiée** | Le socle n'est pas saisi à la main : il est **importé du cadastre**, et 92 % reste à promouvoir |
 | **A2** | La deuxième campagne sera vide | Bloquante | **Résolue** | Paramètre `includeAlreadySurveyed` au peuplement |
-| **A3** | Photo obligatoire sans chaîne de téléversement | Bloquante | **Résolue** | MinIO + dépôt direct par le mobile, URLs de lecture signées par l'API |
+| **A3** | Photo obligatoire sans chaîne de téléversement | Bloquante | **Partielle** | Chaîne MinIO livrée ; taille max, formats, compression et rétention non définis |
 | **A4** | Travail hors-ligne non traité | Bloquante | **Résolue** | `Id` client + POST idempotent (200 sur rejeu) |
 | **B1** | Un agent peut valider ses propres relevés | Critique | **Résolue** | Refus dans le handler, vérifié sur un compte cumulant les rôles |
 | **B2** | Anti-fraude collectée mais jamais exploitée | Critique | **Résolue** | Distance stockée + `CreatedAtUtc` + `GET /api/surveys/suspicious` |
@@ -29,10 +38,15 @@ Revue critique du processus de recensement tel que défini par [`docs/plans/sche
 | **D1** | `Street` n'est raccordée à rien et n'apparaît dans aucune adresse | Majeure | **Dette technique** | — |
 | **D2** | Unicités manquantes sur les noms et codes | Mineure | **Résolue** | 3 index uniques + contrôle applicatif 409 |
 | **D3** | Les permissions `*.delete` n'existent pas en base | Mineure | **Dette technique** | — |
+| **E1** | Les composants du code d'adresse sont vides en base — aucun code calculable | Bloquante | **À faire** | Renseigner `City.Code`, `Quartier.AreaNumber`, `Bloc.Number` |
+| **E2** | Le format du code d'adresse change, et la fenêtre se referme au 1er relevé validé | Bloquante | **À faire** | Passer à 5 segments **avant** toute validation `Definitive` |
+| **E3** | `(CloseId, Numero)` n'est pas indexable — `Adresse` ne porte pas `CloseId` | Critique | **À faire** | Dénormaliser `Adresse.CloseId` |
+| **E4** | `Bloc.QuartierId` → `Bloc.CloseId` casse les consommateurs existants | Majeure | **À faire** | Recenser et migrer joins, vue `blocs_tiles`, `GET /api/blocs?quartierId=` |
 
-**État au 2026-08-09 après implémentation : 11 résolues, 1 partielle, 4 en dette technique.**
+**État au 2026-08-09 : 10 résolues, 2 partielles, 4 en dette technique.**
+**Ajouté le 2026-08-23 : 1 requalifiée (`A1`), 4 à faire (`E1`–`E4`).**
 
-Les statuts `Résolue` sont vérifiés par les tests de bout en bout (73 assertions HTTP, toutes vertes) décrits dans [`docs/plans/schema-recensement.md`](plans/schema-recensement.md). La `Partielle` restante est `C3`, qui attend un endpoint de compteurs.
+Les statuts `Résolue` sont vérifiés par les tests de bout en bout (73 assertions HTTP, toutes vertes) décrits dans [`docs/plans/schema-recensement.md`](plans/schema-recensement.md). Les deux `Partielle` sont `A3` (politique de rétention des photos) et `C3` (endpoint de compteurs).
 
 ---
 
@@ -40,20 +54,42 @@ Les statuts `Résolue` sont vérifiés par les tests de bout en bout (73 asserti
 
 ## A1 — Les adresses doivent exister avant le terrain
 
-**Gravité** : bloquante · **Statut** : Dette technique
+**Gravité** : bloquante · **Statut** : Requalifiée (2026-08-23)
 
-**Constat.** Une `Adresse` doit exister en base **avant** qu'un agent puisse y être affecté : `CampaignAssignment.AdresseId` est une FK vers une ligne existante, et le peuplement sélectionne des adresses déjà enregistrées. Or c'est le terrain qui découvre les parcelles. Le seul moyen actuel de créer une adresse est la saisie manuelle par le Gestionnaire (`POST /api/adresses`).
+> ⚠️ **La décision de 2026-08-09 reposait sur un constat faux.** Elle affirmait que le socle est
+> « alimenté à la main par le Gestionnaire » et qu'« aucune campagne ne peut couvrir plus de
+> parcelles que le Gestionnaire n'en a créées une par une ». **C'est démenti par la base.**
 
-**Aggravant.** Un agent qui trouve une construction non répertoriée **n'a aucun moyen de la signaler** — il n'existe pas d'`AdresseSuggestion`, alors que le pattern est déjà en place deux fois dans le repo (`BlocSuggestion`, `StreetSuggestion`).
+**Constat (révisé).** Une `Adresse` doit toujours exister avant qu'un agent y soit affecté — ça,
+c'est inchangé. Mais elle n'est **pas** saisie à la main : le cadastre est **déjà importé** en
+PostGIS et exposé par Martin. Relevé le 2026-08-23 :
 
-**Décision (2026-08-09).** Aucune des trois pistes n'est retenue pour ce lot. Le socle reste **alimenté à la main par le Gestionnaire**, comme aujourd'hui.
+| | Cadastre (PostGIS brut) | Référentiel (EF) | Promu |
+|---|---|---|---|
+| Parcelles → `Adresses` | `das_parcelles` : **28 474** | **2 512** | 8,8 % |
+| Îlots → `Blocs` | `das_ilots` : **3 700** | **309** | 8,4 % |
+| Quartiers | **69** | **6** | — |
 
-**Conséquences assumées** — à garder en tête, ce sont les plus lourdes de tout ce document :
-- Le volume de saisie manuelle conditionne le démarrage. Aucune campagne ne peut couvrir plus de parcelles que le Gestionnaire n'en a créées une par une.
-- Une construction découverte sur le terrain et absente du socle est **définitivement perdue** pour la campagne en cours : l'agent la voit, ne peut ni la relever ni la signaler, et rien ne garde trace du manque.
-- Le recensement mesure donc la complétude du socle, pas celle du terrain. Tant que `A1` est en dette, aucun chiffre issu du système ne peut être présenté comme un décompte exhaustif des adresses de la ville.
+Ce chiffre global est trompeur : **le référentiel ne couvre qu'un seul quartier, et il le couvre
+presque entièrement.** Quartier 7 : 309/309 îlots (**100 %**), 2 502/2 547 parcelles (**98,2 %**,
+vérifié par `ST_Equals` entre `Adresses.Boundary` et `das_parcelles.geom`). Les 5 autres quartiers
+du référentiel sont des **coquilles vides** — 0 bloc, 0 adresse.
 
-**À rouvrir en priorité** dès que l'import GIS revient au programme, ou dès la première campagne réelle si le volume de saisie se révèle intenable. La piste `AdresseSuggestion` reste la moins coûteuse (1 entité + 1 table + 4 slices, sur un pattern éprouvé).
+**Le vrai sujet n'est donc pas la saisie, c'est le rapprochement cadastre → référentiel.**
+Périmètre pilote traité à fond, 68 quartiers pas encore entrés.
+
+**Dette réelle qui subsiste :**
+- **Aucune traçabilité parcelle → adresse.** `Adresses` n'a pas de colonne pointant vers
+  `das_parcelles`. Le lien n'est retrouvable que par comparaison géométrique (`ST_Equals`), ce qui
+  interdit de répondre à « cette parcelle est-elle déjà promue ? » à coût raisonnable. **C'est ce
+  qu'il faut corriger en priorité**, pas la saisie manuelle.
+- **`AdresseSuggestion` reste absente.** Un agent qui trouve une construction hors cadastre ne
+  peut toujours pas la signaler. Le pattern existe deux fois (`BlocSuggestion`, `StreetSuggestion`).
+- Les 10 adresses (sur 2 512) sans parcelle cadastrale correspondante sont soit saisies à la main,
+  soit retouchées depuis — indistinguables faute de traçabilité.
+
+**Ce qui n'est PAS un sujet backend** : faire entrer les 68 autres quartiers, c'est rejouer le
+script PostGIS qui a produit Quartier 7. Travail d'outillage, pas de code applicatif.
 
 ---
 
@@ -323,15 +359,169 @@ La piste 2 (vue Postgres) n'est pas écartée sur le fond — elle reste l'optio
 
 ---
 
+---
+
+# E. Adressage — introduction de la `Close` (revue du 2026-08-23)
+
+> Cette section groupe par **sujet** et non par gravité, contrairement à `A`–`D` : les quatre
+> entrées découlent du même changement et se lisent ensemble.
+> Conception complète : [`docs/plans/adressage.md`](plans/adressage.md).
+
+**Le changement.** Nouveau niveau de hiérarchie —
+`City → [Commune] → [Zone] → Quartier → Close → Bloc → Adresse`. Une close regroupe des blocs dans
+un quartier. Arbitrages du responsable projet : un bloc appartient à **une seule** close, une close
+à **un seul** quartier, la close **entre dans le code d'adresse**, sa géométrie est l'union de ses
+blocs calculée à la volée.
+
+**Ce que ça déplace :**
+
+| | Avant | Après |
+|---|---|---|
+| Code d'adresse | `77-007-7-42` (4 segments) | `77-007-3-7-42` (5 segments) |
+| Bloc unique dans | `(QuartierId, Bloc.Number)` | `(CloseId, Bloc.Number)` |
+| Maison unique dans | `(BlocId, Numero)` | **`(CloseId, Numero)`** |
+| Libellé | `« 42, bloc 2, Quartier 7 Djibouti »` | `« 42, close 2, Quartier 7 Djibouti »` |
+
+Le segment `Bloc.Number` du code **devient redondant** (`ville-quartier-close-numéro` suffirait à
+l'unicité). **Il est conservé sciemment** — ne pas « optimiser » le format sans nouvel arbitrage.
+
+---
+
+## E1 — Les composants du code d'adresse sont vides en base
+
+**Gravité** : bloquante · **Statut** : À faire
+
+**Constat.** `AddressCodeGenerator.Generate()` renvoie `null` dès qu'un composant manque. Relevé
+le 2026-08-23 :
+
+| Segment | Colonne | Renseigné |
+|---|---|---|
+| Ville | `City.Code` | **1 / 2** (Djibouti = 77 ; Ali Sabieh `NULL`) |
+| Quartier | `Quartier.AreaNumber` | **0 / 6** |
+| Bloc | `Bloc.Number` | **0 / 309** |
+| Maison | `Adresse.Numero` | 2512 / 2512 ✅ |
+
+→ **0 adresse sur 2512 a un `addressCode`**, et c'est structurellement impossible aujourd'hui :
+deux segments sur quatre sont vides partout. Même chose pour le **code postal**, qui a besoin de
+`City.Code` + `AreaNumber` — donc aucun code postal calculable non plus.
+
+**Effet de bord déjà visible** : le renommage d'un bloc est refusé tant que `Bloc.Number` est
+`NULL` (garde applicative). Avec 0/309, **l'écran de nommage des blocs est verrouillé en prod**.
+
+**À faire.** Renseigner les trois colonnes. Le script `scripts/2026-08-18-registry-prod-donnees.sql`
+le prévoit déjà et rappelle pourquoi ce n'est **pas** automatisable : *« le numéro de quartier est
+celui du plan d'adressage, pas un rang arbitraire […] Un numéro inventé aujourd'hui devient un code
+d'adresse faux et définitif demain. »* Passer par `PATCH /api/quartiers/{id}` et
+`PATCH /api/cities/{id}` plutôt que par SQL : l'unicité y est contrôlée et le 409 lisible.
+Côté front, l'écran **Codes postaux** couvre déjà ville + quartier ; **il n'existe aucun écran pour
+`Bloc.Number`** — 309 valeurs à saisir par API ou SQL.
+
+---
+
+## E2 — Le format du code change, et la fenêtre se referme au premier relevé validé
+
+**Gravité** : bloquante · **Statut** : À faire
+
+**Constat.** `AddressCode` est **figé** en base à la validation `Definitive` d'un relevé
+(`ValidateSurveyHandler.FreezeAddressCodeAsync`) et n'est **jamais réécrit** — c'est délibéré :
+ses composants sont modifiables, un code recalculé serait un libellé, pas un identifiant.
+
+Passer de 4 à 5 segments après le premier figeage créerait donc **deux générations
+d'identifiants incompatibles dans la même table**, sans moyen de rattraper la première.
+
+**Fenêtre actuelle :**
+
+| | |
+|---|---|
+| Adresses avec un code figé | **0 / 2512** |
+| Relevés (`Surveys`) en base | **0** |
+| Campagnes | 2 |
+
+**Rien n'est figé nulle part.** Le changement de format coûte donc **zéro aujourd'hui**, et devient
+irréversible dès le premier relevé validé en `Definitive`. Même remarque pour la contrainte
+`Bloc.Number` qui change de parent : 0/309 renseignés, donc aucun doublon à dédoublonner.
+
+**À faire.** Livrer `E1`, `E3`, `E4` et la renumérotation **avant** d'ouvrir la validation des
+relevés. C'est une contrainte de séquencement, pas de charge.
+
+---
+
+## E3 — `(CloseId, Numero)` n'est pas indexable en l'état
+
+**Gravité** : critique · **Statut** : À faire
+
+**Constat.** La maison devient unique **dans sa close**. Or `Adresse` porte `BlocId`, pas
+`CloseId`, et **un index unique PostgreSQL ne traverse pas une jointure** : on ne peut pas indexer
+`(Bloc.CloseId, Adresse.Numero)` depuis `Adresses`.
+
+**Pourquoi ça compte.** Sans garantie en base, deux écritures concurrentes ou un import SQL direct
+peuvent créer deux « maison 42 » dans la même close. Le libellé devient alors ambigu — et comme
+`addressCode` est `null` partout (`E1`), **le libellé est la seule chose que l'utilisateur voit**.
+
+L'ampleur est réelle, pas théorique : **2512 adresses pour 39 numéros distincts**, le numéro `1`
+apparaissant **308 fois** (une par bloc). Toute close de 2 blocs ou plus est concernée.
+
+| Piste | Ce que ça donne | Coût |
+|---|---|---|
+| **Dénormaliser `Adresse.CloseId`** | index unique natif, garantie réelle | à maintenir si un bloc change de close |
+| Trigger / contrainte d'exclusion | pas de colonne en trop | logique cachée en base |
+| Contrôle applicatif seul | rien à migrer | **aucune garantie** concurrentielle |
+
+**Recommandation : la dénormalisation**, avec contrôle applicatif par-dessus pour un 409 lisible —
+exactement la défense en profondeur déjà retenue en `D2`. C'est aussi le pattern du projet : la vue
+`adresses_tiles` aplatit déjà `cityId/communeId/zoneId/quartierId/blocId`.
+
+---
+
+## E4 — `Bloc.QuartierId` → `Bloc.CloseId` casse les consommateurs
+
+**Gravité** : majeure · **Statut** : À faire
+
+**Constat.** Le quartier d'un bloc devient joignable *via* sa close. Tout ce qui lit
+`Bloc.QuartierId` directement casse :
+
+- `AdresseQueries.Rows` — le join `Bloc → Quartier` passe par `Close` ;
+- `FreezeAddressCodeAsync` — même join, plus le nouveau segment `Close.Number` ;
+- `GET /api/blocs?quartierId=` — le filtre traverse maintenant une table de plus ;
+- la vue **`blocs_tiles`**, qui expose `QuartierId` en colonne directe (consommée par les tuiles
+  Martin et par le filtrage carte du front) ;
+- `AddressCodeGenerator.Generate()` — un paramètre de plus ; conserver le retour `null` si un
+  composant manque.
+
+**Ordre de migration — il y a une dépendance circulaire.** On ne peut pas renuméroter avant de
+savoir quelle close contient quels blocs :
+
+1. créer les closes, y rattacher les **309 blocs** (`Bloc.CloseId` nullable en base, obligatoire à
+   la saisie — même schéma transitoire que `AreaNumber` et `Bloc.Number`) ;
+2. renuméroter les **2512 adresses**, unicité par close — **automatique côté backend**, séquentiel
+   par close, l'ajustement manuel restant possible via `PATCH /api/adresses/{id}` ;
+3. renseigner les composants de `E1` ;
+4. **seulement ensuite**, ouvrir la validation des relevés (`E2`).
+
+**Reste à livrer** : entité `Close` + table, index unique `(QuartierId, Number)`, et
+`/api/closes` (CRUD + affectation des blocs). Le front a déjà l'écran, en mock, prêt à basculer.
+
+---
 # Synthèse de la dette technique
 
-Quatre failles restent ouvertes et assumées. Leur point commun : aucune n'empêche le code de fonctionner, toutes dégradent ce que le système peut **prouver** ou **maintenir**.
+## Ouverte et assumée (revue 2026-08-09)
 
 | ID | Ce qu'on perd | Quand ça deviendra bloquant |
 |---|---|---|
-| **A1** | L'exhaustivité. Le système mesure la complétude du socle, pas celle du terrain — et une adresse découverte sur place est perdue. | Dès la première campagne réelle, si le volume de saisie manuelle est intenable. |
-| **C5** | La traçabilité de l'intention : on ne saura pas distinguer « bloc non retenu » de « bloc sans adresse connue ». | Dès qu'un peuplement partiel devra être expliqué. |
+| **A1** | *(requalifiée)* La traçabilité parcelle → adresse : impossible de dire si une parcelle du cadastre est déjà promue autrement qu'en comparant les géométries. Et une construction hors cadastre reste non signalable (`AdresseSuggestion` absente). | Dès la reprise d'un 2ᵉ quartier — sans traçabilité, on ne saura pas quoi promouvoir. |
+| **C5** | La traçabilité de l'intention : on ne distinguera pas « bloc non retenu » de « bloc sans adresse connue ». | Dès qu'un peuplement partiel devra être expliqué. |
 | **D1** | La justification d'un module entier — le référentiel de rues n'a aucun usage produit. | À l'arbitrage métier sur la composition d'une adresse. |
 | **D3** | La cohérence du catalogue de permissions vis-à-vis de la base. | À la première UI d'administration des rôles. |
 
-`A1` est la seule des quatre classée **bloquante** : elle est en dette parce qu'un contournement manuel existe, pas parce que son impact serait faible.
+## À livrer (revue 2026-08-23) — séquencement contraint
+
+`E4` → `E3` → `E1` → puis seulement ouvrir la validation des relevés (`E2`).
+
+**Le point à retenir : la fenêtre est ouverte mais elle se referme toute seule.** Il y a
+aujourd'hui **0 code d'adresse figé** et **0 relevé** en base. Changer le format du code, déplacer
+les contraintes d'unicité et renuméroter ne coûtent donc **rien**. Au premier relevé validé en
+`Definitive`, chaque code posé l'est pour toujours et le coût devient une reprise de données
+impossible à faire proprement.
+
+Les deux `Partielle` restantes ne sont pas dans ce séquencement : `A3` attend une politique de
+rétention des photos, `C3` un endpoint de compteurs par utilisateur.
