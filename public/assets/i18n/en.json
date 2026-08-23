@@ -38,7 +38,6 @@
     "mockBadgeHint": "This screen shows demo data: no backend wired yet."
   },
   "mockBadge": {
-    "postcodes": "The backend doesn't compute postcodes through an exposed contract yet — demo data.",
     "notifications": "No /api/notifications route on the backend — event mapping awaiting a business decision.",
     "reports": "No reporting route on the backend.",
     "audit": "No /api/audit route on the backend — no audit log exposed.",
@@ -387,26 +386,26 @@
     "colQuartier": "Quarter"
   },
   "postcodes": {
-    "eyebrow": "Postcode allocation and tracking",
-    "allocate": "Allocate postcode",
-    "code": "Code",
-    "area": "Area",
-    "areaPlaceholder": "Quarter / commune",
-    "region": "Region",
-    "reserve": "Reserve",
-    "issuedThisMonth": "issued this month",
-    "active": "active",
-    "reserved": "reserved",
-    "issuedByMonth": "Issued by month",
-    "addresses": "Addresses",
-    "statusCol": "Status",
-    "issued": "Issued",
-    "empty": "No postcodes",
-    "status": {
-      "active": "Active",
-      "reserved": "Reserved",
-      "retired": "Retired"
-    }
+    "eyebrow": "Postcode = city code + quarter number, computed, never entered",
+    "kpiWithPostcode": "Quarters with a postcode",
+    "kpiWithoutPostcode": "Quarters without a postcode",
+    "kpiCitiesWithoutCode": "Cities without a code",
+    "quartiersTitle": "Quarters",
+    "citiesTitle": "Cities",
+    "allCities": "All cities",
+    "onlyMissing": "Missing postcode only",
+    "colQuartier": "Quarter",
+    "colCity": "City",
+    "colCode": "Quarter code",
+    "colAreaNumber": "Number",
+    "colPostcode": "Postcode",
+    "colCityName": "City",
+    "colCityCode": "City code",
+    "missing": "—",
+    "empty": "No quarters",
+    "confirmCityCode": "{{count}} quarter(s) will be renumbered",
+    "errorAreaNumberUsed": "This number is already used in this city.",
+    "errorCityCodeUsed": "This code is already used by another city."
   },
   "fieldops": {
     "eyebrow": "Census campaigns and field assignments",

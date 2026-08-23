@@ -38,8 +38,9 @@ export const BACKEND_READINESS: Record<FeatureKey, FeatureReadiness> = {
   units: { status: 'wired', routes: ['/api/units'] },
   dataquality: { status: 'wired', routes: ['/api/surveys/suspicious'] },
   dashboard: { status: 'wired', routes: ['/api/adresses/summary', '/api/campaigns/{id}/progress'] },
+  postcodes: { status: 'wired', routes: ['/api/quartiers', '/api/quartiers/{id}', '/api/cities', '/api/cities/{id}'] },
 
-  postcodes: { status: 'mock', routes: [], noteKey: 'mockBadge.postcodes' },
+
   notifications: { status: 'mock', routes: [], noteKey: 'mockBadge.notifications' },
   reports: { status: 'mock', routes: [], noteKey: 'mockBadge.reports' },
   audit: { status: 'mock', routes: [], noteKey: 'mockBadge.audit' },

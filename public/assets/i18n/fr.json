@@ -38,7 +38,6 @@
     "mockBadgeHint": "Cet écran affiche des données de démonstration : aucun backend câblé pour l'instant."
   },
   "mockBadge": {
-    "postcodes": "Le back ne calcule pas encore les codes postaux via un contrat exposé — écran en données de démonstration.",
     "notifications": "Aucune route /api/notifications côté backend — mapping des événements en attente d'arbitrage métier.",
     "reports": "Aucune route de rapports côté backend.",
     "audit": "Aucune route /api/audit côté backend — pas de journal d'audit exposé.",
@@ -387,26 +386,26 @@
     "colQuartier": "Quartier"
   },
   "postcodes": {
-    "eyebrow": "Allocation et suivi des codes postaux",
-    "allocate": "Allouer un code postal",
-    "code": "Code",
-    "area": "Zone",
-    "areaPlaceholder": "Quartier / commune",
-    "region": "Région",
-    "reserve": "Réserver",
-    "issuedThisMonth": "émis ce mois",
-    "active": "actifs",
-    "reserved": "réservés",
-    "issuedByMonth": "Émis par mois",
-    "addresses": "Adresses",
-    "statusCol": "Statut",
-    "issued": "Émis le",
-    "empty": "Aucun code postal",
-    "status": {
-      "active": "Actif",
-      "reserved": "Réservé",
-      "retired": "Retiré"
-    }
+    "eyebrow": "Code postal = code ville + numéro de quartier, calculé, jamais saisi",
+    "kpiWithPostcode": "Quartiers avec code postal",
+    "kpiWithoutPostcode": "Quartiers sans code postal",
+    "kpiCitiesWithoutCode": "Villes sans code",
+    "quartiersTitle": "Quartiers",
+    "citiesTitle": "Villes",
+    "allCities": "Toutes les villes",
+    "onlyMissing": "Sans code postal uniquement",
+    "colQuartier": "Quartier",
+    "colCity": "Ville",
+    "colCode": "Code quartier",
+    "colAreaNumber": "Numéro",
+    "colPostcode": "Code postal",
+    "colCityName": "Ville",
+    "colCityCode": "Code ville",
+    "missing": "—",
+    "empty": "Aucun quartier",
+    "confirmCityCode": "{{count}} quartier(s) seront renumérotés",
+    "errorAreaNumberUsed": "Ce numéro est déjà utilisé dans cette ville.",
+    "errorCityCodeUsed": "Ce code est déjà utilisé par une autre ville."
   },
   "fieldops": {
     "eyebrow": "Campagnes de recensement et affectations terrain",

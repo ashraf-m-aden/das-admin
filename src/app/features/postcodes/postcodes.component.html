@@ -1,50 +1,121 @@
 <das-page-header [eyebrow]="'postcodes.eyebrow' | transloco" [title]="'nav.postcodes' | transloco" feature="postcodes" />
 
 <div class="pc">
-  @if (facade.data(); as d) {
-    <div class="pc__top">
-<section class="das-card allocate">
-        <div class="panel__title">{{ 'postcodes.allocate' | transloco }}</div>
-        <form [formGroup]="form" (ngSubmit)="allocate()">
-          <label class="field"><span>{{ 'postcodes.code' | transloco }}</span><input type="text" formControlName="code" placeholder="PC 1007" /></label>
-          <label class="field"><span>{{ 'postcodes.area' | transloco }}</span><input type="text" formControlName="adminUnitName" [attr.placeholder]="'postcodes.areaPlaceholder' | transloco" /></label>
-          <label class="field"><span>{{ 'postcodes.region' | transloco }}</span><input type="text" formControlName="region" placeholder="Djibouti" /></label>
-          <button type="submit" class="btn btn--primary" [disabled]="facade.saving()">
-            @if (facade.saving()) { {{ 'common.saving' | transloco }} } @else { {{ 'postcodes.reserve' | transloco }} }
-          </button>
-        </form>
-        <div class="stats">
-          <div><span class="stats__n">{{ (facade.data()?.totalIssued ?? 0) | number }}</span><span class="stats__l">{{ 'postcodes.issuedThisMonth' | transloco }}</span></div>
-          <div><span class="stats__n">{{ facade.data()?.activeCount ?? 0 }}</span><span class="stats__l">{{ 'postcodes.active' | transloco }}</span></div>
-          <div><span class="stats__n">{{ facade.data()?.reservedCount ?? 0 }}</span><span class="stats__l">{{ 'postcodes.reserved' | transloco }}</span></div>
-        </div>
-      </section>
+  @if (facade.loading() && facade.quartiers().length === 0) {
+    <div class="pc__loading">{{ 'common.loading' | transloco }}</div>
+  } @else {
+    @if (facade.errorMessageKey(); as err) { <div class="pc__error">{{ err | transloco }}</div> }
 
-      <section class="das-card chart">
-        <div class="panel__title">{{ 'postcodes.issuedByMonth' | transloco }}</div>
-        <div class="bars">
-          @for (m of facade.monthly(); track m.month) {
-            <div class="bar"><div class="bar__fill" [style.height.%]="barHeight(m.count)"></div><span class="bar__label">{{ m.month }}</span></div>
+    <div class="kpis">
+      <div class="kpi">
+        <span class="kpi__value">{{ facade.kpis().withPostcode | number }}</span>
+        <span class="kpi__label">{{ 'postcodes.kpiWithPostcode' | transloco }}</span>
+      </div>
+      <div class="kpi kpi--warn">
+        <span class="kpi__value">{{ facade.kpis().withoutPostcode | number }}</span>
+        <span class="kpi__label">{{ 'postcodes.kpiWithoutPostcode' | transloco }}</span>
+      </div>
+      <div class="kpi kpi--warn">
+        <span class="kpi__value">{{ facade.kpis().citiesWithoutCode | number }}</span>
+        <span class="kpi__label">{{ 'postcodes.kpiCitiesWithoutCode' | transloco }}</span>
+      </div>
+    </div>
+
+    <section class="das-card table-card">
+      <div class="table-card__head">
+        <div class="panel__title">{{ 'postcodes.quartiersTitle' | transloco }}</div>
+        <div class="filters">
+          <select class="fselect" (change)="setCityFilter($any($event.target).value)">
+            <option value="">{{ 'postcodes.allCities' | transloco }}</option>
+            @for (c of facade.cities(); track c.id) { <option [value]="c.id">{{ c.name }}</option> }
+          </select>
+          <label class="fcheck">
+            <input type="checkbox" [checked]="onlyMissing()" (change)="toggleOnlyMissing()" />
+            {{ 'postcodes.onlyMissing' | transloco }}
+          </label>
+        </div>
+      </div>
+
+      <div class="thead">
+        <span>{{ 'postcodes.colQuartier' | transloco }}</span>
+        <span>{{ 'postcodes.colCity' | transloco }}</span>
+        <span>{{ 'postcodes.colCode' | transloco }}</span>
+        <span>{{ 'postcodes.colAreaNumber' | transloco }}</span>
+        <span>{{ 'postcodes.colPostcode' | transloco }}</span>
+        <span></span>
+      </div>
+      @for (q of filteredQuartiers(); track q.id) {
+        <div class="trow">
+          <span class="trow__nom">{{ q.nom }}</span>
+          <span>{{ q.cityName }}</span>
+          <span class="mono">{{ q.code }}</span>
+          @if (editingQuartierId() === q.id) {
+            <span>
+              <input type="number" class="einput" min="1" max="999" [ngModel]="editAreaNumber()" (ngModelChange)="editAreaNumber.set($event)" />
+            </span>
+          } @else {
+            <span class="mono">{{ q.areaNumber ?? '—' }}</span>
+          }
+          @if (q.postcode) {
+            <span class="mono trow__postcode">{{ q.postcode }}</span>
+          } @else {
+            <span class="trow__missing">{{ 'postcodes.missing' | transloco }}</span>
+          }
+          @if (canEdit()) {
+            @if (editingQuartierId() === q.id) {
+              <span class="actions">
+                <button type="button" class="abtn abtn--save" [disabled]="facade.savingId() === q.id" (click)="saveEditArea(q)">{{ 'common.save' | transloco }}</button>
+                <button type="button" class="abtn" (click)="cancelEditArea()">{{ 'common.cancel' | transloco }}</button>
+              </span>
+            } @else {
+              <span class="actions"><button type="button" class="abtn" (click)="startEditArea(q)"><i class="ti ti-pencil" aria-hidden="true"></i></button></span>
+            }
+          } @else {
+            <span></span>
           }
         </div>
-      </section>
-    </div>
-<section class="das-card table-card">
-      <div class="thead"><span>{{ 'postcodes.code' | transloco }}</span><span>{{ 'postcodes.area' | transloco }}</span><span>{{ 'postcodes.region' | transloco }}</span><span>{{ 'postcodes.addresses' | transloco }}</span><span>{{ 'postcodes.statusCol' | transloco }}</span><span>{{ 'postcodes.issued' | transloco }}</span></div>
-      @for (r of facade.rows(); track r.id) {
-        <div class="trow">
-          <span class="trow__code">{{ r.code }}</span>
-          <span>{{ r.adminUnitName }}</span>
-          <span>{{ r.region }}</span>
-          <span class="trow__num">{{ r.addressCount | number }}</span>
-          <span class="status" [style.color]="statusColor(r.status)"><span class="status__dot" [style.background]="statusColor(r.status)"></span>{{ statusLabelKey(r.status) | transloco }}</span>
-          <span class="trow__date">{{ r.issuedAt | dasDate }}</span>
-        </div>
       } @empty {
-        <div class="empty">@if (facade.loading()) { {{ 'common.loading' | transloco }} } @else { {{ 'postcodes.empty' | transloco }} }</div>
+        <div class="empty">{{ 'postcodes.empty' | transloco }}</div>
       }
     </section>
-  } @else {
-    <div class="pc__loading">{{ 'common.loading' | transloco }}</div>
+
+    <section class="das-card table-card">
+      <div class="panel__title">{{ 'postcodes.citiesTitle' | transloco }}</div>
+      <div class="thead thead--cities">
+        <span>{{ 'postcodes.colCityName' | transloco }}</span>
+        <span>{{ 'postcodes.colCityCode' | transloco }}</span>
+        <span></span>
+      </div>
+      @for (c of facade.cities(); track c.id) {
+        <div class="trow trow--cities">
+          <span>{{ c.name }}</span>
+          @if (editingCityId() === c.id) {
+            <span>
+              <input type="number" class="einput" min="1" max="99" [ngModel]="editCityCode()" (ngModelChange)="editCityCode.set($event)" />
+            </span>
+          } @else {
+            <span class="mono">{{ c.code ?? '—' }}</span>
+          }
+          @if (canEdit()) {
+            @if (confirmingCityId() === c.id) {
+              <span class="actions">
+                <span class="confirm-text">{{ 'postcodes.confirmCityCode' | transloco: { count: quartierCountForCity(c.id) } }}</span>
+                <button type="button" class="abtn abtn--save" [disabled]="facade.savingId() === c.id" (click)="confirmSaveCity(c)">{{ 'common.apply' | transloco }}</button>
+                <button type="button" class="abtn" (click)="cancelEditCity()">{{ 'common.cancel' | transloco }}</button>
+              </span>
+            } @else if (editingCityId() === c.id) {
+              <span class="actions">
+                <button type="button" class="abtn abtn--save" (click)="requestSaveCity(c)">{{ 'common.save' | transloco }}</button>
+                <button type="button" class="abtn" (click)="cancelEditCity()">{{ 'common.cancel' | transloco }}</button>
+              </span>
+            } @else {
+              <span class="actions"><button type="button" class="abtn" (click)="startEditCity(c)"><i class="ti ti-pencil" aria-hidden="true"></i></button></span>
+            }
+          } @else {
+            <span></span>
+          }
+        </div>
+      }
+    </section>
   }
 </div>

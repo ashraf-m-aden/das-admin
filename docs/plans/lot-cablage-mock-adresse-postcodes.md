@@ -336,18 +336,35 @@ est en lecture seule sur cet écran : masquer les actions d'édition selon le r�
 - Une fois câblé : `postcodes` passe à `'wired'` dans le registre → le badge disparaît de
   lui-même. C'est le premier module à faire la transition, il sert de démonstration.
 
+### 3.6 Implémenté — écarts et précisions par rapport à la spec ci-dessus
+
+- **`boundaryWkt` est réellement optionnel sur `PATCH /api/quartiers/{id}` et `PATCH /api/cities/{id}`**,
+  vérifié dans `GeometryWkt.TryParsePolygon` (retourne `true`/`null` sur chaîne vide) et les deux
+  handlers (`SetBoundary` seulement si non nul). Contrairement à l'adresse (§2.1), **pas besoin
+  de le renvoyer** : le corps de la mise à jour omet `boundaryWkt`.
+- **Découverte en lisant `UpdateCityHandler` : un second 409 existe**, non documenté plus haut —
+  `Cities.CodeAlreadyUsed` (deux villes ne peuvent pas porter le même code). Géré symétriquement
+  à `Quartiers.AreaNumberAlreadyUsed`.
+- Pas de nouveau module NgRx : `PostcodesFacade` reste à base de signaux (pattern déjà en place
+  avant ce lot pour ce module précis) plutôt qu'un feature `createFeature`/actions/effects complet
+  — proportionné pour un écran à deux listes sans navigation complexe.
+- Erreur mappée par `code`, jamais par `message` (CLAUDE.md §6) — **première implémentation
+  réelle de cette règle dans le repo** : jusqu'ici, tous les effets NgRx retombaient sur un
+  `common.error` générique sans inspecter `err.error.code`. `errorCode()` dans la facade lit
+  `err.error.code` (forme `HttpErrorResponse` réelle) ou `err.code` (forme `throwError` du mock,
+  qui ne s'enveloppe pas dans `.error` — cf. précédent `mock-review-api.service.ts`).
+- `postcodes` passe à `'wired'` dans `backend-readiness.ts` — le badge disparaît de lui-même,
+  comme prévu. La clé i18n `mockBadge.postcodes` (posée en partie 1) est retirée, devenue morte.
+- `PostcodeStatus` et l'interface `Postcode` supprimées de `das.models.ts` (plus aucun usage).
+
 ---
 
 ## Ordre d'exécution
 
-1. **Partie 1** (registre + badge). Indépendante, livre de la valeur seule, et met les 7 écrans
-   non câblés dans un état honnête immédiatement.
-2. **Partie 3** (codes postaux). Aucune décision en suspens, et une valeur immédiate mesurable :
-   `Cities.Code` est `NULL` sur les 2 villes et `AreaNumber` est `NULL` sur les 6 quartiers —
-   **aucun code postal n'est calculable aujourd'hui**. 8 valeurs à saisir dans cet écran, et les
-   2 512 adresses en gagnent un d'un coup.
-3. **Partie 2** (édition d'adresse). Débloquée depuis l'arbitrage du 2026-08-23 ; le prérequis
-   est d'exposer `boundaryWkt` sur `AddressDetail`.
+1. ✅ **Partie 1** (registre + badge) — commit `1add8ec`.
+2. ✅ **Partie 3** (codes postaux) — voir §3.6.
+3. **Partie 2** (édition d'adresse) — reste à faire. Débloquée depuis l'arbitrage du 2026-08-23 ;
+   le prérequis est d'exposer `boundaryWkt` sur `AddressDetail`.
 
 Aucune modification de `dasApi` n'est nécessaire dans ce lot : les trois parties tiennent sur des
 routes existantes.

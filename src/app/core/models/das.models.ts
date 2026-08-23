@@ -200,18 +200,6 @@ export interface RedoRequest {
   createdAt: ISODateTime; resolvedAt: ISODateTime | null;
 }
 
-/* =============================================================================
- * CODES POSTAUX (module Postcodes)
- * ========================================================================== */
-
-export type PostcodeStatus = 'active' | 'reserved' | 'retired';
-export interface Postcode {
-  id: UUID; code: string;          // ex. "PC 1001"
-  adminUnitId: UUID; adminUnitName: string;
-  addressCount: number; status: PostcodeStatus;
-  issuedAt: ISODateTime; createdBy: UUID;
-}
-
 export type UserRole = 'Admin' | 'Gestionnaire' | 'Superviseur' | 'AgentTerrain';
 
 export interface User {
