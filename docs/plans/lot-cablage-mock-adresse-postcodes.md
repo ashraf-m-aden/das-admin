@@ -1,4 +1,4 @@
-# Lot : tag « mock », création d'adresse, écran codes postaux
+# Lot : tag « mock », édition d'adresse, écran codes postaux
 
 > **Nature du fichier.** Spec d'exécution du lot en cours, à respecter pendant l'implémentation.
 > Contrairement aux autres fichiers de `docs/plans/` (un par module, durables), celui-ci couvre
@@ -149,73 +149,93 @@ fourniture — celui de `app.config.ts` — et retirer l'override de la route.
 
 ---
 
-## Partie 2 — Écran « Créer une adresse »
+## Partie 2 — Écran adresses : **édition**, pas création
 
-### 2.1 État actuel
+### 2.0 Décision du 2026-08-23 — on ne crée plus d'adresse depuis le front
 
-`adresse-list.component.html` porte 4 boutons d'en-tête — **Importer, Fusionner doublons, Créer,
-Exporter** — dont **aucun n'a de handler**. Ce sont des boutons morts depuis l'origine.
+> **Arbitrage du responsable projet.** Les adresses **ne se créent pas depuis l'interface** :
+> elles entrent par la reprise cadastre et sont **numérotées automatiquement par le back**
+> (séquentiel par bloc à l'import — c'est déjà ce qu'annonce `addressing.numberingHint`).
+> Le front ne fait que **modifier de l'existant**.
 
-### 2.2 Contrat réel
+Cette décision est cohérente avec l'état réel de la base (relevé le 2026-08-23) :
+
+| | Cadastre (PostGIS brut) | Référentiel (EF) | Couverture |
+|---|---|---|---|
+| Parcelles → `Adresses` | `das_parcelles` : **28 474** | **2 512** | 8,8 % |
+| Îlots → `Blocs` | `das_ilots` : **3 700** | **309** | 8,4 % |
+| Quartiers | **69** | **6** | — |
+
+Chiffre trompeur si on s'arrête là. En réalité **le référentiel ne couvre qu'un seul quartier,
+et il le couvre presque intégralement** :
+
+| Quartier 7 (seul quartier peuplé) | Cadastre | Référentiel | Couverture |
+|---|---|---|---|
+| Îlots → Blocs | 309 | 309 | **100 %** |
+| Parcelles → Adresses | 2 547 | 2 502 | **98,2 %** |
+
+Les 5 autres quartiers du référentiel (`Château d'eau`, `Cheik Moussa`, `Einguela`,
+`Quartier Ali`, `Quartier Shell`) sont des **coquilles vides** : 0 bloc, 0 adresse.
+
+Donc : **périmètre pilote = Quartier 7, traité à fond.** Pas une reprise bâclée. Faire entrer les
+68 autres quartiers = rejouer le script PostGIS qui a produit Q7 — un travail back/outillage, que
+CLAUDE.md §1 exclut explicitement du front. **Ne rien construire côté front qui suppose leur
+arrivée.**
+
+*(Corollaire à remonter côté back : `A1` de `dasApi/docs/failles-recensement.md` — « le socle est
+alimenté à la main par le Gestionnaire », « aucune campagne ne peut couvrir plus de parcelles que
+le Gestionnaire n'en a créées une par une » — est **périmé**. Il y a 28 474 parcelles en base. Le
+sujet n'est pas la saisie manuelle, c'est le rapprochement cadastre → référentiel.)*
+
+### 2.1 Contrat d'édition
 
 ```
-POST /api/adresses
-Body : { blocId: UUID, numero: int, boundaryWkt: string }
-→ 201 AdresseResponse { id, blocId, numero, boundaryWkt, locationWkt,
-                        blocCode, blocName, quartierNom, cityName, libelle }
+PATCH /api/adresses/{id}
+Body : { numero: int, boundaryWkt: string }
+→ 200 AdresseResponse
 ```
 
-Validation back (`CreateAdresseRequestValidator`) :
+Validation back (`UpdateAdresseRequestValidator`) :
 
-- `blocId` non vide ;
 - `numero` **> 0**, et **unique dans le bloc** → sinon **409** ;
-- `boundaryWkt` **obligatoire**, `MULTIPOLYGON` ou `POLYGON` WKT valide, SRID 4326.
-  Message back explicite : *« une parcelle sans emprise n'a pas de position »*.
+- `boundaryWkt` **obligatoire et non vide**, `MULTIPOLYGON`/`POLYGON` WKT, SRID 4326.
 
-Permission : `adresses.create` → **Gestionnaire** (+ Admin par bypass). Un Superviseur reçoit un
-403 : masquer l'action pour les rôles qui ne l'ont pas, plutôt que de laisser un bouton qui échoue.
+> ⚠️ **Remplacement complet, malgré le verbe `PATCH`.** Les deux champs sont exigés à chaque
+> appel. Pour ne changer que le numéro, il faut **renvoyer la géométrie existante à l'identique**.
+>
+> **Et surtout : ne jamais reconstruire ce WKT depuis la tuile vectorielle.** Une tuile est
+> simplifiée et découpée aux bords — une parcelle à cheval sur deux tuiles y est tronquée. On
+> écrirait une géométrie fausse dans le référentiel national. La seule source acceptable est le
+> `boundaryWkt` renvoyé par `GET /api/adresses/{id}`.
 
-### 2.3 Décision ouverte — comment produire `boundaryWkt` ⚠️
+Le bloc de rattachement (`blocId`) **n'est pas modifiable** par cette route : déplacer une
+parcelle d'un bloc à l'autre changerait son `addressCode`. Ne pas exposer de champ bloc éditable.
 
-C'est **le** point bloquant du chantier, et c'est une décision produit, pas technique. Trois
-options, à trancher avant de coder :
+Permission : `adresses.update` → **Gestionnaire** (+ Admin par bypass). Masquer l'action pour les
+autres rôles plutôt que de laisser un bouton qui finit en 403.
 
-| Option | Ce que ça donne | Coût |
-|---|---|---|
-| **A. Clic sur la carte → carré généré** | L'opérateur place un point, le front en fait un petit carré (~30 m). Aucune dépendance. C'est déjà ce que fait `squareMulti()` dans `mock-adresse-api.service.ts`. | Faible |
-| **B. Dessin libre du polygone** | Emprise réelle de la parcelle. Nécessite une lib de dessin (MapLibre n'en a pas ; `terra-draw` ou fork de `mapbox-gl-draw`) → décision de dépendance. | Moyen |
-| **C. Saisie WKT brute** | Champ texte. Utilisable seulement par quelqu'un qui a déjà le WKT. | Nul |
+### 2.2 Travail à faire
 
-**Recommandation : A pour la v1**, B en second lot si le besoin d'emprise fidèle se confirme.
-Raison : le carré est une approximation *assumée et visible*, alors que l'absence d'écran de
-création bloque complètement la saisie du socle — or `A1` (`dasApi/docs/failles-recensement.md`)
-rappelle que **tout le recensement dépend du volume d'adresses saisies à la main**. Débloquer la
-saisie prime sur la fidélité du contour, qui pourra être reprise plus tard par le terrain.
-
-> ⚠️ **À confirmer avec le responsable projet avant implémentation.** Si des carrés approximatifs
-> sont inacceptables dans le référentiel national, c'est B, et le lot change de taille.
-
-### 2.4 Travail à faire
-
-- `AdresseApiPort` : ajouter `create(payload: CreateAdressePayload): Observable<CreatedAdresse>`.
-  Nouveaux modèles dans `adresse.models.ts` — ne **pas** réutiliser `AddressListItem` :
-  `AdresseResponse` a une forme différente (pas de `workflowStage`, pas de `lastUpdate`).
-- `AdresseApiService.create()` → `POST /api/adresses`. `MockAdresseApiService.create()` → ajoute
-  au tableau en mémoire, avec la **même règle d'unicité du numéro dans le bloc** (le mock doit
-  reproduire le 409, sinon le cas d'erreur ne se teste jamais).
-- Store : action `createAdresse` / `createAdresseSuccess` / `createAdresseFailure`, effet qui
-  enchaîne sur `loadPage()` en cas de succès (la liste doit montrer la nouvelle ligne).
-- **Mapping d'erreur par `code`, jamais par `message`** (CLAUDE.md §6) : le 409 back porte un
-  code métier → clé i18n dédiée (« Ce numéro existe déjà dans ce bloc »), pas un `common.error`
-  générique. C'est la seule erreur que l'opérateur peut corriger lui-même, elle doit être lisible.
-- UI : formulaire en tiroir/modale — sélection du bloc via `HierarchyCascadeComponent` (déjà
-  découplé, cf. CLAUDE.md §4), champ `numero`, carte de placement (option A).
-- **Les 3 autres boutons.** Aucun back derrière :
-  - *Importer* → contredit frontalement CLAUDE.md §1 (« pas d'import de données géo côté front ») ;
+- **`AddressDetail` doit porter `boundaryWkt`.** Le modèle front ne l'expose pas aujourd'hui,
+  alors que `AdresseDetailResponse` le renvoie déjà. Sans ce champ, l'édition du numéro est
+  impossible (rien à renvoyer dans le body). C'est le prérequis technique du lot.
+- `AdresseApiPort` : ajouter `update(id, payload: UpdateAdressePayload)`.
+  `MockAdresseApiService.update()` doit **reproduire le 409 d'unicité du numéro dans le bloc** —
+  sinon le seul cas d'erreur corrigeable par l'opérateur n'est jamais testable en mock.
+- Store : `updateAdresse` / `...Success` / `...Failure`, avec rechargement du détail **et** de la
+  page en cas de succès (la ligne de liste affiche le numéro).
+- **Erreur mappée par `code`, jamais par `message`** (CLAUDE.md §6) : le 409 → clé i18n dédiée
+  (« Ce numéro est déjà utilisé dans ce bloc »), pas un `common.error` générique.
+- UI : édition du numéro depuis le tiroir de détail (`address-detail-drawer`), qui affiche déjà
+  la fiche complète. Pas de nouvel écran. Le bouton « Modifier » du tiroir existe déjà **et ne
+  fait rien** — c'est lui qu'on branche.
+- **Les 4 boutons morts de l'en-tête de liste** (`adresse-list.component.html`) :
+  - *Créer une adresse* → **retiré** : décision §2.0, les adresses ne se créent plus ici ;
+  - *Importer* → contredit CLAUDE.md §1 (« pas d'import de données géo côté front ») ;
   - *Fusionner doublons* → aucune route de déduplication ;
   - *Exporter* → aucune route d'export.
-  → **Les retirer.** Un bouton mort dans une barre d'action est un bug d'interface : il promet une
-  fonction qui n'existe pas. Les réintroduire le jour où la route existe.
+  → **Les quatre partent.** Un bouton mort dans une barre d'action est un bug d'interface : il
+  promet une fonction qui n'existe pas.
 
 ---
 
@@ -322,10 +342,15 @@ est en lecture seule sur cet écran : masquer les actions d'édition selon le r�
 
 1. **Partie 1** (registre + badge). Indépendante, livre de la valeur seule, et met les 7 écrans
    non câblés dans un état honnête immédiatement.
-2. **Partie 3** (codes postaux) — entièrement spécifiée par des routes qui existent, aucune
-   décision en suspens.
-3. **Partie 2** (création d'adresse) — **bloquée** tant que la question du `boundaryWkt` (§2.3)
-   n'est pas tranchée.
+2. **Partie 3** (codes postaux). Aucune décision en suspens, et une valeur immédiate mesurable :
+   `Cities.Code` est `NULL` sur les 2 villes et `AreaNumber` est `NULL` sur les 6 quartiers —
+   **aucun code postal n'est calculable aujourd'hui**. 8 valeurs à saisir dans cet écran, et les
+   2 512 adresses en gagnent un d'un coup.
+3. **Partie 2** (édition d'adresse). Débloquée depuis l'arbitrage du 2026-08-23 ; le prérequis
+   est d'exposer `boundaryWkt` sur `AddressDetail`.
+
+Aucune modification de `dasApi` n'est nécessaire dans ce lot : les trois parties tiennent sur des
+routes existantes.
 
 ## Vérification (à chaque partie)
 
