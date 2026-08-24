@@ -9,10 +9,11 @@ import { AdresseFacade } from '../../../core/adresse/store/adresse.facade';
 import { PageHeaderComponent } from '../../../core/layout/page-header/page-header.component';
 import { DasDatePipe } from '../../../core/i18n/das-locale.pipes';
 import { BasemapLayerGroup, DasMapComponent } from '../../../core/ui/map/das-map.component';
-import { MapFeature, MapLayerConfig, TileFilter, TileLayerBinding } from '../../../core/ui/map/map.models';
+import { MapFeature, MapLayerConfig, TileFeatureStateMap, TileFilter, TileLayerBinding } from '../../../core/ui/map/map.models';
+import { wktBounds } from '../../../core/ui/map/wkt.util';
 import { MapLegendComponent, LegendEntry } from '../../../core/ui/map/map-legend/map-legend.component';
 import { AddressDetailDrawerComponent } from '../address-detail-drawer/address-detail-drawer.component';
-import { AddressListItem, WORKFLOW_STAGES } from '../../../core/adresse/models/adresse.models';
+import { AddressDetail, AddressListItem, WORKFLOW_STAGES } from '../../../core/adresse/models/adresse.models';
 import { initialAdresseFilters } from '../../../core/adresse/store/adresse.state';
 import { AddressWorkflowStage } from '../../../core/models/das.models';
 import { HierarchySelection } from '../../../core/hierarchy/models/hierarchy.models';
@@ -23,6 +24,9 @@ import { AppConfigService } from '../../../core/config/app-config.service';
 const STAGE_COLOR: Record<AddressWorkflowStage, string> = {
   registered: '#6b7280', surveyed: '#d97706', verified: '#16a34a', approved: '#0d9488', published: '#7c3aed',
 };
+
+/** Bleu de surbrillance des résultats de recherche — override live, la coloration de base reste bakée dans le style. */
+const SEARCH_HIT_COLOR = '#2563eb';
 
 const ADRESSES_TILE: TileLayerBinding = {
   id: 'adresses', labelKey: 'adresse.layerParcels', source: 'adresses', sourceLayer: 'adresses_tiles',
@@ -54,6 +58,7 @@ export class AdresseListComponent implements OnInit {
   protected readonly selectedIds = toSignal(this.facade.selectedIds$, { initialValue: [] as string[] });
   protected readonly selectedCount$ = this.facade.selectedCount$;
   protected readonly detailOpenId$ = this.facade.detailOpenId$;
+  private readonly detail = toSignal(this.facade.detail$, { initialValue: null as AddressDetail | null });
   protected readonly isMutating$ = this.facade.isMutating$;
 
   private readonly filters = toSignal(this.facade.filters$, { initialValue: initialAdresseFilters });
@@ -96,6 +101,11 @@ export class AdresseListComponent implements OnInit {
     const f = this.filters();
     const clauses: ExpressionSpecification[] = [];
     if (f.blocId) clauses.push(['==', ['get', 'BlocId'], f.blocId] as ExpressionSpecification);
+    // ⚠️ Exige un attribut `CloseId` sur la vue `adresses_tiles` (maintenue hors dépôt, côté Martin).
+    // Tant qu'il n'y est pas, filtrer par close vide la carte — c'est VOULU : l'alternative serait
+    // d'afficher tout le quartier pendant que la liste montre la close, soit exactement la
+    // divergence liste↔carte que CLAUDE.md §4 interdit, et elle serait indébogable.
+    else if (f.closeId) clauses.push(['==', ['get', 'CloseId'], f.closeId] as ExpressionSpecification);
     else if (f.quartierId) clauses.push(['==', ['get', 'QuartierId'], f.quartierId] as ExpressionSpecification);
     else if (f.zoneId) clauses.push(['==', ['get', 'ZoneId'], f.zoneId] as ExpressionSpecification);
     else if (f.communeId) clauses.push(['==', ['get', 'CommuneId'], f.communeId] as ExpressionSpecification);
@@ -107,6 +117,33 @@ export class AdresseListComponent implements OnInit {
         clauses.length === 1 ? (clauses[0] as FilterSpecification) :
           (['all', ...clauses] as FilterSpecification);
     return { adresses: expr };
+  });
+
+  /**
+   * Surbrillance des résultats de recherche sur la carte.
+   * `promoteId: "Id"` sur la source `adresses` fait que l'id de feature de tuile EST l'id
+   * d'adresse : on peut donc colorier sans rien demander de plus au back. Ne s'active que si une
+   * recherche texte est en cours — sinon toute la page serait bleue en permanence.
+   */
+  protected readonly tileFeatureStates = computed<Record<string, TileFeatureStateMap>>(() => {
+    const states: TileFeatureStateMap = {};
+    if (this.filters().search.trim()) {
+      for (const item of this.items()) states[item.id] = { colorOverride: SEARCH_HIT_COLOR };
+    }
+    const open = this.detail();
+    if (open) states[open.id] = { colorOverride: SEARCH_HIT_COLOR, selected: true };
+    return { adresses: states };
+  });
+
+  /**
+   * Cadrage : l'adresse ouverte prime sur le niveau hiérarchique choisi.
+   * `boundaryWkt` vient de `GET /api/adresses/{id}` — la liste, elle, renvoie toujours
+   * `geom: null` à dessein, donc c'est la seule source de coordonnées disponible.
+   */
+  protected readonly mapFitBbox = computed(() => {
+    const open = this.detail();
+    if (open?.boundaryWkt) return wktBounds(open.boundaryWkt);
+    return this.selectedBbox();
   });
 
   protected readonly filterForm = this.fb.group({

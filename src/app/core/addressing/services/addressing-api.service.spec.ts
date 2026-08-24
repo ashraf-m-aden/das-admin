@@ -9,8 +9,8 @@ import { BlockToName } from '../models/addressing.models';
 const BASE = 'http://test-api/api';
 
 const blocs: Block[] = [
-  { id: 'bloc-1', code: 'BLK-1', name: null, number: 1, quartierId: 'q1', boundaryWkt: null },
-  { id: 'bloc-2', code: 'BLK-2', name: null, number: 2, quartierId: 'q1', boundaryWkt: null },
+  { id: 'bloc-1', code: 'BLK-1', name: null, number: 1, quartierId: 'q1', closeId: null, boundaryWkt: null },
+  { id: 'bloc-2', code: 'BLK-2', name: null, number: 2, quartierId: 'q1', closeId: null, boundaryWkt: null },
 ];
 
 /**
@@ -63,6 +63,6 @@ describe('AddressingApiService — listBlocksToName', () => {
     const req = httpMock.expectOne(`${BASE}/blocs/bloc-1`);
     expect(req.request.method).toBe('PATCH');
     expect(req.request.body).toEqual({ code: 'BLK-1', name: 'Avenue Nasser', number: 1, boundaryWkt: null });
-    req.flush({ id: 'bloc-1', code: 'BLK-1', name: 'Avenue Nasser', number: 1, quartierId: 'q1', boundaryWkt: null });
+    req.flush({ id: 'bloc-1', code: 'BLK-1', name: 'Avenue Nasser', number: 1, quartierId: 'q1', closeId: null, boundaryWkt: null });
   });
 });

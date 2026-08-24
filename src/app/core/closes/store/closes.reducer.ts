@@ -20,20 +20,28 @@ export const closesFeature = createFeature({
     })),
 
     on(ClosesActions.loadBlocsSuccess, (s, { blocs }) => ({ ...s, blocs })),
+    on(ClosesActions.loadStreetsSuccess, (s, { streets }) => ({ ...s, streets })),
 
-    on(ClosesActions.saveClose, ClosesActions.removeClose, (s) => ({
-      ...s, isSaving: true, saveErrorMessageKey: null,
-    })),
-    on(ClosesActions.saveCloseSuccess, ClosesActions.removeCloseSuccess, (s) => ({ ...s, isSaving: false, saveTick: s.saveTick + 1 })),
-    on(ClosesActions.saveCloseFailure, ClosesActions.removeCloseFailure, (s, { errorMessageKey }) => ({
-      ...s, isSaving: false, saveErrorMessageKey: errorMessageKey,
-    })),
+    on(
+      ClosesActions.saveClose, ClosesActions.removeClose, ClosesActions.attachBlocs, ClosesActions.detachBloc,
+      (s) => ({ ...s, isSaving: true, saveErrorMessageKey: null }),
+    ),
+    on(
+      ClosesActions.saveCloseSuccess, ClosesActions.removeCloseSuccess,
+      ClosesActions.attachBlocsSuccess, ClosesActions.detachBlocSuccess,
+      (s) => ({ ...s, isSaving: false, saveTick: s.saveTick + 1 }),
+    ),
+    on(
+      ClosesActions.saveCloseFailure, ClosesActions.removeCloseFailure,
+      ClosesActions.attachBlocsFailure, ClosesActions.detachBlocFailure,
+      (s, { errorMessageKey }) => ({ ...s, isSaving: false, saveErrorMessageKey: errorMessageKey }),
+    ),
   ),
 });
 
 export const {
   name: closesFeatureKey,
   reducer: closesReducer,
-  selectCloses, selectBlocs, selectQuartierId,
+  selectCloses, selectBlocs, selectStreets, selectQuartierId,
   selectListStatus, selectIsSaving, selectSaveErrorMessageKey, selectSaveTick,
 } = closesFeature;

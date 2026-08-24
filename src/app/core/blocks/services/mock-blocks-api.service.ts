@@ -12,9 +12,9 @@ export class MockBlocksApiService extends BlocksApiPort {
   private static readonly SIMULATED_LATENCY_MS = 350;
 
   private blocs: Block[] = [
-    { id: 'bloc-0001', code: 'Q7-B01', name: 'Avenue Nasser', number: 1, quartierId: QUARTIER_7, boundaryWkt: 'POLYGON((43.140 11.585, 43.146 11.585, 43.146 11.590, 43.140 11.590, 43.140 11.585))' },
-    { id: 'bloc-0002', code: 'Q7-B02', name: null, number: 2, quartierId: QUARTIER_7, boundaryWkt: 'POLYGON((43.146 11.585, 43.152 11.585, 43.152 11.590, 43.146 11.590, 43.146 11.585))' },
-    { id: 'bloc-0003', code: 'Q7-B03', name: null, number: null, quartierId: QUARTIER_7, boundaryWkt: 'POLYGON((43.140 11.590, 43.146 11.590, 43.146 11.595, 43.140 11.595, 43.140 11.590))' },
+    { id: 'bloc-0001', code: 'Q7-B01', name: 'Avenue Nasser', number: 1, quartierId: QUARTIER_7, closeId: 'close-0001', boundaryWkt: 'POLYGON((43.140 11.585, 43.146 11.585, 43.146 11.590, 43.140 11.590, 43.140 11.585))' },
+    { id: 'bloc-0002', code: 'Q7-B02', name: null, number: 2, quartierId: QUARTIER_7, closeId: null, boundaryWkt: 'POLYGON((43.146 11.585, 43.152 11.585, 43.152 11.590, 43.146 11.590, 43.146 11.585))' },
+    { id: 'bloc-0003', code: 'Q7-B03', name: null, number: null, quartierId: QUARTIER_7, closeId: null, boundaryWkt: 'POLYGON((43.140 11.590, 43.146 11.590, 43.146 11.595, 43.140 11.595, 43.140 11.590))' },
   ];
 
   override list(query: BlockListQuery): Observable<Block[]> {

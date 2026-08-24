@@ -40,7 +40,7 @@ export const BACKEND_READINESS: Record<FeatureKey, FeatureReadiness> = {
   dashboard: { status: 'wired', routes: ['/api/adresses/summary', '/api/campaigns/{id}/progress'] },
   postcodes: { status: 'wired', routes: ['/api/quartiers', '/api/quartiers/{id}', '/api/cities', '/api/cities/{id}'] },
 
-  closes: { status: 'mock', routes: [], noteKey: 'mockBadge.closes' },
+  closes: { status: 'wired', routes: ['/api/closes', '/api/closes/{id}', '/api/closes/{id}/blocs', '/api/closes/{id}/blocs/{blocId}'] },
 
   notifications: { status: 'mock', routes: [], noteKey: 'mockBadge.notifications' },
   reports: { status: 'mock', routes: [], noteKey: 'mockBadge.reports' },

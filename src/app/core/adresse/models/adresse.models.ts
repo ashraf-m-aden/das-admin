@@ -81,6 +81,8 @@ export interface AdresseFilters {
   communeId: UUID | null;
   zoneId: UUID | null;
   quartierId: UUID | null;
+  /** Close de la parcelle — la portion de rue qui la nomme. Ne rend aucune ligne tant que la reprise de données n'a rattaché aucun bloc. */
+  closeId: UUID | null;
   blocId: UUID | null;
 }
 

@@ -1,6 +1,6 @@
 import { UUID } from '../../models/das.models';
 import { Block } from '../../models/das.models';
-import { Close } from '../models/closes.models';
+import { Close, CloseStreetOption } from '../models/closes.models';
 
 export type LoadStatus = 'idle' | 'loading' | 'loaded' | 'error';
 
@@ -8,6 +8,8 @@ export interface ClosesState {
   closes: Close[];
   /** Blocs candidats du quartier courant — source du sélecteur et du coloriage carte. */
   blocs: Block[];
+  /** Référentiel plat, chargé une fois — une close exige une rue. */
+  streets: CloseStreetOption[];
   quartierId: UUID | null;
   listStatus: LoadStatus;
   isSaving: boolean;
@@ -23,6 +25,7 @@ export interface ClosesState {
 export const initialClosesState: ClosesState = {
   closes: [],
   blocs: [],
+  streets: [],
   quartierId: null,
   listStatus: 'idle',
   isSaving: false,

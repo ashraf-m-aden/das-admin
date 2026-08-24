@@ -38,10 +38,19 @@ export class HierarchyMockService extends HierarchyApiPort {
     }
     return of([{ id: this.quartier7Id, level: 'quartier', code: 'Q7', name: 'Quartier 7', parentId: zoneId ?? communeId ?? cityId, bbox: this.boulaos } as HierarchyNode]);
   }
+  /** Mêmes ids que MockClosesApiService. Le quartier Ali Sabieh n'a AUCUNE close : c'est le cas creux, le select doit s'y masquer. */
+  override closes(quartierId: UUID): Observable<HierarchyNode[]> {
+    if (quartierId !== this.quartier7Id) return of([]);
+    return of([
+      { id: 'close-0001', level: 'close', code: 'CL-01', name: 'Impasse du Puits', parentId: quartierId, bbox: this.boulaos },
+      { id: 'close-0002', level: 'close', code: 'CL-02', name: '2', parentId: quartierId, bbox: this.boulaos },
+    ] as HierarchyNode[]);
+  }
+
   override blocs(quartierId: UUID): Observable<HierarchyNode[]> {
     return of([
-      { id: 'bloc-0001', level: 'bloc', code: 'Q7-B01', name: 'Bloc 01', parentId: quartierId, bbox: [43.140, 11.585, 43.146, 11.590] },
-      { id: 'bloc-0002', level: 'bloc', code: 'Q7-B02', name: 'Bloc 02', parentId: quartierId, bbox: [43.146, 11.585, 43.152, 11.590] },
+      { id: 'bloc-0001', level: 'bloc', code: 'Q7-B01', name: 'Bloc 01', parentId: quartierId, closeId: 'close-0001', bbox: [43.140, 11.585, 43.146, 11.590] },
+      { id: 'bloc-0002', level: 'bloc', code: 'Q7-B02', name: 'Bloc 02', parentId: quartierId, closeId: null, bbox: [43.146, 11.585, 43.152, 11.590] },
     ] as HierarchyNode[]);
   }
 }

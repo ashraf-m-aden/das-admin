@@ -68,6 +68,14 @@ export interface Block {
   /** Composant numérique du code d'adresse — `null` sur les blocs antérieurs au 2026-08-18. */
   number: number | null;
   quartierId: UUID;
+  /**
+   * Close de rattachement — celle qui nomme les adresses du bloc. `null` tant que le bloc n'y est
+   * pas rattaché (cas de toute la base avant la reprise de données).
+   * **Ne se modifie PAS par `PATCH /api/blocs/{id}`** : le rattachement passe par
+   * `POST /api/closes/{id}/blocs`, seul endroit qui porte les gardes (même quartier, code
+   * d'adresse figé, collision de numéros).
+   */
+  closeId: UUID | null;
   /** WKT (SRID 4326) — géométrie servie par les tuiles Martin pour le rendu, ce champ ne sert qu'au cadrage/à l'édition. */
   boundaryWkt: string | null;
 }

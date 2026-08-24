@@ -363,6 +363,30 @@ La piste 2 (vue Postgres) n'est pas écartée sur le fond — elle reste l'optio
 
 # E. Adressage — introduction de la `Close` (revue du 2026-08-23)
 
+> ## ⚠️ Rectificatif du 2026-08-24 — le back a livré, et il a tranché autrement
+>
+> La `Close` est **implémentée** depuis `0036f99` (`dasApi`). Deux affirmations de cette section
+> sont **fausses** et corrigées ci-dessous ; le reste tient.
+>
+> 1. **Le code d'adresse a QUATRE segments, pas cinq** : `77-007-3-42`
+>    (`Ville-Quartier-Close-Numéro`). **Le bloc en est sorti**, il n'y figure plus du tout. La
+>    proposition à cinq segments a été explicitement écartée (décision `D-4`).
+> 2. **L'unicité de `Bloc.Number` ne se déplace pas** : elle **reste `(QuartierId, Number)`**.
+>    Le déplacement sur `(CloseId, Number)` annoncé en `E4` n'avait de sens que si le bloc entrait
+>    dans le code — ce n'est plus le cas.
+>
+> Reste juste : `(CloseId, Numero)` pour la maison, la dénormalisation `Adresse.CloseId` (`E3`,
+> le back l'a effectivement retenue avec une **FK composite** qui empêche la divergence), et
+> l'impératif de calendrier (`E2`).
+>
+> **Une close n'est pas « un ensemble de blocs »** : c'est **la portion d'une rue dans un
+> quartier**, `StreetId` obligatoire. C'est ce qui résout `D1` — une rue traverse plusieurs
+> quartiers et ne peut porter de `QuartierId`, une close le peut. **`D1` est donc à passer en
+> résolue** au prochain passage.
+>
+> Conception à jour : `dasApi/docs/plans/adressage-close.md`.
+
+
 > Cette section groupe par **sujet** et non par gravité, contrairement à `A`–`D` : les quatre
 > entrées découlent du même changement et se lisent ensemble.
 > Conception complète : [`docs/plans/adressage.md`](plans/adressage.md).

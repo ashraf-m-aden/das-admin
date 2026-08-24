@@ -24,7 +24,7 @@ export interface AdresseState {
 export const initialAdresseFilters: AdresseFilters = {
   search: '', postcode: null, zone: null, region: null,
   status: null as AddressWorkflowStage | null, team: null,
-  cityId: null, communeId: null, zoneId: null, quartierId: null, blocId: null,
+  cityId: null, communeId: null, zoneId: null, quartierId: null, closeId: null, blocId: null,
 };
 
 export const initialAdresseState: AdresseState = {

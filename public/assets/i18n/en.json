@@ -39,7 +39,6 @@
     "mockBadgeHint": "This screen shows demo data: no backend wired yet."
   },
   "mockBadge": {
-    "closes": "No /api/closes route on the backend — the entity does not exist yet (see docs/plans/adressage.md §3.3).",
     "notifications": "No /api/notifications route on the backend — event mapping awaiting a business decision.",
     "reports": "No reporting route on the backend.",
     "audit": "No /api/audit route on the backend — no audit log exposed.",
@@ -114,27 +113,37 @@
     "quickActions": "Quick access"
   },
   "closes": {
-    "eyebrow": "Groups of blocks — the number is part of the address code",
+    "eyebrow": "Street portions within a quarter — the number is part of the address code",
     "pickQuartier": "Pick a quarter to see its closes.",
     "listTitle": "Closes in this quarter",
     "new": "New close",
     "newTitle": "New close",
     "editTitle": "Edit close",
-    "name": "Name",
-    "namePlaceholder": "e.g. Cité du Corail",
+    "street": "Street",
+    "pickStreet": "Pick a street…",
+    "streetHint": "The street is what names the address (12, rue de la Mosquée, Quartier 7 Djibouti). An unnamed street falls back to the number, then the code.",
     "number": "Number",
+    "code": "Code",
+    "codePlaceholder": "e.g. CL-01",
+    "numberHint": "1 to 999, unique within the quarter. It is the 3rd segment of the address code (77-007-3-42).",
     "numberTakenBy": "This number already belongs to “{{name}}” in this quarter.",
-    "numberHint": "Unique within the quarter. It is the 3rd segment of the address code (77-007-3-7-42).",
-    "pickBlocs": "Blocks in this close ({{count}})",
-    "pickBlocsHint": "Tick them in the list, or click a block directly on the map.",
     "blocCount": "{{count}} block(s)",
-    "blocTaken": "already taken",
-    "noBlocs": "No block in this quarter",
+    "adresseCount": "{{count}} parcel(s)",
+    "manageBlocs": "Manage blocks",
+    "blocsOf": "Blocks of “{{name}}”",
+    "attachHint": "Tick to attach, untick to detach — one block at a time. You can also click a block on the map.",
+    "noBlocs": "No free block in this quarter",
     "empty": "No close in this quarter",
-    "legendSelected": "Selected",
+    "legendSelected": "Blocks of this close",
     "legendTaken": "Taken by another close",
     "errorNumberUsed": "A close already uses this number in this quarter.",
-    "errorBlocTaken": "One of the blocks already belongs to another close."
+    "errorCodeUsed": "A close already uses this code in this quarter.",
+    "errorStreetUsed": "This street already has a close in this quarter.",
+    "errorBlocTaken": "This block already belongs to another close.",
+    "errorBlocOtherQuartier": "This block belongs to another quarter.",
+    "errorNumeroCollision": "Attachment refused: two parcels would share the same number in this close. Renumbering must happen first.",
+    "errorFrozenCode": "Refused: a parcel already carries a frozen address code, which this number is part of.",
+    "errorHasBlocs": "Deletion refused: blocks are still attached to this close."
   },
   "blocks": {
     "eyebrow": "Djibouti City · Boulaos",
@@ -612,6 +621,7 @@
     "allCommunes": "All communes",
     "allZones": "All zones",
     "allQuartiers": "All quartiers",
+    "allCloses": "All closes",
     "allBlocs": "All blocs"
   },
   "profile": {

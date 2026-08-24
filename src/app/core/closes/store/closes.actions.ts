@@ -1,6 +1,6 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { Block, UUID } from '../../models/das.models';
-import { Close, SaveClosePayload } from '../models/closes.models';
+import { Close, CloseStreetOption, CreateClosePayload } from '../models/closes.models';
 
 export const ClosesActions = createActionGroup({
   source: 'Closes',
@@ -12,14 +12,27 @@ export const ClosesActions = createActionGroup({
     'Load List Success': props<{ closes: Close[] }>(),
     'Load List Failure': props<{ errorMessageKey: string }>(),
 
+    'Load Streets': emptyProps(),
+    'Load Streets Success': props<{ streets: CloseStreetOption[] }>(),
+
+    'Load Blocs': emptyProps(),
     'Load Blocs Success': props<{ blocs: Block[] }>(),
 
-    'Save Close': props<{ id: UUID | null; payload: SaveClosePayload }>(),
+    /** `payload` porte toujours `quartierId` (contexte de l'écran) ; l'effet le retire pour `update` (non modifiable, §3.2). */
+    'Save Close': props<{ id: UUID | null; payload: CreateClosePayload }>(),
     'Save Close Success': emptyProps(),
     'Save Close Failure': props<{ errorMessageKey: string }>(),
 
     'Remove Close': props<{ id: UUID }>(),
     'Remove Close Success': emptyProps(),
     'Remove Close Failure': props<{ errorMessageKey: string }>(),
+
+    'Attach Blocs': props<{ closeId: UUID; blocIds: UUID[] }>(),
+    'Attach Blocs Success': emptyProps(),
+    'Attach Blocs Failure': props<{ errorMessageKey: string }>(),
+
+    'Detach Bloc': props<{ closeId: UUID; blocId: UUID }>(),
+    'Detach Bloc Success': emptyProps(),
+    'Detach Bloc Failure': props<{ errorMessageKey: string }>(),
   },
 });

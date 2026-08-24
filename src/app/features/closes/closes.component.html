@@ -1,4 +1,4 @@
-<das-page-header [eyebrow]="'closes.eyebrow' | transloco" [title]="'nav.closes' | transloco" feature="closes" />
+<das-page-header [eyebrow]="'closes.eyebrow' | transloco" [title]="'nav.closes' | transloco" />
 
 <div class="cl">
   <div class="cl__filters">
@@ -12,7 +12,45 @@
   } @else {
     <div class="cl__grid">
       <section class="das-card panel">
-        @if (editing() === null) {
+        @if (editing() !== null) {
+          <div class="panel__head">
+            <div class="panel__title">{{ (editing() === 'new' ? 'closes.newTitle' : 'closes.editTitle') | transloco }}</div>
+          </div>
+
+          <label class="field">
+            <span>{{ 'closes.street' | transloco }}</span>
+            <select [ngModel]="formStreetId()" (ngModelChange)="formStreetId.set($event)">
+              <option [ngValue]="null">{{ 'closes.pickStreet' | transloco }}</option>
+              @for (s of streets(); track s.id) {
+                <option [ngValue]="s.id">{{ streetLabel(s) }}</option>
+              }
+            </select>
+          </label>
+          <p class="hint">{{ 'closes.streetHint' | transloco }}</p>
+
+          <div class="form">
+            <label class="field field--narrow">
+              <span>{{ 'closes.number' | transloco }}</span>
+              <input type="number" min="1" max="999" [ngModel]="formNumber()" (ngModelChange)="formNumber.set($event)" />
+            </label>
+            <label class="field">
+              <span>{{ 'closes.code' | transloco }}</span>
+              <input type="text" [ngModel]="formCode()" (ngModelChange)="formCode.set($event)" [attr.placeholder]="'closes.codePlaceholder' | transloco" />
+            </label>
+          </div>
+          @if (numberCollision(); as owner) {
+            <p class="warn">{{ 'closes.numberTakenBy' | transloco: { name: owner.label } }}</p>
+          } @else {
+            <p class="hint">{{ 'closes.numberHint' | transloco }}</p>
+          }
+
+          <div class="form-actions">
+            <button type="button" class="btn btn--primary" [disabled]="!canSave() || (isSaving$ | async)" (click)="save()">
+              @if (isSaving$ | async) { {{ 'common.saving' | transloco }} } @else { {{ 'common.save' | transloco }} }
+            </button>
+            <button type="button" class="btn" (click)="cancelEdit()">{{ 'common.cancel' | transloco }}</button>
+          </div>
+        } @else {
           <div class="panel__head">
             <div class="panel__title">{{ 'closes.listTitle' | transloco }}</div>
             @if (canEdit()) {
@@ -23,12 +61,13 @@
           </div>
 
           @for (c of closes(); track c.id) {
-            <div class="row" (mouseenter)="highlight(c.id)" (mouseleave)="highlight(null)">
+            <div class="row" [class.row--on]="managing() === c.id" (mouseenter)="highlight(c.id)" (mouseleave)="highlight(null)">
               <span class="row__num mono">{{ c.number }}</span>
-              <span class="row__name">{{ c.name }}</span>
-              <span class="row__count">{{ 'closes.blocCount' | transloco: { count: c.blocIds.length } }}</span>
+              <span class="row__name">{{ c.label }}</span>
+              <span class="row__count">{{ 'closes.blocCount' | transloco: { count: c.blocs.length } }} · {{ 'closes.adresseCount' | transloco: { count: c.adresseCount } }}</span>
               @if (canEdit()) {
                 <span class="row__actions">
+                  <button type="button" class="abtn" [class.abtn--on]="managing() === c.id" (click)="manageBlocs(c)" [attr.title]="'closes.manageBlocs' | transloco"><i class="ti ti-stack-2" aria-hidden="true"></i></button>
                   <button type="button" class="abtn" (click)="startEdit(c)"><i class="ti ti-pencil" aria-hidden="true"></i></button>
                   <button type="button" class="abtn abtn--danger" [disabled]="isSaving$ | async" (click)="remove(c)"><i class="ti ti-trash" aria-hidden="true"></i></button>
                 </span>
@@ -37,49 +76,31 @@
           } @empty {
             <div class="empty">@if (isListLoading$ | async) { {{ 'common.loading' | transloco }} } @else { {{ 'closes.empty' | transloco }} }</div>
           }
-        } @else {
-          <div class="panel__head">
-            <div class="panel__title">{{ (editing() === 'new' ? 'closes.newTitle' : 'closes.editTitle') | transloco }}</div>
-          </div>
 
-          <div class="form">
-            <label class="field">
-              <span>{{ 'closes.name' | transloco }}</span>
-              <input type="text" [ngModel]="formName()" (ngModelChange)="formName.set($event)" [attr.placeholder]="'closes.namePlaceholder' | transloco" />
-            </label>
-            <label class="field field--narrow">
-              <span>{{ 'closes.number' | transloco }}</span>
-              <input type="number" min="1" [ngModel]="formNumber()" (ngModelChange)="formNumber.set($event)" />
-            </label>
-          </div>
-          @if (numberCollision(); as owner) {
-            <p class="warn">{{ 'closes.numberTakenBy' | transloco: { name: owner.name } }}</p>
-          } @else {
-            <p class="hint">{{ 'closes.numberHint' | transloco }}</p>
+          @if (managedClose(); as mc) {
+            <div class="blocs-panel">
+              <div class="panel__title panel__title--sub">{{ 'closes.blocsOf' | transloco: { name: mc.label } }}</div>
+              <p class="hint">{{ 'closes.attachHint' | transloco }}</p>
+
+              @for (b of mc.blocs; track b.id) {
+                <label class="bloc bloc--on">
+                  <input type="checkbox" checked [disabled]="isSaving$ | async" (change)="detachBloc(b.id)" />
+                  <span class="bloc__name">{{ b.name ?? b.code }}</span>
+                  @if (b.number !== null) { <span class="bloc__num mono">{{ b.number }}</span> }
+                </label>
+              }
+
+              @for (b of freeBlocs(); track b.id) {
+                <label class="bloc">
+                  <input type="checkbox" [disabled]="isSaving$ | async" (change)="attachBloc(b.id)" />
+                  <span class="bloc__name">{{ blocLabel(b) }}</span>
+                  @if (b.number !== null) { <span class="bloc__num mono">{{ b.number }}</span> }
+                </label>
+              } @empty {
+                @if (mc.blocs.length === 0) { <div class="empty">{{ 'closes.noBlocs' | transloco }}</div> }
+              }
+            </div>
           }
-
-          <div class="panel__title panel__title--sub">{{ 'closes.pickBlocs' | transloco: { count: formBlocIds().length } }}</div>
-          <p class="hint">{{ 'closes.pickBlocsHint' | transloco }}</p>
-
-          <div class="blocs">
-            @for (b of blocs(); track b.id) {
-              <label class="bloc" [class.bloc--taken]="isBlocTaken()(b.id)" [class.bloc--on]="isSelected(b.id)">
-                <input type="checkbox" [checked]="isSelected(b.id)" [disabled]="isBlocTaken()(b.id)" (change)="toggleBloc(b.id)" />
-                <span class="bloc__name">{{ b.name ?? b.code }}</span>
-                @if (b.number !== null) { <span class="bloc__num mono">{{ b.number }}</span> }
-                @if (isBlocTaken()(b.id)) { <span class="bloc__taken">{{ 'closes.blocTaken' | transloco }}</span> }
-              </label>
-            } @empty {
-              <div class="empty">{{ 'closes.noBlocs' | transloco }}</div>
-            }
-          </div>
-
-          <div class="form-actions">
-            <button type="button" class="btn btn--primary" [disabled]="!canSave() || (isSaving$ | async)" (click)="save()">
-              @if (isSaving$ | async) { {{ 'common.saving' | transloco }} } @else { {{ 'common.save' | transloco }} }
-            </button>
-            <button type="button" class="btn" (click)="cancelEdit()">{{ 'common.cancel' | transloco }}</button>
-          </div>
         }
       </section>
 
@@ -95,7 +116,7 @@
             [tileFilters]="tileFilters()"
             [fitBbox]="mapFitBbox()"
             [showLayerControl]="false"
-            (featureSelect)="toggleBloc($event)" />
+            (featureSelect)="onMapBloc($event)" />
         </div>
       </section>
     </div>

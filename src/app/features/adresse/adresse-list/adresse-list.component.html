@@ -48,7 +48,8 @@
   </div>
 <section class="das-card reg-map">
   <das-map [features]="mapFeatures()" [layers]="mapLayers" [tileLayers]="tileLayers" [tileFilters]="tileFilters()"
-    [basemapLayers]="basemapLayers" [fitBbox]="selectedBbox()" (featureSelect)="open($event)" />
+    [tileFeatureStates]="tileFeatureStates()"
+    [basemapLayers]="basemapLayers" [fitBbox]="mapFitBbox()" (featureSelect)="open($event)" />
   <das-map-legend [entries]="legendEntries" />
 </section>
   <section class="das-card table-card">

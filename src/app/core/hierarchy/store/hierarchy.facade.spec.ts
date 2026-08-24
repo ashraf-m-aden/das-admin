@@ -22,6 +22,7 @@ describe('HierarchyFacade — reloadQuartiers', () => {
       communes: vi.fn().mockReturnValue(of([])),
       zones: vi.fn().mockReturnValue(of([])),
       quartiers: quartiersSpy,
+      closes: vi.fn().mockReturnValue(of([])),
       blocs: vi.fn().mockReturnValue(of([])),
     };
 

@@ -4,7 +4,7 @@ import { HierarchyFacade } from '../../store/hierarchy.facade';
 import { HierarchySelection } from '../../models/hierarchy.models';
 
 /**
- * Cascade City→Commune→Zone→Quartier(→Bloc). Découplée du module hôte : elle
+ * Cascade City→Commune→Zone→Quartier(→Close→Bloc). Découplée du module hôte : elle
  * pilote la HierarchyFacade et ÉMET la sélection ; l'hôte la route vers son
  * propre facade (Blocs, Adresse…). `showBloc` active le 5e niveau.
  */
@@ -25,6 +25,7 @@ export class HierarchyCascadeComponent implements OnInit {
   protected readonly communes = this.hierarchy.communes;
   protected readonly zones = this.hierarchy.zones;
   protected readonly quartiers = this.hierarchy.quartiers;
+  protected readonly closes = this.hierarchy.closes;
   protected readonly blocs = this.hierarchy.blocs;
   protected readonly selection = this.hierarchy.selection;
 
@@ -34,6 +35,7 @@ export class HierarchyCascadeComponent implements OnInit {
   onCommune(id: string): void { this.hierarchy.selectCommune(id || null); this.emit(); }
   onZone(id: string): void { this.hierarchy.selectZone(id || null); this.emit(); }
   onQuartier(id: string): void { this.hierarchy.selectQuartier(id || null); this.emit(); }
+  onClose(id: string): void { this.hierarchy.selectClose(id || null); this.emit(); }
   onBloc(id: string): void { this.hierarchy.selectBloc(id || null); this.emit(); }
 
   private emit(): void { this.selectionChange.emit(this.hierarchy.selection()); }

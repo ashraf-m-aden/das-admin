@@ -27,6 +27,17 @@
     }
   </select>
 
+  <!-- Raffinement optionnel : masqué tant que le quartier n'a aucune close (donnée creuse),
+       exactement comme une Zone vide — cf. CLAUDE.md §4. -->
+  @if (closes().length > 0) {
+  <select class="cascade__select" (change)="onClose($any($event.target).value)">
+    <option value="">{{ 'hierarchy.allCloses' | transloco }}</option>
+    @for (c of closes(); track c.id) {
+    <option [value]="c.id" [selected]="c.id === selection().closeId">{{ c.name }}</option>
+    }
+  </select>
+  }
+
   @if (showBloc()) {
   <select class="cascade__select" [disabled]="!selection().quartierId" (change)="onBloc($any($event.target).value)">
     <option value="">{{ 'hierarchy.allBlocs' | transloco }}</option>

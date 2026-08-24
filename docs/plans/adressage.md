@@ -1,5 +1,28 @@
 # Adressage — composition des identifiants et introduction de la `Close`
 
+> ## ⚠️ DOCUMENT PÉRIMÉ — ne pas s'y fier (constat du 2026-08-24)
+>
+> Le back a livré la `Close` le 2026-08-23 (`0036f99`), et **il a tranché contre ce document sur
+> deux points majeurs**. La conception fait désormais autorité dans
+> **`dasApi/docs/plans/adressage-close.md`**. Ce fichier n'est conservé que comme trace.
+>
+> | | Ce document disait | Le back a livré |
+> |---|---|---|
+> | Nature de la close | « un ensemble de blocs » | **la portion d'une RUE dans un quartier** — `StreetId` obligatoire, c'est la rue qui nomme l'adresse |
+> | Code d'adresse | **5 segments** `77-007-3-7-42` (bloc conservé) | **4 segments** `77-007-3-42` — le bloc en est sorti (décision `D-4`) |
+> | Unicité `Bloc.Number` | déplacée sur `(CloseId, Number)` | **reste `(QuartierId, Number)`** — le déplacement n'avait de sens que si le bloc entrait dans le code |
+> | Champ `code` sur la close | « pas de champ code, délibérément » | **obligatoire**, unique dans le quartier |
+> | Libellé | `42, close 2, Quartier 7 Djibouti` | `12, rue de la Mosquée, Quartier 7 Djibouti` |
+>
+> Ce document avait été copié dans `dasApi` puis **retiré** (`f46db9b`) comme « un document du
+> dépôt front ». Sa proposition à 5 segments a été explicitement écartée parce qu'il reconnaissait
+> lui-même la redondance du segment bloc, et que `Bloc.Number` est vide partout.
+>
+> **Ce qui reste juste ici** : la règle des trois identifiants dérivés (§1), le figeage de
+> `addressCode` à la validation `Definitive`, et le fait que le code postal reste
+> `City.Code + Quartier.AreaNumber`.
+
+
 > **Pourquoi ce fichier.** Jusqu'au 2026-08-23, l'adressage n'avait **aucune doc dédiée** : le
 > concept était éclaté entre `schema-recensement-gis.md` (tables), `recensement-geographie.md`
 > (hiérarchie) et `contrat-api-registry.md` §3.1/§3.7 (dérivations) — dont **§3.7 est périmée**

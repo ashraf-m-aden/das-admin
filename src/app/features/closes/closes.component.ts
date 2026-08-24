@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -11,14 +11,13 @@ import { TileFeatureStateMap, TileFilter, TileLayerBinding } from '../../core/ui
 import { unionBounds, wktBounds } from '../../core/ui/map/wkt.util';
 import { HierarchyCascadeComponent } from '../../core/hierarchy/ui/hierarchy-cascade/hierarchy-cascade.component';
 import { HierarchySelection } from '../../core/hierarchy/models/hierarchy.models';
-import { Close } from '../../core/closes/models/closes.models';
+import { Close, CloseStreetOption } from '../../core/closes/models/closes.models';
 import { Block, UUID, UserRole } from '../../core/models/das.models';
 
 const CAN_EDIT_ROLES: UserRole[] = ['Admin', 'Gestionnaire'];
 
-/** Bleu de sélection, appliqué en `feature-state.colorOverride` — la coloration de base reste bakée dans le style. */
+/** Override live ; la coloration de base reste bakée dans le style (CLAUDE.md §4). */
 const SELECTED_COLOR = '#2563eb';
-/** Gris : bloc déjà pris par une AUTRE close, non sélectionnable. */
 const TAKEN_COLOR = '#9aa3b5';
 
 const BLOCS_TILE: TileLayerBinding = {
@@ -33,7 +32,7 @@ const BLOCS_TILE: TileLayerBinding = {
   templateUrl: './closes.component.html',
   styleUrl: './closes.component.scss',
 })
-export class ClosesComponent {
+export class ClosesComponent implements OnInit {
   private facade = inject(ClosesFacade);
   private authFacade = inject(AuthFacade);
 
@@ -43,24 +42,69 @@ export class ClosesComponent {
 
   protected readonly closes = toSignal(this.facade.closes$, { initialValue: [] as Close[] });
   protected readonly blocs = toSignal(this.facade.blocs$, { initialValue: [] as Block[] });
+  protected readonly streets = toSignal(this.facade.streets$, { initialValue: [] as CloseStreetOption[] });
   protected readonly quartierId = toSignal(this.facade.quartierId$, { initialValue: null as UUID | null });
   private readonly blocOwner = toSignal(this.facade.blocOwner$, { initialValue: new Map<UUID, Close>() });
-  private readonly saving = toSignal(this.facade.isSaving$, { initialValue: false });
+  private readonly takenNumbers = toSignal(this.facade.takenNumbers$, { initialValue: new Map<number, Close>() });
   private readonly saveTick = toSignal(this.facade.saveTick$, { initialValue: 0 });
 
   private readonly roles = toSignal(this.authFacade.roles$, { initialValue: [] as UserRole[] });
   protected readonly canEdit = computed(() => this.roles().some((r) => CAN_EDIT_ROLES.includes(r)));
 
-  /** État purement local du formulaire — n'a pas sa place dans le store, il meurt avec l'écran. */
+  /** État purement local du formulaire — il meurt avec l'écran, rien à faire dans le store. */
   protected readonly editing = signal<UUID | 'new' | null>(null);
-  protected readonly formName = signal('');
+  protected readonly formStreetId = signal<UUID | null>(null);
   protected readonly formNumber = signal<number | null>(null);
-  protected readonly formBlocIds = signal<UUID[]>([]);
+  protected readonly formCode = signal('');
+
+  /** Close dont on gère les blocs. Distinct de l'édition de la fiche : ce sont deux routes back. */
+  protected readonly managing = signal<UUID | null>(null);
   protected readonly highlightedCloseId = signal<UUID | null>(null);
 
-  private readonly takenNumbers = toSignal(this.facade.takenNumbers$, { initialValue: new Map<number, Close>() });
+  protected readonly tileLayers: TileLayerBinding[] = [BLOCS_TILE];
 
-  /** Numéro déjà porté par une AUTRE close du quartier — signalé avant l'envoi plutôt qu'au 409. */
+  constructor() {
+    // Referme le formulaire UNIQUEMENT sur écriture réussie : sur un 409 il reste ouvert avec la
+    // saisie intacte. Le panneau blocs, lui, reste ouvert — on y enchaîne les rattachements.
+    effect(() => {
+      this.saveTick();
+      this.editing.set(null);
+    });
+  }
+
+  ngOnInit(): void { this.facade.loadStreets(); }
+
+  protected readonly managedClose = computed(() =>
+    this.closes().find((c) => c.id === this.managing()) ?? null);
+
+  protected readonly tileFilters = computed<Record<string, TileFilter>>(() => {
+    const q = this.quartierId();
+    return { 'closes-blocs': q ? ['==', ['get', 'QuartierId'], q] : null };
+  });
+
+  /** Bleu = blocs de la close ciblée, gris = pris par une autre close. */
+  protected readonly tileFeatureStates = computed<Record<string, TileFeatureStateMap>>(() => {
+    const states: TileFeatureStateMap = {};
+    const focus = this.managing() ?? this.highlightedCloseId();
+    for (const [blocId, close] of this.blocOwner()) {
+      states[blocId] = { colorOverride: close.id === focus ? SELECTED_COLOR : TAKEN_COLOR };
+    }
+    return { 'closes-blocs': states };
+  });
+
+  /** Cadrage sur l'union des blocs de la close ciblée — la « géométrie » d'une close, ce sont ses blocs. */
+  protected readonly mapFitBbox = computed(() => {
+    const focusId = this.managing() ?? this.highlightedCloseId();
+    const close = this.closes().find((c) => c.id === focusId);
+    if (!close || close.blocs.length === 0) return null;
+    const ids = close.blocs.map((b) => b.id);
+    const blocs = this.blocs().filter((b) => ids.includes(b.id));
+    return unionBounds(blocs.map((b) => (b.boundaryWkt ? wktBounds(b.boundaryWkt) : null)));
+  });
+
+  /** Blocs encore libres du quartier — un bloc n'appartient qu'à UNE close. */
+  protected readonly freeBlocs = computed(() => this.blocs().filter((b) => !b.closeId));
+
   protected readonly numberCollision = computed(() => {
     const n = this.formNumber();
     if (n === null) return null;
@@ -68,119 +112,84 @@ export class ClosesComponent {
     return owner && owner.id !== this.editing() ? owner : null;
   });
 
-  constructor() {
-    // Referme le formulaire UNIQUEMENT sur une écriture réussie : sur un 409 (numéro déjà pris,
-    // bloc déjà affecté) il reste ouvert avec la saisie intacte, l'opérateur corrige et renvoie.
-    effect(() => {
-      this.saveTick();
-      this.editing.set(null);
-    });
-  }
-
-  protected readonly tileLayers: TileLayerBinding[] = [BLOCS_TILE];
-
-  /** Limite la carte au quartier choisi — même mécanisme que le registre adresses. */
-  protected readonly tileFilters = computed<Record<string, TileFilter>>(() => {
-    const q = this.quartierId();
-    return { 'closes-blocs': q ? ['==', ['get', 'QuartierId'], q] : null };
-  });
-
-  /**
-   * Bleu = sélectionné dans le formulaire, gris = déjà pris par une autre close.
-   * Hors édition, on colorie les blocs de la close survolée dans la liste.
-   */
-  protected readonly tileFeatureStates = computed<Record<string, TileFeatureStateMap>>(() => {
-    const states: TileFeatureStateMap = {};
-    const owner = this.blocOwner();
-    const selfId = this.editing();
-
-    if (selfId !== null) {
-      for (const [blocId, close] of owner) {
-        if (close.id !== selfId) states[blocId] = { colorOverride: TAKEN_COLOR };
-      }
-      for (const id of this.formBlocIds()) states[id] = { colorOverride: SELECTED_COLOR, selected: true };
-    } else {
-      const highlighted = this.highlightedCloseId();
-      for (const c of this.closes()) {
-        const color = c.id === highlighted ? SELECTED_COLOR : TAKEN_COLOR;
-        for (const b of c.blocIds) states[b] = { colorOverride: color };
-      }
-    }
-    return { 'closes-blocs': states };
-  });
-
-  /** Cadrage sur l'union des blocs sélectionnés — c'est la seule « union » qu'on calcule, et elle est visuelle. */
-  protected readonly mapFitBbox = computed(() => {
-    const ids = this.editing() !== null
-      ? this.formBlocIds()
-      : (this.closes().find((c) => c.id === this.highlightedCloseId())?.blocIds ?? []);
-    if (ids.length === 0) return null;
-    const blocs = this.blocs().filter((b) => ids.includes(b.id));
-    return unionBounds(blocs.map((b) => (b.boundaryWkt ? wktBounds(b.boundaryWkt) : null)));
-  });
-
-  protected readonly isBlocTaken = computed(() => {
-    const owner = this.blocOwner();
-    const selfId = this.editing();
-    return (blocId: UUID) => {
-      const c = owner.get(blocId);
-      return !!c && c.id !== selfId;
-    };
-  });
-
   protected readonly canSave = computed(() =>
-    this.formName().trim().length > 0
+    this.formStreetId() !== null
     && this.formNumber() !== null
-    && this.formNumber()! > 0
-    && this.formBlocIds().length > 0
+    && this.formNumber()! >= 1 && this.formNumber()! <= 999
+    && this.formCode().trim().length > 0
     && this.quartierId() !== null
     && this.numberCollision() === null,
   );
 
   onHierarchy(sel: HierarchySelection): void {
-    this.cancelEdit();
+    this.editing.set(null);
+    this.managing.set(null);
     this.facade.selectQuartier(sel.quartierId);
   }
 
   highlight(id: UUID | null): void { this.highlightedCloseId.set(id); }
 
   startCreate(): void {
+    this.managing.set(null);
     this.editing.set('new');
-    this.formName.set('');
+    this.formStreetId.set(null);
     this.formNumber.set(null);
-    this.formBlocIds.set([]);
+    this.formCode.set('');
   }
 
   startEdit(c: Close): void {
+    this.managing.set(null);
     this.editing.set(c.id);
-    this.formName.set(c.name);
+    this.formStreetId.set(c.streetId);
     this.formNumber.set(c.number);
-    this.formBlocIds.set([...c.blocIds]);
+    this.formCode.set(c.code);
   }
 
   cancelEdit(): void { this.editing.set(null); }
 
-  /** Point d'entrée unique du clic carte ET de la case à cocher — les deux modes restent synchronisés par construction. */
-  toggleBloc(blocId: UUID): void {
-    if (this.editing() === null || this.isBlocTaken()(blocId)) return;
-    this.formBlocIds.update((ids) => (ids.includes(blocId) ? ids.filter((x) => x !== blocId) : [...ids, blocId]));
-  }
-
-  isSelected(blocId: UUID): boolean { return this.formBlocIds().includes(blocId); }
-
   save(): void {
     if (!this.canSave()) return;
     const id = this.editing();
-    this.facade.save(
-      id === 'new' ? null : id,
-      { name: this.formName().trim(), number: this.formNumber()!, quartierId: this.quartierId()!, blocIds: this.formBlocIds() },
-    );
-    // Pas de cancelEdit() ici : la fermeture est pilotée par `saveTick` (constructeur), donc
-    // seulement en cas de succès.
+    this.facade.save(id === 'new' ? null : id, {
+      quartierId: this.quartierId()!,
+      streetId: this.formStreetId()!,
+      number: this.formNumber()!,
+      code: this.formCode().trim(),
+      boundaryWkt: null,
+    });
   }
 
-  remove(c: Close): void {
-    if (this.saving()) return;
-    this.facade.remove(c.id);
+  remove(c: Close): void { this.facade.remove(c.id); }
+
+  manageBlocs(c: Close): void {
+    this.editing.set(null);
+    this.managing.update((cur) => (cur === c.id ? null : c.id));
   }
+
+  /**
+   * Un bloc à la fois, volontairement. Le back refuse (409) le rattachement dès que la réunion
+   * des blocs ferait porter le même numéro à deux parcelles — et comme chaque bloc numérote à
+   * partir de 1, c'est la règle plus que l'exception tant que la renumérotation n'a pas eu lieu.
+   * Envoyer un lot ferait échouer le tout pour un seul bloc fautif, sans dire lequel.
+   */
+  attachBloc(blocId: UUID): void {
+    const closeId = this.managing();
+    if (closeId) this.facade.attachBlocs(closeId, [blocId]);
+  }
+
+  detachBloc(blocId: UUID): void {
+    const closeId = this.managing();
+    if (closeId) this.facade.detachBloc(closeId, blocId);
+  }
+
+  /** Clic carte : rattache un bloc libre, détache un bloc de la close gérée. */
+  onMapBloc(blocId: UUID): void {
+    if (!this.managing()) return;
+    const owner = this.blocOwner().get(blocId);
+    if (owner?.id === this.managing()) this.detachBloc(blocId);
+    else if (!owner) this.attachBloc(blocId);
+  }
+
+  streetLabel(s: CloseStreetOption): string { return s.name ?? s.code; }
+  blocLabel(b: Block): string { return b.name ?? b.code; }
 }

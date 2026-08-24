@@ -15,9 +15,22 @@ function errorCode(err: unknown): string | undefined {
   return e?.error?.code ?? e?.code;
 }
 
+/**
+ * Codes métier du back (`ErrorResponse.Code`). Ils se testent, jamais le `message` (CLAUDE.md §6).
+ * `Closes.BlocNumeroCollision` est le cas courant tant que la renumérotation n'a pas eu lieu :
+ * chaque bloc numérotant à partir de 1, réunir deux blocs sous une close fait collider leurs
+ * numéros de maison — le back le refuse, et c'est la règle plus que l'exception aujourd'hui.
+ */
 const ERROR_KEY_BY_CODE: Record<string, string> = {
   'Closes.NumberAlreadyUsed': 'closes.errorNumberUsed',
+  'Closes.CodeAlreadyUsed': 'closes.errorCodeUsed',
+  'Closes.StreetAlreadyUsed': 'closes.errorStreetUsed',
   'Closes.BlocAlreadyAssigned': 'closes.errorBlocTaken',
+  'Closes.BlocOtherQuartier': 'closes.errorBlocOtherQuartier',
+  'Closes.NumeroCollision': 'closes.errorNumeroCollision',
+  'Closes.BlocNumeroCollision': 'closes.errorNumeroCollision',
+  'Closes.FrozenAddressCode': 'closes.errorFrozenCode',
+  'Closes.HasBlocs': 'closes.errorHasBlocs',
 };
 
 const toErrorKey = (err: unknown): string => ERROR_KEY_BY_CODE[errorCode(err) ?? ''] ?? 'common.error';
@@ -39,9 +52,17 @@ export class ClosesEffects {
   loadList$ = createEffect(() => this.actions$.pipe(
     ofType(ClosesActions.loadList),
     concatLatestFrom(() => this.store.select(closesFeature.selectQuartierId)),
-    switchMap(([, quartierId]) => this.api.list({ quartierId, search: '' }).pipe(
+    switchMap(([, quartierId]) => this.api.list({ quartierId }).pipe(
       map((closes) => ClosesActions.loadListSuccess({ closes })),
       catchError(() => of(ClosesActions.loadListFailure({ errorMessageKey: 'common.error' }))),
+    )),
+  ));
+
+  loadStreets$ = createEffect(() => this.actions$.pipe(
+    ofType(ClosesActions.loadStreets),
+    switchMap(() => this.api.listStreets().pipe(
+      map((streets) => ClosesActions.loadStreetsSuccess({ streets })),
+      catchError(() => of(ClosesActions.loadStreetsSuccess({ streets: [] }))),
     )),
   ));
 
@@ -56,12 +77,21 @@ export class ClosesEffects {
     }),
   ));
 
+  /** `quartierId` est retiré du corps en modification : le back ne le modifie pas (`Close.Update`). */
   saveClose$ = createEffect(() => this.actions$.pipe(
     ofType(ClosesActions.saveClose),
-    switchMap(({ id, payload }) => (id ? this.api.update(id, payload) : this.api.create(payload)).pipe(
-      map(() => ClosesActions.saveCloseSuccess()),
-      catchError((err: unknown) => of(ClosesActions.saveCloseFailure({ errorMessageKey: toErrorKey(err) }))),
-    )),
+    switchMap(({ id, payload }) => {
+      const request$ = id
+        ? this.api.update(id, {
+          streetId: payload.streetId, number: payload.number,
+          code: payload.code, boundaryWkt: payload.boundaryWkt,
+        })
+        : this.api.create(payload);
+      return request$.pipe(
+        map(() => ClosesActions.saveCloseSuccess()),
+        catchError((err: unknown) => of(ClosesActions.saveCloseFailure({ errorMessageKey: toErrorKey(err) }))),
+      );
+    }),
   ));
 
   removeClose$ = createEffect(() => this.actions$.pipe(
@@ -72,9 +102,32 @@ export class ClosesEffects {
     )),
   ));
 
-  /** Toute écriture réussie relit la liste — les numéros et les rattachements de blocs ont pu bouger. */
+  attachBlocs$ = createEffect(() => this.actions$.pipe(
+    ofType(ClosesActions.attachBlocs),
+    switchMap(({ closeId, blocIds }) => this.api.attachBlocs(closeId, blocIds).pipe(
+      map(() => ClosesActions.attachBlocsSuccess()),
+      catchError((err: unknown) => of(ClosesActions.attachBlocsFailure({ errorMessageKey: toErrorKey(err) }))),
+    )),
+  ));
+
+  detachBloc$ = createEffect(() => this.actions$.pipe(
+    ofType(ClosesActions.detachBloc),
+    switchMap(({ closeId, blocId }) => this.api.detachBloc(closeId, blocId).pipe(
+      map(() => ClosesActions.detachBlocSuccess()),
+      catchError((err: unknown) => of(ClosesActions.detachBlocFailure({ errorMessageKey: toErrorKey(err) }))),
+    )),
+  ));
+
+  /**
+   * Toute écriture réussie relit la liste ET les blocs : `Bloc.closeId` change au
+   * rattachement/détachement, et c'est lui qui pilote le grisage du sélecteur.
+   */
   reloadAfterWrite$ = createEffect(() => this.actions$.pipe(
-    ofType(ClosesActions.saveCloseSuccess, ClosesActions.removeCloseSuccess),
-    map(() => ClosesActions.loadList()),
+    ofType(
+      ClosesActions.saveCloseSuccess, ClosesActions.removeCloseSuccess,
+      ClosesActions.attachBlocsSuccess, ClosesActions.detachBlocSuccess,
+    ),
+    concatLatestFrom(() => this.store.select(closesFeature.selectQuartierId)),
+    map(([, quartierId]) => ClosesActions.selectQuartier({ quartierId })),
   ));
 }

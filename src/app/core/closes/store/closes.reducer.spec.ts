@@ -8,11 +8,16 @@ import { Block } from '../../models/das.models';
 const reduce = closesFeature.reducer;
 
 const close = (id: string, number: number, blocIds: string[]): Close => ({
-  id, name: `Close ${number}`, number, quartierId: 'q1', blocIds,
+  id, quartierId: 'q1', quartierNom: 'Quartier 7', quartierCode: 'Q7',
+  streetId: `street-${id}`, streetCode: 'STR-1', streetName: null,
+  number, code: `CL-0${number}`, label: String(number),
+  blocs: blocIds.map((b) => ({ id: b, code: `CODE-${b}`, name: null, number: 1 })),
+  adresseCount: 0, boundaryWkt: null,
 });
 
-const bloc = (id: string): Block => ({
-  id, code: `CODE-${id}`, name: null, number: 1, quartierId: 'q1', boundaryWkt: null,
+/** `closeId` est ce qui relie un bloc à sa close — c'est lui que `selectBlocOwner` lit. */
+const bloc = (id: string, closeId: string | null = null): Block => ({
+  id, code: `CODE-${id}`, name: null, number: 1, quartierId: 'q1', closeId, boundaryWkt: null,
 });
 
 describe('closesFeature reducer', () => {
@@ -54,7 +59,10 @@ describe('closesFeature reducer', () => {
   it('efface l\'erreur précédente quand une nouvelle écriture démarre', () => {
     const state = { ...initialClosesState, saveErrorMessageKey: 'closes.errorBlocTaken' };
 
-    const next = reduce(state, ClosesActions.saveClose({ id: null, payload: { name: 'X', number: 2, quartierId: 'q1', blocIds: ['b1'] } }));
+    const next = reduce(state, ClosesActions.saveClose({
+      id: null,
+      payload: { quartierId: 'q1', streetId: 's1', number: 2, code: 'CL-02', boundaryWkt: null },
+    }));
 
     expect(next.isSaving).toBe(true);
     expect(next.saveErrorMessageKey).toBeNull();
@@ -62,8 +70,11 @@ describe('closesFeature reducer', () => {
 });
 
 describe('closes selectors', () => {
-  it('selectBlocOwner associe chaque bloc à SA close — un bloc n\'appartient qu\'à une seule', () => {
-    const owner = selectBlocOwner.projector([close('c1', 1, ['b1', 'b2']), close('c2', 2, ['b3'])]);
+  it('selectBlocOwner lit Bloc.closeId — la source de vérité du rattachement', () => {
+    const blocs = [bloc('b1', 'c1'), bloc('b2', 'c1'), bloc('b3', 'c2'), bloc('b4', null)];
+    const closes = [close('c1', 1, ['b1', 'b2']), close('c2', 2, ['b3'])];
+
+    const owner = selectBlocOwner.projector(blocs, closes);
 
     expect(owner.get('b1')?.id).toBe('c1');
     expect(owner.get('b2')?.id).toBe('c1');

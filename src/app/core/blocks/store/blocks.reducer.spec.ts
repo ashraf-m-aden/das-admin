@@ -6,7 +6,7 @@ import { Block } from '../../models/das.models';
 const reduce = blocksFeature.reducer;
 
 const bloc = (id: string, name: string | null): Block => ({
-  id, code: `CODE-${id}`, name, number: 1, quartierId: 'q1', boundaryWkt: null,
+  id, code: `CODE-${id}`, name, number: 1, quartierId: 'q1', closeId: null, boundaryWkt: null,
 });
 
 describe('blocksFeature reducer — updateBlockSuccess', () => {
