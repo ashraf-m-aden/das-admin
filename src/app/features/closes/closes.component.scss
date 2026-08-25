@@ -23,6 +23,22 @@
   &__actions { display: flex; gap: v.$space-1; }
 }
 
+.streets { display: flex; flex-direction: column; gap: 1px; max-height: 220px; overflow: auto; border: 1px solid var(--color-border); border-radius: v.$radius-sm; @include m.slim-scrollbar; }
+.street { display: flex; align-items: center; gap: v.$space-2; width: 100%; padding: v.$space-2 v.$space-3; border: none; background: none; font: inherit; font-size: v.$font-size-sm; color: var(--color-text-secondary); text-align: left; cursor: pointer;
+  &:hover, &:focus-visible { background: var(--color-surface-alt); outline: none; }
+  &:focus-visible { box-shadow: inset 0 0 0 2px var(--color-accent); }
+  &--on { background: var(--das-blue-50); color: var(--color-text-primary); font-weight: v.$font-weight-medium; }
+  &__name { flex: 1; min-width: 0; @include m.truncate;
+    &--unnamed { color: var(--color-text-muted); font-style: italic; } }
+  &__tag { font-size: v.$font-size-xs; color: var(--color-text-muted); }
+}
+
+.generated { display: flex; align-items: center; gap: v.$space-2; padding: v.$space-2 v.$space-3; background: var(--color-surface-alt); border-radius: v.$radius-sm;
+  &__label { font-size: v.$font-size-xs; color: var(--color-text-muted); }
+  &__value { font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; color: var(--color-text-primary); }
+  &__sep { color: var(--color-text-muted); }
+}
+
 .form { display: flex; gap: v.$space-2; flex-wrap: wrap; }
 .field { display: flex; flex-direction: column; gap: v.$space-1; flex: 1; min-width: 140px;
   span { font-size: v.$font-size-xs; color: var(--color-text-muted); }

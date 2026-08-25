@@ -3,12 +3,13 @@ import { forkJoin } from 'rxjs';
 import { PostcodesApiPort } from '../services/postcodes-api.port';
 import { CityPostcodeRow, QuartierPostcodeRow } from '../models/postcodes.models';
 import { UUID } from '../../models/das.models';
+import { ErrorKeyMap, toErrorKey } from '../../http/error-code';
 
-/** Lit `err.error.code` (HttpErrorResponse réel) ou `err.code` (throwError direct du mock) — les deux formes coexistent dans ce repo. */
-function errorCode(err: unknown): string | undefined {
-  const e = err as { error?: { code?: string }; code?: string } | null | undefined;
-  return e?.error?.code ?? e?.code;
-}
+/** Codes métier de `PATCH /api/quartiers/{id}` et `PATCH /api/cities/{id}`, relus dans la source `dasApi`. */
+const ERROR_KEY_BY_CODE: ErrorKeyMap = {
+  'Quartiers.AreaNumberAlreadyUsed': 'postcodes.errorAreaNumberUsed',
+  'Cities.CodeAlreadyUsed': 'postcodes.errorCityCodeUsed',
+};
 
 @Injectable({ providedIn: 'root' })
 export class PostcodesFacade {
@@ -62,9 +63,7 @@ export class PostcodesFacade {
       },
       error: (err) => {
         this._savingId.set(null);
-        this._errorMessageKey.set(
-          errorCode(err) === 'Quartiers.AreaNumberAlreadyUsed' ? 'postcodes.errorAreaNumberUsed' : 'common.error',
-        );
+        this._errorMessageKey.set(toErrorKey(err, ERROR_KEY_BY_CODE));
       },
     });
   }
@@ -80,9 +79,7 @@ export class PostcodesFacade {
       },
       error: (err) => {
         this._savingId.set(null);
-        this._errorMessageKey.set(
-          errorCode(err) === 'Cities.CodeAlreadyUsed' ? 'postcodes.errorCityCodeUsed' : 'common.error',
-        );
+        this._errorMessageKey.set(toErrorKey(err, ERROR_KEY_BY_CODE));
       },
     });
   }

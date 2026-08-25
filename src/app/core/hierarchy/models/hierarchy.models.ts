@@ -1,7 +1,13 @@
 import type { Polygon } from 'geojson';
 import type { UUID } from '../../models/das.models';
 
-/** City → Commune → Zone → Quartier → Close → Bloc (→ Adresse). */
+/**
+ * City → Commune → Zone → Quartier → Close (→ Adresse).
+ *
+ * `bloc` reste un niveau de la HIÉRARCHIE du domaine, mais plus un niveau de FILTRE : il a été
+ * retiré de la cascade le 2026-08-25 (cf. `HierarchyCascadeComponent`). Le back continue de
+ * renvoyer des nœuds `bloc`, que seul l'écran des closes consomme, comme données.
+ */
 export type HierarchyLevel = 'city' | 'commune' | 'zone' | 'quartier' | 'close' | 'bloc';
 
 export type Bbox4326 = [number, number, number, number];
@@ -29,9 +35,10 @@ export interface HierarchyBoundary {
 
 /**
  * Sélection de la cascade. `null` = « tous ».
- * `closeId` est un **raffinement optionnel** entre quartier et bloc, au même titre que commune et
- * zone : il se masque quand le quartier n'a aucune close (état normal tant que la reprise de
- * données n'a pas eu lieu — sinon le select bloc deviendrait inutilisable).
+ *
+ * `closeId` est le niveau le plus fin : c'est la close qui nomme l'adresse depuis le passage du
+ * code à quatre segments. Le niveau bloc a été retiré le 2026-08-25 — un bloc est une unité de
+ * TRAVAIL (affectation de campagne), pas un critère d'adressage.
  */
 export interface HierarchySelection {
   cityId: UUID | null;
@@ -39,9 +46,8 @@ export interface HierarchySelection {
   zoneId: UUID | null;
   quartierId: UUID | null;
   closeId: UUID | null;
-  blocId: UUID | null;
 }
 
 export const EMPTY_HIERARCHY_SELECTION: HierarchySelection = {
-  cityId: null, communeId: null, zoneId: null, quartierId: null, closeId: null, blocId: null,
+  cityId: null, communeId: null, zoneId: null, quartierId: null, closeId: null,
 };

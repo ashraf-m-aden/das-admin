@@ -33,8 +33,13 @@ const BASEMAP_NON_ROAD_LAYER_ID = /rail|ferry|aerialway|pier/i;
  * Aucune couche adossée à ces sources n'est jamais masquée par `basemapRoadsOnly` :
  * plusieurs écrans (dashboard, rapports) affichent ces tuiles SANS déclarer de
  * `TileLayerBinding` — s'appuyer sur les seuls bindings les ferait disparaître.
+ *
+ * `streets` a rejoint la liste le 2026-08-25, quand la voirie CARTO a été remplacée par la
+ * table `Streets` du référentiel. Ses couches survivraient aussi au filtre par accident (leurs
+ * ids contiennent « street », que la regex ci-dessus laisse passer) — mais dépendre d'une
+ * coïncidence de nommage pour ne pas effacer nos propres données serait une bombe à retardement.
  */
-const DAS_TILE_SOURCES = new Set(['blocs', 'adresses']);
+const DAS_TILE_SOURCES = new Set(['streets', 'closes', 'blocs', 'adresses']);
 
 /**
  * Groupe de couches issues du STYLE DE BASE (map-style.json) que l'on peut
@@ -213,8 +218,10 @@ export class DasMapComponent implements OnInit, OnDestroy {
    * - les couches déclarées par `tileLayers` / `basemapLayers` (Blocs, Adresses,
    *   contours cadastraux) sont exclues : leur visibilité reste pilotée par le
    *   panneau des couches, pas par ce filtre.
-   * En mode réel le style maison ne porte aucune voirie : la méthode est un no-op utile
-   * (il n'y a que `bg` + nos couches), le rendu ne change pas.
+   * En mode réel, depuis le 2026-08-25, le style maison ne contient PLUS de fond de carte tiers :
+   * la voirie vient de la table `Streets` via la source `streets`, protégée par
+   * `DAS_TILE_SOURCES`. La méthode n'a donc plus rien à masquer — elle reste en place pour le
+   * mode mock, qui charge un vrai style CARTO complet (`MOCK_BASEMAP_STYLE_URL`).
    */
   private hideNonRoadBasemapLayers(): void {
     const map = this.map!;

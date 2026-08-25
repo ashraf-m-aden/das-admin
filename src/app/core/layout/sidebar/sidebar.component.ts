@@ -50,6 +50,7 @@ export class SidebarComponent {
     { kind: 'link', labelKey: 'nav.fieldOps', path: '/field-operations', icon: 'ti-users-group', allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
     { kind: 'link', labelKey: 'nav.postcodes', path: '/postcodes', icon: 'ti-mail-code', allowedRoles: ['Admin', 'Gestionnaire'] },
     { kind: 'link', labelKey: 'nav.dataQuality', path: '/data-quality', icon: 'ti-shield-check', allowedRoles: ['Admin', 'Superviseur'] },
+    { kind: 'link', labelKey: 'nav.discoveries', path: '/discoveries', icon: 'ti-map-pin-plus', allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
     {
       kind: 'group', key: 'reports', labelKey: 'nav.reports', icon: 'ti-chart-bar',
       allowedRoles: ['Admin', 'Gestionnaire'],
@@ -60,7 +61,6 @@ export class SidebarComponent {
     },
     { kind: 'link', labelKey: 'nav.users', path: '/staff', icon: 'ti-users', allowedRoles: ['Admin'] },
     { kind: 'link', labelKey: 'nav.integrations', path: '/integrations', icon: 'ti-plug', allowedRoles: ['Admin'] },
-    { kind: 'link', labelKey: 'nav.settings', path: '/settings', icon: 'ti-settings', allowedRoles: ['Admin'] },
   ];
 
   isVisible(entry: NavEntry, roles: UserRole[]): boolean {

@@ -28,7 +28,7 @@
       <input type="text" formControlName="search" [attr.placeholder]="'adresse.searchPlaceholder' | transloco" />
     </label>
 
-    <das-hierarchy-cascade [showBloc]="true" (selectionChange)="onHierarchy($event)" />
+    <das-hierarchy-cascade (selectionChange)="onHierarchy($event)" />
 
     <select formControlName="status">
       <option [ngValue]="null">{{ 'adresse.allStatuses' | transloco }}</option>
@@ -74,6 +74,7 @@
       <span class="col-check"><input type="checkbox" [checked]="allOnPageSelected()" (change)="toggleAll()" /></span>
       <span>{{ 'adresse.colId' | transloco }}</span>
       <span>{{ 'adresse.colPostcode' | transloco }}</span>
+      <span>{{ 'adresse.colStreet' | transloco }}</span>
       <span>{{ 'adresse.colQuartier' | transloco }}</span>
       <span>{{ 'adresse.colType' | transloco }}</span>
       <span>{{ 'adresse.colStatus' | transloco }}</span>
@@ -87,6 +88,7 @@
           (click)="toggle(a.id, $event)" /></span>
       <span class="trow__id">{{ a.addressCode ?? a.libelle }}</span>
       <span class="trow__pc">{{ a.postcode }}</span>
+      <span class="trow__street">{{ a.street ?? '—' }}</span>
       <span>{{ a.quartier }}</span> <span>{{ a.propertyType }}</span>
       <span><span class="stage" [style.color]="stageColor(a.workflowStage)"><span class="stage__dot"
             [style.background]="stageColor(a.workflowStage)"></span>{{ stageLabelKey(a.workflowStage) | transloco

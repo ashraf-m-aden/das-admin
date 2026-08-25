@@ -11,7 +11,7 @@
   @if (block(); as b) {
     <div class="detail__grid">
       <section class="das-card detail__map">
-        <das-map [tileLayers]="tileLayers" [tileFilters]="tileFilters()" [fitBbox]="fitBbox()" [showLayerControl]="false" />
+        <das-map [tileLayers]="tileLayers" [tileFilters]="tileFilters()" [fitBbox]="fitBbox()" [basemapLayers]="basemapLayers" />
       </section>
 
       <section class="das-card detail__fiche">
@@ -29,9 +29,17 @@
           </div>
         </div>
 
-        <a class="btn btn--ghost fiche__parcels-link" [routerLink]="['/adresse']" [queryParams]="{ blocId: b.id }">
-          <i class="ti ti-list" aria-hidden="true"></i>{{ 'blocks.viewParcels' | transloco }}
-        </a>
+        <!--
+          Vers les parcelles de la CLOSE du bloc, pas du bloc : le filtre par bloc a été retiré
+          le 2026-08-25 (un bloc est une unité de travail, pas d'adressage). Masqué tant que le
+          bloc n'est rattaché à aucune close — un lien qui ne filtrerait rien vaut moins que pas
+          de lien.
+        -->
+        @if (b.closeId) {
+          <a class="btn btn--ghost fiche__parcels-link" [routerLink]="['/adresse']" [queryParams]="{ closeId: b.closeId }">
+            <i class="ti ti-list" aria-hidden="true"></i>{{ 'blocks.viewCloseParcels' | transloco }}
+          </a>
+        }
 
         <form class="fiche__name-form" [formGroup]="nameForm" (ngSubmit)="saveName()">
           <label class="fiche__muted" for="block-name">{{ 'blocks.nameLabel' | transloco }}</label>

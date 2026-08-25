@@ -6,6 +6,38 @@ import { ReviewApiPort } from '../services/review-api.port';
 import { AddressingApiPort } from '../../addressing/services/addressing-api.port';
 import { ReferenceApiPort } from '../../reference/services/reference-api.port';
 import { ReviewItem } from '../models/review.models';
+import { ErrorKeyMap, toErrorKey } from '../../http/error-code';
+
+/**
+ * Codes métier de `/api/surveys` et des deux files de suggestions, relevés dans la source
+ * `dasApi` le 2026-08-25. Testés sur `code`, jamais sur `message` (CLAUDE.md §6).
+ *
+ * Une seule table pour tout le module : les codes sont préfixés par leur famille, donc les
+ * décisions relevé et suggestion ne peuvent pas se marcher dessus, et `reject$` — qui appelle
+ * l'une OU l'autre selon `submissionType` — n'a qu'une table à consulter.
+ *
+ * `Surveys.SelfReview` et `*.NotPending` sont les deux refus qu'un superviseur rencontre
+ * vraiment : le premier est une règle métier (on ne valide pas son propre relevé, `B1` des
+ * failles), le second signale une file périmée — un collègue a statué entre-temps.
+ *
+ * `Surveys.InvalidValidationType` reste volontairement non mappé : c'est un bug du front (type
+ * de validation inconnu envoyé), pas une situation que l'opérateur peut corriger. Le repli
+ * générique est la bonne réponse.
+ */
+const ERROR_KEY_BY_CODE: ErrorKeyMap = {
+  'Surveys.SelfReview': 'review.errorSelfReview',
+  'Surveys.NotSubmitted': 'review.errorNotSubmitted',
+  'Surveys.NotFound': 'review.errorSurveyNotFound',
+  // Sort de `requestCorrection` seulement : sur campagne clôturée l'agent ne peut plus saisir,
+  // il reste à valider ou rejeter (`RequestSurveyCorrectionHandler`).
+  'Campaigns.Closed': 'review.errorCampaignClosed',
+  'BlocSuggestions.NotPending': 'review.errorSuggestionNotPending',
+  'StreetSuggestions.NotPending': 'review.errorSuggestionNotPending',
+  'BlocSuggestions.NotFound': 'review.errorSuggestionNotFound',
+  'StreetSuggestions.NotFound': 'review.errorSuggestionNotFound',
+};
+
+const toKey = (err: unknown): string => toErrorKey(err, ERROR_KEY_BY_CODE);
 
 @Injectable()
 export class ReviewEffects {
@@ -59,7 +91,7 @@ export class ReviewEffects {
       mergeMap(({ id }) =>
         this.reviewApi.validateSurvey(id).pipe(
           map(() => ReviewActions.validateSuccess({ id })),
-          catchError(() => of(ReviewActions.validateFailure({ errorMessageKey: 'common.error' }))),
+          catchError((err: unknown) => of(ReviewActions.validateFailure({ errorMessageKey: toKey(err) }))),
         ),
       ),
     ),
@@ -77,7 +109,7 @@ export class ReviewEffects {
               : this.addressingApi.rejectStreetSuggestion(id, rejectionReason);
         return decision$.pipe(
           map(() => ReviewActions.rejectSuccess({ id })),
-          catchError(() => of(ReviewActions.rejectFailure({ errorMessageKey: 'common.error' }))),
+          catchError((err: unknown) => of(ReviewActions.rejectFailure({ errorMessageKey: toKey(err) }))),
         );
       }),
     ),
@@ -89,7 +121,7 @@ export class ReviewEffects {
       mergeMap(({ id }) =>
         this.reviewApi.requestSurveyCorrection(id).pipe(
           map(() => ReviewActions.requestCorrectionSuccess({ id })),
-          catchError(() => of(ReviewActions.requestCorrectionFailure({ errorMessageKey: 'common.error' }))),
+          catchError((err: unknown) => of(ReviewActions.requestCorrectionFailure({ errorMessageKey: toKey(err) }))),
         ),
       ),
     ),
@@ -103,7 +135,7 @@ export class ReviewEffects {
           submissionType === 'block' ? this.addressingApi.approveBlockSuggestion(id) : this.addressingApi.approveStreetSuggestion(id);
         return decision$.pipe(
           map(() => ReviewActions.approveSuggestionSuccess({ id })),
-          catchError(() => of(ReviewActions.approveSuggestionFailure({ errorMessageKey: 'common.error' }))),
+          catchError((err: unknown) => of(ReviewActions.approveSuggestionFailure({ errorMessageKey: toKey(err) }))),
         );
       }),
     ),
@@ -115,7 +147,7 @@ export class ReviewEffects {
       mergeMap(({ surveyId }) =>
         this.reviewApi.getSurveyPhotos(surveyId).pipe(
           map((photos) => ReviewActions.loadPhotosSuccess({ surveyId, photos })),
-          catchError(() => of(ReviewActions.loadPhotosFailure({ surveyId, errorMessageKey: 'common.error' }))),
+          catchError((err: unknown) => of(ReviewActions.loadPhotosFailure({ surveyId, errorMessageKey: toKey(err) }))),
         ),
       ),
     ),

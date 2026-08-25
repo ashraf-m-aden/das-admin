@@ -12,11 +12,12 @@ import { PageHeaderComponent } from '../../../core/layout/page-header/page-heade
 import { DasDatePipe } from '../../../core/i18n/das-locale.pipes';
 import { HierarchyCascadeComponent } from '../../../core/hierarchy/ui/hierarchy-cascade/hierarchy-cascade.component';
 import { HierarchySelection } from '../../../core/hierarchy/models/hierarchy.models';
-import { DasMapComponent } from '../../../core/ui/map/das-map.component';
+import { BasemapLayerGroup, DasMapComponent } from '../../../core/ui/map/das-map.component';
 import { TileFeatureStateMap, TileFilter, TileLayerBinding } from '../../../core/ui/map/map.models';
 import { unionBounds, wktBounds } from '../../../core/ui/map/wkt.util';
 import { AssignmentStatus, CampaignBloc, UUID } from '../../../core/models/das.models';
 import { StaffMember } from '../../../core/staff/models/staff.models';
+import { STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP } from '../../../core/ui/map/basemap-groups';
 
 /** Palette distincte et stable par agent — même génération de couleur que dans le template (agentColor). */
 const AGENT_PALETTE = ['#2563eb', '#d97706', '#16a34a', '#7c3aed', '#dc2626', '#0d9488', '#db2777', '#65a30d'];
@@ -40,6 +41,13 @@ function hashColor(id: string): string {
   styleUrl: './campaign-detail.component.scss',
 })
 export class CampaignDetailComponent implements OnInit, OnDestroy {
+
+  /**
+   * Voirie et contours du style de base, pilotables depuis le panneau des couches. Le panneau
+   * a été activé sur cette carte le 2026-08-25 : depuis le retrait du fond CARTO, la voirie est
+   * la seule référence de terrain, et il faut pouvoir la masquer pour lire les contours dessous.
+   */
+  protected readonly basemapLayers: BasemapLayerGroup[] = [STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP];
   private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);
   protected facade = inject(FieldOpsFacade);

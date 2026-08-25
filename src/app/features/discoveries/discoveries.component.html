@@ -1,0 +1,126 @@
+<das-page-header [eyebrow]="'discoveries.eyebrow' | transloco" [title]="'nav.discoveries' | transloco">
+  @if (canReview()) {
+    <button actions type="button" class="btn" [disabled]="isExporting$ | async" (click)="exportGeoJson()">
+      <i class="ti ti-file-download" aria-hidden="true"></i>
+      @if (isExporting$ | async) { {{ 'common.loading' | transloco }} } @else { {{ 'discoveries.export' | transloco }} }
+    </button>
+  }
+</das-page-header>
+
+<div class="dc">
+  <div class="dc__filters">
+    <label class="field">
+      <span>{{ 'discoveries.campaign' | transloco }}</span>
+      <select [ngModel]="campaignId() ?? ''" (ngModelChange)="setCampaign($event)">
+        <option value="">{{ 'discoveries.allCampaigns' | transloco }}</option>
+        @for (c of campaigns(); track c.id) {
+          <option [value]="c.id">{{ c.label }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="field">
+      <span>{{ 'discoveries.statusFilter' | transloco }}</span>
+      <select [ngModel]="status() ?? ''" (ngModelChange)="setStatus($event)">
+        @for (s of statuses; track s) {
+          <option [value]="s ?? ''">
+            {{ (s ? statusLabelKey(s) : 'discoveries.allStatuses') | transloco }}
+          </option>
+        }
+      </select>
+    </label>
+
+    <div class="dc__counts">
+      <span class="cnt"><span class="cnt__dot" [style.background]="statusColor('Pending')"></span>{{ counts().pending }}</span>
+      <span class="cnt"><span class="cnt__dot" [style.background]="statusColor('Accepted')"></span>{{ counts().accepted }}</span>
+      <span class="cnt"><span class="cnt__dot" [style.background]="statusColor('Rejected')"></span>{{ counts().rejected }}</span>
+    </div>
+  </div>
+
+  <p class="dc__note">{{ 'discoveries.noAddressCreated' | transloco }}</p>
+
+  @if (errorMessageKey$ | async; as err) { <div class="dc__error">{{ err | transloco }}</div> }
+
+  <div class="dc__grid">
+    <section class="das-card panel">
+      @for (r of reports(); track r.id) {
+        <div class="row" [class.row--on]="selectedId() === r.id" (click)="select(r.id)">
+          <div class="row__main">
+            <span class="row__status" [style.color]="statusColor(r.status)">
+              <span class="row__dot" [style.background]="statusColor(r.status)"></span>
+              {{ statusLabelKey(r.status) | transloco }}
+            </span>
+            <span class="row__agent">{{ r.agentFullName }}</span>
+            @if (r.blocCode) { <span class="row__bloc mono">{{ r.blocCode }}</span> }
+          </div>
+
+          @if (r.comment) { <p class="row__comment">{{ r.comment }}</p> }
+
+          <div class="row__meta">
+            <span>{{ r.capturedAtUtc | dasDate: 'long' }}</span>
+            @if (r.gpsAccuracyM !== null) {
+              <span>{{ 'discoveries.accuracy' | transloco: { m: r.gpsAccuracyM } }}</span>
+            }
+            @if (offlineHours(r); as h) {
+              <span class="row__offline">{{ 'discoveries.offlineFor' | transloco: { hours: h } }}</span>
+            }
+          </div>
+
+          @if (r.status === 'Rejected' && r.rejectionReason) {
+            <p class="row__reason">{{ 'discoveries.rejectedBecause' | transloco: { reason: r.rejectionReason } }}</p>
+          }
+
+          @if (canReview() && r.status === 'Pending') {
+            @if (rejecting() === r.id) {
+              <div class="reject" (click)="$event.stopPropagation()">
+                <label class="field">
+                  <span>{{ 'discoveries.rejectReason' | transloco }}</span>
+                  <textarea rows="2" [ngModel]="rejectionReason()" (ngModelChange)="rejectionReason.set($event)"
+                    [attr.placeholder]="'discoveries.rejectPlaceholder' | transloco"></textarea>
+                </label>
+                <p class="hint">{{ 'discoveries.rejectHint' | transloco }}</p>
+                <div class="reject__actions">
+                  <button type="button" class="btn btn--danger"
+                    [disabled]="!canConfirmReject() || (isReviewing$ | async)" (click)="confirmReject()">
+                    {{ 'discoveries.confirmReject' | transloco }}
+                  </button>
+                  <button type="button" class="btn" (click)="cancelReject()">{{ 'common.cancel' | transloco }}</button>
+                </div>
+              </div>
+            } @else {
+              <div class="row__actions" (click)="$event.stopPropagation()">
+                <button type="button" class="btn btn--primary" [disabled]="isReviewing$ | async" (click)="accept(r)">
+                  <i class="ti ti-check" aria-hidden="true"></i>{{ 'discoveries.accept' | transloco }}
+                </button>
+                <button type="button" class="btn" [disabled]="isReviewing$ | async" (click)="startReject(r)">
+                  <i class="ti ti-x" aria-hidden="true"></i>{{ 'discoveries.reject' | transloco }}
+                </button>
+              </div>
+            }
+          }
+        </div>
+      } @empty {
+        <div class="empty">
+          @if (isListLoading$ | async) { {{ 'common.loading' | transloco }} } @else { {{ 'discoveries.empty' | transloco }} }
+        </div>
+      }
+    </section>
+
+    <section class="das-card map-panel">
+      <div class="map-panel__legend">
+        <span class="lg"><span class="lg__dot" [style.background]="statusColor('Pending')"></span>{{ 'discoveries.status.Pending' | transloco }}</span>
+        <span class="lg"><span class="lg__dot" [style.background]="statusColor('Accepted')"></span>{{ 'discoveries.status.Accepted' | transloco }}</span>
+        <span class="lg"><span class="lg__dot" [style.background]="statusColor('Rejected')"></span>{{ 'discoveries.status.Rejected' | transloco }}</span>
+      </div>
+      <div class="map-panel__canvas">
+        <das-map
+          [features]="mapFeatures()"
+          [layers]="mapLayers"
+          [selectedId]="selectedId()"
+          [fitBbox]="mapFitBbox()"
+          [basemapLayers]="basemapLayers"
+          (featureSelect)="select($event)" />
+      </div>
+    </section>
+  </div>
+</div>

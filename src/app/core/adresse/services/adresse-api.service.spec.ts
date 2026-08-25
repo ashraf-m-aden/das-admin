@@ -29,7 +29,7 @@ describe('AdresseApiService', () => {
   afterEach(() => httpMock.verify());
 
   it('list() envoie un POST sur /search, jamais un GET', () => {
-    service.list({ filters: { search: '', postcode: null, zone: null, region: null, status: null, team: null, cityId: null, communeId: null, zoneId: null, quartierId: null, closeId: null, blocId: null }, page: 1, pageSize: 10 })
+    service.list({ filters: { search: '', postcode: null, zone: null, region: null, status: null, team: null, cityId: null, communeId: null, zoneId: null, quartierId: null, closeId: null }, page: 1, pageSize: 10 })
       .subscribe();
 
     const req = httpMock.expectOne(`${BASE}/adresses/search`);

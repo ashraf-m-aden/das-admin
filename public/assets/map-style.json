@@ -1,104 +1,327 @@
 {
   "version": 8,
   "sources": {
-    "basemap": {
+    "streets": {
       "type": "vector",
-      "url": "https://tiles.basemaps.cartocdn.com/vector/carto.streets/v1/tiles.json",
-      "attribution": "&copy; <a href=\"https://carto.com/attributions\">CARTO</a>, &copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors"
+      "tiles": [
+        "__TILES_BASE_URL__/streets_tiles/{z}/{x}/{y}"
+      ],
+      "minzoom": 0,
+      "maxzoom": 20,
+      "promoteId": "Id"
     },
     "blocs": {
       "type": "vector",
-      "tiles": ["__TILES_BASE_URL__/blocs_tiles/{z}/{x}/{y}"],
+      "tiles": [
+        "__TILES_BASE_URL__/blocs_tiles/{z}/{x}/{y}"
+      ],
       "promoteId": "Id"
     },
     "adresses": {
       "type": "vector",
-      "tiles": ["__TILES_BASE_URL__/adresses_tiles/{z}/{x}/{y}"],
+      "tiles": [
+        "__TILES_BASE_URL__/adresses_tiles/{z}/{x}/{y}"
+      ],
+      "promoteId": "Id"
+    },
+    "closes": {
+      "type": "vector",
+      "tiles": [
+        "__TILES_BASE_URL__/closes_tiles/{z}/{x}/{y}"
+      ],
+      "minzoom": 0,
+      "maxzoom": 20,
       "promoteId": "Id"
     }
   },
   "glyphs": "https://tiles.basemaps.cartocdn.com/fonts/{fontstack}/{range}.pbf",
   "layers": [
-    { "id": "bg", "type": "background", "paint": { "background-color": "#f8f9fa" } },
-
     {
-      "id": "basemap-road-minor-case",
+      "id": "bg",
+      "type": "background",
+      "paint": {
+        "background-color": "#f8f9fa"
+      }
+    },
+    {
+      "id": "streets-track",
       "type": "line",
-      "source": "basemap",
-      "source-layer": "transportation",
+      "source": "streets",
+      "source-layer": "streets_tiles",
       "minzoom": 13,
       "filter": [
         "match",
-        ["get", "class"],
-        ["secondary", "tertiary", "minor", "service"],
+        [
+          "get",
+          "Type"
+        ],
+        [
+          "Piste"
+        ],
         true,
         false
       ],
-      "layout": { "line-cap": "round", "line-join": "round" },
+      "layout": {
+        "line-cap": "butt",
+        "line-join": "round"
+      },
+      "paint": {
+        "line-color": [
+          "case",
+          [
+            "!=",
+            [
+              "feature-state",
+              "colorOverride"
+            ],
+            null
+          ],
+          [
+            "feature-state",
+            "colorOverride"
+          ],
+          "#cbd5e1"
+        ],
+        "line-dasharray": [
+          2,
+          2
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.5
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0.8,
+          15,
+          1.6,
+          17,
+          3,
+          19,
+          6
+        ]
+      }
+    },
+    {
+      "id": "streets-minor-case",
+      "type": "line",
+      "source": "streets",
+      "source-layer": "streets_tiles",
+      "minzoom": 13,
+      "filter": [
+        "match",
+        [
+          "get",
+          "Type"
+        ],
+        [
+          "Avenue",
+          "Rue",
+          "Impasse"
+        ],
+        true,
+        false
+      ],
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      },
       "paint": {
         "line-color": "#d7dbe0",
-        "line-width": ["interpolate", ["exponential", 1.5], ["zoom"], 13, 1.2, 15, 3, 17, 8, 19, 18]
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.5
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          1.2,
+          15,
+          3,
+          17,
+          8,
+          19,
+          18
+        ]
       }
     },
     {
-      "id": "basemap-road-minor-fill",
+      "id": "streets-minor-fill",
       "type": "line",
-      "source": "basemap",
-      "source-layer": "transportation",
+      "source": "streets",
+      "source-layer": "streets_tiles",
       "minzoom": 13,
       "filter": [
         "match",
-        ["get", "class"],
-        ["secondary", "tertiary", "minor", "service"],
+        [
+          "get",
+          "Type"
+        ],
+        [
+          "Avenue",
+          "Rue",
+          "Impasse"
+        ],
         true,
         false
       ],
-      "layout": { "line-cap": "round", "line-join": "round" },
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      },
       "paint": {
-        "line-color": "#ffffff",
-        "line-width": ["interpolate", ["exponential", 1.5], ["zoom"], 13, 0.4, 15, 1.8, 17, 6, 19, 15]
+        "line-color": [
+          "case",
+          [
+            "!=",
+            [
+              "feature-state",
+              "colorOverride"
+            ],
+            null
+          ],
+          [
+            "feature-state",
+            "colorOverride"
+          ],
+          "#ffffff"
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.5
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0.4,
+          15,
+          1.8,
+          17,
+          6,
+          19,
+          15
+        ]
       }
     },
-
     {
-      "id": "basemap-road-major-case",
+      "id": "streets-major-case",
       "type": "line",
-      "source": "basemap",
-      "source-layer": "transportation",
+      "source": "streets",
+      "source-layer": "streets_tiles",
       "minzoom": 9,
       "filter": [
         "match",
-        ["get", "class"],
-        ["motorway", "trunk", "primary"],
+        [
+          "get",
+          "Type"
+        ],
+        [
+          "Boulevard",
+          "Route"
+        ],
         true,
         false
       ],
-      "layout": { "line-cap": "round", "line-join": "round" },
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      },
       "paint": {
         "line-color": "#c8ced6",
-        "line-width": ["interpolate", ["exponential", 1.5], ["zoom"], 9, 1.4, 12, 3, 15, 7, 17, 13, 19, 24]
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.5
+          ],
+          [
+            "zoom"
+          ],
+          9,
+          1.4,
+          12,
+          3,
+          15,
+          7,
+          17,
+          13,
+          19,
+          24
+        ]
       }
     },
     {
-      "id": "basemap-road-major-fill",
+      "id": "streets-major-fill",
       "type": "line",
-      "source": "basemap",
-      "source-layer": "transportation",
+      "source": "streets",
+      "source-layer": "streets_tiles",
       "minzoom": 9,
       "filter": [
         "match",
-        ["get", "class"],
-        ["motorway", "trunk", "primary"],
+        [
+          "get",
+          "Type"
+        ],
+        [
+          "Boulevard",
+          "Route"
+        ],
         true,
         false
       ],
-      "layout": { "line-cap": "round", "line-join": "round" },
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      },
       "paint": {
-        "line-color": "#ffffff",
-        "line-width": ["interpolate", ["exponential", 1.5], ["zoom"], 9, 0.6, 12, 1.8, 15, 5, 17, 10, 19, 20]
+        "line-color": [
+          "case",
+          [
+            "!=",
+            [
+              "feature-state",
+              "colorOverride"
+            ],
+            null
+          ],
+          [
+            "feature-state",
+            "colorOverride"
+          ],
+          "#ffffff"
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.5
+          ],
+          [
+            "zoom"
+          ],
+          9,
+          0.6,
+          12,
+          1.8,
+          15,
+          5,
+          17,
+          10,
+          19,
+          20
+        ]
       }
     },
-
     {
       "id": "blocs-fill",
       "type": "fill",
@@ -107,11 +330,24 @@
       "paint": {
         "fill-color": [
           "case",
-          ["!=", ["feature-state", "colorOverride"], null],
-          ["feature-state", "colorOverride"],
+          [
+            "!=",
+            [
+              "feature-state",
+              "colorOverride"
+            ],
+            null
+          ],
+          [
+            "feature-state",
+            "colorOverride"
+          ],
           [
             "match",
-            ["get", "status"],
+            [
+              "get",
+              "status"
+            ],
             "not_assigned",
             "#9aa3b5",
             "assigned",
@@ -129,15 +365,28 @@
         ],
         "fill-opacity": [
           "case",
-          ["boolean", ["feature-state", "hidden"], false],
+          [
+            "boolean",
+            [
+              "feature-state",
+              "hidden"
+            ],
+            false
+          ],
           0,
-          ["boolean", ["feature-state", "selected"], false],
+          [
+            "boolean",
+            [
+              "feature-state",
+              "selected"
+            ],
+            false
+          ],
           0.6,
           0.4
         ]
       }
     },
-
     {
       "id": "blocs-line",
       "type": "line",
@@ -146,14 +395,100 @@
       "paint": {
         "line-color": [
           "case",
-          ["boolean", ["feature-state", "selected"], false],
+          [
+            "boolean",
+            [
+              "feature-state",
+              "selected"
+            ],
+            false
+          ],
           "#1d4ed8",
           "#64748b"
         ],
-        "line-width": ["case", ["boolean", ["feature-state", "selected"], false], 2.4, 1]
+        "line-width": [
+          "case",
+          [
+            "boolean",
+            [
+              "feature-state",
+              "selected"
+            ],
+            false
+          ],
+          2.4,
+          1
+        ]
       }
     },
-
+    {
+      "id": "closes-fill",
+      "type": "fill",
+      "source": "closes",
+      "source-layer": "closes_tiles",
+      "minzoom": 11,
+      "paint": {
+        "fill-color": [
+          "case",
+          [
+            "!=",
+            [
+              "feature-state",
+              "colorOverride"
+            ],
+            null
+          ],
+          [
+            "feature-state",
+            "colorOverride"
+          ],
+          "#7c3aed"
+        ],
+        "fill-opacity": 0.08
+      }
+    },
+    {
+      "id": "closes-line",
+      "type": "line",
+      "source": "closes",
+      "source-layer": "closes_tiles",
+      "minzoom": 11,
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "paint": {
+        "line-color": [
+          "case",
+          [
+            "boolean",
+            [
+              "feature-state",
+              "selected"
+            ],
+            false
+          ],
+          "#5b21b6",
+          "#7c3aed"
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          11,
+          1.2,
+          15,
+          2.2,
+          18,
+          3.5
+        ],
+        "line-opacity": 0.9
+      }
+    },
     {
       "id": "adresses-fill",
       "type": "fill",
@@ -163,11 +498,24 @@
       "paint": {
         "fill-color": [
           "case",
-          ["!=", ["feature-state", "colorOverride"], null],
-          ["feature-state", "colorOverride"],
+          [
+            "!=",
+            [
+              "feature-state",
+              "colorOverride"
+            ],
+            null
+          ],
+          [
+            "feature-state",
+            "colorOverride"
+          ],
           [
             "match",
-            ["get", "workflowStage"],
+            [
+              "get",
+              "workflowStage"
+            ],
             "registered",
             "#6b7280",
             "surveyed",
@@ -183,15 +531,28 @@
         ],
         "fill-opacity": [
           "case",
-          ["boolean", ["feature-state", "hidden"], false],
+          [
+            "boolean",
+            [
+              "feature-state",
+              "hidden"
+            ],
+            false
+          ],
           0,
-          ["boolean", ["feature-state", "selected"], false],
+          [
+            "boolean",
+            [
+              "feature-state",
+              "selected"
+            ],
+            false
+          ],
           0.75,
           0.55
         ]
       }
     },
-
     {
       "id": "adresses-line",
       "type": "line",
@@ -201,31 +562,104 @@
       "paint": {
         "line-color": [
           "case",
-          ["boolean", ["feature-state", "selected"], false],
+          [
+            "boolean",
+            [
+              "feature-state",
+              "selected"
+            ],
+            false
+          ],
           "#1d4ed8",
           "#ffffff"
         ],
-        "line-width": ["case", ["boolean", ["feature-state", "selected"], false], 2, 1]
+        "line-width": [
+          "case",
+          [
+            "boolean",
+            [
+              "feature-state",
+              "selected"
+            ],
+            false
+          ],
+          2,
+          1
+        ]
       }
     },
-
     {
-      "id": "basemap-roadname",
+      "id": "streets-name",
       "type": "symbol",
-      "source": "basemap",
-      "source-layer": "transportation_name",
+      "source": "streets",
+      "source-layer": "streets_tiles",
       "minzoom": 14,
       "layout": {
         "symbol-placement": "line",
         "symbol-spacing": 250,
-        "text-field": ["get", "name"],
-        "text-font": ["Montserrat Regular", "Open Sans Regular", "Noto Sans Regular"],
-        "text-size": ["interpolate", ["linear"], ["zoom"], 14, 10, 18, 12]
+        "text-field": [
+          "get",
+          "Name"
+        ],
+        "text-font": [
+          "Montserrat Regular",
+          "Open Sans Regular",
+          "Noto Sans Regular"
+        ],
+        "text-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          14,
+          10,
+          18,
+          12
+        ]
       },
       "paint": {
         "text-color": "#4b5563",
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.4
+      }
+    },
+    {
+      "id": "closes-label",
+      "type": "symbol",
+      "source": "closes",
+      "source-layer": "closes_tiles",
+      "minzoom": 14,
+      "layout": {
+        "text-field": [
+          "get",
+          "Label"
+        ],
+        "text-font": [
+          "Montserrat Regular",
+          "Open Sans Regular",
+          "Noto Sans Regular"
+        ],
+        "text-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          14,
+          10,
+          18,
+          13
+        ]
+      },
+      "paint": {
+        "text-color": "#5b21b6",
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.6
       }
     }
   ]

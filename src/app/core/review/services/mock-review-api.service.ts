@@ -5,6 +5,17 @@ import { ReviewApiPort } from './review-api.port';
 import { CurrentSurveyItem, ReviewPhoto, StalledSurveyItem, SurveyReviewItem } from '../models/review.models';
 import { UUID } from '../../models/das.models';
 
+/**
+ * Agent dont les relevés sont, dans le mock, réputés être ceux du superviseur connecté. Il rend
+ * `Surveys.SelfReview` atteignable sans back : c'est la faille `B1`, la seule règle de la file
+ * de validation qu'un opérateur peut réellement déclencher, et elle serait autrement invisible
+ * en `useMockApi`. Le vrai back compare l'auteur du relevé au `reviewerUserId` du jeton.
+ */
+const SELF_AGENT_ID = 'mock-surveyor-0002';
+
+/** Forme d'erreur métier du mock : `{ code, message }` nu, sans enveloppe `.error` (cf. `core/http/error-code.ts`). */
+const fail = (code: string, message: string): Observable<never> => throwError(() => ({ code, message }));
+
 @Injectable({ providedIn: 'root' })
 export class MockReviewApiService extends ReviewApiPort {
   private static readonly SIMULATED_LATENCY_MS = 450;
@@ -88,21 +99,34 @@ export class MockReviewApiService extends ReviewApiPort {
   }
 
   override validateSurvey(id: UUID): Observable<void> {
-    if (!this.surveys.some((s) => s.id === id)) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
+    const refus = this.ensureReviewable(id);
+    if (refus) return refus;
     this.surveys = this.surveys.filter((s) => s.id !== id);
     return of(undefined).pipe(delay(MockReviewApiService.SIMULATED_LATENCY_MS));
   }
 
   override rejectSurvey(id: UUID, rejectionReason: string): Observable<void> {
-    if (!this.surveys.some((s) => s.id === id)) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
+    const refus = this.ensureReviewable(id);
+    if (refus) return refus;
     this.surveys = this.surveys.filter((s) => s.id !== id);
     return of(undefined).pipe(delay(MockReviewApiService.SIMULATED_LATENCY_MS));
   }
 
   override requestSurveyCorrection(id: UUID): Observable<void> {
-    if (!this.surveys.some((s) => s.id === id)) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
+    const refus = this.ensureReviewable(id);
+    if (refus) return refus;
     this.surveys = this.surveys.filter((s) => s.id !== id);
     return of(undefined).pipe(delay(MockReviewApiService.SIMULATED_LATENCY_MS));
+  }
+
+  /** Mêmes refus que `SurveyReview.EnsureReviewable`, dans le même ordre : introuvable, puis auto-validation. */
+  private ensureReviewable(id: UUID): Observable<never> | null {
+    const survey = this.surveys.find((s) => s.id === id);
+    if (!survey) return fail('Surveys.NotFound', 'Relevé introuvable.');
+    if (survey.agentId === SELF_AGENT_ID) {
+      return fail('Surveys.SelfReview', 'Vous ne pouvez pas statuer sur votre propre relevé.');
+    }
+    return null;
   }
 
   override getSurveyPhotos(id: UUID): Observable<ReviewPhoto[]> {

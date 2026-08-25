@@ -14,7 +14,6 @@
     "auditLogs": "Journaux d'audit",
     "users": "Utilisateurs",
     "integrations": "Intégrations",
-    "settings": "Paramètres",
     "notifications": "Notifications",
     "logout": "Déconnexion",
     "blocks": "Blocs",
@@ -22,7 +21,8 @@
     "addressing": "Adressage",
     "review": "Revue des données",
     "staff": "Personnel",
-    "clients": "Clients"
+    "clients": "Clients",
+    "discoveries": "Signalements"
   },
   "common": {
     "search": "Rechercher…",
@@ -43,8 +43,7 @@
     "reports": "Aucune route de rapports côté backend.",
     "audit": "Aucune route /api/audit côté backend — pas de journal d'audit exposé.",
     "clients": "Aucune route /api/clients côté backend — module de l'API commerciale, hors périmètre backend actuel.",
-    "integrations": "Aucune route /api/integrations côté backend.",
-    "settings": "Aucune route /api/road-types ni /api/map-import côté backend."
+    "integrations": "Aucune route /api/integrations côté backend."
   },
   "auth": {
     "title": "Connexion",
@@ -120,13 +119,7 @@
     "newTitle": "Nouvelle close",
     "editTitle": "Modifier la close",
     "street": "Rue",
-    "pickStreet": "Choisir une rue…",
     "streetHint": "C'est la rue qui nomme l'adresse (12, rue de la Mosquée, Quartier 7 Djibouti). Une rue non encore nommée retombe sur le numéro puis le code.",
-    "number": "Numéro",
-    "code": "Code",
-    "codePlaceholder": "ex. CL-01",
-    "numberHint": "1 à 999, unique dans le quartier. C'est le 3e segment du code d'adresse (77-007-3-42).",
-    "numberTakenBy": "Le numéro est déjà porté par « {{name}} » dans ce quartier.",
     "blocCount": "{{count}} bloc(s)",
     "adresseCount": "{{count}} parcelle(s)",
     "manageBlocs": "Gérer les blocs",
@@ -134,16 +127,54 @@
     "attachHint": "Cochez pour rattacher, décochez pour détacher — un bloc à la fois. Vous pouvez aussi cliquer un bloc sur la carte.",
     "noBlocs": "Aucun bloc libre dans ce quartier",
     "empty": "Aucune close dans ce quartier",
-    "legendSelected": "Blocs de la close",
-    "legendTaken": "Pris par une autre close",
-    "errorNumberUsed": "Une close porte déjà ce numéro dans ce quartier.",
+    "legendTaken": "Prise par une autre close",
+    "errorNumberUsed": "Ce numéro vient d'être pris par quelqu'un d'autre. La liste a été rechargée : réessayez, un nouveau numéro sera calculé.",
     "errorCodeUsed": "Une close porte déjà ce code dans ce quartier.",
     "errorStreetUsed": "Cette rue a déjà une close dans ce quartier.",
-    "errorBlocTaken": "Ce bloc appartient déjà à une autre close.",
     "errorBlocOtherQuartier": "Ce bloc est dans un autre quartier.",
     "errorNumeroCollision": "Rattachement refusé : deux parcelles porteraient le même numéro dans cette close. La renumérotation doit être faite d'abord.",
     "errorFrozenCode": "Refusé : une parcelle porte déjà un code d'adresse figé, dont ce numéro fait partie.",
-    "errorHasBlocs": "Suppression refusée : des blocs sont encore rattachés à cette close."
+    "errorHasBlocs": "Suppression refusée : des blocs sont encore rattachés à cette close.",
+    "errorHasAdresses": "Suppression refusée : des adresses sont encore rattachées à cette close.",
+    "errorBlocNotAttached": "Ce bloc n'est pas rattaché à cette close.",
+    "errorNotFound": "Cet élément n'existe plus. Rechargez la liste.",
+    "takenBy": "dans {{name}}",
+    "generated": "Sera créée sous",
+    "numberIs": "numéro {{n}}",
+    "generatedHint": "Le code et le numéro sont dérivés du quartier et du premier numéro libre — ils ne se saisissent pas.",
+    "searchStreet": "Rechercher une rue…",
+    "unnamedStreet": "sans nom",
+    "noStreetMatch": "Aucune rue ne correspond.",
+    "legendInClose": "Dans {{name}}",
+    "legendFree": "Libre — cliquez pour rattacher",
+    "mapClickHint": "Cliquez un bloc vert pour le rattacher, un bloc bleu pour le détacher. Les blocs gris appartiennent à une autre close : détachez-les de là-bas d'abord.",
+    "mapIdleHint": "Choisissez une close à gérer pour sélectionner ses blocs directement sur la carte."
+  },
+  "discoveries": {
+    "eyebrow": "Canal montant du terrain",
+    "campaign": "Campagne",
+    "allCampaigns": "Toutes les campagnes",
+    "statusFilter": "Statut",
+    "allStatuses": "Tous les statuts",
+    "status": {
+      "Pending": "À trier",
+      "Accepted": "Retenu",
+      "Rejected": "Écarté"
+    },
+    "noAddressCreated": "Retenir un signalement ne crée aucune adresse : le point part à l'expert GIS, qui produira l'emprise.",
+    "accuracy": "Précision {{m}} m",
+    "offlineFor": "Reçu {{hours}} h après la capture",
+    "rejectedBecause": "Écarté : {{reason}}",
+    "accept": "Retenir",
+    "reject": "Écarter",
+    "rejectReason": "Motif",
+    "rejectPlaceholder": "Déjà au référentiel, hors périmètre, doublon…",
+    "rejectHint": "Le motif remonte à l'agent : sans lui, il refera le même signalement à la campagne suivante.",
+    "confirmReject": "Confirmer",
+    "export": "Exporter (GeoJSON)",
+    "empty": "Aucun signalement pour ces filtres.",
+    "errorAlreadyReviewed": "Ce signalement a déjà été traité. Rechargez la liste.",
+    "errorNotFound": "Ce signalement n'existe plus. Rechargez la liste."
   },
   "blocks": {
     "eyebrow": "Djibouti-ville · Boulaos",
@@ -155,7 +186,6 @@
     "summaryOne": "{{total}} bloc, dont {{unnamed}} sans nom",
     "summary": "{{total}} blocs, dont {{unnamed}} sans nom",
     "backToList": "Retour",
-    "viewParcels": "Voir les adresses",
     "missingNumberHint": "Ce bloc n'a pas encore de numéro (repris avant le 18/08/2026) — il doit être renuméroté avant de pouvoir être renommé.",
     "nameLabel": "Nom du bloc",
     "namePlaceholder": "ex. Avenue du Corail",
@@ -167,7 +197,8 @@
       "empty": "Aucun relevé validé sur ce bloc",
       "surveyed": "Relevées",
       "notSurveyable": "Non relevables"
-    }
+    },
+    "viewCloseParcels": "Voir les parcelles de la close"
   },
   "addressing": {
     "title": "Adressage",
@@ -211,7 +242,13 @@
       "photo_retake": "Reprendre la photo",
       "gps_recheck": "Revérifier le GPS",
       "other": "Autre"
-    }
+    },
+    "errorSelfReview": "Vous ne pouvez pas statuer sur votre propre relevé.",
+    "errorNotSubmitted": "Ce relevé n'est plus en attente de décision. Rechargez la file.",
+    "errorSurveyNotFound": "Relevé introuvable. Rechargez la file.",
+    "errorCampaignClosed": "Campagne clôturée : validez ou rejetez, le renvoi en correction n'est plus possible.",
+    "errorSuggestionNotPending": "Cette suggestion a déjà été traitée. Rechargez la file.",
+    "errorSuggestionNotFound": "Suggestion introuvable. Rechargez la file."
   },
   "clients": {
     "eyebrow": "Module commercial",
@@ -292,47 +329,6 @@
     "property_approved": "Propriété {{code}} approuvée",
     "property_needs_redo": "Propriété {{code}} à reprendre",
     "redo_resolved": "Reprise résolue sur {{code}}"
-  },
-  "settings": {
-    "eyebrow": "Configuration du système",
-    "roadTypes": "Types de voie",
-    "mapImport": "Import carte",
-    "label": "Libellé",
-    "code": "Code",
-    "isPoint": "Ponctuel",
-    "emptyRoadTypes": "Aucun type",
-    "targetType": "Type de données",
-    "targetZone": "Zone cible",
-    "importSuccess": "Import terminé",
-    "importedCount": "Éléments importés",
-    "skippedCount": "Éléments ignorés",
-    "importAnother": "Importer un autre fichier",
-    "importTarget": "Type de données",
-    "importTargetBlocks": "Blocs",
-    "importTargetAdminUnits": "Unités administratives",
-    "importZone": "Zone cible",
-    "importFile": "Fichier GeoJSON",
-    "startImport": "Lancer l'import",
-    "selectZone": "Choisir une zone…",
-    "dropFile": "Déposer un fichier GeoJSON / Shapefile",
-    "dropHint": "Reprojeté automatiquement en EPSG:4326",
-    "import": "Importer",
-    "importing": "Import en cours…",
-    "imported": "{{count}} éléments importés",
-    "skipped": "{{count}} ignorés",
-    "target": {
-      "blocks": "Blocs",
-      "admin": "Unités administratives"
-    },
-    "roadCode": {
-      "street": "Rue",
-      "avenue": "Avenue",
-      "boulevard": "Boulevard",
-      "alley": "Ruelle",
-      "road": "Route",
-      "intersection": "Intersection",
-      "roundabout": "Rond-point"
-    }
   },
   "feedback": {
     "saved": "Enregistré",
@@ -418,14 +414,17 @@
     "linked": {
       "postcode": "Code postal",
       "block": "Bloc",
-      "team": "Équipe"
+      "team": "Équipe",
+      "street": "Rue"
     },
     "layerParcels": "Adresses",
     "occupancyCol": "Occupation",
     "zone": "Zone",
     "allZones": "Toutes les zones",
     "colZone": "Zone",
-    "colQuartier": "Quartier"
+    "colQuartier": "Quartier",
+    "colStreet": "Rue",
+    "close": "Close"
   },
   "postcodes": {
     "eyebrow": "Code postal = code ville + numéro de quartier, calculé, jamais saisi",
@@ -515,7 +514,25 @@
     "transferTo": "Agent cible…",
     "thisCampaignOnly": "Limiter à cette campagne",
     "transferResultOne": "{{count}} bloc transféré",
-    "transferResult": "{{count}} blocs transférés"
+    "transferResult": "{{count}} blocs transférés",
+    "errorPlannedAlreadyExists": "Une campagne est déjà en préparation. Démarrez-la ou supprimez-la avant d'en créer une autre.",
+    "errorCodeCollision": "Impossible d'attribuer un code de campagne. Réessayez.",
+    "errorNotPlanned": "Seule une campagne en préparation peut être démarrée.",
+    "errorAnotherInProgress": "Une autre campagne est déjà en cours. Clôturez-la d'abord.",
+    "errorNoBlocAssigned": "Affectez au moins un bloc avant de démarrer la campagne.",
+    "errorIneligibleAgents": "Des agents affectés ne sont plus éligibles. Réaffectez leurs blocs avant de démarrer.",
+    "errorNotStarted": "Cette campagne n'a pas démarré : il n'y a pas de saisie à prolonger ni à clôturer.",
+    "errorNotInProgress": "La feuille de route se génère au démarrage de la campagne.",
+    "errorAlreadyExtended": "La saisie de cette campagne est déjà prolongée.",
+    "errorAlreadyClosed": "Cette campagne est déjà clôturée.",
+    "errorCampaignClosed": "Campagne clôturée : elle ne peut plus être modifiée.",
+    "errorPopulateConflict": "Une génération concurrente est déjà passée. Relancez pour voir l'état à jour.",
+    "errorInvalidAgent": "L'agent doit être un utilisateur actif portant le rôle Agent terrain.",
+    "errorBlocAlreadyAssigned": "Ce bloc est déjà affecté sur cette campagne. Utilisez la réaffectation.",
+    "errorSameAgent": "Ce bloc est déjà affecté à cet agent.",
+    "errorAssignmentNotPending": "Seule une affectation encore à faire peut être abandonnée.",
+    "errorAssignmentHasSurvey": "Un relevé est en cours sur cette affectation : traitez-le avant de l'abandonner.",
+    "errorNotFound": "Cet élément n'existe plus. Rechargez l'écran."
   },
   "dataquality": {
     "eyebrow": "File de contrôle anti-fraude — signaux terrain",
@@ -537,7 +554,9 @@
     "basemap": {
       "ilots": "Contours îlots",
       "parcelles": "Contours parcelles",
-      "adresses": "Points adresses"
+      "adresses": "Points adresses",
+      "streets": "Rues",
+      "closes": "Closes"
     }
   },
   "reports": {
@@ -621,7 +640,7 @@
     "allZones": "Toutes les zones",
     "allQuartiers": "Tous les quartiers",
     "allCloses": "Toutes les closes",
-    "allBlocs": "Tous les blocs"
+    "noCloses": "Aucune close dans ce quartier"
   },
   "profile": {
     "eyebrow": "Mon compte",

@@ -42,6 +42,16 @@ const BLOC_ADRESSES: Record<UUID, UUID[]> = {
   'bloc-0003': ['addr-12370', 'addr-12375', 'addr-12380'],
 };
 
+/**
+ * Forme d'erreur métier du mock : `{ code, message }` nu, sans enveloppe `.error`.
+ *
+ * Les codes reproduisent ceux des handlers `dasApi` (`CreateCampaignHandler`,
+ * `StartCampaignHandler`, `AssignBlocHandler`…). Ils étaient auparavant génériques
+ * (`not_found` / `conflict`) : aucun ne correspondait à un code réel, donc aucun message
+ * d'erreur de cet écran n'était vérifiable sans back.
+ */
+const fail = (code: string, message: string): Observable<never> => throwError(() => ({ code, message }));
+
 @Injectable({ providedIn: 'root' })
 export class MockFieldOpsApiService extends FieldOpsApiPort {
   private static readonly SIMULATED_LATENCY_MS = 400;
@@ -98,13 +108,13 @@ export class MockFieldOpsApiService extends FieldOpsApiPort {
 
   override getCampaign(id: UUID): Observable<Campaign> {
     const c = this.campaigns.find((x) => x.id === id);
-    if (!c) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
+    if (!c) return fail('Campaigns.NotFound', 'Campagne introuvable.');
     return of(c).pipe(delay(MockFieldOpsApiService.SIMULATED_LATENCY_MS));
   }
 
   override createCampaign(payload: CreateCampaignPayload): Observable<Campaign> {
     if (this.campaigns.some((c) => c.status === 'Planned')) {
-      return throwError(() => ({ code: 'conflict', message: 'common.error' }));
+      return fail('Campaigns.PlannedAlreadyExists', 'Une campagne est déjà en préparation.');
     }
     const now = new Date();
     const yymm = `${String(now.getFullYear()).slice(2)}${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -120,8 +130,8 @@ export class MockFieldOpsApiService extends FieldOpsApiPort {
 
   override updateCampaign(id: UUID, payload: CreateCampaignPayload): Observable<Campaign> {
     const campaign = this.campaigns.find((c) => c.id === id);
-    if (!campaign) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
-    if (campaign.status === 'Closed') return throwError(() => ({ code: 'conflict', message: 'common.error' }));
+    if (!campaign) return fail('Campaigns.NotFound', 'Campagne introuvable.');
+    if (campaign.status === 'Closed') return fail('Campaigns.Closed', 'Campagne clôturée.');
     const updated: Campaign = { ...campaign, name: payload.name, deadline: payload.deadline };
     this.campaigns = this.campaigns.map((c) => (c.id === id ? updated : c));
     return of(updated).pipe(delay(MockFieldOpsApiService.SIMULATED_LATENCY_MS));
@@ -129,7 +139,7 @@ export class MockFieldOpsApiService extends FieldOpsApiPort {
 
   override getCampaignProgress(id: UUID): Observable<CampaignProgress> {
     const campaign = this.campaigns.find((c) => c.id === id);
-    if (!campaign) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
+    if (!campaign) return fail('Campaigns.NotFound', 'Campagne introuvable.');
     const items = this.assignments.filter((a) => a.campaignId === id);
     const blocs = this.campaignBlocs.filter((cb) => cb.campaignId === id);
 
@@ -193,9 +203,11 @@ export class MockFieldOpsApiService extends FieldOpsApiPort {
 
   override startCampaign(id: UUID): Observable<StartCampaignResult> {
     const campaign = this.campaigns.find((c) => c.id === id);
-    if (!campaign) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
-    if (campaign.status !== 'Planned') return throwError(() => ({ code: 'conflict', message: 'common.error' }));
-    if (!this.campaignBlocs.some((cb) => cb.campaignId === id)) return throwError(() => ({ code: 'conflict', message: 'common.error' }));
+    if (!campaign) return fail('Campaigns.NotFound', 'Campagne introuvable.');
+    if (campaign.status !== 'Planned') return fail('Campaigns.NotPlanned', 'Seule une campagne en préparation peut être démarrée.');
+    if (!this.campaignBlocs.some((cb) => cb.campaignId === id)) {
+      return fail('Campaigns.NoBlocAssigned', 'Affectez au moins un bloc avant de démarrer.');
+    }
 
     const updated: Campaign = { ...campaign, status: 'InProgress', openedAtUtc: new Date().toISOString() };
     this.campaigns = this.campaigns.map((c) => (c.id === id ? updated : c));
@@ -205,8 +217,8 @@ export class MockFieldOpsApiService extends FieldOpsApiPort {
 
   override populateCampaign(id: UUID): Observable<PopulateCampaignResult> {
     const campaign = this.campaigns.find((c) => c.id === id);
-    if (!campaign) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
-    if (campaign.status === 'Planned') return throwError(() => ({ code: 'conflict', message: 'common.error' }));
+    if (!campaign) return fail('Campaigns.NotFound', 'Campagne introuvable.');
+    if (campaign.status === 'Planned') return fail('Campaigns.NotInProgress', 'La feuille de route se génère au démarrage.');
 
     const createdAssignments = this.generateMissingAssignments(id);
     const totalAssignments = this.assignments.filter((a) => a.campaignId === id).length;
@@ -215,7 +227,7 @@ export class MockFieldOpsApiService extends FieldOpsApiPort {
 
   override addCampaignAddresses(id: UUID, adresseIds: UUID[]): Observable<AddCampaignAddressesResult> {
     const campaign = this.campaigns.find((c) => c.id === id);
-    if (!campaign) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
+    if (!campaign) return fail('Campaigns.NotFound', 'Campagne introuvable.');
 
     const blocByAdresse = new Map<UUID, UUID>();
     for (const [blocId, adresses] of Object.entries(BLOC_ADRESSES)) for (const a of adresses) blocByAdresse.set(a, blocId);
@@ -242,7 +254,8 @@ export class MockFieldOpsApiService extends FieldOpsApiPort {
 
   override extendCampaign(id: UUID): Observable<Campaign> {
     const campaign = this.campaigns.find((c) => c.id === id);
-    if (!campaign) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
+    if (!campaign) return fail('Campaigns.NotFound', 'Campagne introuvable.');
+    if (campaign.status === 'Planned') return fail('Campaigns.NotStarted', "Cette campagne n'a pas démarré.");
     const updated: Campaign = campaign.status === 'Closed' ? { ...campaign, status: 'InProgress', closedAtUtc: null } : campaign;
     this.campaigns = this.campaigns.map((c) => (c.id === id ? updated : c));
     return of(updated).pipe(delay(MockFieldOpsApiService.SIMULATED_LATENCY_MS));
@@ -250,7 +263,9 @@ export class MockFieldOpsApiService extends FieldOpsApiPort {
 
   override closeCampaign(id: UUID): Observable<Campaign> {
     const campaign = this.campaigns.find((c) => c.id === id);
-    if (!campaign) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
+    if (!campaign) return fail('Campaigns.NotFound', 'Campagne introuvable.');
+    if (campaign.status === 'Closed') return fail('Campaigns.AlreadyClosed', 'Cette campagne est déjà clôturée.');
+    if (campaign.status === 'Planned') return fail('Campaigns.NotStarted', "Cette campagne n'a pas démarré.");
     const updated: Campaign = { ...campaign, status: 'Closed', closedAtUtc: new Date().toISOString() };
     this.campaigns = this.campaigns.map((c) => (c.id === id ? updated : c));
     return of(updated).pipe(delay(MockFieldOpsApiService.SIMULATED_LATENCY_MS));
@@ -265,7 +280,7 @@ export class MockFieldOpsApiService extends FieldOpsApiPort {
 
   override assignBloc(campaignId: UUID, blocId: UUID, agentId: UUID): Observable<CampaignBloc> {
     if (this.campaignBlocs.some((cb) => cb.campaignId === campaignId && cb.blocId === blocId)) {
-      return throwError(() => ({ code: 'conflict', message: 'common.error' }));
+      return fail('CampaignBlocs.AlreadyAssigned', 'Ce bloc est déjà affecté sur cette campagne.');
     }
     const meta = BLOCS[blocId] ?? { code: blocId, name: null };
     const created: CampaignBloc = {
@@ -280,7 +295,8 @@ export class MockFieldOpsApiService extends FieldOpsApiPort {
 
   override reassignBloc(campaignId: UUID, blocId: UUID, agentId: UUID): Observable<CampaignBloc> {
     const existing = this.campaignBlocs.find((cb) => cb.campaignId === campaignId && cb.blocId === blocId);
-    if (!existing || existing.agentId === agentId) return throwError(() => ({ code: 'conflict', message: 'common.error' }));
+    if (!existing) return fail('CampaignBlocs.NotFound', "Ce bloc n'est pas affecté sur cette campagne.");
+    if (existing.agentId === agentId) return fail('CampaignBlocs.SameAgent', 'Ce bloc est déjà affecté à cet agent.');
     const updated: CampaignBloc = { ...existing, agentId, agentFullName: AGENTS[agentId] ?? agentId, reassignedAtUtc: new Date().toISOString() };
     this.campaignBlocs = this.campaignBlocs.map((cb) => (cb.id === existing.id ? updated : cb));
     // La responsabilité des affectations ToDo bascule immédiatement — les Done/Abandoned restent attribuées à leur auteur.
@@ -319,7 +335,8 @@ export class MockFieldOpsApiService extends FieldOpsApiPort {
 
   override abandonAssignment(id: UUID, abandonReason: string): Observable<Assignment> {
     const existing = this.assignments.find((a) => a.id === id);
-    if (!existing || existing.status !== 'ToDo') return throwError(() => ({ code: 'conflict', message: 'common.error' }));
+    if (!existing) return fail('Assignments.NotFound', 'Affectation introuvable.');
+    if (existing.status !== 'ToDo') return fail('Assignments.NotPending', 'Seule une affectation à faire peut être abandonnée.');
     const updated: Assignment = { ...existing, status: 'Abandoned', abandonReason, abandonedAtUtc: new Date().toISOString() };
     this.assignments = this.assignments.map((a) => (a.id === id ? updated : a));
     return of(updated).pipe(delay(MockFieldOpsApiService.SIMULATED_LATENCY_MS));

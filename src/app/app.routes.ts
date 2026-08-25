@@ -78,12 +78,14 @@ export const routes: Routes = [
         canActivate: [roleGuard(['Admin'])],
         loadChildren: () => import('./features/integrations/integrations.routes').then((m) => m.integrationsRoutes),
       },
-      { path: 'profile', loadChildren: () => import('./features/profile/profile.routes').then((m) => m.profileRoutes) },
       {
-        path: 'settings',
-        canActivate: [roleGuard(['Admin'])],
-        loadChildren: () => import('./features/settings/settings.routes').then((m) => m.settingsRoutes),
+        path: 'discoveries',
+        // `discoveries.view` est seedée pour Superviseur ET Gestionnaire ; le tri lui-même
+        // (`discoveries.review`) est gaté dans l'écran, pas ici — le Superviseur consulte.
+        canActivate: [roleGuard(['Admin', 'Superviseur', 'Gestionnaire'])],
+        loadChildren: () => import('./features/discoveries/discoveries.routes').then((m) => m.discoveriesRoutes),
       },
+      { path: 'profile', loadChildren: () => import('./features/profile/profile.routes').then((m) => m.profileRoutes) },
       { path: '', pathMatch: 'full', redirectTo: 'adresse' },
     ],
   },

@@ -7,6 +7,12 @@ import { AdresseActions } from './adresse.actions';
 import { adresseFeature } from './adresse.reducer';
 import { AdresseApiPort } from '../services/adresse-api.port';
 import { UnitsApiPort } from '../../units/services/units-api.port';
+import { ErrorKeyMap, toErrorKey } from '../../http/error-code';
+
+/** Seul code métier de `PATCH /api/adresses/{id}` — `UpdateAdresseHandler`, unicité du numéro dans la close. */
+const ERROR_KEY_BY_CODE: ErrorKeyMap = {
+  'Adresses.NumeroTaken': 'adresse.errorNumeroTaken',
+};
 
 @Injectable()
 export class AdresseEffects {
@@ -89,14 +95,10 @@ export class AdresseEffects {
     ofType(AdresseActions.updateAdresse),
     switchMap(({ id, payload }) => this.api.update(id, payload).pipe(
       map(() => AdresseActions.updateAdresseSuccess({ id })),
-      // Erreur mappée par `code`, jamais par `message` (CLAUDE.md §6) — `.error.code` en HTTP réel,
-      // `.code` en direct pour le mock (throwError ne s'enveloppe pas dans `.error`, cf. mock-review-api).
-      catchError((err: unknown) => {
-        const code = (err as { error?: { code?: string }; code?: string })?.error?.code
-          ?? (err as { code?: string })?.code;
-        const errorMessageKey = code === 'Adresses.NumeroTaken' ? 'adresse.errorNumeroTaken' : 'common.error';
-        return of(AdresseActions.updateAdresseFailure({ errorMessageKey }));
-      }),
+      // Erreur mappée par `code`, jamais par `message` (CLAUDE.md §6) — cf. `core/http/error-code.ts`.
+      catchError((err: unknown) => of(AdresseActions.updateAdresseFailure({
+        errorMessageKey: toErrorKey(err, ERROR_KEY_BY_CODE),
+      }))),
     )),
   ));
 }

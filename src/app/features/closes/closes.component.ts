@@ -6,24 +6,50 @@ import { TranslocoModule } from '@jsverse/transloco';
 import { ClosesFacade } from '../../core/closes/store/closes.facade';
 import { PageHeaderComponent } from '../../core/layout/page-header/page-header.component';
 import { AuthFacade } from '../../core/auth/store/auth.facade';
-import { DasMapComponent } from '../../core/ui/map/das-map.component';
+import { BasemapLayerGroup, DasMapComponent } from '../../core/ui/map/das-map.component';
 import { TileFeatureStateMap, TileFilter, TileLayerBinding } from '../../core/ui/map/map.models';
 import { unionBounds, wktBounds } from '../../core/ui/map/wkt.util';
 import { HierarchyCascadeComponent } from '../../core/hierarchy/ui/hierarchy-cascade/hierarchy-cascade.component';
 import { HierarchySelection } from '../../core/hierarchy/models/hierarchy.models';
+import { HierarchyFacade } from '../../core/hierarchy/store/hierarchy.facade';
 import { Close, CloseStreetOption } from '../../core/closes/models/closes.models';
 import { Block, UUID, UserRole } from '../../core/models/das.models';
+import { STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP } from '../../core/ui/map/basemap-groups';
 
 const CAN_EDIT_ROLES: UserRole[] = ['Admin', 'Gestionnaire'];
 
-/** Override live ; la coloration de base reste bakée dans le style (CLAUDE.md §4). */
-const SELECTED_COLOR = '#2563eb';
-const TAKEN_COLOR = '#9aa3b5';
+/**
+ * Overrides live ; la coloration de base reste bakée dans le style (CLAUDE.md §4).
+ *
+ * Trois états, et ils ne sont appliqués QUE pendant la gestion des blocs d'une close. Hors de
+ * ce mode, les blocs gardent leur couleur de base — celle du statut de campagne, qui est
+ * l'information de travail du reste de l'application. La recouvrir en permanence ferait perdre
+ * une lecture pour en gagner une autre.
+ */
+const IN_CLOSE_COLOR = '#2563eb';   // dans la close en cours
+const FREE_COLOR = '#16a34a';       // libre : cliquable
+const TAKEN_COLOR = '#9aa3b5';      // pris par une autre close : non cliquable
 
 const BLOCS_TILE: TileLayerBinding = {
   id: 'closes-blocs', labelKey: 'nav.blocks', source: 'blocs', sourceLayer: 'blocs_tiles',
   styleLayerIds: ['blocs-fill', 'blocs-line'], interactiveLayerId: 'blocs-fill', visible: true,
 };
+
+/**
+ * Liaison vers la voirie du référentiel, pour pouvoir la SURLIGNER au survol de la liste des
+ * rues. `promoteId: "Id"` est déjà posé sur la source dans `map-style.json` : l'id de feature
+ * est l'id de la rue, aucune résolution à faire.
+ */
+const STREETS_TILE: TileLayerBinding = {
+  id: 'closes-streets', labelKey: 'map.basemap.streets', source: 'streets',
+  sourceLayer: 'streets_tiles',
+  styleLayerIds: ['streets-track', 'streets-minor-case', 'streets-minor-fill',
+    'streets-major-case', 'streets-major-fill', 'streets-name'],
+  interactiveLayerId: 'streets-minor-fill', visible: true,
+};
+
+/** Rue survolée dans la liste, ou cliquée sur la carte. */
+const STREET_HOVER_COLOR = '#dc2626';
 
 @Component({
   selector: 'das-closes',
@@ -33,8 +59,16 @@ const BLOCS_TILE: TileLayerBinding = {
   styleUrl: './closes.component.scss',
 })
 export class ClosesComponent implements OnInit {
+
+  /**
+   * Voirie et contours du style de base, pilotables depuis le panneau des couches. Le panneau
+   * a été activé sur cette carte le 2026-08-25 : depuis le retrait du fond CARTO, la voirie est
+   * la seule référence de terrain, et il faut pouvoir la masquer pour lire les contours dessous.
+   */
+  protected readonly basemapLayers: BasemapLayerGroup[] = [STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP];
   private facade = inject(ClosesFacade);
   private authFacade = inject(AuthFacade);
+  private hierarchy = inject(HierarchyFacade);
 
   protected readonly isListLoading$ = this.facade.isListLoading$;
   protected readonly isSaving$ = this.facade.isSaving$;
@@ -54,14 +88,26 @@ export class ClosesComponent implements OnInit {
   /** État purement local du formulaire — il meurt avec l'écran, rien à faire dans le store. */
   protected readonly editing = signal<UUID | 'new' | null>(null);
   protected readonly formStreetId = signal<UUID | null>(null);
-  protected readonly formNumber = signal<number | null>(null);
-  protected readonly formCode = signal('');
+
+  /**
+   * Numéro et code d'une close en MODIFICATION. En création ils ne sont pas saisis : ils sont
+   * dérivés (`nextFreeNumber` / `generatedCode`). Le back exige les deux champs à chaque appel,
+   * c'est donc le front qui les fournit — mais l'opérateur n'a plus à inventer un identifiant
+   * dont il ne connaît pas les règles d'unicité.
+   */
+  private readonly editNumber = signal<number | null>(null);
+  private readonly editCode = signal('');
 
   /** Close dont on gère les blocs. Distinct de l'édition de la fiche : ce sont deux routes back. */
   protected readonly managing = signal<UUID | null>(null);
   protected readonly highlightedCloseId = signal<UUID | null>(null);
 
-  protected readonly tileLayers: TileLayerBinding[] = [BLOCS_TILE];
+  /** Rue survolée dans la liste. Pilote la surbrillance carte, rien d'autre. */
+  protected readonly hoveredStreetId = signal<UUID | null>(null);
+  /** Filtre de la liste des rues — indispensable dès que l'import OSM en aura versé des centaines. */
+  protected readonly streetSearch = signal('');
+
+  protected readonly tileLayers: TileLayerBinding[] = [BLOCS_TILE, STREETS_TILE];
 
   constructor() {
     // Referme le formulaire UNIQUEMENT sur écriture réussie : sur un 409 il reste ouvert avec la
@@ -82,14 +128,45 @@ export class ClosesComponent implements OnInit {
     return { 'closes-blocs': q ? ['==', ['get', 'QuartierId'], q] : null };
   });
 
-  /** Bleu = blocs de la close ciblée, gris = pris par une autre close. */
+  /**
+   * Bleu = dans la close gérée · vert = libre, cliquable · gris = pris ailleurs.
+   * Rouge = rue survolée dans la liste, ou rue déjà choisie dans le formulaire.
+   *
+   * Le vert n'est posé QUE en mode gestion : c'est lui qui transforme la carte en surface de
+   * sélection. Sans lui, un bloc libre garde sa couleur de statut de campagne et rien ne
+   * distingue « cliquable » de « déjà pris ailleurs » — c'est précisément ce qui manquait.
+   */
   protected readonly tileFeatureStates = computed<Record<string, TileFeatureStateMap>>(() => {
-    const states: TileFeatureStateMap = {};
-    const focus = this.managing() ?? this.highlightedCloseId();
-    for (const [blocId, close] of this.blocOwner()) {
-      states[blocId] = { colorOverride: close.id === focus ? SELECTED_COLOR : TAKEN_COLOR };
+    const blocStates: TileFeatureStateMap = {};
+    const managing = this.managing();
+    const focus = managing ?? this.highlightedCloseId();
+    const owner = this.blocOwner();
+
+    for (const [blocId, close] of owner) {
+      blocStates[blocId] = { colorOverride: close.id === focus ? IN_CLOSE_COLOR : TAKEN_COLOR };
     }
-    return { 'closes-blocs': states };
+    if (managing) {
+      for (const b of this.blocs()) {
+        if (!owner.has(b.id)) blocStates[b.id] = { colorOverride: FREE_COLOR };
+      }
+    }
+
+    const streetStates: TileFeatureStateMap = {};
+    // Le survol l'emporte sur la sélection : c'est le geste en cours qui doit se voir.
+    const street = this.hoveredStreetId() ?? this.formStreetId();
+    if (street) streetStates[street] = { colorOverride: STREET_HOVER_COLOR };
+
+    return { 'closes-blocs': blocStates, 'closes-streets': streetStates };
+  });
+
+  /** Rues filtrées par la recherche. Le tri met les rues nommées devant : elles se reconnaissent. */
+  protected readonly visibleStreets = computed(() => {
+    const q = this.streetSearch().trim().toLowerCase();
+    const list = q
+      ? this.streets().filter((s) => this.streetLabel(s).toLowerCase().includes(q))
+      : this.streets();
+    return [...list].sort((a, b) => Number(!a.name) - Number(!b.name)
+      || this.streetLabel(a).localeCompare(this.streetLabel(b)));
   });
 
   /** Cadrage sur l'union des blocs de la close ciblée — la « géométrie » d'une close, ce sont ses blocs. */
@@ -102,23 +179,68 @@ export class ClosesComponent implements OnInit {
     return unionBounds(blocs.map((b) => (b.boundaryWkt ? wktBounds(b.boundaryWkt) : null)));
   });
 
-  /** Blocs encore libres du quartier — un bloc n'appartient qu'à UNE close. */
-  protected readonly freeBlocs = computed(() => this.blocs().filter((b) => !b.closeId));
-
-  protected readonly numberCollision = computed(() => {
-    const n = this.formNumber();
-    if (n === null) return null;
-    const owner = this.takenNumbers().get(n);
-    return owner && owner.id !== this.editing() ? owner : null;
+  /**
+   * Blocs du quartier proposables à la close gérée, chacun avec sa close propriétaire s'il en a
+   * une. Les blocs de la close gérée en sont exclus : ils sont listés au-dessus, cochés.
+   *
+   * Un bloc déjà pris est **montré et désactivé**, pas masqué. Le masquer laissait l'opérateur
+   * devant une liste incomplète sans lui dire pourquoi — il ne pouvait pas distinguer « ce bloc
+   * n'existe pas dans ce quartier » de « ce bloc est déjà ailleurs ». Désactivé et légendé, il
+   * répond à la question et indique où aller le détacher.
+   *
+   * Le back accepterait le déplacement direct (`AttachBlocsHandler` traite un bloc déjà rattaché
+   * comme un transfert, refusé seulement sur code d'adresse figé). On ne l'expose pas : tant que
+   * la renumérotation par close n'a pas eu lieu, ce déplacement partirait presque toujours en
+   * 409 `Closes.DuplicateAdresseNumero`. Le détachement explicite reste le chemin lisible.
+   */
+  protected readonly selectableBlocs = computed(() => {
+    const owner = this.blocOwner();
+    const managedId = this.managing();
+    return this.blocs()
+      .filter((b) => owner.get(b.id)?.id !== managedId)
+      .map((b) => ({ bloc: b, takenBy: owner.get(b.id) ?? null }));
   });
 
+  /**
+   * Code du quartier courant, lu dans la hiérarchie. Repli sur une close existante : après un
+   * rechargement direct de l'écran, la cascade peut ne pas encore avoir peuplé ses quartiers
+   * alors que la liste des closes, elle, porte déjà `quartierCode`.
+   */
+  protected readonly quartierCode = computed(() => {
+    const id = this.quartierId();
+    if (!id) return '';
+    return this.hierarchy.quartiers().find((q) => q.id === id)?.code
+      ?? this.closes().find((c) => c.quartierId === id)?.quartierCode
+      ?? '';
+  });
+
+  /**
+   * Plus petit numéro libre du quartier, pas `max + 1` : après une suppression, un trou doit se
+   * refermer. Le numéro entre dans le code d'adresse — laisser des trous rendrait la
+   * numérotation des closes illisible sur le terrain.
+   */
+  protected readonly nextFreeNumber = computed(() => {
+    const taken = this.takenNumbers();
+    let n = 1;
+    while (taken.has(n)) n++;
+    return n;
+  });
+
+  /** Format arrêté le 2026-08-25 : code du quartier + numéro sur deux chiffres (`Q7-03`). */
+  protected readonly generatedCode = computed(
+    () => `${this.quartierCode()}-${String(this.nextFreeNumber()).padStart(2, '0')}`);
+
+  /**
+   * Le numéro n'est plus saisi, donc plus jamais en collision au moment du clic. Il peut le
+   * devenir entre le calcul et l'envoi si un collègue crée une close en même temps : c'est le
+   * back qui tranche (409), et l'effet recharge alors la liste pour que la tentative suivante
+   * reparte d'un numéro libre.
+   */
   protected readonly canSave = computed(() =>
     this.formStreetId() !== null
-    && this.formNumber() !== null
-    && this.formNumber()! >= 1 && this.formNumber()! <= 999
-    && this.formCode().trim().length > 0
     && this.quartierId() !== null
-    && this.numberCollision() === null,
+    && this.nextFreeNumber() <= 999
+    && (this.editing() !== 'new' || this.quartierCode() !== ''),
   );
 
   onHierarchy(sel: HierarchySelection): void {
@@ -133,16 +255,15 @@ export class ClosesComponent implements OnInit {
     this.managing.set(null);
     this.editing.set('new');
     this.formStreetId.set(null);
-    this.formNumber.set(null);
-    this.formCode.set('');
   }
 
+  /** En modification on CONSERVE numéro et code : les régénérer renumérerait une close en place. */
   startEdit(c: Close): void {
     this.managing.set(null);
     this.editing.set(c.id);
     this.formStreetId.set(c.streetId);
-    this.formNumber.set(c.number);
-    this.formCode.set(c.code);
+    this.editNumber.set(c.number);
+    this.editCode.set(c.code);
   }
 
   cancelEdit(): void { this.editing.set(null); }
@@ -150,11 +271,12 @@ export class ClosesComponent implements OnInit {
   save(): void {
     if (!this.canSave()) return;
     const id = this.editing();
-    this.facade.save(id === 'new' ? null : id, {
+    const creating = id === 'new';
+    this.facade.save(creating ? null : id, {
       quartierId: this.quartierId()!,
       streetId: this.formStreetId()!,
-      number: this.formNumber()!,
-      code: this.formCode().trim(),
+      number: creating ? this.nextFreeNumber() : this.editNumber()!,
+      code: creating ? this.generatedCode() : this.editCode(),
       boundaryWkt: null,
     });
   }
@@ -182,13 +304,39 @@ export class ClosesComponent implements OnInit {
     if (closeId) this.facade.detachBloc(closeId, blocId);
   }
 
-  /** Clic carte : rattache un bloc libre, détache un bloc de la close gérée. */
-  onMapBloc(blocId: UUID): void {
+  /**
+   * Clic carte. Deux couches sont interactives sur cet écran (blocs et rues) et `featureSelect`
+   * n'émet que l'id, sans dire d'où il vient : c'est donc à l'appelant de trancher, en regardant
+   * dans quel jeu l'id existe. Sans cette garde, cliquer une rue enverrait son id à
+   * `attachBlocs` et produirait un 404 incompréhensible.
+   */
+  onMapFeature(id: UUID): void {
+    if (this.streets().some((s) => s.id === id)) { this.pickStreet(id); return; }
+    if (this.blocs().some((b) => b.id === id)) this.onMapBloc(id);
+  }
+
+  /**
+   * Rattache un bloc libre, détache un bloc de la close gérée. Un bloc pris par une AUTRE close
+   * ne fait rien — même règle que la case désactivée de la liste (cf. `selectableBlocs`), les
+   * deux entrées doivent se comporter pareil.
+   */
+  private onMapBloc(blocId: UUID): void {
     if (!this.managing()) return;
     const owner = this.blocOwner().get(blocId);
     if (owner?.id === this.managing()) this.detachBloc(blocId);
     else if (!owner) this.attachBloc(blocId);
   }
+
+  /** Choisir une rue depuis la liste ou depuis la carte : même chemin, même résultat. */
+  pickStreet(id: UUID | null): void {
+    if (this.editing() === null) return;
+    this.formStreetId.set(id);
+  }
+
+  hoverStreet(id: UUID | null): void { this.hoveredStreetId.set(id); }
+
+  /** La légende lit les mêmes constantes que la carte : deux sources de vérité divergeraient. */
+  protected readonly colors = { inClose: IN_CLOSE_COLOR, free: FREE_COLOR, taken: TAKEN_COLOR };
 
   streetLabel(s: CloseStreetOption): string { return s.name ?? s.code; }
   blocLabel(b: Block): string { return b.name ?? b.code; }

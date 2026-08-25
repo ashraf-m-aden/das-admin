@@ -20,6 +20,7 @@ import { HierarchySelection } from '../../../core/hierarchy/models/hierarchy.mod
 import { HierarchyFacade } from '../../../core/hierarchy/store/hierarchy.facade';
 import { HierarchyCascadeComponent } from '../../../core/hierarchy/ui/hierarchy-cascade/hierarchy-cascade.component';
 import { AppConfigService } from '../../../core/config/app-config.service';
+import { STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, BLOCS_BASEMAP_GROUP } from '../../../core/ui/map/basemap-groups';
 
 const STAGE_COLOR: Record<AddressWorkflowStage, string> = {
   registered: '#6b7280', surveyed: '#d97706', verified: '#16a34a', approved: '#0d9488', published: '#7c3aed',
@@ -86,9 +87,7 @@ export class AdresseListComponent implements OnInit {
 
   protected readonly tileLayers: TileLayerBinding[] = this.isMock ? [] : [ADRESSES_TILE];
 
-  protected readonly basemapLayers: BasemapLayerGroup[] = [
-    { id: 'blocs', labelKey: 'nav.blocks', styleLayerIds: ['blocs-fill', 'blocs-line'], visible: false },
-  ];
+  protected readonly basemapLayers: BasemapLayerGroup[] = [STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, BLOCS_BASEMAP_GROUP];
 
   /**
    * Filtre tuile ADRESSES : niveau hiérarchique non-null le plus profond + étape.
@@ -100,12 +99,11 @@ export class AdresseListComponent implements OnInit {
   protected readonly tileFilters = computed<Record<string, TileFilter>>(() => {
     const f = this.filters();
     const clauses: ExpressionSpecification[] = [];
-    if (f.blocId) clauses.push(['==', ['get', 'BlocId'], f.blocId] as ExpressionSpecification);
-    // ⚠️ Exige un attribut `CloseId` sur la vue `adresses_tiles` (maintenue hors dépôt, côté Martin).
-    // Tant qu'il n'y est pas, filtrer par close vide la carte — c'est VOULU : l'alternative serait
-    // d'afficher tout le quartier pendant que la liste montre la close, soit exactement la
-    // divergence liste↔carte que CLAUDE.md §4 interdit, et elle serait indébogable.
-    else if (f.closeId) clauses.push(['==', ['get', 'CloseId'], f.closeId] as ExpressionSpecification);
+    // La close est le niveau le plus fin depuis le retrait du filtre bloc (2026-08-25).
+    // L'attribut `CloseId` est bien présent sur la vue `adresses_tiles` — vérifié le 2026-08-25 ;
+    // il faut seulement que Martin ait été redémarré depuis, il ne relit son catalogue qu'au
+    // démarrage. Sans ça le filtre vide la carte au lieu de la restreindre.
+    if (f.closeId) clauses.push(['==', ['get', 'CloseId'], f.closeId] as ExpressionSpecification);
     else if (f.quartierId) clauses.push(['==', ['get', 'QuartierId'], f.quartierId] as ExpressionSpecification);
     else if (f.zoneId) clauses.push(['==', ['get', 'ZoneId'], f.zoneId] as ExpressionSpecification);
     else if (f.communeId) clauses.push(['==', ['get', 'CommuneId'], f.communeId] as ExpressionSpecification);
@@ -160,8 +158,9 @@ export class AdresseListComponent implements OnInit {
 
   ngOnInit(): void {
     this.facade.init();
-    const blocId = this.route.snapshot.queryParamMap.get('blocId');
-    if (blocId) this.facade.setFilters({ blocId });
+    // Lien profond depuis la fiche d'un bloc : « voir les parcelles de sa close ».
+    const closeId = this.route.snapshot.queryParamMap.get('closeId');
+    if (closeId) this.facade.setFilters({ closeId });
     const search = this.route.snapshot.queryParamMap.get('search');
     if (search) this.filterForm.patchValue({ search });
     this.filterForm.valueChanges.subscribe((v) => this.facade.setFilters({

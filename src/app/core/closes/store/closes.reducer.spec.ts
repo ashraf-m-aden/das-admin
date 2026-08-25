@@ -57,7 +57,7 @@ describe('closesFeature reducer', () => {
   });
 
   it('efface l\'erreur précédente quand une nouvelle écriture démarre', () => {
-    const state = { ...initialClosesState, saveErrorMessageKey: 'closes.errorBlocTaken' };
+    const state = { ...initialClosesState, saveErrorMessageKey: 'closes.errorNumeroCollision' };
 
     const next = reduce(state, ClosesActions.saveClose({
       id: null,

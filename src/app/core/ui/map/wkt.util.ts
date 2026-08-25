@@ -31,3 +31,17 @@ export function unionBounds(boxes: Array<[number, number, number, number] | null
     Math.max(...valid.map((b) => b[3])),
   ];
 }
+
+/**
+ * Point GeoJSON d'un WKT `POINT(lng lat)` (SRID 4326), ou `null` si le texte n'en est pas un.
+ *
+ * Volontairement strict, contrairement à `wktBounds` : celui-ci ne sert qu'à cadrer, alors
+ * qu'ici on produit une géométrie affichée. Accepter `POLYGON(...)` en n'y prenant que les deux
+ * premiers nombres placerait un repère sur un coin d'emprise, ce qui se voit mal et se croit.
+ */
+export function wktPoint(wkt: string): { type: 'Point'; coordinates: [number, number] } | null {
+  const m = /^\s*POINT\s*\(\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\)\s*$/i.exec(wkt);
+  if (!m) return null;
+  // Ordre WKT et ordre GeoJSON coïncident : longitude d'abord. Ne pas « corriger ».
+  return { type: 'Point', coordinates: [Number(m[1]), Number(m[2])] };
+}

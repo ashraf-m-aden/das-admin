@@ -10,6 +10,7 @@ import { MapFeature, MapLayerConfig } from '../../../core/ui/map/map.models';
 import { AddressDetailDrawerComponent } from '../address-detail-drawer/address-detail-drawer.component';
 import { AddressListItem, WORKFLOW_STAGES } from '../../../core/adresse/models/adresse.models';
 import { AddressWorkflowStage } from '../../../core/models/das.models';
+import { STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP } from '../../../core/ui/map/basemap-groups';
 
 const STAGE_COLORS: Record<AddressWorkflowStage, string> = {
   registered: '#6b7280', surveyed: '#d97706', verified: '#16a34a', approved: '#0d9488', published: '#7c3aed',
@@ -43,10 +44,8 @@ export class AdresseMapComponent implements OnInit {
     { id: 'adresse', labelKey: 'nav.adresse', type: 'fill', visible: true },
   ];
 
-  /** Contours cadastraux du style de base, pilotables via le panneau des couches. */
-  protected readonly basemapLayers: BasemapLayerGroup[] = [
-    { id: 'adresses', labelKey: 'map.basemap.adresses', styleLayerIds: ['adresses-fill', 'adresses-line'], visible: false },
-  ];
+  /** Voirie et contours cadastraux du style de base, pilotables via le panneau des couches. */
+  protected readonly basemapLayers: BasemapLayerGroup[] = [STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP];
   ngOnInit(): void { this.facade.init(); }
 
   onSelect(id: string): void { this.facade.openDetail(id); }

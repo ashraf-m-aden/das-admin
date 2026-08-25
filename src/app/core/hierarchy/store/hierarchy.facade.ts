@@ -37,8 +37,7 @@ export class HierarchyFacade {
     const s = this._selection();
     const bboxOf = (list: HierarchyNode[], id: UUID | null) =>
       id ? (list.find((n) => n.id === id)?.bbox ?? null) : null;
-    return bboxOf(this._allBlocs(), s.blocId)
-      ?? bboxOf(this._closes(), s.closeId)
+    return bboxOf(this._closes(), s.closeId)
       ?? bboxOf(this._quartiers(), s.quartierId)
       ?? bboxOf(this._zones(), s.zoneId)
       ?? bboxOf(this._communes(), s.communeId)
@@ -54,7 +53,7 @@ export class HierarchyFacade {
   }
 
   selectCity(cityId: UUID | null): void {
-    this._selection.set({ cityId, communeId: null, zoneId: null, quartierId: null, closeId: null, blocId: null });
+    this._selection.set({ cityId, communeId: null, zoneId: null, quartierId: null, closeId: null });
     this._communes.set([]); this._zones.set([]); this._quartiers.set([]);
     this._closes.set([]); this._allBlocs.set([]);
     if (cityId) this.api.communes(cityId).subscribe((c) => this._communes.set(c));
@@ -62,14 +61,14 @@ export class HierarchyFacade {
   }
 
   selectCommune(communeId: UUID | null): void {
-    this._selection.update((s) => ({ ...s, communeId, zoneId: null, quartierId: null, closeId: null, blocId: null }));
+    this._selection.update((s) => ({ ...s, communeId, zoneId: null, quartierId: null, closeId: null }));
     this._zones.set([]); this._closes.set([]); this._allBlocs.set([]);
     if (communeId) this.api.zones(communeId).subscribe((z) => this._zones.set(z));
     this.reloadQuartiers();
   }
 
   selectZone(zoneId: UUID | null): void {
-    this._selection.update((s) => ({ ...s, zoneId, quartierId: null, closeId: null, blocId: null }));
+    this._selection.update((s) => ({ ...s, zoneId, quartierId: null, closeId: null }));
     this._closes.set([]); this._allBlocs.set([]);
     this.reloadQuartiers();
   }
@@ -87,7 +86,7 @@ export class HierarchyFacade {
 
   /** Charge closes ET blocs du quartier : la close n'est qu'un filtre du même jeu de blocs. */
   selectQuartier(quartierId: UUID | null): void {
-    this._selection.update((s) => ({ ...s, quartierId, closeId: null, blocId: null }));
+    this._selection.update((s) => ({ ...s, quartierId, closeId: null }));
     this._closes.set([]); this._allBlocs.set([]);
     if (!quartierId) return;
     this.api.closes(quartierId).subscribe((c) => this._closes.set(c));
@@ -96,10 +95,6 @@ export class HierarchyFacade {
 
   /** Raffinement : aucun rechargement, `blocs` se restreint tout seul (computed). */
   selectClose(closeId: UUID | null): void {
-    this._selection.update((s) => ({ ...s, closeId, blocId: null }));
-  }
-
-  selectBloc(blocId: UUID | null): void {
-    this._selection.update((s) => ({ ...s, blocId }));
+    this._selection.update((s) => ({ ...s, closeId }));
   }
 }

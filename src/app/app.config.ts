@@ -26,9 +26,6 @@ import { ReviewEffects } from './core/review/store/review.effects';
 import { provideNotificationsApi } from './core/notifications/services/notifications-api.provider';
 import { notificationsFeature } from './core/notifications/store/notifications.reducer';
 import { NotificationsEffects } from './core/notifications/store/notifications.effects';
-import { provideSettingsApi } from './core/settings/services/settings-api.provider';
-import { settingsFeature } from './core/settings/store/settings.reducer';
-import { SettingsEffects } from './core/settings/store/settings.effects';
 import { provideAddressingApi } from './core/addressing/services/addressing-api.provider';
 import { addressingFeature } from './core/addressing/store/addressing.reducer';
 import { AddressingEffects } from './core/addressing/store/addressing.effects';
@@ -72,6 +69,9 @@ import { MockUnitsApiService } from './core/units/services/mock-units-api.servic
 import { ClosesApiPort } from './core/closes/services/closes-api.port';
 import { ClosesApiService } from './core/closes/services/closes-api.service';
 import { MockClosesApiService } from './core/closes/services/mock-closes-api.service';
+import { DiscoveriesApiPort } from './core/discoveries/services/discoveries-api.port';
+import { DiscoveriesApiService } from './core/discoveries/services/discoveries-api.service';
+import { MockDiscoveriesApiService } from './core/discoveries/services/mock-discoveries-api.service';
 import { shouldUseMock } from './core/config/backend-readiness';
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -85,7 +85,6 @@ export const appConfig: ApplicationConfig = {
     provideBlocksApi(),
     provideReviewApi(),
     provideNotificationsApi(),
-    provideSettingsApi(),
     provideAddressingApi(),
     provideClientsApi(),
 
@@ -97,7 +96,6 @@ export const appConfig: ApplicationConfig = {
       [reviewFeature.name]: reviewFeature.reducer,
       [fieldOpsFeature.name]: fieldOpsFeature.reducer,
       [notificationsFeature.name]: notificationsFeature.reducer,
-      [settingsFeature.name]: settingsFeature.reducer,
       [addressingFeature.name]: addressingFeature.reducer,
       [clientsFeature.name]: clientsFeature.reducer,
     }),
@@ -109,7 +107,6 @@ export const appConfig: ApplicationConfig = {
       ReviewEffects,
       FieldOpsEffects,
       NotificationsEffects,
-      SettingsEffects,
       AddressingEffects,
       ClientsEffects,
       FeedbackEffects
@@ -131,6 +128,7 @@ export const appConfig: ApplicationConfig = {
     { provide: ReferenceApiPort, useFactory: () => shouldUseMock('reference') ? inject(MockReferenceApiService) : inject(ReferenceApiService) },
     { provide: UnitsApiPort, useFactory: () => shouldUseMock('units') ? inject(MockUnitsApiService) : inject(UnitsApiService) },
     { provide: ClosesApiPort, useFactory: () => shouldUseMock('closes') ? inject(MockClosesApiService) : inject(ClosesApiService) },
+    { provide: DiscoveriesApiPort, useFactory: () => shouldUseMock('discoveries') ? inject(MockDiscoveriesApiService) : inject(DiscoveriesApiService) },
 
     { provide: ENVIRONMENT_INITIALIZER, multi: true, useValue: () => inject(ThemeService) },
     provideStoreDevtools({ maxAge: 25, logOnly: false }),

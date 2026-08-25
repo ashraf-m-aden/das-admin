@@ -27,23 +27,21 @@
     }
   </select>
 
-  <!-- Raffinement optionnel : masqué tant que le quartier n'a aucune close (donnée creuse),
-       exactement comme une Zone vide — cf. CLAUDE.md §4. -->
-  @if (closes().length > 0) {
-  <select class="cascade__select" (change)="onClose($any($event.target).value)">
+  <!--
+    Le select des closes est TOUJOURS rendu, désactivé quand le quartier n'en a aucune.
+    Il était masqué dans ce cas jusqu'au 2026-08-25 : impossible alors de distinguer « ce filtre
+    n'existe pas » de « il n'y a rien à filtrer », et comme aucune close n'existe encore, le
+    filtre semblait tout simplement absent de l'application.
+  -->
+  <select class="cascade__select" [disabled]="!selection().quartierId || closes().length === 0"
+    (change)="onClose($any($event.target).value)">
+    @if (selection().quartierId && closes().length === 0) {
+    <option value="">{{ 'hierarchy.noCloses' | transloco }}</option>
+    } @else {
     <option value="">{{ 'hierarchy.allCloses' | transloco }}</option>
     @for (c of closes(); track c.id) {
     <option [value]="c.id" [selected]="c.id === selection().closeId">{{ c.name }}</option>
     }
-  </select>
-  }
-
-  @if (showBloc()) {
-  <select class="cascade__select" [disabled]="!selection().quartierId" (change)="onBloc($any($event.target).value)">
-    <option value="">{{ 'hierarchy.allBlocs' | transloco }}</option>
-    @for (b of blocs(); track b.id) {
-    <option [value]="b.id" [selected]="b.id === selection().blocId">{{ b.name }}</option>
     }
   </select>
-  }
 </div>

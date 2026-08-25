@@ -29,8 +29,6 @@ export interface AdministrativeUnit {
   createdAt: ISODateTime;
 }
 
-export type RoadTypeCode = 'street' | 'avenue' | 'boulevard' | 'alley' | 'road' | 'intersection' | 'roundabout';
-export interface RoadType { id: UUID; code: RoadTypeCode; labelFr: string; isPoint: boolean; }
 export type ZoneStatus = 'active' | 'reserved' | 'retired';
 
 /**

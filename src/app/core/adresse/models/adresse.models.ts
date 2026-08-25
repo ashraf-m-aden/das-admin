@@ -16,6 +16,14 @@ export interface AddressListItem {
   libelle: string;            // libellé humain, toujours présent — repli d'affichage quand addressCode est null
   postcode: string | null;   // code postal du quartier de l'adresse
   zone: string | null;       // zone (regroupe des quartiers)
+  /**
+   * Voie de la parcelle : nom de la rue, à défaut « close N », à défaut le code de la close.
+   * Rempli par le back depuis le 2026-08-23 — c'est la `Close`, portion de rue dans un quartier,
+   * qui a créé la liaison adresse↔rue qui manquait (faille `D1`). Reste `null` tant que le bloc
+   * de la parcelle n'est rattaché à aucune close : on n'y met JAMAIS le bloc en repli, un bloc
+   * n'est pas une voie.
+   */
+  street: string | null;
   quartier: string;
   propertyType: string;      // libellé FR d'un catalogue back, pas un enum fermé — à afficher brut
   workflowStage: AddressWorkflowStage;
@@ -26,6 +34,8 @@ export interface AddressListItem {
 
 /** Composantes hiérarchiques d'une adresse (fiche détail). */
 export interface AddressComponents {
+  /** Même chaîne de repli que `AddressListItem.street`, et `null` dans les mêmes cas. */
+  street: string | null;
   quartierNom: string;   // le back envoie `quartierNom` (pas `quartier`)
   zone: string;          // zone (regroupe des quartiers)
   commune: string;
@@ -41,7 +51,7 @@ export interface AddressLocation {
 export interface AddressPropertyInfo { propertyType: string; occupancyType: OccupancyType; buildingUse: string | null; }
 export interface AddressValidation { score: number; notes: string | null; }
 
-export type LinkedRecordKind = 'postcode' | 'block' | 'team';
+export type LinkedRecordKind = 'postcode' | 'block' | 'street' | 'team';
 export interface LinkedRecord { id: UUID; kind: LinkedRecordKind; label: string; }
 
 /** Adresse enrichie pour le tiroir de détail (details / linked). Pas d'onglet historique : `history` toujours vide côté back. */
@@ -54,6 +64,12 @@ export interface AddressDetail extends AddressListItem {
    * seule cette valeur est renvoyable telle quelle sur `PATCH /api/adresses/{id}`.
    */
   boundaryWkt: string;
+  /** Close de la parcelle — celle qui la nomme. `null` tant que son bloc n'y est pas rattaché. */
+  closeId: UUID | null;
+  /** Code technique de la close. `null` quand la parcelle n'a pas de close. */
+  closeCode: string | null;
+  /** Nom BRUT de la rue, `null` aussi quand la rue n'est pas encore nommée — c'est `components.street` qui porte le repli. */
+  streetName: string | null;
   components: AddressComponents;
   location: AddressLocation;
   propertyInfo: AddressPropertyInfo;
@@ -81,9 +97,11 @@ export interface AdresseFilters {
   communeId: UUID | null;
   zoneId: UUID | null;
   quartierId: UUID | null;
-  /** Close de la parcelle — la portion de rue qui la nomme. Ne rend aucune ligne tant que la reprise de données n'a rattaché aucun bloc. */
+  /**
+   * Close de la parcelle — la portion de rue qui la nomme. Niveau de filtre le plus fin depuis
+   * le retrait du bloc (2026-08-25) : un bloc est une unité de travail, pas d'adressage.
+   */
   closeId: UUID | null;
-  blocId: UUID | null;
 }
 
 /** Options de filtre alimentant les selects. Déclaration UNIQUE. */

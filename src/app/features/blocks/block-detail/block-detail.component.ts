@@ -9,11 +9,12 @@ import type { FilterSpecification } from 'maplibre-gl';
 import { BlocksFacade } from '../../../core/blocks/store/blocks.facade';
 import { ReviewFacade } from '../../../core/review/store/review.facade';
 import { PageHeaderComponent } from '../../../core/layout/page-header/page-header.component';
-import { DasMapComponent } from '../../../core/ui/map/das-map.component';
+import { BasemapLayerGroup, DasMapComponent } from '../../../core/ui/map/das-map.component';
 import { TileFilter, TileLayerBinding } from '../../../core/ui/map/map.models';
 import { wktBounds } from '../../../core/ui/map/wkt.util';
 import { UUID } from '../../../core/models/das.models';
 import { NotSurveyableReason } from '../../../core/review/models/review.models';
+import { STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP } from '../../../core/ui/map/basemap-groups';
 
 const BLOC_TILE: TileLayerBinding = {
   id: 'bloc', labelKey: 'nav.blocks', source: 'blocs', sourceLayer: 'blocs_tiles',
@@ -28,6 +29,13 @@ const BLOC_TILE: TileLayerBinding = {
   styleUrl: './block-detail.component.scss',
 })
 export class BlockDetailComponent implements OnInit, OnDestroy {
+
+  /**
+   * Voirie et contours du style de base, pilotables depuis le panneau des couches. Le panneau
+   * a été activé sur cette carte le 2026-08-25 : depuis le retrait du fond CARTO, la voirie est
+   * la seule référence de terrain, et il faut pouvoir la masquer pour lire les contours dessous.
+   */
+  protected readonly basemapLayers: BasemapLayerGroup[] = [STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP];
   private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);
   protected facade = inject(BlocksFacade);

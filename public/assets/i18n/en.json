@@ -14,7 +14,6 @@
     "auditLogs": "Audit Logs",
     "users": "Users",
     "integrations": "Integrations",
-    "settings": "Settings",
     "notifications": "Notifications",
     "logout": "Logout",
     "blocks": "Blocks",
@@ -22,7 +21,8 @@
     "addressing": "Addressing",
     "review": "Data review",
     "staff": "Staff",
-    "clients": "Clients"
+    "clients": "Clients",
+    "discoveries": "Field reports"
   },
   "common": {
     "search": "Search…",
@@ -43,8 +43,7 @@
     "reports": "No reporting route on the backend.",
     "audit": "No /api/audit route on the backend — no audit log exposed.",
     "clients": "No /api/clients route on the backend — commercial API module, outside current backend scope.",
-    "integrations": "No /api/integrations route on the backend.",
-    "settings": "No /api/road-types or /api/map-import route on the backend."
+    "integrations": "No /api/integrations route on the backend."
   },
   "auth": {
     "title": "Sign in",
@@ -120,13 +119,7 @@
     "newTitle": "New close",
     "editTitle": "Edit close",
     "street": "Street",
-    "pickStreet": "Pick a street…",
     "streetHint": "The street is what names the address (12, rue de la Mosquée, Quartier 7 Djibouti). An unnamed street falls back to the number, then the code.",
-    "number": "Number",
-    "code": "Code",
-    "codePlaceholder": "e.g. CL-01",
-    "numberHint": "1 to 999, unique within the quarter. It is the 3rd segment of the address code (77-007-3-42).",
-    "numberTakenBy": "This number already belongs to “{{name}}” in this quarter.",
     "blocCount": "{{count}} block(s)",
     "adresseCount": "{{count}} parcel(s)",
     "manageBlocs": "Manage blocks",
@@ -134,16 +127,54 @@
     "attachHint": "Tick to attach, untick to detach — one block at a time. You can also click a block on the map.",
     "noBlocs": "No free block in this quarter",
     "empty": "No close in this quarter",
-    "legendSelected": "Blocks of this close",
     "legendTaken": "Taken by another close",
-    "errorNumberUsed": "A close already uses this number in this quarter.",
+    "errorNumberUsed": "Someone just took this number. The list has been reloaded: try again, a new number will be computed.",
     "errorCodeUsed": "A close already uses this code in this quarter.",
     "errorStreetUsed": "This street already has a close in this quarter.",
-    "errorBlocTaken": "This block already belongs to another close.",
     "errorBlocOtherQuartier": "This block belongs to another quarter.",
     "errorNumeroCollision": "Attachment refused: two parcels would share the same number in this close. Renumbering must happen first.",
     "errorFrozenCode": "Refused: a parcel already carries a frozen address code, which this number is part of.",
-    "errorHasBlocs": "Deletion refused: blocks are still attached to this close."
+    "errorHasBlocs": "Deletion refused: blocks are still attached to this close.",
+    "errorHasAdresses": "Deletion refused: addresses are still attached to this close.",
+    "errorBlocNotAttached": "This block is not attached to this close.",
+    "errorNotFound": "This item no longer exists. Reload the list.",
+    "takenBy": "in {{name}}",
+    "generated": "Will be created as",
+    "numberIs": "number {{n}}",
+    "generatedHint": "Code and number are derived from the quarter and the first free number — they are not typed in.",
+    "searchStreet": "Search a street…",
+    "unnamedStreet": "unnamed",
+    "noStreetMatch": "No street matches.",
+    "legendInClose": "In {{name}}",
+    "legendFree": "Free — click to attach",
+    "mapClickHint": "Click a green block to attach it, a blue one to detach it. Grey blocks belong to another close: detach them there first.",
+    "mapIdleHint": "Pick a close to manage, then select its blocks straight on the map."
+  },
+  "discoveries": {
+    "eyebrow": "Reports from the field",
+    "campaign": "Campaign",
+    "allCampaigns": "All campaigns",
+    "statusFilter": "Status",
+    "allStatuses": "All statuses",
+    "status": {
+      "Pending": "To triage",
+      "Accepted": "Kept",
+      "Rejected": "Discarded"
+    },
+    "noAddressCreated": "Keeping a report creates no address: the point goes to the GIS expert, who will produce the boundary.",
+    "accuracy": "Accuracy {{m}} m",
+    "offlineFor": "Received {{hours}} h after capture",
+    "rejectedBecause": "Discarded: {{reason}}",
+    "accept": "Keep",
+    "reject": "Discard",
+    "rejectReason": "Reason",
+    "rejectPlaceholder": "Already in the registry, out of scope, duplicate…",
+    "rejectHint": "The reason goes back to the agent: without it, they will report the same thing next campaign.",
+    "confirmReject": "Confirm",
+    "export": "Export (GeoJSON)",
+    "empty": "No reports for these filters.",
+    "errorAlreadyReviewed": "This report has already been handled. Reload the list.",
+    "errorNotFound": "This report no longer exists. Reload the list."
   },
   "blocks": {
     "eyebrow": "Djibouti City · Boulaos",
@@ -155,7 +186,6 @@
     "summaryOne": "{{total}} block, {{unnamed}} unnamed",
     "summary": "{{total}} blocks, {{unnamed}} unnamed",
     "backToList": "Back",
-    "viewParcels": "View addresses",
     "missingNumberHint": "This block has no number yet (predates 2026-08-18 backfill) — it must be renumbered before it can be renamed.",
     "nameLabel": "Block name",
     "namePlaceholder": "e.g. Corail Avenue",
@@ -167,7 +197,8 @@
       "empty": "No validated survey on this block",
       "surveyed": "Surveyed",
       "notSurveyable": "Not surveyable"
-    }
+    },
+    "viewCloseParcels": "View parcels of the close"
   },
   "addressing": {
     "title": "Addressing",
@@ -211,7 +242,13 @@
       "photo_retake": "Retake photo",
       "gps_recheck": "Recheck GPS",
       "other": "Other"
-    }
+    },
+    "errorSelfReview": "You cannot review your own survey.",
+    "errorNotSubmitted": "This survey is no longer awaiting a decision. Reload the queue.",
+    "errorSurveyNotFound": "Survey not found. Reload the queue.",
+    "errorCampaignClosed": "Campaign closed: validate or reject — sending back for correction is no longer possible.",
+    "errorSuggestionNotPending": "This suggestion has already been handled. Reload the queue.",
+    "errorSuggestionNotFound": "Suggestion not found. Reload the queue."
   },
   "clients": {
     "eyebrow": "Commercial module",
@@ -292,47 +329,6 @@
     "property_approved": "Property {{code}} approved",
     "property_needs_redo": "Property {{code}} needs redo",
     "redo_resolved": "Redo resolved on {{code}}"
-  },
-  "settings": {
-    "eyebrow": "System configuration",
-    "roadTypes": "Road types",
-    "mapImport": "Map import",
-    "label": "Label",
-    "code": "Code",
-    "isPoint": "Point",
-    "emptyRoadTypes": "No road types",
-    "targetType": "Data type",
-    "targetZone": "Target zone",
-    "importSuccess": "Import complete",
-    "importedCount": "Items imported",
-    "skippedCount": "Items skipped",
-    "importAnother": "Import another file",
-    "importTarget": "Data type",
-    "importTargetBlocks": "Blocks",
-    "importTargetAdminUnits": "Administrative units",
-    "importZone": "Target zone",
-    "importFile": "GeoJSON file",
-    "startImport": "Start import",
-    "selectZone": "Select a zone…",
-    "dropFile": "Drop a GeoJSON / Shapefile",
-    "dropHint": "Automatically reprojected to EPSG:4326",
-    "import": "Import",
-    "importing": "Importing…",
-    "imported": "{{count}} items imported",
-    "skipped": "{{count}} skipped",
-    "target": {
-      "blocks": "Blocks",
-      "admin": "Administrative units"
-    },
-    "roadCode": {
-      "street": "Street",
-      "avenue": "Avenue",
-      "boulevard": "Boulevard",
-      "alley": "Alley",
-      "road": "Road",
-      "intersection": "Intersection",
-      "roundabout": "Roundabout"
-    }
   },
   "feedback": {
     "saved": "Saved",
@@ -418,14 +414,17 @@
     "linked": {
       "postcode": "Postcode",
       "block": "Block",
-      "team": "Team"
+      "team": "Team",
+      "street": "Street"
     },
     "layerParcels": "Addresses",
     "occupancyCol": "Occupancy",
     "zone": "Zone",
     "allZones": "All zones",
     "colZone": "Zone",
-    "colQuartier": "Quarter"
+    "colQuartier": "Quarter",
+    "colStreet": "Street",
+    "close": "Close"
   },
   "postcodes": {
     "eyebrow": "Postcode = city code + quarter number, computed, never entered",
@@ -515,7 +514,25 @@
     "transferTo": "To agent…",
     "thisCampaignOnly": "Limit to this campaign",
     "transferResultOne": "{{count}} block transferred",
-    "transferResult": "{{count}} blocks transferred"
+    "transferResult": "{{count}} blocks transferred",
+    "errorPlannedAlreadyExists": "A campaign is already being prepared. Start or delete it before creating another.",
+    "errorCodeCollision": "Could not assign a campaign code. Try again.",
+    "errorNotPlanned": "Only a campaign in preparation can be started.",
+    "errorAnotherInProgress": "Another campaign is already running. Close it first.",
+    "errorNoBlocAssigned": "Assign at least one block before starting the campaign.",
+    "errorIneligibleAgents": "Some assigned agents are no longer eligible. Reassign their blocks before starting.",
+    "errorNotStarted": "This campaign has not started: there is no fieldwork to extend or close.",
+    "errorNotInProgress": "The roadmap is generated when the campaign starts.",
+    "errorAlreadyExtended": "Fieldwork for this campaign has already been extended.",
+    "errorAlreadyClosed": "This campaign is already closed.",
+    "errorCampaignClosed": "Campaign closed: it can no longer be changed.",
+    "errorPopulateConflict": "A concurrent generation already ran. Refresh to see the current state.",
+    "errorInvalidAgent": "The agent must be an active user with the Field agent role.",
+    "errorBlocAlreadyAssigned": "This block is already assigned on this campaign. Use reassignment instead.",
+    "errorSameAgent": "This block is already assigned to that agent.",
+    "errorAssignmentNotPending": "Only an assignment still to do can be abandoned.",
+    "errorAssignmentHasSurvey": "A survey is in progress on this assignment: handle it before abandoning.",
+    "errorNotFound": "This item no longer exists. Reload the screen."
   },
   "dataquality": {
     "eyebrow": "Anti-fraud control queue — field signals",
@@ -533,12 +550,13 @@
   "map": {
     "layers": "Layers",
     "error": "Map unavailable",
-
-      "legend": { "title": "Status" },
+    "legend": { "title": "Status" },
     "basemap": {
       "ilots": "Block outlines",
       "parcelles": "Parcel outlines",
-      "adresses": "Address points"
+      "adresses": "Address points",
+      "streets": "Streets",
+      "closes": "Closes"
     }
   },
   "reports": {
@@ -622,7 +640,7 @@
     "allZones": "All zones",
     "allQuartiers": "All quartiers",
     "allCloses": "All closes",
-    "allBlocs": "All blocs"
+    "noCloses": "No close in this quarter"
   },
   "profile": {
     "eyebrow": "My account",

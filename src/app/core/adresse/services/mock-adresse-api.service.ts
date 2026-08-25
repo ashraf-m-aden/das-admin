@@ -46,7 +46,19 @@ interface MockAddressRecord extends AddressListItem {
   numero: number;
   boundaryWkt: string;
   closeId: string;
+  /** `null` quand le bloc de la parcelle n'est rattaché à aucune close — cf. `attached` ci-dessous. */
+  closeCode: string | null;
+  /** Nom BRUT de la rue. `null` sur une rue pas encore nommée : c'est ce qui rend le repli de `street` visible. */
+  streetName: string | null;
 }
+
+/**
+ * Rues des closes du mock. La valeur `null` est délibérée : une rue est nommée par une
+ * `StreetSuggestion` approuvée, donc `Street.Name` reste vide un moment. C'est le cas qui fait
+ * jouer le repli `Street.Name → « close N » → Code` côté back — sans lui, on ne verrait jamais
+ * le repli à l'écran.
+ */
+const STREET_NAMES: readonly (string | null)[] = ['Avenue Nasser', 'Rue de la Mosquée', null, 'Boulevard de la République'];
 
 @Injectable({ providedIn: 'root' })
 export class MockAdresseApiService extends AdresseApiPort {
@@ -59,6 +71,11 @@ export class MockAdresseApiService extends AdresseApiPort {
     const lat = 11.588 + Math.floor(i / 8) * 0.0045;
     const quartier = QUARTIERS[i % QUARTIERS.length];
     const workflowStage = STAGES[i % STAGES.length];
+    const closeIndex = Math.floor(i / 6);
+    // Une parcelle sur onze n'est rattachée à aucune close : c'est l'état de TOUTE la base avant
+    // la reprise de données, et le seul qui rende `street`/`closeCode` nuls (jamais un repli).
+    const attached = i % 11 !== 0;
+    const streetName = STREET_NAMES[closeIndex % STREET_NAMES.length];
 
     return {
       id: `addr-${n}`,
@@ -68,6 +85,8 @@ export class MockAdresseApiService extends AdresseApiPort {
       quartier,
       postcode: POSTCODE_BY_QUARTIER[quartier],
       zone: ZONE_BY_QUARTIER[quartier],
+      // Repli du back : nom de la rue → « close N » → code de la close. Jamais le bloc.
+      street: attached ? (streetName ?? `close ${closeIndex + 1}`) : null,
       propertyType: TYPES[i % TYPES.length],
       workflowStage,
       lastUpdate: new Date(2026, 6, 1 + (i % 28), 9, (i * 7) % 60).toISOString(),
@@ -75,7 +94,10 @@ export class MockAdresseApiService extends AdresseApiPort {
       geom: squareMulti(lng, lat, 0.0028),
       numero: (i % 30) + 1,
       boundaryWkt: squareWkt(lng, lat, 0.0028),
-      closeId: `close-${quartier}-${Math.floor(i / 6)}`,
+      // Une parcelle sans close n'a pas de voisine au sens de l'unicité du numéro : id unique.
+      closeId: attached ? `close-${quartier}-${closeIndex}` : `close-orpheline-${i}`,
+      closeCode: attached ? `CL-${String(closeIndex + 1).padStart(2, '0')}` : null,
+      streetName: attached ? streetName : null,
     };
   });
 
@@ -129,7 +151,9 @@ export class MockAdresseApiService extends AdresseApiPort {
     if (!base) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
     const detail: AddressDetail = {
       ...base,
+      closeId: base.closeCode ? base.closeId : null,
       components: {
+        street: base.street,
         quartierNom: base.quartier,
         zone: base.zone ?? '—',
         commune: 'Boulaos',
@@ -142,6 +166,9 @@ export class MockAdresseApiService extends AdresseApiPort {
       validation: { score: 1 + (base.id.charCodeAt(base.id.length - 1) % 6), notes: 'Adresse vérifiée sur site. Numéro de bâtiment visible.' },
       linked: [
         { id: `${id}-l1`, kind: 'postcode', label: base.postcode ?? '—' },
+        // La rue n'entre dans `linked` que si la parcelle a une close : sans close, il n'y a
+        // aucune rue à lier, et une ligne « — » ferait croire à une donnée manquante.
+        ...(base.street ? [{ id: `${id}-l3`, kind: 'street' as const, label: base.street }] : []),
         { id: `${id}-l2`, kind: 'team', label: base.assignedTeamName ?? '—' },
       ],
       units: [], // écrasé par le forkJoin de AdresseEffects.openDetail$ (MockUnitsApiService) — placeholder pour respecter AddressDetail.

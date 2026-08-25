@@ -35,18 +35,23 @@ Revue critique du processus de recensement tel que défini par [`docs/plans/sche
 | **C3** | Aucune notification, tout est en *pull* | Majeure | **Partielle** | Filtres par statut livrés ; pas d'endpoint de compteurs dédié |
 | **C4** | Aucun suivi d'avancement | Majeure | **Résolue** | `GET /api/campaigns/{id}/progress` |
 | **C5** | Le périmètre visé par une campagne n'est pas stocké | Mineure | **Dette technique** | — |
-| **D1** | `Street` n'est raccordée à rien et n'apparaît dans aucune adresse | Majeure | **Dette technique** | — |
+| **D1** | `Street` n'est raccordée à rien et n'apparaît dans aucune adresse | Majeure | **Résolue** | La `Close` raccorde la rue au quartier ; `street` est rempli sur `/api/adresses` |
 | **D2** | Unicités manquantes sur les noms et codes | Mineure | **Résolue** | 3 index uniques + contrôle applicatif 409 |
 | **D3** | Les permissions `*.delete` n'existent pas en base | Mineure | **Dette technique** | — |
-| **E1** | Les composants du code d'adresse sont vides en base — aucun code calculable | Bloquante | **À faire** | Renseigner `City.Code`, `Quartier.AreaNumber`, `Bloc.Number` |
-| **E2** | Le format du code d'adresse change, et la fenêtre se referme au 1er relevé validé | Bloquante | **À faire** | Passer à 5 segments **avant** toute validation `Definitive` |
-| **E3** | `(CloseId, Numero)` n'est pas indexable — `Adresse` ne porte pas `CloseId` | Critique | **À faire** | Dénormaliser `Adresse.CloseId` |
-| **E4** | `Bloc.QuartierId` → `Bloc.CloseId` casse les consommateurs existants | Majeure | **À faire** | Recenser et migrer joins, vue `blocs_tiles`, `GET /api/blocs?quartierId=` |
+| **E1** | Les composants du code d'adresse sont vides en base — aucun code calculable | Bloquante | **À faire** | Renseigner `City.Code` et `Quartier.AreaNumber`, puis rattacher les blocs à des closes. **`Bloc.Number` sort du périmètre** : il n'entre plus dans le code |
+| **E2** | Le format du code d'adresse change, et la fenêtre se referme au 1er relevé validé | Bloquante | **Partielle** | Format livré à **4** segments (`AddressCodeGenerator`, `77-007-3-42`). Reste l'impératif de calendrier : rien ne doit être validé `Definitive` avant la reprise |
+| **E3** | `(CloseId, Numero)` n'est pas indexable — `Adresse` ne porte pas `CloseId` | Critique | **Partielle** | `Adresse.CloseId` dénormalisé (migration `AddCloses`). L'index unique `(CloseId, Numero)`, la FK composite et le retrait de `(BlocId, Numero)` attendent la migration 2 (`MakeAdresseCloseRequired`, **pas encore écrite**) — d'ici là c'est `AttachBlocsHandler` qui tient seul l'invariant |
+| **E4** | `Bloc.QuartierId` → `Bloc.CloseId` casse les consommateurs existants | Majeure | **Requalifiée** | Le déplacement n'a pas eu lieu et n'aura pas lieu : `Bloc.QuartierId` est **conservé**, `Bloc.CloseId` s'y **ajoute** (nullable). L'unicité `(QuartierId, Bloc.Number)` ne bouge pas. Reste côté carte : `blocs_tiles` et `adresses_tiles` n'exposent pas `CloseId` |
 
 **État au 2026-08-09 : 10 résolues, 2 partielles, 4 en dette technique.**
-**Ajouté le 2026-08-23 : 1 requalifiée (`A1`), 4 à faire (`E1`–`E4`).**
+**Révision du 2026-08-23 : 1 requalifiée (`A1`), 4 ajoutées (`E1`–`E4`).**
+**Révision du 2026-08-25, après livraison de la `Close` :** `D1` **résolue** (c'est la close qui
+la résout — voir le rectificatif de la section E) ; `E2` et `E3` passent en **partielle** ; `E4`
+**requalifiée** ; `E1` reste à faire mais son périmètre se réduit (`Bloc.Number` en sort).
+**Total : 11 résolues, 4 partielles, 3 en dette technique, 1 à faire, 2 requalifiées.**
 
-Les statuts `Résolue` sont vérifiés par les tests de bout en bout (73 assertions HTTP, toutes vertes) décrits dans [`docs/plans/schema-recensement.md`](plans/schema-recensement.md). Les deux `Partielle` sont `A3` (politique de rétention des photos) et `C3` (endpoint de compteurs).
+Les statuts `Résolue` sont vérifiés par les tests de bout en bout (73 assertions HTTP, toutes vertes) décrits dans [`docs/plans/schema-recensement.md`](plans/schema-recensement.md). Les `Partielle` sont `A3` (politique de rétention des photos), `C3` (endpoint de compteurs),
+`E2` (fenêtre de calendrier encore ouverte) et `E3` (migration 2 non écrite).
 
 ---
 
@@ -534,18 +539,33 @@ savoir quelle close contient quels blocs :
 |---|---|---|
 | **A1** | *(requalifiée)* La traçabilité parcelle → adresse : impossible de dire si une parcelle du cadastre est déjà promue autrement qu'en comparant les géométries. Et une construction hors cadastre reste non signalable (`AdresseSuggestion` absente). | Dès la reprise d'un 2ᵉ quartier — sans traçabilité, on ne saura pas quoi promouvoir. |
 | **C5** | La traçabilité de l'intention : on ne distinguera pas « bloc non retenu » de « bloc sans adresse connue ». | Dès qu'un peuplement partiel devra être expliqué. |
-| **D1** | La justification d'un module entier — le référentiel de rues n'a aucun usage produit. | À l'arbitrage métier sur la composition d'une adresse. |
 | **D3** | La cohérence du catalogue de permissions vis-à-vis de la base. | À la première UI d'administration des rôles. |
 
-## À livrer (revue 2026-08-23) — séquencement contraint
+## À livrer — séquencement révisé le 2026-08-25
 
-`E4` → `E3` → `E1` → puis seulement ouvrir la validation des relevés (`E2`).
+Le séquencement du 2026-08-23 (`E4` → `E3` → `E1` → `E2`) est **périmé** : `E4` n'a plus lieu
+d'être (le déplacement d'unicité est abandonné) et la moitié d'`E3` est livrée. Ce qui reste :
+
+1. **Migration 2 (`MakeAdresseCloseRequired`)** — passer `Bloc.CloseId` et `Adresse.CloseId` en
+   `NOT NULL`, poser la FK composite `(BlocId, CloseId) → Blocs(Id, CloseId)` et l'index unique
+   `(CloseId, Numero)`, retirer `(BlocId, Numero)`. Elle **n'est pas écrite**. Tant qu'elle
+   manque, `AttachBlocsHandler` est la seule chose qui tient l'invariant — un écrit qui passerait
+   à côté de ce handler créerait un doublon que rien n'attraperait.
+2. **Reprise de données** — créer les closes du Quartier 7, y rattacher les 309 blocs, puis
+   **renuméroter** les 2 512 parcelles par close. C'est le préalable de la migration 2 : la
+   contrainte `NOT NULL` échouera tant qu'une parcelle n'a pas de close, et l'index unique
+   échouera tant que deux blocs d'une même close numérotent chacun à partir de 1.
+3. **`E1`** — renseigner `City.Code` et `Quartier.AreaNumber` : sans eux `AddressCodeGenerator`
+   renvoie `null` et aucun code n'est calculable, même une fois les closes en place.
+4. **Puis seulement** ouvrir la validation `Definitive` des relevés (`E2`).
 
 **Le point à retenir : la fenêtre est ouverte mais elle se referme toute seule.** Il y a
-aujourd'hui **0 code d'adresse figé** et **0 relevé** en base. Changer le format du code, déplacer
+aujourd'hui **0 code d'adresse figé** et **0 relevé** en base. Changer le format du code, poser
 les contraintes d'unicité et renuméroter ne coûtent donc **rien**. Au premier relevé validé en
 `Definitive`, chaque code posé l'est pour toujours et le coût devient une reprise de données
-impossible à faire proprement.
+impossible à faire proprement. Le back a d'ailleurs déjà armé le piège dans l'autre sens :
+`FrozenAddressCodeGuard` refuse (409) tout déplacement de bloc dès qu'un code est figé.
 
-Les deux `Partielle` restantes ne sont pas dans ce séquencement : `A3` attend une politique de
-rétention des photos, `C3` un endpoint de compteurs par utilisateur.
+Hors séquencement : `A3` attend une politique de rétention des photos, `C3` un endpoint de
+compteurs par utilisateur. Et côté carte, `blocs_tiles`/`adresses_tiles` doivent exposer
+`CloseId` — sans quoi le filtre par close du front vide l'écran.

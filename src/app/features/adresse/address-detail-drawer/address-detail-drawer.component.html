@@ -23,6 +23,8 @@
           <div class="section">
             <div class="section__title">{{ 'adresse.components' | transloco }}</div>
             <dl class="kv">
+              <div><dt>{{ 'adresse.colStreet' | transloco }}</dt><dd>{{ d.components.street ?? '—' }}</dd></div>
+              <div><dt>{{ 'adresse.close' | transloco }}</dt><dd>{{ d.closeCode ?? '—' }}</dd></div>
               <div><dt>{{ 'adresse.colQuartier' | transloco }}</dt><dd>{{ d.components.quartierNom }}</dd></div>
               <div><dt>{{ 'adresse.zone' | transloco }}</dt><dd>{{ d.components.zone }}</dd></div>
               <div><dt>{{ 'addressing.commune' | transloco }}</dt><dd>{{ d.components.commune }}</dd></div>

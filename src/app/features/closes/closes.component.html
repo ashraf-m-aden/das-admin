@@ -17,31 +17,49 @@
             <div class="panel__title">{{ (editing() === 'new' ? 'closes.newTitle' : 'closes.editTitle') | transloco }}</div>
           </div>
 
-          <label class="field">
+          <!--
+            Liste maison, et non un <select> : un <option> est rendu par le système
+            d'exploitation, pas par la page — il ne reçoit aucun événement de survol de façon
+            portable, donc la surbrillance carte demandée y serait impossible. La liste apporte
+            au passage la recherche, indispensable avec les centaines de rues venues d'OSM.
+          -->
+          <div class="field">
             <span>{{ 'closes.street' | transloco }}</span>
-            <select [ngModel]="formStreetId()" (ngModelChange)="formStreetId.set($event)">
-              <option [ngValue]="null">{{ 'closes.pickStreet' | transloco }}</option>
-              @for (s of streets(); track s.id) {
-                <option [ngValue]="s.id">{{ streetLabel(s) }}</option>
-              }
-            </select>
-          </label>
+            <input type="search" [ngModel]="streetSearch()" (ngModelChange)="streetSearch.set($event)"
+              [attr.placeholder]="'closes.searchStreet' | transloco" [attr.aria-label]="'closes.searchStreet' | transloco" />
+          </div>
+
+          <div class="streets" role="listbox" [attr.aria-label]="'closes.street' | transloco"
+            (mouseleave)="hoverStreet(null)">
+            @for (s of visibleStreets(); track s.id) {
+              <button type="button" class="street" role="option"
+                [class.street--on]="formStreetId() === s.id"
+                [attr.aria-selected]="formStreetId() === s.id"
+                (mouseenter)="hoverStreet(s.id)"
+                (focus)="hoverStreet(s.id)"
+                (click)="pickStreet(s.id)">
+                <span class="street__name" [class.street__name--unnamed]="!s.name">{{ streetLabel(s) }}</span>
+                @if (!s.name) { <span class="street__tag">{{ 'closes.unnamedStreet' | transloco }}</span> }
+              </button>
+            } @empty {
+              <div class="empty">{{ 'closes.noStreetMatch' | transloco }}</div>
+            }
+          </div>
           <p class="hint">{{ 'closes.streetHint' | transloco }}</p>
 
-          <div class="form">
-            <label class="field field--narrow">
-              <span>{{ 'closes.number' | transloco }}</span>
-              <input type="number" min="1" max="999" [ngModel]="formNumber()" (ngModelChange)="formNumber.set($event)" />
-            </label>
-            <label class="field">
-              <span>{{ 'closes.code' | transloco }}</span>
-              <input type="text" [ngModel]="formCode()" (ngModelChange)="formCode.set($event)" [attr.placeholder]="'closes.codePlaceholder' | transloco" />
-            </label>
-          </div>
-          @if (numberCollision(); as owner) {
-            <p class="warn">{{ 'closes.numberTakenBy' | transloco: { name: owner.label } }}</p>
-          } @else {
-            <p class="hint">{{ 'closes.numberHint' | transloco }}</p>
+          <!--
+            Numéro et code ne sont plus saisis : ils sont dérivés du quartier et du premier
+            numéro libre. Ils restent AFFICHÉS avant l'enregistrement — un identifiant qui entre
+            dans le code d'adresse ne doit pas apparaître par surprise après coup.
+          -->
+          @if (editing() === 'new') {
+            <div class="generated">
+              <span class="generated__label">{{ 'closes.generated' | transloco }}</span>
+              <span class="generated__value mono">{{ generatedCode() }}</span>
+              <span class="generated__sep">·</span>
+              <span class="generated__value mono">{{ 'closes.numberIs' | transloco: { n: nextFreeNumber() } }}</span>
+            </div>
+            <p class="hint">{{ 'closes.generatedHint' | transloco }}</p>
           }
 
           <div class="form-actions">
@@ -90,11 +108,15 @@
                 </label>
               }
 
-              @for (b of freeBlocs(); track b.id) {
-                <label class="bloc">
-                  <input type="checkbox" [disabled]="isSaving$ | async" (change)="attachBloc(b.id)" />
-                  <span class="bloc__name">{{ blocLabel(b) }}</span>
-                  @if (b.number !== null) { <span class="bloc__num mono">{{ b.number }}</span> }
+              @for (x of selectableBlocs(); track x.bloc.id) {
+                <label class="bloc" [class.bloc--taken]="x.takenBy">
+                  <input type="checkbox" [disabled]="(isSaving$ | async) || !!x.takenBy" (change)="attachBloc(x.bloc.id)" />
+                  <span class="bloc__name">{{ blocLabel(x.bloc) }}</span>
+                  @if (x.takenBy) {
+                    <span class="bloc__taken">{{ 'closes.takenBy' | transloco: { name: x.takenBy.label } }}</span>
+                  } @else if (x.bloc.number !== null) {
+                    <span class="bloc__num mono">{{ x.bloc.number }}</span>
+                  }
                 </label>
               } @empty {
                 @if (mc.blocs.length === 0) { <div class="empty">{{ 'closes.noBlocs' | transloco }}</div> }
@@ -105,18 +127,28 @@
       </section>
 
       <section class="das-card map-panel">
-        <div class="map-panel__legend">
-          <span class="lg"><span class="lg__dot" style="background:#2563eb"></span>{{ 'closes.legendSelected' | transloco }}</span>
-          <span class="lg"><span class="lg__dot" style="background:#9aa3b5"></span>{{ 'closes.legendTaken' | transloco }}</span>
-        </div>
+        <!--
+          La légende ne montre que ce qui est vrai à l'instant : hors gestion de blocs, aucune
+          couleur n'est surchargée sur la carte, donc afficher une légende serait mentir.
+        -->
+        @if (managedClose(); as mc) {
+          <div class="map-panel__legend">
+            <span class="lg"><span class="lg__dot" [style.background]="colors.inClose"></span>{{ 'closes.legendInClose' | transloco: { name: mc.label } }}</span>
+            <span class="lg"><span class="lg__dot" [style.background]="colors.free"></span>{{ 'closes.legendFree' | transloco }}</span>
+            <span class="lg"><span class="lg__dot" [style.background]="colors.taken"></span>{{ 'closes.legendTaken' | transloco }}</span>
+          </div>
+          <p class="hint">{{ 'closes.mapClickHint' | transloco }}</p>
+        } @else {
+          <p class="hint">{{ 'closes.mapIdleHint' | transloco }}</p>
+        }
         <div class="map-panel__canvas">
           <das-map
             [tileLayers]="tileLayers"
             [tileFeatureStates]="tileFeatureStates()"
             [tileFilters]="tileFilters()"
             [fitBbox]="mapFitBbox()"
-            [showLayerControl]="false"
-            (featureSelect)="onMapBloc($event)" />
+            [basemapLayers]="basemapLayers"
+            (featureSelect)="onMapFeature($event)" />
         </div>
       </section>
     </div>

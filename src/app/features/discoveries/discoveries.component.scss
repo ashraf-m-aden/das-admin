@@ -1,0 +1,58 @@
+@use "styles/variables" as v;
+@use "styles/mixins" as m;
+
+.dc { padding: v.$space-4 v.$space-5; display: flex; flex-direction: column; gap: v.$space-3; }
+.dc__filters { display: flex; gap: v.$space-3; flex-wrap: wrap; align-items: flex-end; }
+.dc__counts { display: flex; gap: v.$space-3; padding-bottom: v.$space-1; }
+.dc__note { margin: 0; font-size: v.$font-size-xs; color: var(--color-text-muted); font-style: italic; }
+.dc__error { padding: v.$space-3 v.$space-4; background: var(--color-danger-bg); color: var(--color-danger); border-radius: v.$radius-md; font-size: v.$font-size-sm; }
+.dc__grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: v.$space-3; align-items: start; @include m.respond-below(lg) { grid-template-columns: 1fr; } }
+
+.cnt { display: inline-flex; align-items: center; gap: v.$space-1; font-size: v.$font-size-sm; color: var(--color-text-secondary); }
+.cnt__dot { width: 9px; height: 9px; border-radius: 50%; }
+
+.panel { padding: v.$space-4; display: flex; flex-direction: column; gap: v.$space-2; max-height: 640px; overflow: auto; @include m.slim-scrollbar; }
+
+.row { display: flex; flex-direction: column; gap: v.$space-1; padding: v.$space-3; border-radius: v.$radius-sm; border: 1px solid transparent; cursor: pointer;
+  &:hover { background: var(--color-surface-alt); }
+  &--on { background: var(--das-blue-50); border-color: var(--color-accent); }
+  &__main { display: flex; align-items: center; gap: v.$space-2; flex-wrap: wrap; }
+  &__status { display: inline-flex; align-items: center; gap: v.$space-1; font-size: v.$font-size-xs; font-weight: v.$font-weight-medium; }
+  &__dot { width: 8px; height: 8px; border-radius: 50%; }
+  &__agent { font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; color: var(--color-text-primary); }
+  &__bloc { font-size: v.$font-size-xs; color: var(--color-text-muted); }
+  &__comment { margin: 0; font-size: v.$font-size-sm; color: var(--color-text-secondary); }
+  &__meta { display: flex; gap: v.$space-3; flex-wrap: wrap; font-size: v.$font-size-xs; color: var(--color-text-muted); }
+  &__offline { font-style: italic; }
+  &__reason { margin: 0; font-size: v.$font-size-xs; color: var(--color-text-muted); }
+  &__actions { display: flex; gap: v.$space-2; margin-top: v.$space-2; }
+}
+
+.reject { display: flex; flex-direction: column; gap: v.$space-2; margin-top: v.$space-2; padding: v.$space-3; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: v.$radius-sm;
+  &__actions { display: flex; gap: v.$space-2; }
+}
+
+.hint { margin: 0; font-size: v.$font-size-xs; color: var(--color-text-muted); }
+
+.field { display: flex; flex-direction: column; gap: v.$space-1; min-width: 180px;
+  span { font-size: v.$font-size-xs; color: var(--color-text-muted); }
+  select, textarea { padding: v.$space-2; border: 1px solid var(--color-border); border-radius: v.$radius-sm; background: var(--color-surface); color: var(--color-text-primary); font: inherit; font-size: v.$font-size-sm; outline: none; &:focus { border-color: var(--color-accent); } }
+  select { height: 34px; padding: 0 v.$space-2; }
+  textarea { resize: vertical; }
+}
+
+.map-panel { padding: v.$space-4; display: flex; flex-direction: column; gap: v.$space-3; }
+.map-panel__legend { display: flex; gap: v.$space-3; flex-wrap: wrap; }
+.map-panel__canvas { height: 520px; border-radius: v.$radius-md; overflow: hidden; }
+.lg { display: inline-flex; align-items: center; gap: v.$space-1; font-size: v.$font-size-xs; color: var(--color-text-secondary); }
+.lg__dot { width: 9px; height: 9px; border-radius: 50%; }
+
+.mono { font-family: v.$font-family-mono; }
+.empty { padding: v.$space-6; text-align: center; color: var(--color-text-muted); font-size: v.$font-size-sm; }
+
+.btn { height: 34px; padding: 0 v.$space-3; display: inline-flex; align-items: center; gap: v.$space-1; border: 1px solid var(--color-border); border-radius: v.$radius-sm; background: var(--color-surface); font: inherit; font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; color: var(--color-text-secondary); cursor: pointer;
+  &:hover { background: var(--color-surface-alt); }
+  &--primary { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-on-accent); }
+  &--danger { border-color: var(--color-danger); color: var(--color-danger); }
+  &:disabled { opacity: 0.55; cursor: default; }
+}
