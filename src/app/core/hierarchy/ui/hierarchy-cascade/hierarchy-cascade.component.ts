@@ -1,7 +1,8 @@
-import { Component, OnInit, inject, output } from '@angular/core';
+import { Component, OnInit, inject, input, output, signal } from '@angular/core';
 import { TranslocoModule } from '@jsverse/transloco';
 import { HierarchyFacade } from '../../store/hierarchy.facade';
 import { HierarchySelection } from '../../models/hierarchy.models';
+import { UUID } from '../../../models/das.models';
 
 /**
  * Cascade City→Commune→Zone→Quartier→Close. Découplée du module hôte : elle pilote la
@@ -27,7 +28,16 @@ import { HierarchySelection } from '../../models/hierarchy.models';
 export class HierarchyCascadeComponent implements OnInit {
   private hierarchy = inject(HierarchyFacade);
 
+  /**
+   * Affiche un multi-select de zones à côté du select Zone. Il ne FILTRE pas : il désigne les
+   * zones à mettre en évidence sur la carte. Opt-in — c'est un besoin de l'écran cartographie,
+   * pas de tous les consommateurs de la cascade.
+   */
+  readonly showZoneHighlight = input<boolean>(false);
+
   readonly selectionChange = output<HierarchySelection>();
+  /** Zones à mettre en évidence. Indépendant de `selectionChange` : surligner n'est pas filtrer. */
+  readonly zoneHighlightChange = output<UUID[]>();
 
   protected readonly cities = this.hierarchy.cities;
   protected readonly communes = this.hierarchy.communes;
@@ -43,6 +53,20 @@ export class HierarchyCascadeComponent implements OnInit {
   onZone(id: string): void { this.hierarchy.selectZone(id || null); this.emit(); }
   onQuartier(id: string): void { this.hierarchy.selectQuartier(id || null); this.emit(); }
   onClose(id: string): void { this.hierarchy.selectClose(id || null); this.emit(); }
+
+  protected readonly highlightedZones = signal<UUID[]>([]);
+
+  isZoneHighlighted(id: UUID): boolean { return this.highlightedZones().includes(id); }
+
+  toggleZoneHighlight(id: UUID): void {
+    this.highlightedZones.update((ids) => ids.includes(id) ? ids.filter((z) => z !== id) : [...ids, id]);
+    this.zoneHighlightChange.emit(this.highlightedZones());
+  }
+
+  clearZoneHighlight(): void {
+    this.highlightedZones.set([]);
+    this.zoneHighlightChange.emit([]);
+  }
 
   private emit(): void { this.selectionChange.emit(this.hierarchy.selection()); }
 }

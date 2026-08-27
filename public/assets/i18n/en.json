@@ -148,7 +148,23 @@
     "legendInClose": "In {{name}}",
     "legendFree": "Free — click to attach",
     "mapClickHint": "Click a green block to attach it, a blue one to detach it. Grey blocks belong to another close: detach them there first.",
-    "mapIdleHint": "Pick a close to manage, then select its blocks straight on the map."
+    "mapIdleHint": "Pick a close to manage, then select its blocks straight on the map.",
+    "previewNumbering": "Preview numbering",
+    "previewHint": "Attaching several blocks renumbers their parcels: each block numbers from 1. The preview proposes an order; you validate it on the map before anything is written.",
+    "planTitle": "Proposed numbering",
+    "planLayer": "Numbering plan",
+    "planSummary": "{{total}} parcel(s), {{changed}} renumbered",
+    "planEstimated": "order estimated from the parcels (no street has a centreline yet): check it on the map.",
+    "planWas": "was {{n}}",
+    "planApply": "Apply numbering",
+    "planReverse": "Reverse direction",
+    "planDuplicates": "Duplicate numbers: {{nums}}. Fix before applying.",
+    "planFrozen": "{{count}} parcel(s) with a frozen address code would change number — refused.",
+    "planFrozenRow": "Frozen address code: this number can no longer change.",
+    "errorNumberingDuplicate": "Two parcels share the same number in the plan.",
+    "errorNumberingIncomplete": "The plan does not cover every parcel of the close.",
+    "errorNumberingForeign": "The plan contains a parcel that does not belong to this close.",
+    "errorNumberingOutOfRange": "A number in the plan is outside the allowed range."
   },
   "discoveries": {
     "eyebrow": "Reports from the field",
@@ -637,6 +653,8 @@
   "hierarchy": {
     "allCities": "All cities",
     "allCommunes": "All communes",
+    "highlightZones": "Highlight:",
+    "clearHighlight": "clear",
     "allZones": "All zones",
     "allQuartiers": "All quartiers",
     "allCloses": "All closes",

@@ -29,3 +29,40 @@ export const selectTakenNumbers = createSelector(
   closesFeature.selectCloses,
   (closes) => new Map<number, Close>(closes.map((c) => [c.number, c])),
 );
+
+/**
+ * Le plan tel qu'il sera ENVOYÉ : proposition du serveur, écrasée par les corrections manuelles.
+ * Trié par numéro effectif — c'est l'ordre que l'opérateur relit sur la carte, il doit
+ * correspondre à ce qu'il valide.
+ */
+export const selectEffectivePlan = createSelector(
+  closesFeature.selectPlan,
+  closesFeature.selectPlanEdits,
+  (plan, edits) => {
+    if (!plan) return null;
+    const adresses = plan.adresses
+      .map((a) => ({ ...a, effectiveNumero: edits[a.adresseId] ?? a.proposedNumero }))
+      .sort((x, y) => x.effectiveNumero - y.effectiveNumero);
+    return { ...plan, adresses };
+  },
+);
+
+/**
+ * Anomalies bloquantes, détectées AVANT l'envoi — le back les refuserait de toute façon
+ * (`Closes.NumberingDuplicate`, `Closes.AddressCodeFrozen`), autant les montrer tout de suite
+ * plutôt que de faire un aller-retour pour un 409.
+ */
+export const selectPlanIssues = createSelector(selectEffectivePlan, (plan) => {
+  if (!plan) return { duplicates: [] as number[], frozen: [] as string[], outOfRange: [] as string[] };
+  const counts = new Map<number, number>();
+  for (const a of plan.adresses) counts.set(a.effectiveNumero, (counts.get(a.effectiveNumero) ?? 0) + 1);
+  return {
+    duplicates: [...counts.entries()].filter(([, n]) => n > 1).map(([num]) => num),
+    // Un code figé interdit de changer le numéro : on ne signale que ceux qu'on ferait bouger.
+    frozen: plan.adresses.filter((a) => a.addressCode && a.effectiveNumero !== a.currentNumero).map((a) => a.adresseId),
+    outOfRange: plan.adresses.filter((a) => a.effectiveNumero < 1).map((a) => a.adresseId),
+  };
+});
+
+export const selectCanApplyPlan = createSelector(selectPlanIssues, selectEffectivePlan, (issues, plan) =>
+  !!plan && issues.duplicates.length === 0 && issues.frozen.length === 0 && issues.outOfRange.length === 0);

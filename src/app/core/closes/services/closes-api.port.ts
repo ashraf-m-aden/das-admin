@@ -1,6 +1,9 @@
 import { Observable } from 'rxjs';
 import { UUID } from '../../models/das.models';
-import { Close, CloseListQuery, CloseStreetOption, CreateClosePayload, UpdateClosePayload } from '../models/closes.models';
+import {
+  AdresseNumbering, Close, CloseListQuery, CloseNumberingPlan, CloseStreetOption,
+  CreateClosePayload, UpdateClosePayload,
+} from '../models/closes.models';
 
 export abstract class ClosesApiPort {
   abstract list(query: CloseListQuery): Observable<Close[]>;
@@ -10,8 +13,19 @@ export abstract class ClosesApiPort {
   abstract create(payload: CreateClosePayload): Observable<Close>;
   abstract update(id: UUID, payload: UpdateClosePayload): Observable<Close>;
   abstract remove(id: UUID): Observable<void>;
-  /** `POST /api/closes/{id}/blocs` — idempotent, un ou plusieurs blocs à la fois. */
-  abstract attachBlocs(id: UUID, blocIds: UUID[]): Observable<Close>;
+  /**
+   * `POST /api/closes/{id}/blocs/preview` — **n'écrit rien**. Propose un numéro par parcelle de la
+   * close résultante, avec sa position et sa géométrie, pour validation sur carte.
+   * `blocIds` peut être vide : on obtient alors une proposition pour la close telle qu'elle est.
+   */
+  abstract previewAttachBlocs(id: UUID, blocIds: UUID[], reverse: boolean): Observable<CloseNumberingPlan>;
+
+  /**
+   * `POST /api/closes/{id}/blocs`. Sans `numbering`, refusé (409 `Closes.DuplicateAdresseNumero`)
+   * dès que la réunion des blocs produirait des numéros en double — ce qui est le cas courant.
+   * Avec `numbering`, rattachement et renumérotation se font dans la MÊME transaction.
+   */
+  abstract attachBlocs(id: UUID, blocIds: UUID[], numbering?: AdresseNumbering[]): Observable<Close>;
   /** `DELETE /api/closes/{id}/blocs/{blocId}` — un bloc à la fois. */
   abstract detachBloc(id: UUID, blocId: UUID): Observable<Close>;
 }

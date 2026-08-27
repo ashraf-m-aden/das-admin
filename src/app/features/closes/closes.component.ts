@@ -7,8 +7,8 @@ import { ClosesFacade } from '../../core/closes/store/closes.facade';
 import { PageHeaderComponent } from '../../core/layout/page-header/page-header.component';
 import { AuthFacade } from '../../core/auth/store/auth.facade';
 import { BasemapLayerGroup, DasMapComponent } from '../../core/ui/map/das-map.component';
-import { TileFeatureStateMap, TileFilter, TileLayerBinding } from '../../core/ui/map/map.models';
-import { unionBounds, wktBounds } from '../../core/ui/map/wkt.util';
+import { MapFeature, MapLayerConfig, TileFeatureStateMap, TileFilter, TileLayerBinding } from '../../core/ui/map/map.models';
+import { unionBounds, wktBounds, wktPoint } from '../../core/ui/map/wkt.util';
 import { HierarchyCascadeComponent } from '../../core/hierarchy/ui/hierarchy-cascade/hierarchy-cascade.component';
 import { HierarchySelection } from '../../core/hierarchy/models/hierarchy.models';
 import { HierarchyFacade } from '../../core/hierarchy/store/hierarchy.facade';
@@ -17,6 +17,12 @@ import { Block, UUID, UserRole } from '../../core/models/das.models';
 import { STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP } from '../../core/ui/map/basemap-groups';
 
 const CAN_EDIT_ROLES: UserRole[] = ['Admin', 'Gestionnaire'];
+
+/** Parcelle arrivant avec un bloc rattaché / déjà dans la close / au code figé (numéro inchangé) / figé et déplacé (bloquant). */
+const PLAN_ENTERING_COLOR = '#2563eb';
+const PLAN_EXISTING_COLOR = '#0d9488';
+const PLAN_LOCKED_COLOR = '#6b7280';
+const PLAN_FROZEN_COLOR = '#dc2626';
 
 /**
  * Overrides live ; la coloration de base reste bakée dans le style (CLAUDE.md §4).
@@ -100,6 +106,17 @@ export class ClosesComponent implements OnInit {
 
   /** Close dont on gère les blocs. Distinct de l'édition de la fiche : ce sont deux routes back. */
   protected readonly managing = signal<UUID | null>(null);
+
+  /* ---- Plan de numérotation ------------------------------------------------ */
+  protected readonly plan = toSignal(this.facade.plan$, { initialValue: null });
+  protected readonly planIssues = toSignal(this.facade.planIssues$, {
+    initialValue: { duplicates: [] as number[], frozen: [] as string[], outOfRange: [] as string[] },
+  });
+  protected readonly canApplyPlan = toSignal(this.facade.canApplyPlan$, { initialValue: false });
+  protected readonly isPreviewing$ = this.facade.isPreviewing$;
+  /** Blocs cochés en attente d'aperçu — le rattachement ne part plus directement. */
+  protected readonly pendingBlocIds = signal<UUID[]>([]);
+  protected readonly planReverse = signal(false);
   protected readonly highlightedCloseId = signal<UUID | null>(null);
 
   /** Rue survolée dans la liste. Pilote la surbrillance carte, rien d'autre. */
@@ -288,18 +305,80 @@ export class ClosesComponent implements OnInit {
     this.managing.update((cur) => (cur === c.id ? null : c.id));
   }
 
-  /**
-   * Un bloc à la fois, volontairement. Le back refuse (409) le rattachement dès que la réunion
-   * des blocs ferait porter le même numéro à deux parcelles — et comme chaque bloc numérote à
-   * partir de 1, c'est la règle plus que l'exception tant que la renumérotation n'a pas eu lieu.
-   * Envoyer un lot ferait échouer le tout pour un seul bloc fautif, sans dire lequel.
-   */
-  attachBloc(blocId: UUID): void {
-    const closeId = this.managing();
-    if (closeId) this.facade.attachBlocs(closeId, [blocId]);
+  /* ---- Parcours aperçu → validation → application -------------------------- */
+
+  /** Coche/décoche un bloc candidat. Rien n'est envoyé : l'aperçu est explicite. */
+  togglePendingBloc(blocId: UUID): void {
+    if (this.blocOwner().get(blocId)) return;
+    this.pendingBlocIds.update((ids) => ids.includes(blocId) ? ids.filter((x) => x !== blocId) : [...ids, blocId]);
   }
 
+  isPending(blocId: UUID): boolean { return this.pendingBlocIds().includes(blocId); }
+
+  /**
+   * Demande la proposition de numérotation. `blocIds` peut être vide : on obtient alors une
+   * proposition pour la close telle qu'elle est — c'est la façon de vérifier après coup qu'une
+   * numérotation est stable (`changedCount` à 0).
+   */
+  preview(): void {
+    const closeId = this.managing();
+    if (closeId) this.facade.previewNumbering(closeId, this.pendingBlocIds(), this.planReverse());
+  }
+
+  /** Le sens de parcours brut est arbitraire : si le plan commence par le mauvais bout, on le rejoue inversé. */
+  toggleReverse(): void {
+    this.planReverse.update((r) => !r);
+    this.preview();
+  }
+
+  editNumero(adresseId: UUID, value: number | null): void {
+    if (value === null || Number.isNaN(value)) return;
+    this.facade.editPlannedNumero(adresseId, value);
+  }
+
+  discardPlan(): void {
+    this.facade.discardPlan();
+    this.pendingBlocIds.set([]);
+    this.planReverse.set(false);
+  }
+
+  /** Applique le plan RELU — rattachement et renumérotation dans la même transaction côté back. */
+  applyPlan(): void {
+    const closeId = this.managing();
+    if (closeId && this.canApplyPlan()) this.facade.attachBlocs(closeId, this.pendingBlocIds());
+  }
+
+  /**
+   * Le plan projeté sur la carte : un point par parcelle, portant son numéro EFFECTIF en libellé
+   * permanent. C'est le seul rendu qui permette de vérifier ce qu'on valide — voir que le 1
+   * précède le 2 le long de la voie. Les parcelles entrantes se distinguent de celles déjà
+   * rattachées, et un code figé passe en rouge : son numéro ne peut pas bouger.
+   */
+  protected readonly planFeatures = computed<MapFeature[]>(() => {
+    const p = this.plan();
+    if (!p) return [];
+    const frozen = new Set(this.planIssues().frozen);
+    return p.adresses.flatMap((a) => {
+      const pt = wktPoint(a.locationWkt);
+      if (!pt) return [];
+      return [{
+        id: a.adresseId,
+        layerId: 'plan',
+        geometry: pt,
+        color: a.addressCode ? (frozen.has(a.adresseId) ? PLAN_FROZEN_COLOR : PLAN_LOCKED_COLOR)
+          : a.entering ? PLAN_ENTERING_COLOR : PLAN_EXISTING_COLOR,
+        label: String(a.effectiveNumero),
+        selectable: false,
+      }];
+    });
+  });
+
+  protected readonly planLayers: MapLayerConfig[] = [
+    { id: 'plan', labelKey: 'closes.planLayer', type: 'point', visible: true, showLabels: true },
+  ];
+
   detachBloc(blocId: UUID): void {
+
     const closeId = this.managing();
     if (closeId) this.facade.detachBloc(closeId, blocId);
   }
@@ -324,7 +403,7 @@ export class ClosesComponent implements OnInit {
     if (!this.managing()) return;
     const owner = this.blocOwner().get(blocId);
     if (owner?.id === this.managing()) this.detachBloc(blocId);
-    else if (!owner) this.attachBloc(blocId);
+    else if (!owner) this.togglePendingBloc(blocId);
   }
 
   /** Choisir une rue depuis la liste ou depuis la carte : même chemin, même résultat. */

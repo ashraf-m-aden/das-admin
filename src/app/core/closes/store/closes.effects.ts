@@ -5,6 +5,7 @@ import { Store } from '@ngrx/store';
 import { catchError, filter, map, of, switchMap } from 'rxjs';
 import { ClosesActions } from './closes.actions';
 import { closesFeature } from './closes.reducer';
+import { selectEffectivePlan } from './closes.selectors';
 import { ClosesApiPort } from '../services/closes-api.port';
 import { BlocksApiPort } from '../../blocks/services/blocks-api.port';
 import { EMPTY_HIERARCHY_SELECTION } from '../../hierarchy/models/hierarchy.models';
@@ -41,6 +42,10 @@ const ERROR_KEY_BY_CODE: ErrorKeyMap = {
   // Écran désynchronisé (close supprimée ailleurs, bloc disparu) : `Blocs.NotFound` sort aussi
   // du rattachement. Même conseil dans les deux cas — recharger.
   'Closes.NotFound': 'closes.errorNotFound',
+  'Closes.NumberingDuplicate': 'closes.errorNumberingDuplicate',
+  'Closes.NumberingIncomplete': 'closes.errorNumberingIncomplete',
+  'Closes.NumberingForeignAdresse': 'closes.errorNumberingForeign',
+  'Closes.NumberingOutOfRange': 'closes.errorNumberingOutOfRange',
   'Blocs.NotFound': 'closes.errorNotFound',
 };
 
@@ -113,12 +118,27 @@ export class ClosesEffects {
     )),
   ));
 
+  previewNumbering$ = createEffect(() => this.actions$.pipe(
+    ofType(ClosesActions.previewNumbering),
+    switchMap(({ closeId, blocIds, reverse }) => this.api.previewAttachBlocs(closeId, blocIds, reverse).pipe(
+      map((plan) => ClosesActions.previewNumberingSuccess({ plan, blocIds })),
+      catchError((err: unknown) => of(ClosesActions.previewNumberingFailure({ errorMessageKey: toErrorKey(err, ERROR_KEY_BY_CODE) }))),
+    )),
+  ));
+
   attachBlocs$ = createEffect(() => this.actions$.pipe(
     ofType(ClosesActions.attachBlocs),
-    switchMap(({ closeId, blocIds }) => this.api.attachBlocs(closeId, blocIds).pipe(
-      map(() => ClosesActions.attachBlocsSuccess()),
-      catchError((err: unknown) => of(ClosesActions.attachBlocsFailure({ errorMessageKey: toKey(err) }))),
-    )),
+    // Le plan validé est lu DANS LE STORE plutôt que porté par l'action : c'est de l'état relu
+    // à l'écran, pas une donnée du geste (CLAUDE.md §4). L'envoyer dans le payload obligerait
+    // l'écran à recomposer ce que le sélecteur sait déjà faire.
+    concatLatestFrom(() => this.store.select(selectEffectivePlan)),
+    switchMap(([{ closeId, blocIds }, plan]) => {
+      const numbering = plan?.adresses.map((a) => ({ adresseId: a.adresseId, numero: a.effectiveNumero }));
+      return this.api.attachBlocs(closeId, blocIds, numbering).pipe(
+        map(() => ClosesActions.attachBlocsSuccess()),
+        catchError((err: unknown) => of(ClosesActions.attachBlocsFailure({ errorMessageKey: toErrorKey(err, ERROR_KEY_BY_CODE) }))),
+      );
+    }),
   ));
 
   detachBloc$ = createEffect(() => this.actions$.pipe(

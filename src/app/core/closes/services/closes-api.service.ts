@@ -4,7 +4,10 @@ import { Observable, map } from 'rxjs';
 import { ClosesApiPort } from './closes-api.port';
 import { AppConfigService } from '../../config/app-config.service';
 import { UUID } from '../../models/das.models';
-import { Close, CloseListQuery, CloseStreetOption, CreateClosePayload, UpdateClosePayload } from '../models/closes.models';
+import {
+  AdresseNumbering, Close, CloseListQuery, CloseNumberingPlan, CloseStreetOption,
+  CreateClosePayload, UpdateClosePayload,
+} from '../models/closes.models';
 
 interface RawCloseBlocResponse {
   id: string;
@@ -76,8 +79,15 @@ export class ClosesApiService extends ClosesApiPort {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 
-  override attachBlocs(id: UUID, blocIds: UUID[]): Observable<Close> {
-    return this.http.post<RawCloseResponse>(`${this.baseUrl}/${id}/blocs`, { blocIds }).pipe(map(toClose));
+  override previewAttachBlocs(id: UUID, blocIds: UUID[], reverse: boolean): Observable<CloseNumberingPlan> {
+    return this.http.post<CloseNumberingPlan>(`${this.baseUrl}/${id}/blocs/preview`, { blocIds, reverse });
+  }
+
+  override attachBlocs(id: UUID, blocIds: UUID[], numbering?: AdresseNumbering[]): Observable<Close> {
+    // `numbering` omis (et non `null`) quand il n'y en a pas : le back distingue « pas de plan »
+    // de « plan vide », et un plan vide serait refusé comme incomplet.
+    const body = numbering?.length ? { blocIds, numbering } : { blocIds };
+    return this.http.post<RawCloseResponse>(`${this.baseUrl}/${id}/blocs`, body).pipe(map(toClose));
   }
 
   override detachBloc(id: UUID, blocId: UUID): Observable<Close> {

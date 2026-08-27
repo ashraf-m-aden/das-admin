@@ -1,6 +1,6 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { Block, UUID } from '../../models/das.models';
-import { Close, CloseStreetOption, CreateClosePayload } from '../models/closes.models';
+import { Close, CloseNumberingPlan, CloseStreetOption, CreateClosePayload } from '../models/closes.models';
 
 export const ClosesActions = createActionGroup({
   source: 'Closes',
@@ -26,6 +26,14 @@ export const ClosesActions = createActionGroup({
     'Remove Close': props<{ id: UUID }>(),
     'Remove Close Success': emptyProps(),
     'Remove Close Failure': props<{ errorMessageKey: string }>(),
+
+    /** Demande l'aperçu — n'écrit rien côté back. */
+    'Preview Numbering': props<{ closeId: UUID; blocIds: UUID[]; reverse: boolean }>(),
+    'Preview Numbering Success': props<{ plan: CloseNumberingPlan; blocIds: UUID[] }>(),
+    'Preview Numbering Failure': props<{ errorMessageKey: string }>(),
+    /** Correction manuelle d'un numéro proposé, avant application. */
+    'Edit Planned Numero': props<{ adresseId: UUID; numero: number }>(),
+    'Discard Plan': emptyProps(),
 
     'Attach Blocs': props<{ closeId: UUID; blocIds: UUID[] }>(),
     'Attach Blocs Success': emptyProps(),

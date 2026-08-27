@@ -1,3 +1,5 @@
+@use "styles/variables" as v;
+
 .cascade {
   display: flex;
   flex-wrap: wrap;
@@ -18,4 +20,15 @@
       cursor: not-allowed;
     }
   }
+}
+/* Mise en évidence par zone — multi-sélection, distincte du select Zone qui filtre. */
+.zone-hl { display: flex; align-items: center; gap: v.$space-1; flex-wrap: wrap;
+  &__label { font-size: v.$font-size-xs; color: var(--color-text-muted); margin-right: 2px; }
+  &__chip { display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 v.$space-2;
+    border: 1px solid var(--color-border); border-radius: v.$radius-full; background: var(--color-surface);
+    font-size: v.$font-size-xs; color: var(--color-text-secondary); cursor: pointer;
+    &:hover { border-color: var(--color-accent); }
+    &--on { border-color: var(--color-accent); background: var(--das-blue-50); color: var(--color-text-primary); } }
+  &__clear { height: 28px; padding: 0 v.$space-2; border: none; background: none; font: inherit;
+    font-size: v.$font-size-xs; color: var(--color-accent); cursor: pointer; text-decoration: underline; }
 }

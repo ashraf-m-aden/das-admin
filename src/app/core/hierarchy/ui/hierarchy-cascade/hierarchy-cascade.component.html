@@ -20,6 +20,24 @@
     }
   </select>
 
+  <!-- Mise en évidence par zone : multi-sélection, à ne pas confondre avec le select Zone
+       ci-dessus, qui FILTRE. Surligner n'est pas filtrer — les autres zones restent visibles.
+       Masqué tant qu'aucune zone n'est chargée (commune non choisie, ou commune sans zone). -->
+  @if (showZoneHighlight() && zones().length > 0) {
+  <div class="zone-hl">
+    <span class="zone-hl__label">{{ 'hierarchy.highlightZones' | transloco }}</span>
+    @for (z of zones(); track z.id) {
+    <label class="zone-hl__chip" [class.zone-hl__chip--on]="isZoneHighlighted(z.id)">
+      <input type="checkbox" [checked]="isZoneHighlighted(z.id)" (change)="toggleZoneHighlight(z.id)" />
+      {{ z.name }}
+    </label>
+    }
+    @if (highlightedZones().length > 0) {
+    <button type="button" class="zone-hl__clear" (click)="clearZoneHighlight()">{{ 'hierarchy.clearHighlight' | transloco }}</button>
+    }
+  </div>
+  }
+
   <select class="cascade__select" [disabled]="!selection().cityId" (change)="onQuartier($any($event.target).value)">
     <option value="">{{ 'hierarchy.allQuartiers' | transloco }}</option>
     @for (q of quartiers(); track q.id) {

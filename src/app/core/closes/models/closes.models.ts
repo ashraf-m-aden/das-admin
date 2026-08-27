@@ -73,3 +73,58 @@ export interface CloseStreetOption {
   /** `null` tant qu'aucune StreetSuggestion n'a été approuvée — on retombe sur `code` à l'affichage. */
   name: string | null;
 }
+
+/* =============================================================================
+ * PLAN DE NUMÉROTATION — `POST /api/closes/{id}/blocs/preview`
+ *
+ * Rattacher plusieurs blocs à une close est refusé tant que leurs parcelles portent des numéros
+ * qui collident : chaque bloc numérote à partir de 1. Le back ne renumérote pas tout seul — il
+ * PROPOSE un ordre, le front le montre sur la carte, l'humain valide ou corrige, et c'est le plan
+ * relu qui est appliqué. Jamais un recalcul après coup, qui écrirait autre chose que ce qui a été
+ * vérifié.
+ * ========================================================================== */
+
+/**
+ * `ParcelCloud` : l'ordre est déduit des parcelles seules — un axe est ajusté sur leur nuage.
+ * C'est le seul régime possible tant qu'aucune rue n'a de tracé, donc **aujourd'hui, partout**.
+ * C'est une estimation, et c'est précisément pourquoi le plan passe par la carte.
+ */
+export type CloseOrderingSource = 'ParcelCloud' | 'StreetLine';
+
+/** Côté de l'axe. **Indicatif** : sans tracé de rue l'axe traverse les parcelles, ce n'est pas un trottoir — n'en tirer aucune parité. */
+export type CloseSide = 'Left' | 'Right';
+
+export interface PlannedAdresse {
+  adresseId: UUID;
+  blocId: UUID;
+  blocCode: string;
+  /** Vrai si la parcelle arrive avec un bloc en cours de rattachement — distingue ce qui bouge de ce qui était là. */
+  entering: boolean;
+  currentNumero: number;
+  proposedNumero: number;
+  /** Position le long de l'axe, en mètres depuis la première parcelle. C'est la clé de tri. */
+  distanceMeters: number;
+  side: CloseSide;
+  /** Presque toujours `null`. Renseigné = numéro non modifiable, l'application du plan serait refusée. */
+  addressCode: string | null;
+  locationWkt: string;
+  boundaryWkt: string;
+}
+
+export interface CloseNumberingPlan {
+  closeId: UUID;
+  closeCode: string;
+  orderingSource: CloseOrderingSource;
+  /** Sens de parcours utilisé. Rejouer l'aperçu avec l'autre valeur si le plan commence par le mauvais bout. */
+  reverse: boolean;
+  parcelCount: number;
+  /** Parcelles dont le numéro changerait. `0` sur une close déjà numérotée = numérotation stable. */
+  changedCount: number;
+  adresses: PlannedAdresse[];
+}
+
+/** Ce que le front RENVOIE après validation sur carte, dans `numbering` de `POST /blocs`. */
+export interface AdresseNumbering {
+  adresseId: UUID;
+  numero: number;
+}

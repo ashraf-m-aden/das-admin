@@ -148,7 +148,23 @@
     "legendInClose": "Dans {{name}}",
     "legendFree": "Libre — cliquez pour rattacher",
     "mapClickHint": "Cliquez un bloc vert pour le rattacher, un bloc bleu pour le détacher. Les blocs gris appartiennent à une autre close : détachez-les de là-bas d'abord.",
-    "mapIdleHint": "Choisissez une close à gérer pour sélectionner ses blocs directement sur la carte."
+    "mapIdleHint": "Choisissez une close à gérer pour sélectionner ses blocs directement sur la carte.",
+    "previewNumbering": "Prévisualiser la numérotation",
+    "previewHint": "Le rattachement de plusieurs blocs renumérote leurs parcelles : chaque bloc numérote à partir de 1. L'aperçu propose un ordre, vous le validez sur la carte avant qu'il soit écrit.",
+    "planTitle": "Numérotation proposée",
+    "planLayer": "Plan de numérotation",
+    "planSummary": "{{total}} parcelle(s), dont {{changed}} renumérotée(s)",
+    "planEstimated": "ordre estimé d'après les parcelles (aucune rue n'a de tracé) : vérifiez-le sur la carte.",
+    "planWas": "était {{n}}",
+    "planApply": "Appliquer la numérotation",
+    "planReverse": "Inverser le sens",
+    "planDuplicates": "Numéros en double : {{nums}}. Corrigez avant d'appliquer.",
+    "planFrozen": "{{count}} parcelle(s) au code d'adresse figé changeraient de numéro — refusé.",
+    "planFrozenRow": "Code d'adresse figé : ce numéro ne peut plus changer.",
+    "errorNumberingDuplicate": "Deux parcelles portent le même numéro dans le plan.",
+    "errorNumberingIncomplete": "Le plan ne couvre pas toutes les parcelles de la close.",
+    "errorNumberingForeign": "Le plan contient une parcelle qui n'appartient pas à cette close.",
+    "errorNumberingOutOfRange": "Un numéro du plan est hors des valeurs autorisées."
   },
   "discoveries": {
     "eyebrow": "Canal montant du terrain",
@@ -637,6 +653,8 @@
   "hierarchy": {
     "allCities": "Toutes les villes",
     "allCommunes": "Toutes les communes",
+    "highlightZones": "Mettre en évidence :",
+    "clearHighlight": "tout effacer",
     "allZones": "Toutes les zones",
     "allQuartiers": "Tous les quartiers",
     "allCloses": "Toutes les closes",

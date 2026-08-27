@@ -8,8 +8,8 @@
 </das-page-header>
 
 <div class="map-wrap">
-  <das-hierarchy-cascade (selectionChange)="onHierarchy($event)" />
-  <das-map [features]="mapFeatures()" [layers]="mapLayers" [tileLayers]="tileLayers" [tileFilters]="tileFilters()"
+  <das-hierarchy-cascade [showZoneHighlight]="true" (selectionChange)="onHierarchy($event)" (zoneHighlightChange)="onZoneHighlight($event)" />
+  <das-map [features]="mapFeatures()" [layers]="mapLayers" [tileLayers]="tileLayers" [tileFilters]="tileFilters()" [tileFillColors]="tileFillColors()"
     [basemapLayers]="basemapLayers" [fitBbox]="selectedBbox()" (featureSelect)="onSelect($event)" />
   <div class="map-legend">
     <button type="button" class="map-legend__item map-legend__item--btn" [class.map-legend__item--on]="statusFilter() === null" (click)="filterStatus(null)">{{ 'blocks.filterAll' | transloco }}</button>

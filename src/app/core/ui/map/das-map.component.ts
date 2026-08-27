@@ -9,7 +9,7 @@ import * as maplibregl from 'maplibre-gl';
 import { AppConfigService } from '../../config/app-config.service';
 import { MapStyleService } from '../../map/map-style.service';
 import {
-  MapFeature, MapLayerConfig, TileFeatureStateMap, TileFilter, TileLayerBinding,
+  MapFeature, MapLayerConfig, TileFeatureStateMap, TileFillColor, TileFilter, TileLayerBinding,
 } from './map.models';
 
 const MOCK_BASEMAP_STYLE_URL = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
@@ -77,6 +77,8 @@ export class DasMapComponent implements OnInit, OnDestroy {
   readonly tileFeatureStates = input<Record<string, TileFeatureStateMap>>({});
   /** Filtre data-driven par binding : { [bindingId]: expression | null }. */
   readonly tileFilters = input<Record<string, TileFilter>>({});
+  /** Recoloration par binding, lue sur les attributs de la tuile : { [bindingId]: expression | null }. */
+  readonly tileFillColors = input<Record<string, TileFillColor>>({});
 
   readonly center = input<[number, number]>([43.145, 11.595]);
   readonly zoom = input<number>(12);
@@ -116,6 +118,9 @@ export class DasMapComponent implements OnInit, OnDestroy {
   /** feature-state déjà posés, par binding, pour ne retirer que ce qui disparaît. */
   private readonly appliedTileStateIds = new Map<string, Set<string>>();
 
+  /** Coloration d'origine par couche de style, pour pouvoir la restaurer à l'identique. */
+  private readonly bakedFillColors = new Map<string, unknown>();
+
   private readonly isMockMode = this.config.get('useMockApi');
 
   protected readonly initError = signal(false);
@@ -152,6 +157,8 @@ export class DasMapComponent implements OnInit, OnDestroy {
     effect(() => { const s = this.tileFeatureStates(); if (this.loaded) this.applyTileFeatureStates(s); });
     // Application des filtres sur les couches tuiles
     effect(() => { const f = this.tileFilters(); if (this.loaded) this.applyTileFilters(f); });
+    // Recoloration des couches tuiles
+    effect(() => { const c = this.tileFillColors(); if (this.loaded) this.applyTileFillColors(c); });
     // Recadrage sur emprise explicite (cascade hiérarchie)
     effect(() => { const b = this.fitBbox(); if (this.loaded && b) this.applyFitBbox(b); });
   }
@@ -205,6 +212,7 @@ export class DasMapComponent implements OnInit, OnDestroy {
       this.applyVisibility(this.visibility());
       this.applyHighlight(this.internalSelected());
       this.applyTileFilters(this.tileFilters());
+      this.applyTileFillColors(this.tileFillColors());
       this.applyTileFeatureStates(this.tileFeatureStates());
       const bbox = this.fitBbox();
       if (bbox) this.applyFitBbox(bbox);
@@ -264,6 +272,18 @@ export class DasMapComponent implements OnInit, OnDestroy {
       } else {
         addLayerSafe({ id: `${layer.id}-circle`, type: 'circle', source: src, paint: { 'circle-color': ['get', 'color'], 'circle-radius': 5, 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 1.5 } });
         addLayerSafe({ id: `${layer.id}-sel`, type: 'circle', source: src, filter: ['==', ['get', 'id'], NONE], paint: { 'circle-color': HIGHLIGHT, 'circle-opacity': 0.001, 'circle-radius': 8, 'circle-stroke-color': HIGHLIGHT, 'circle-stroke-width': 3 } });
+        if (layer.showLabels) {
+          // `glyphs` est déclaré dans map-style.json, donc le texte rend. En mode mock le fond
+          // CARTO en fournit aussi — pas de régression silencieuse d'un mode à l'autre.
+          addLayerSafe({
+            id: `${layer.id}-label`, type: 'symbol', source: src,
+            layout: {
+              'text-field': ['get', 'label'], 'text-size': 12, 'text-offset': [0, 1.1],
+              'text-font': ['Open Sans Regular'], 'text-allow-overlap': true,
+            },
+            paint: { 'text-color': '#0b1220', 'text-halo-color': '#ffffff', 'text-halo-width': 1.6 },
+          });
+        }
         this.wireInteractions(`${layer.id}-circle`);
       }
     }
@@ -354,7 +374,9 @@ export class DasMapComponent implements OnInit, OnDestroy {
     // Overlays GeoJSON
     for (const l of this.layers()) {
       const value = (vis[l.id] ?? true) ? 'visible' : 'none';
-      const ids = l.type === 'fill' ? [`${l.id}-fill`, `${l.id}-line`, `${l.id}-sel`] : [`${l.id}-circle`, `${l.id}-sel`];
+      const ids = l.type === 'fill'
+        ? [`${l.id}-fill`, `${l.id}-line`, `${l.id}-sel`]
+        : [`${l.id}-circle`, `${l.id}-sel`, `${l.id}-label`];
       for (const id of ids) if (this.map.getLayer(id)) this.map.setLayoutProperty(id, 'visibility', value);
     }
 
@@ -414,6 +436,27 @@ export class DasMapComponent implements OnInit, OnDestroy {
       const filter = filters[binding.id] ?? null;
       for (const styleLayerId of binding.styleLayerIds) {
         if (map.getLayer(styleLayerId)) map.setFilter(styleLayerId, filter);
+      }
+    }
+  }
+
+  /**
+   * Recolore les couches `fill` d'un binding. La coloration d'origine est mémorisée au premier
+   * passage : elle est bakée dans map-style.json et doit pouvoir revenir telle quelle, sans
+   * qu'on la recopie ici — deux exemplaires de la même règle divergeraient.
+   */
+  private applyTileFillColors(colors: Record<string, TileFillColor>): void {
+    if (!this.map || !this.loaded) return;
+    const map = this.map;
+    for (const binding of this.tileLayers()) {
+      const override = colors[binding.id] ?? null;
+      for (const styleLayerId of binding.styleLayerIds) {
+        const layer = map.getLayer(styleLayerId);
+        if (!layer || layer.type !== 'fill') continue;
+        if (!this.bakedFillColors.has(styleLayerId)) {
+          this.bakedFillColors.set(styleLayerId, map.getPaintProperty(styleLayerId, 'fill-color'));
+        }
+        map.setPaintProperty(styleLayerId, 'fill-color', (override ?? this.bakedFillColors.get(styleLayerId)) as never);
       }
     }
   }

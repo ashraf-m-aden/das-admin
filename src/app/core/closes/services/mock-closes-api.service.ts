@@ -3,7 +3,10 @@ import { Observable, of, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { ClosesApiPort } from './closes-api.port';
 import { UUID } from '../../models/das.models';
-import { Close, CloseBloc, CloseListQuery, CloseStreetOption, CreateClosePayload, UpdateClosePayload } from '../models/closes.models';
+import {
+  AdresseNumbering, Close, CloseBloc, CloseListQuery, CloseNumberingPlan, CloseStreetOption,
+  CreateClosePayload, PlannedAdresse, UpdateClosePayload,
+} from '../models/closes.models';
 
 const LATENCY_MS = 320;
 /** Mêmes ids que `MockBlocksApiService`/`HierarchyMockService`, pour que les mocks se parlent. */
@@ -15,6 +18,9 @@ interface MockClose {
   id: string; quartierId: string; streetId: string; streetCode: string; streetName: string | null;
   number: number; code: string; blocIds: string[];
 }
+
+/** Ordre stable, utilisé pour espacer les parcelles mock le long de l'axe. */
+const MOCK_BLOC_ORDER = ['bloc-0001', 'bloc-0002', 'bloc-0003'];
 
 const MOCK_BLOCS: Record<string, CloseBloc> = {
   'bloc-0001': { id: 'bloc-0001', code: 'Q7-B01', name: 'Avenue Nasser', number: 1 },
@@ -126,34 +132,91 @@ export class MockClosesApiService extends ClosesApiPort {
    * de 1, leurs numéros de maison collident. C'est ce refus-là qu'un opérateur rencontrera, donc
    * c'est celui qu'il faut pouvoir tester sans back.
    */
-  override attachBlocs(id: UUID, blocIds: UUID[]): Observable<Close> {
+  /**
+   * Chaque bloc mock numérote ses parcelles à partir de 1 — comme en base réelle. C'est ce qui
+   * rend la collision reproductible en mock, sans quoi le parcours preview → validation →
+   * application ne serait jamais exerçable hors backend.
+   */
+  private parcelsOf(blocId: string): Array<{ adresseId: string; numero: number; lng: number; lat: number }> {
+    const seed = MOCK_BLOC_ORDER.indexOf(blocId);
+    return Array.from({ length: 4 }, (_, i) => ({
+      adresseId: `${blocId}-adr-${i + 1}`,
+      numero: i + 1,
+      lng: 43.140 + seed * 0.006 + i * 0.0012,
+      lat: 11.586 + seed * 0.0008,
+    }));
+  }
+
+  override previewAttachBlocs(id: UUID, blocIds: UUID[], reverse: boolean): Observable<CloseNumberingPlan> {
     const close = this.closes.find((c) => c.id === id);
-    if (!close) return fail('Closes.NotFound', 'Close introuvable.');
+    if (!close) return throwError(() => ({ code: 'Closes.NotFound', message: 'Close introuvable.' }));
 
-    const missing = blocIds.filter((b) => !MOCK_BLOCS[b]);
-    if (missing.length > 0) {
-      return fail('Blocs.NotFound', `Bloc(s) introuvable(s) : ${missing.join(', ')}.`).pipe(delay(LATENCY_MS));
+    const resulting = [...new Set([...close.blocIds, ...blocIds])];
+    const rows = resulting.flatMap((b) =>
+      this.parcelsOf(b).map((p) => ({ ...p, blocId: b, entering: !close.blocIds.includes(b) })));
+
+    // Tri le long d'un axe est-ouest — approximation du régime ParcelCloud du back.
+    rows.sort((a, b) => (reverse ? b.lng - a.lng : a.lng - b.lng));
+    const first = rows[0];
+
+    const adresses: PlannedAdresse[] = rows.map((r, i) => ({
+      adresseId: r.adresseId,
+      blocId: r.blocId,
+      blocCode: MOCK_BLOCS[r.blocId]?.code ?? r.blocId,
+      entering: r.entering,
+      currentNumero: r.numero,
+      proposedNumero: i + 1,
+      distanceMeters: first ? Math.round(Math.abs(r.lng - first.lng) * 111_320) : 0,
+      side: i % 2 === 0 ? 'Left' : 'Right',
+      addressCode: null,
+      locationWkt: `POINT(${r.lng} ${r.lat})`,
+      boundaryWkt: `MULTIPOLYGON(((${r.lng} ${r.lat}, ${r.lng + 0.0008} ${r.lat}, ${r.lng + 0.0008} ${r.lat + 0.0006}, ${r.lng} ${r.lat + 0.0006}, ${r.lng} ${r.lat})))`,
+    }));
+
+    return of({
+      closeId: close.id,
+      closeCode: close.code,
+      orderingSource: 'ParcelCloud' as const,
+      reverse,
+      parcelCount: adresses.length,
+      changedCount: adresses.filter((a) => a.currentNumero !== a.proposedNumero).length,
+      adresses,
+    }).pipe(delay(LATENCY_MS));
+  }
+
+  override attachBlocs(id: UUID, blocIds: UUID[], numbering?: AdresseNumbering[]): Observable<Close> {
+    const close = this.closes.find((c) => c.id === id);
+    if (!close) return throwError(() => ({ code: 'Closes.NotFound', message: 'Close introuvable.' }));
+
+    const takenElsewhere = blocIds.find((b) => this.closes.some((c) => c.id !== id && c.blocIds.includes(b)));
+    if (takenElsewhere) {
+      return throwError(() => ({ code: 'Closes.BlocAlreadyAssigned', message: 'Un des blocs appartient déjà à une autre close.' })).pipe(delay(LATENCY_MS));
     }
 
-    // Idempotent : un bloc déjà dans CETTE close est ignoré.
-    const entrants = blocIds.filter((b) => !close.blocIds.includes(b));
-    if (entrants.length === 0) return of(this.toClose(close)).pipe(delay(LATENCY_MS));
-
-    if (close.blocIds.length + entrants.length > 1) {
-      return fail(
-        'Closes.DuplicateAdresseNumero',
-        'Rattachement refusé : plusieurs parcelles de cette close porteraient le même numéro.',
-      ).pipe(delay(LATENCY_MS));
+    // LA garde qui compte : sans plan, réunir deux blocs fait collider leurs numéros — chaque
+    // bloc partant de 1. Le back refuse pour la même raison, et c'est ce refus qui envoie
+    // l'opérateur vers l'aperçu.
+    const resulting = [...new Set([...close.blocIds, ...blocIds])];
+    if (!numbering?.length && resulting.length > 1) {
+      return throwError(() => ({
+        code: 'Closes.DuplicateAdresseNumero',
+        message: 'Deux parcelles porteraient le même numéro dans cette close.',
+      })).pipe(delay(LATENCY_MS));
     }
 
-    // Déplacement : le bloc quitte sa close précédente.
-    this.closes = this.closes.map((c) => (
-      c.id === id
-        ? { ...c, blocIds: [...c.blocIds, ...entrants] }
-        : { ...c, blocIds: c.blocIds.filter((b) => !entrants.includes(b)) }
-    ));
-    const attached = this.closes.find((c) => c.id === id) as MockClose;
-    return of(this.toClose(attached)).pipe(delay(LATENCY_MS));
+    if (numbering?.length) {
+      const nums = numbering.map((n) => n.numero);
+      if (new Set(nums).size !== nums.length) {
+        return throwError(() => ({ code: 'Closes.NumberingDuplicate', message: 'Deux parcelles portent le même numéro dans le plan.' })).pipe(delay(LATENCY_MS));
+      }
+      const expected = resulting.flatMap((b) => this.parcelsOf(b).map((p) => p.adresseId));
+      if (numbering.length !== expected.length) {
+        return throwError(() => ({ code: 'Closes.NumberingIncomplete', message: 'Le plan ne couvre pas toutes les parcelles de la close.' })).pipe(delay(LATENCY_MS));
+      }
+    }
+
+    close.blocIds = resulting;
+    return of(this.toClose(close)).pipe(delay(LATENCY_MS));
   }
 
   override detachBloc(id: UUID, blocId: UUID): Observable<Close> {

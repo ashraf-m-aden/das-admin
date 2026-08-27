@@ -1,5 +1,5 @@
 import type { MultiPolygon, Point, Polygon } from 'geojson';
-import type { FilterSpecification } from 'maplibre-gl';
+import type { ExpressionSpecification, FilterSpecification } from 'maplibre-gl';
 
 export type MapGeometry = Point | Polygon | MultiPolygon;
 
@@ -19,6 +19,13 @@ export interface MapLayerConfig {
   labelKey: string;        // clé i18n pour le contrôle de couches
   type: 'point' | 'fill';
   visible: boolean;        // état initial
+  /**
+   * Affiche `label` en permanence à côté de la feature, au lieu de le réserver à la popup au clic.
+   * Réservé aux cas où le libellé EST l'information à vérifier — la numérotation proposée d'une
+   * close, par exemple, qui ne se relit qu'en voyant les numéros dans l'ordre sur la carte.
+   * Ailleurs, c'est du bruit qui se superpose au fond.
+   */
+  showLabels?: boolean;
 }
 
 /**
@@ -58,3 +65,14 @@ export interface TileLayerBinding {
 
 /** Filtre appliqué à une couche tuile (`null` = aucun filtre, tout visible). */
 export type TileFilter = FilterSpecification | null;
+
+/**
+ * Recoloration d'une couche tuile par une expression lue sur ses PROPRES attributs
+ * (`['match', ['get','ZoneId'], …]`), `null` = retour à la coloration bakée dans le style.
+ *
+ * À distinguer de `TileFeatureState.colorOverride`, qui colore feature par feature et suppose
+ * qu'on connaisse déjà l'id de chacune. Quand le critère est un attribut que la tuile porte
+ * déjà — la zone d'un bloc, par exemple — l'expression évite d'aller redemander à l'API une
+ * correspondance que la tuile contient.
+ */
+export type TileFillColor = ExpressionSpecification | string | null;
