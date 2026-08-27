@@ -9,7 +9,8 @@ import { MapFeature, MapLayerConfig, TileFillColor, TileFilter, TileLayerBinding
 import { HierarchySelection } from '../../../core/hierarchy/models/hierarchy.models';
 import { HierarchyFacade } from '../../../core/hierarchy/store/hierarchy.facade';
 import { HierarchyCascadeComponent } from '../../../core/hierarchy/ui/hierarchy-cascade/hierarchy-cascade.component';
-import { STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP } from '../../../core/ui/map/basemap-groups';
+import { STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, SIG_VOIRIE_BASEMAP_GROUP, SIG_ILOTS_BASEMAP_GROUP,
+} from '../../../core/ui/map/basemap-groups';
 
 /**
  * Statut affiché = uniquement celui de la tuile `blocs_tiles` (agrégat live sur
@@ -80,7 +81,7 @@ export class BlocksMapComponent implements OnInit {
   protected readonly tileLayers: TileLayerBinding[] = [BLOCS_TILE];
 
   /** Voirie + parcelles : couches du style de base, togglables (no-op silencieux en mock). */
-  protected readonly basemapLayers: BasemapLayerGroup[] = [STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP];
+  protected readonly basemapLayers: BasemapLayerGroup[] = [STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, SIG_VOIRIE_BASEMAP_GROUP, SIG_ILOTS_BASEMAP_GROUP];
 
   onHierarchy(sel: HierarchySelection): void { this.facade.setFilters(sel); }
 

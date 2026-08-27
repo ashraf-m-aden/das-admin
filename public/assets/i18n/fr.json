@@ -654,7 +654,9 @@
       "streets": "Rues",
       "closes": "Closes",
       "closeNumbers": "Numéros de la close",
-      "closeParcels": "Parcelles de la close"
+      "closeParcels": "Parcelles de la close",
+      "sigIlots": "Îlots SIG (à reprendre)",
+      "sigVoirie": "Voirie SIG (à reprendre)"
     }
   },
   "reports": {

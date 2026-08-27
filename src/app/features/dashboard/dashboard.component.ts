@@ -8,7 +8,7 @@ import { PageHeaderComponent } from '../../core/layout/page-header/page-header.c
 import { BasemapLayerGroup, DasMapComponent } from '../../core/ui/map/das-map.component';
 import { TileLayerBinding } from '../../core/ui/map/map.models';
 import {
-  BLOCS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, STREETS_BASEMAP_GROUP,
+  BLOCS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, STREETS_BASEMAP_GROUP, SIG_VOIRIE_BASEMAP_GROUP, SIG_ILOTS_BASEMAP_GROUP,
 } from '../../core/ui/map/basemap-groups';
 import { AddressWorkflowStage } from '../../core/models/das.models';
 import { WORKFLOW_STAGES } from '../../core/adresse/models/adresse.models';
@@ -60,6 +60,7 @@ export class DashboardComponent implements OnInit {
    */
   protected readonly basemapLayers: BasemapLayerGroup[] = [
     STREETS_BASEMAP_GROUP, BLOCS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP,
+    SIG_VOIRIE_BASEMAP_GROUP, SIG_ILOTS_BASEMAP_GROUP,
   ];
 
   protected readonly summary = toSignal(this.facade.summary$);

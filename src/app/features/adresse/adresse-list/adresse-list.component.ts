@@ -20,7 +20,8 @@ import { HierarchySelection } from '../../../core/hierarchy/models/hierarchy.mod
 import { HierarchyFacade } from '../../../core/hierarchy/store/hierarchy.facade';
 import { HierarchyCascadeComponent } from '../../../core/hierarchy/ui/hierarchy-cascade/hierarchy-cascade.component';
 import { AppConfigService } from '../../../core/config/app-config.service';
-import { STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, BLOCS_BASEMAP_GROUP } from '../../../core/ui/map/basemap-groups';
+import { STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, BLOCS_BASEMAP_GROUP, SIG_VOIRIE_BASEMAP_GROUP, SIG_ILOTS_BASEMAP_GROUP,
+} from '../../../core/ui/map/basemap-groups';
 
 const STAGE_COLOR: Record<AddressWorkflowStage, string> = {
   registered: '#6b7280', surveyed: '#d97706', verified: '#16a34a', approved: '#0d9488', published: '#7c3aed',
@@ -108,7 +109,7 @@ export class AdresseListComponent implements OnInit {
 
   protected readonly tileLayers: TileLayerBinding[] = this.isMock ? [] : [ADRESSES_TILE, ADRESSES_NUMERO_TILE];
 
-  protected readonly basemapLayers: BasemapLayerGroup[] = [STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, BLOCS_BASEMAP_GROUP];
+  protected readonly basemapLayers: BasemapLayerGroup[] = [STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, BLOCS_BASEMAP_GROUP, SIG_VOIRIE_BASEMAP_GROUP, SIG_ILOTS_BASEMAP_GROUP];
 
   /**
    * Filtre tuile ADRESSES : niveau hiérarchique non-null le plus profond + étape.

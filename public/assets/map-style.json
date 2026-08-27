@@ -32,6 +32,42 @@
       "minzoom": 0,
       "maxzoom": 20,
       "promoteId": "Id"
+    },
+    "sigIlots": {
+      "type": "vector",
+      "tiles": [
+        "__TILES_BASE_URL__/ilots_extension/{z}/{x}/{y}"
+      ],
+      "minzoom": 8,
+      "maxzoom": 18,
+      "promoteId": "ogc_fid"
+    },
+    "sigVoirie1": {
+      "type": "vector",
+      "tiles": [
+        "__TILES_BASE_URL__/voierie_tertiaire_bitumee/{z}/{x}/{y}"
+      ],
+      "minzoom": 8,
+      "maxzoom": 18,
+      "promoteId": "ogc_fid"
+    },
+    "sigVoirie2": {
+      "type": "vector",
+      "tiles": [
+        "__TILES_BASE_URL__/voierie_tertiaire_non_bitumee/{z}/{x}/{y}"
+      ],
+      "minzoom": 8,
+      "maxzoom": 18,
+      "promoteId": "ogc_fid"
+    },
+    "sigVoirie3": {
+      "type": "vector",
+      "tiles": [
+        "__TILES_BASE_URL__/voierie_extension/{z}/{x}/{y}"
+      ],
+      "minzoom": 8,
+      "maxzoom": 18,
+      "promoteId": "ogc_fid"
     }
   },
   "glyphs": "https://tiles.basemaps.cartocdn.com/fonts/{fontstack}/{range}.pbf",
@@ -320,6 +356,72 @@
           19,
           20
         ]
+      }
+    },
+    {
+      "id": "sig-ilots-line",
+      "type": "line",
+      "source": "sigIlots",
+      "source-layer": "ilots_extension",
+      "minzoom": 11,
+      "layout": {
+        "visibility": "none"
+      },
+      "paint": {
+        "line-color": "#0891b2",
+        "line-width": 1,
+        "line-opacity": 0.85
+      }
+    },
+    {
+      "id": "sig-voirie-bitumee",
+      "type": "line",
+      "source": "sigVoirie1",
+      "source-layer": "voierie_tertiaire_bitumee",
+      "minzoom": 12,
+      "layout": {
+        "visibility": "none",
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "paint": {
+        "line-color": "#7c3aed",
+        "line-width": 1.4,
+        "line-opacity": 0.9
+      }
+    },
+    {
+      "id": "sig-voirie-non-bitumee",
+      "type": "line",
+      "source": "sigVoirie2",
+      "source-layer": "voierie_tertiaire_non_bitumee",
+      "minzoom": 12,
+      "layout": {
+        "visibility": "none",
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "paint": {
+        "line-color": "#a855f7",
+        "line-width": 1.0,
+        "line-opacity": 0.9
+      }
+    },
+    {
+      "id": "sig-voirie-extension",
+      "type": "line",
+      "source": "sigVoirie3",
+      "source-layer": "voierie_extension",
+      "minzoom": 12,
+      "layout": {
+        "visibility": "none",
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "paint": {
+        "line-color": "#c084fc",
+        "line-width": 1.4,
+        "line-opacity": 0.9
       }
     },
     {

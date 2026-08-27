@@ -654,7 +654,9 @@
       "streets": "Streets",
       "closes": "Closes",
       "closeNumbers": "Close house numbers",
-      "closeParcels": "Close parcels"
+      "closeParcels": "Close parcels",
+      "sigIlots": "GIS blocks (to import)",
+      "sigVoirie": "GIS roads (to import)"
     }
   },
   "reports": {

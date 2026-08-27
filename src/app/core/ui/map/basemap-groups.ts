@@ -73,3 +73,34 @@ export const ADRESSES_BASEMAP_GROUP: BasemapLayerGroup = {
   styleLayerIds: ['adresses-fill', 'adresses-line'],
   visible: false,
 };
+
+/**
+ * Livraison SIG du 2026-08-27 — matière PREMIÈRE, pas du référentiel.
+ *
+ * Ces 2 224 îlots couvrent Hayableh, PK12, Cité Hodan et Balbala, c'est-à-dire des zones où
+ * `Quartiers` n'a aucune entrée et `Blocs` aucun bloc : le référentiel s'arrête au Quartier 7.
+ * Les afficher sert à voir CE QUI RESTE À REPRENDRE, pas de la donnée validée — d'où le contour
+ * seul, sans aplat, qui les distingue des blocs du référentiel.
+ *
+ * Masqués par défaut : ils débordent très largement du périmètre de travail actuel.
+ */
+export const SIG_ILOTS_BASEMAP_GROUP: BasemapLayerGroup = {
+  id: 'sig-ilots',
+  labelKey: 'map.basemap.sigIlots',
+  styleLayerIds: ['sig-ilots-line'],
+  visible: false,
+};
+
+/**
+ * Voirie tertiaire et extensions de la même livraison : 1 401 tronçons, dont 267 nommés.
+ *
+ * Distincte de STREETS_BASEMAP_GROUP, qui montre la voirie DU RÉFÉRENTIEL (`Streets`). Les deux
+ * ne se recouvrent pas : la livraison n'a aucun tronçon en commun avec route_principaux ni
+ * voierie_secondaire (vérifié par ST_Equals croisé le 2026-08-27).
+ */
+export const SIG_VOIRIE_BASEMAP_GROUP: BasemapLayerGroup = {
+  id: 'sig-voirie',
+  labelKey: 'map.basemap.sigVoirie',
+  styleLayerIds: ['sig-voirie-bitumee', 'sig-voirie-non-bitumee', 'sig-voirie-extension'],
+  visible: false,
+};
