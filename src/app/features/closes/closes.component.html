@@ -122,54 +122,6 @@
                 @if (mc.blocs.length === 0) { <div class="empty">{{ 'closes.noBlocs' | transloco }}</div> }
               }
 
-              @if (plan(); as p) {
-                <div class="plan">
-                  <div class="panel__title panel__title--sub">{{ 'closes.planTitle' | transloco }}</div>
-                  <p class="hint">
-                    {{ 'closes.planSummary' | transloco: { total: p.parcelCount, changed: p.changedCount } }}
-                    @if (p.orderingSource === 'ParcelCloud') { — {{ 'closes.planEstimated' | transloco }} }
-                  </p>
-
-                  @if (planIssues().duplicates.length) {
-                    <p class="warn">{{ 'closes.planDuplicates' | transloco: { nums: planIssues().duplicates.join(', ') } }}</p>
-                  }
-                  @if (planIssues().frozen.length) {
-                    <p class="warn">{{ 'closes.planFrozen' | transloco: { count: planIssues().frozen.length } }}</p>
-                  }
-
-                  <div class="plan__rows">
-                    @for (a of p.adresses; track a.adresseId) {
-                      <div class="plan__row" [class.plan__row--entering]="a.entering" [class.plan__row--frozen]="a.addressCode">
-                        <input type="number" min="1" class="plan__num" [ngModel]="a.effectiveNumero"
-                               [disabled]="!!a.addressCode" (ngModelChange)="editNumero(a.adresseId, $event)" />
-                        <span class="plan__from mono">{{ 'closes.planWas' | transloco: { n: a.currentNumero } }}</span>
-                        <span class="plan__bloc">{{ a.blocCode }}</span>
-                        <span class="plan__dist mono">{{ a.distanceMeters }} m</span>
-                        @if (a.addressCode) { <span class="plan__lock" [attr.title]="'closes.planFrozenRow' | transloco"><i class="ti ti-lock" aria-hidden="true"></i></span> }
-                      </div>
-                    }
-                  </div>
-
-                  <div class="form-actions">
-                    <button type="button" class="btn btn--primary" [disabled]="!canApplyPlan() || (isSaving$ | async)" (click)="applyPlan()">
-                      @if (isSaving$ | async) { {{ 'common.saving' | transloco }} } @else { {{ 'closes.planApply' | transloco }} }
-                    </button>
-                    <button type="button" class="btn" [disabled]="isPreviewing$ | async" (click)="toggleReverse()">
-                      <i class="ti ti-arrows-left-right" aria-hidden="true"></i>{{ 'closes.planReverse' | transloco }}
-                    </button>
-                    <button type="button" class="btn" (click)="discardPlan()">{{ 'common.cancel' | transloco }}</button>
-                  </div>
-                </div>
-              } @else {
-                <div class="form-actions">
-                  <button type="button" class="btn btn--primary" [disabled]="isPreviewing$ | async" (click)="preview()">
-                    @if (isPreviewing$ | async) { {{ 'common.loading' | transloco }} } @else {
-                      <i class="ti ti-list-numbers" aria-hidden="true"></i>{{ 'closes.previewNumbering' | transloco }}
-                    }
-                  </button>
-                </div>
-                <p class="hint">{{ 'closes.previewHint' | transloco }}</p>
-              }
             </div>
           }
         }
@@ -202,6 +154,55 @@
             [basemapLayers]="basemapLayers"
             (featureSelect)="onMapFeature($event)" />
         </div>
+
+            @if (plan(); as p) {
+              <div class="plan">
+                <div class="panel__title panel__title--sub">{{ 'closes.planTitle' | transloco }}</div>
+                <p class="hint">
+                  {{ 'closes.planSummary' | transloco: { total: p.parcelCount, changed: p.changedCount } }}
+                  @if (p.orderingSource === 'ParcelCloud') { — {{ 'closes.planEstimated' | transloco }} }
+                </p>
+
+                @if (planIssues().duplicates.length) {
+                  <p class="warn">{{ 'closes.planDuplicates' | transloco: { nums: planIssues().duplicates.join(', ') } }}</p>
+                }
+                @if (planIssues().frozen.length) {
+                  <p class="warn">{{ 'closes.planFrozen' | transloco: { count: planIssues().frozen.length } }}</p>
+                }
+
+                <div class="plan__rows">
+                  @for (a of p.adresses; track a.adresseId) {
+                    <div class="plan__row" [class.plan__row--entering]="a.entering" [class.plan__row--frozen]="a.addressCode">
+                      <input type="number" min="1" class="plan__num" [ngModel]="a.effectiveNumero"
+                             [disabled]="!!a.addressCode" (ngModelChange)="editNumero(a.adresseId, $event)" />
+                      <span class="plan__from mono">{{ 'closes.planWas' | transloco: { n: a.currentNumero } }}</span>
+                      <span class="plan__bloc">{{ a.blocCode }}</span>
+                      <span class="plan__dist mono">{{ a.distanceMeters }} m</span>
+                      @if (a.addressCode) { <span class="plan__lock" [attr.title]="'closes.planFrozenRow' | transloco"><i class="ti ti-lock" aria-hidden="true"></i></span> }
+                    </div>
+                  }
+                </div>
+
+                <div class="form-actions">
+                  <button type="button" class="btn btn--primary" [disabled]="!canApplyPlan() || (isSaving$ | async)" (click)="applyPlan()">
+                    @if (isSaving$ | async) { {{ 'common.saving' | transloco }} } @else { {{ 'closes.planApply' | transloco }} }
+                  </button>
+                  <button type="button" class="btn" [disabled]="isPreviewing$ | async" (click)="toggleReverse()">
+                    <i class="ti ti-arrows-left-right" aria-hidden="true"></i>{{ 'closes.planReverse' | transloco }}
+                  </button>
+                  <button type="button" class="btn" (click)="discardPlan()">{{ 'common.cancel' | transloco }}</button>
+                </div>
+              </div>
+            } @else {
+              <div class="form-actions">
+                <button type="button" class="btn btn--primary" [disabled]="isPreviewing$ | async" (click)="preview()">
+                  @if (isPreviewing$ | async) { {{ 'common.loading' | transloco }} } @else {
+                    <i class="ti ti-list-numbers" aria-hidden="true"></i>{{ 'closes.previewNumbering' | transloco }}
+                  }
+                </button>
+              </div>
+              <p class="hint">{{ 'closes.previewHint' | transloco }}</p>
+            }
       </section>
     </div>
   }

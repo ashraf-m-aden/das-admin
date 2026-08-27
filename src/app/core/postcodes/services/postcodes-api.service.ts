@@ -5,6 +5,7 @@ import { PostcodesApiPort } from './postcodes-api.port';
 import { AppConfigService } from '../../config/app-config.service';
 import {
   CityPostcodeRow, QuartierPostcodeRow, UpdateCityCodePayload, UpdateQuartierAreaNumberPayload,
+  ZoneOption,
 } from '../models/postcodes.models';
 
 interface RawQuartierResponse {
@@ -16,6 +17,7 @@ interface RawQuartierResponse {
   cityId: string;
   communeId: string | null;
   zoneId: string | null;
+  boundaryWkt: string | null;
 }
 
 interface RawCityResponse {
@@ -27,7 +29,7 @@ interface RawCityResponse {
 function toQuartierRow(raw: RawQuartierResponse): QuartierPostcodeRow {
   return {
     id: raw.id, nom: raw.nom, code: raw.code, areaNumber: raw.areaNumber, postcode: raw.postcode,
-    cityId: raw.cityId, communeId: raw.communeId, zoneId: raw.zoneId,
+    cityId: raw.cityId, communeId: raw.communeId, zoneId: raw.zoneId, boundaryWkt: raw.boundaryWkt,
   };
 }
 
@@ -43,6 +45,12 @@ export class PostcodesApiService extends PostcodesApiPort {
 
   override listQuartiers(): Observable<QuartierPostcodeRow[]> {
     return this.http.get<RawQuartierResponse[]>(`${this.baseUrl}/quartiers`).pipe(map((rows) => rows.map(toQuartierRow)));
+  }
+
+  override listZones(): Observable<ZoneOption[]> {
+    return this.http.get<{ id: string; name: string }[]>(`${this.baseUrl}/zones`).pipe(
+      map((rows) => rows.map((z) => ({ id: z.id, name: z.name }))),
+    );
   }
 
   override listCities(): Observable<CityPostcodeRow[]> {

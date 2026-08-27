@@ -15,6 +15,14 @@ export interface QuartierPostcodeRow {
   cityId: UUID;
   communeId: UUID | null;
   zoneId: UUID | null;
+  /** Emprise du quartier (POLYGON WKT, SRID 4326). `null` sur les quartiers sans délimitation. */
+  boundaryWkt: string | null;
+}
+
+/** Zone postale — regroupe des quartiers. Sert au coloriage de fond de la carte. */
+export interface ZoneOption {
+  id: UUID;
+  name: string;
 }
 
 export interface CityPostcodeRow {

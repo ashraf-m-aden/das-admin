@@ -4,6 +4,7 @@ import { delay } from 'rxjs/operators';
 import { PostcodesApiPort } from './postcodes-api.port';
 import {
   CityPostcodeRow, QuartierPostcodeRow, UpdateCityCodePayload, UpdateQuartierAreaNumberPayload,
+  ZoneOption,
 } from '../models/postcodes.models';
 
 const LATENCY_MS = 320;
@@ -21,13 +22,24 @@ export class MockPostcodesApiService extends PostcodesApiPort {
     { id: 'city-ali-sabieh', name: 'Ali Sabieh', code: null },
   ];
 
-  private quartiers: Array<{ id: string; nom: string; code: string; areaNumber: number | null; cityId: string; communeId: string | null; zoneId: string | null }> = [
-    { id: 'q-7', nom: 'Quartier 7', code: 'Q7', areaNumber: 7, cityId: 'city-djibouti', communeId: null, zoneId: null },
-    { id: 'q-einguela', nom: 'Einguela', code: 'Ein', areaNumber: null, cityId: 'city-djibouti', communeId: null, zoneId: null },
-    { id: 'q-cheik-moussa', nom: 'Cheik Moussa', code: 'CM', areaNumber: null, cityId: 'city-djibouti', communeId: null, zoneId: null },
-    { id: 'q-shell', nom: 'Quartier Shell', code: 'QS', areaNumber: null, cityId: 'city-djibouti', communeId: null, zoneId: null },
-    { id: 'q-ali', nom: 'Quartier Ali', code: 'QA', areaNumber: null, cityId: 'city-djibouti', communeId: null, zoneId: null },
-    { id: 'q-chateau-eau', nom: "Château d'eau", code: 'CD', areaNumber: null, cityId: 'city-djibouti', communeId: null, zoneId: null },
+  private zones: ZoneOption[] = [
+    { id: 'zone-nord', name: 'Zone Nord' },
+    { id: 'zone-sud', name: 'Zone Sud' },
+  ];
+
+  /** Carrés voisins : de quoi voir le coloriage et les libellés sans dépendre de vraies emprises. */
+  private square(i: number): string {
+    const lng = 43.130 + (i % 3) * 0.020, lat = 11.580 + Math.floor(i / 3) * 0.016;
+    return `POLYGON((${lng} ${lat}, ${lng + 0.018} ${lat}, ${lng + 0.018} ${lat + 0.014}, ${lng} ${lat + 0.014}, ${lng} ${lat}))`;
+  }
+
+  private quartiers: Array<{ id: string; nom: string; code: string; areaNumber: number | null; cityId: string; communeId: string | null; zoneId: string | null; boundaryWkt: string | null }> = [
+    { id: 'q-7', nom: 'Quartier 7', code: 'Q7', areaNumber: 7, cityId: 'city-djibouti', communeId: null, zoneId: 'zone-nord', boundaryWkt: this.square(0) },
+    { id: 'q-einguela', nom: 'Einguela', code: 'Ein', areaNumber: null, cityId: 'city-djibouti', communeId: null, zoneId: 'zone-nord', boundaryWkt: this.square(1) },
+    { id: 'q-cheik-moussa', nom: 'Cheik Moussa', code: 'CM', areaNumber: null, cityId: 'city-djibouti', communeId: null, zoneId: 'zone-sud', boundaryWkt: this.square(2) },
+    { id: 'q-shell', nom: 'Quartier Shell', code: 'QS', areaNumber: null, cityId: 'city-djibouti', communeId: null, zoneId: 'zone-sud', boundaryWkt: this.square(3) },
+    { id: 'q-ali', nom: 'Quartier Ali', code: 'QA', areaNumber: null, cityId: 'city-djibouti', communeId: null, zoneId: 'zone-nord', boundaryWkt: this.square(4) },
+    { id: 'q-chateau-eau', nom: "Château d'eau", code: 'CD', areaNumber: null, cityId: 'city-djibouti', communeId: null, zoneId: 'zone-sud', boundaryWkt: this.square(5) },
   ];
 
   private toQuartierRow(q: (typeof this.quartiers)[number]): QuartierPostcodeRow {
@@ -35,7 +47,7 @@ export class MockPostcodesApiService extends PostcodesApiPort {
     return {
       id: q.id, nom: q.nom, code: q.code, areaNumber: q.areaNumber,
       postcode: computePostcode(city?.code ?? null, q.areaNumber),
-      cityId: q.cityId, communeId: q.communeId, zoneId: q.zoneId,
+      cityId: q.cityId, communeId: q.communeId, zoneId: q.zoneId, boundaryWkt: q.boundaryWkt,
     };
   }
 
@@ -45,6 +57,10 @@ export class MockPostcodesApiService extends PostcodesApiPort {
 
   override listQuartiers(): Observable<QuartierPostcodeRow[]> {
     return of(this.quartiers.map((q) => this.toQuartierRow(q))).pipe(delay(LATENCY_MS));
+  }
+
+  override listZones(): Observable<ZoneOption[]> {
+    return of(this.zones).pipe(delay(LATENCY_MS));
   }
 
   override listCities(): Observable<CityPostcodeRow[]> {

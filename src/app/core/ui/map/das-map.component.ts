@@ -268,6 +268,18 @@ export class DasMapComponent implements OnInit, OnDestroy {
         addLayerSafe({ id: `${layer.id}-fill`, type: 'fill', source: src, paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.45 } });
         addLayerSafe({ id: `${layer.id}-line`, type: 'line', source: src, paint: { 'line-color': ['get', 'color'], 'line-width': 1.4 } });
         addLayerSafe({ id: `${layer.id}-sel`, type: 'line', source: src, filter: ['==', ['get', 'id'], NONE], paint: { 'line-color': HIGHLIGHT, 'line-width': 3 } });
+        // Libellé au centre du polygone. Même opt-in que sur les points : réservé aux cas où le
+        // libellé EST l'information à lire — un code postal sur son quartier, par exemple.
+        if (layer.showLabels) {
+          addLayerSafe({
+            id: `${layer.id}-label`, type: 'symbol', source: src,
+            layout: {
+              'text-field': ['get', 'label'], 'text-size': 12,
+              'text-font': ['Open Sans Regular'], 'text-allow-overlap': false,
+            },
+            paint: { 'text-color': '#0b1220', 'text-halo-color': '#ffffff', 'text-halo-width': 1.6 },
+          });
+        }
         this.wireInteractions(`${layer.id}-fill`);
       } else {
         addLayerSafe({ id: `${layer.id}-circle`, type: 'circle', source: src, paint: { 'circle-color': ['get', 'color'], 'circle-radius': 5, 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 1.5 } });
@@ -375,7 +387,7 @@ export class DasMapComponent implements OnInit, OnDestroy {
     for (const l of this.layers()) {
       const value = (vis[l.id] ?? true) ? 'visible' : 'none';
       const ids = l.type === 'fill'
-        ? [`${l.id}-fill`, `${l.id}-line`, `${l.id}-sel`]
+        ? [`${l.id}-fill`, `${l.id}-line`, `${l.id}-sel`, `${l.id}-label`]
         : [`${l.id}-circle`, `${l.id}-sel`, `${l.id}-label`];
       for (const id of ids) if (this.map.getLayer(id)) this.map.setLayoutProperty(id, 'visibility', value);
     }

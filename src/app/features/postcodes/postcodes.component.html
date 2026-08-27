@@ -21,6 +21,50 @@
       </div>
     </div>
 
+    <section class="das-card map-card">
+      <div class="map-card__head">
+        <div class="panel__title">{{ 'postcodes.mapTitle' | transloco }}</div>
+        <div class="map-card__legend">
+          @if (highlighted().length > 0) {
+            <span class="lg"><span class="lg__dot" style="background:#2563eb"></span>{{ 'postcodes.legendSelected' | transloco }}</span>
+            <span class="lg"><span class="lg__dot" style="background:#dfe3ea"></span>{{ 'postcodes.legendOther' | transloco }}</span>
+          } @else {
+            @for (z of zoneLegend(); track z.id) {
+              <span class="lg"><span class="lg__dot" [style.background]="z.color"></span>{{ z.name }}</span>
+            }
+            <span class="lg"><span class="lg__dot" style="background:#dfe3ea"></span>{{ 'postcodes.legendNoPostcode' | transloco }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="pcpick">
+        <label class="pcpick__search">
+          <i class="ti ti-search" aria-hidden="true"></i>
+          <input type="text" [ngModel]="postcodeSearch()" (ngModelChange)="postcodeSearch.set($event)"
+                 [attr.placeholder]="'postcodes.searchPlaceholder' | transloco" />
+        </label>
+        <div class="pcpick__list">
+          @for (p of availablePostcodes(); track p.code) {
+            <label class="pcpick__item" [class.pcpick__item--on]="isHighlighted(p.code)">
+              <input type="checkbox" [checked]="isHighlighted(p.code)" (change)="toggleHighlight(p.code)" />
+              <span class="mono">{{ p.code }}</span>
+              <span class="pcpick__nom">{{ p.nom }}</span>
+            </label>
+          } @empty {
+            <div class="pcpick__empty">{{ 'postcodes.noPostcodeYet' | transloco }}</div>
+          }
+        </div>
+        @if (highlighted().length > 0) {
+          <button type="button" class="pcpick__clear" (click)="clearHighlight()">{{ 'postcodes.clearHighlight' | transloco }}</button>
+        }
+      </div>
+
+      <div class="map-card__canvas">
+        <das-map [features]="mapFeatures()" [layers]="mapLayers" [fitBbox]="mapFitBbox()"
+                 [showLayerControl]="false" (featureSelect)="onMapQuartier($event)" />
+      </div>
+    </section>
+
     <section class="das-card table-card">
       <div class="table-card__head">
         <div class="panel__title">{{ 'postcodes.quartiersTitle' | transloco }}</div>

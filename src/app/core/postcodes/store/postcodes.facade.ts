@@ -1,7 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { forkJoin } from 'rxjs';
+import { catchError, forkJoin, of } from 'rxjs';
 import { PostcodesApiPort } from '../services/postcodes-api.port';
-import { CityPostcodeRow, QuartierPostcodeRow } from '../models/postcodes.models';
+import { CityPostcodeRow, QuartierPostcodeRow, ZoneOption } from '../models/postcodes.models';
 import { UUID } from '../../models/das.models';
 import { ErrorKeyMap, toErrorKey } from '../../http/error-code';
 
@@ -17,6 +17,7 @@ export class PostcodesFacade {
 
   private readonly _quartiers = signal<QuartierPostcodeRow[]>([]);
   private readonly _cities = signal<CityPostcodeRow[]>([]);
+  private readonly _zones = signal<ZoneOption[]>([]);
   private readonly _loading = signal(false);
   private readonly _savingId = signal<UUID | null>(null);
   private readonly _errorMessageKey = signal<string | null>(null);
@@ -25,6 +26,7 @@ export class PostcodesFacade {
   readonly savingId = this._savingId.asReadonly();
   readonly errorMessageKey = this._errorMessageKey.asReadonly();
   readonly cities = this._cities.asReadonly();
+  readonly zones = this._zones.asReadonly();
 
   readonly quartiers = computed(() => {
     const cityById = new Map(this._cities().map((c) => [c.id, c]));
@@ -51,10 +53,17 @@ export class PostcodesFacade {
   load(): void {
     this._loading.set(true);
     this._errorMessageKey.set(null);
-    forkJoin({ quartiers: this.api.listQuartiers(), cities: this.api.listCities() }).subscribe({
-      next: ({ quartiers, cities }) => {
+    forkJoin({
+      quartiers: this.api.listQuartiers(),
+      cities: this.api.listCities(),
+      // Les zones ne servent qu'au coloriage de fond de la carte : un échec ne doit pas priver
+      // l'écran de sa liste, d'où le repli sur un tableau vide plutôt qu'une erreur globale.
+      zones: this.api.listZones().pipe(catchError(() => of([] as ZoneOption[]))),
+    }).subscribe({
+      next: ({ quartiers, cities, zones }) => {
         this._quartiers.set(quartiers);
         this._cities.set(cities);
+        this._zones.set(zones);
         this._loading.set(false);
       },
       error: () => {

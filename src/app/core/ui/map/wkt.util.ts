@@ -45,3 +45,37 @@ export function wktPoint(wkt: string): { type: 'Point'; coordinates: [number, nu
   // Ordre WKT et ordre GeoJSON coïncident : longitude d'abord. Ne pas « corriger ».
   return { type: 'Point', coordinates: [Number(m[1]), Number(m[2])] };
 }
+
+/**
+ * WKT `POLYGON` / `MULTIPOLYGON` → géométrie GeoJSON, pour un overlay dessiné à partir de
+ * l'API plutôt que des tuiles. Sert quand l'attribut à représenter n'existe QUE côté API —
+ * le code postal, par exemple, qui est dérivé et n'est donc porté par aucune tuile.
+ *
+ * Parseur volontairement minimal : il ne gère ni `EMPTY`, ni `Z`/`M`, ni `SRID=` en préfixe,
+ * qu'aucune réponse de ce back ne produit. Retourne `null` plutôt que de deviner.
+ */
+export function wktPolygon(wkt: string): GeoJSONPolygonLike | null {
+  const text = wkt.trim();
+  const isMulti = /^MULTIPOLYGON/i.test(text);
+  if (!isMulti && !/^POLYGON/i.test(text)) return null;
+
+  const body = text.slice(text.indexOf('('));
+  const ringOf = (chunk: string): [number, number][] =>
+    chunk.split(',').map((pair) => {
+      const [x, y] = pair.trim().split(/\s+/).map(Number);
+      return [x, y] as [number, number];
+    });
+
+  // Les anneaux sont les groupes entre parenthèses les plus INTERNES, quelle que soit la
+  // profondeur d'imbrication — c'est ce qui rend le même découpage valable pour les deux types.
+  const rings = [...body.matchAll(/\(([^()]+)\)/g)].map((m) => ringOf(m[1]));
+  if (rings.length === 0 || rings.some((r) => r.some(([x, y]) => Number.isNaN(x) || Number.isNaN(y)))) return null;
+
+  return isMulti
+    ? { type: 'MultiPolygon', coordinates: rings.map((r) => [r]) }
+    : { type: 'Polygon', coordinates: rings };
+}
+
+type GeoJSONPolygonLike =
+  | { type: 'Polygon'; coordinates: [number, number][][] }
+  | { type: 'MultiPolygon'; coordinates: [number, number][][][] };
