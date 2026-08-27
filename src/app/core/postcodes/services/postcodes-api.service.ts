@@ -50,8 +50,14 @@ export class PostcodesApiService extends PostcodesApiPort {
   }
 
   override updateQuartierAreaNumber({ current, areaNumber }: UpdateQuartierAreaNumberPayload): Observable<QuartierPostcodeRow> {
+    // `code` est VOLONTAIREMENT omis. Il est optionnel côté back (« omis, le code actuel est
+    // conservé »), et le renvoyer tel quel fait échouer la requête sur les quartiers existants :
+    // le validateur exige des lettres majuscules sans chiffre, or « Q7 » est en base depuis
+    // avant cette règle. Un écran qui relit-modifie-réécrit ne doit pas revalider un champ
+    // qu'il ne change pas — il ferait porter à l'opérateur une dette de données qui n'est pas
+    // la sienne, sur un champ que son geste ne touche même pas.
     const body = {
-      nom: current.nom, code: current.code, areaNumber,
+      nom: current.nom, areaNumber,
       cityId: current.cityId, communeId: current.communeId, zoneId: current.zoneId,
     };
     return this.http.patch<RawQuartierResponse>(`${this.baseUrl}/quartiers/${current.id}`, body).pipe(map(toQuartierRow));

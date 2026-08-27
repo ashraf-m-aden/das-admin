@@ -35,6 +35,11 @@ const PLAN_FROZEN_COLOR = '#dc2626';
 const IN_CLOSE_COLOR = '#2563eb';   // dans la close en cours
 const FREE_COLOR = '#16a34a';       // libre : cliquable
 const TAKEN_COLOR = '#9aa3b5';      // pris par une autre close : non cliquable
+/**
+ * Coché, en attente d'aperçu. Sans cette couleur, cliquer un bloc sur la carte le marquait
+ * sans que rien ne change à l'écran — le clic semblait sans effet.
+ */
+const PENDING_COLOR = '#d97706';
 
 const BLOCS_TILE: TileLayerBinding = {
   id: 'closes-blocs', labelKey: 'nav.blocks', source: 'blocs', sourceLayer: 'blocs_tiles',
@@ -165,6 +170,10 @@ export class ClosesComponent implements OnInit {
     if (managing) {
       for (const b of this.blocs()) {
         if (!owner.has(b.id)) blocStates[b.id] = { colorOverride: FREE_COLOR };
+      }
+      // Après les libres : un bloc coché doit se distinguer d'un bloc simplement cliquable.
+      for (const id of this.pendingBlocIds()) {
+        blocStates[id] = { colorOverride: PENDING_COLOR, selected: true };
       }
     }
 
@@ -415,7 +424,7 @@ export class ClosesComponent implements OnInit {
   hoverStreet(id: UUID | null): void { this.hoveredStreetId.set(id); }
 
   /** La légende lit les mêmes constantes que la carte : deux sources de vérité divergeraient. */
-  protected readonly colors = { inClose: IN_CLOSE_COLOR, free: FREE_COLOR, taken: TAKEN_COLOR };
+  protected readonly colors = { inClose: IN_CLOSE_COLOR, free: FREE_COLOR, taken: TAKEN_COLOR, pending: PENDING_COLOR };
 
   streetLabel(s: CloseStreetOption): string { return s.name ?? s.code; }
   blocLabel(b: Block): string { return b.name ?? b.code; }

@@ -109,7 +109,7 @@
               }
 
               @for (x of selectableBlocs(); track x.bloc.id) {
-                <label class="bloc" [class.bloc--taken]="x.takenBy">
+                <label class="bloc" [class.bloc--taken]="x.takenBy" [class.bloc--on]="isPending(x.bloc.id)">
                   <input type="checkbox" [checked]="isPending(x.bloc.id)" [disabled]="(isSaving$ | async) || !!x.takenBy" (change)="togglePendingBloc(x.bloc.id)" />
                   <span class="bloc__name">{{ blocLabel(x.bloc) }}</span>
                   @if (x.takenBy) {
@@ -184,6 +184,7 @@
           <div class="map-panel__legend">
             <span class="lg"><span class="lg__dot" [style.background]="colors.inClose"></span>{{ 'closes.legendInClose' | transloco: { name: mc.label } }}</span>
             <span class="lg"><span class="lg__dot" [style.background]="colors.free"></span>{{ 'closes.legendFree' | transloco }}</span>
+            <span class="lg"><span class="lg__dot" [style.background]="colors.pending"></span>{{ 'closes.legendPending' | transloco }}</span>
             <span class="lg"><span class="lg__dot" [style.background]="colors.taken"></span>{{ 'closes.legendTaken' | transloco }}</span>
           </div>
           <p class="hint">{{ 'closes.mapClickHint' | transloco }}</p>

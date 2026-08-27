@@ -127,6 +127,7 @@
     "attachHint": "Tick to attach, untick to detach — one block at a time. You can also click a block on the map.",
     "noBlocs": "No free block in this quarter",
     "empty": "No close in this quarter",
+    "legendPending": "Ticked, awaiting preview",
     "legendTaken": "Taken by another close",
     "errorNumberUsed": "Someone just took this number. The list has been reloaded: try again, a new number will be computed.",
     "errorCodeUsed": "A close already uses this code in this quarter.",

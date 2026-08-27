@@ -127,6 +127,7 @@
     "attachHint": "Cochez pour rattacher, décochez pour détacher — un bloc à la fois. Vous pouvez aussi cliquer un bloc sur la carte.",
     "noBlocs": "Aucun bloc libre dans ce quartier",
     "empty": "Aucune close dans ce quartier",
+    "legendPending": "Coché, en attente d'aperçu",
     "legendTaken": "Prise par une autre close",
     "errorNumberUsed": "Ce numéro vient d'être pris par quelqu'un d'autre. La liste a été rechargée : réessayez, un nouveau numéro sera calculé.",
     "errorCodeUsed": "Une close porte déjà ce code dans ce quartier.",
