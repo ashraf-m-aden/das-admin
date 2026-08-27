@@ -59,7 +59,9 @@
           @if (q.postcode) {
             <span class="mono trow__postcode">{{ q.postcode }}</span>
           } @else {
-            <span class="trow__missing">{{ 'postcodes.missing' | transloco }}</span>
+            <span class="trow__missing" [attr.title]="('postcodes.missingReason.' + q.missingReason) | transloco">
+              {{ ('postcodes.missingReason.' + q.missingReason) | transloco }}
+            </span>
           }
           @if (canEdit()) {
             @if (editingQuartierId() === q.id) {

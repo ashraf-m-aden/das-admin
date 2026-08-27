@@ -459,7 +459,10 @@
     "colPostcode": "Postcode",
     "colCityName": "City",
     "colCityCode": "City code",
-    "missing": "—",
+    "missingReason": {
+      "cityCode": "city code missing",
+      "areaNumber": "quarter number missing"
+    },
     "empty": "No quarters",
     "confirmCityCode": "{{count}} quarter(s) will be renumbered",
     "errorAreaNumberUsed": "This number is already used in this city.",

@@ -27,8 +27,19 @@ export class PostcodesFacade {
   readonly cities = this._cities.asReadonly();
 
   readonly quartiers = computed(() => {
-    const cityNameById = new Map(this._cities().map((c) => [c.id, c.name]));
-    return this._quartiers().map((q) => ({ ...q, cityName: cityNameById.get(q.cityId) ?? '—' }));
+    const cityById = new Map(this._cities().map((c) => [c.id, c]));
+    return this._quartiers().map((q) => {
+      const city = cityById.get(q.cityId);
+      // Un code postal absent a DEUX causes possibles, et l'opérateur ne peut pas deviner
+      // laquelle : le code de la ville, qu'il corrige dans le bloc Villes, ou le numéro du
+      // quartier, qu'il corrige sur cette ligne. Les distinguer évite de chercher au mauvais
+      // endroit — cas réel rencontré le 2026-08-27.
+      const missingReason: 'cityCode' | 'areaNumber' | null =
+        q.postcode !== null ? null
+          : city?.code == null ? 'cityCode'
+            : 'areaNumber';
+      return { ...q, cityName: city?.name ?? '—', cityCode: city?.code ?? null, missingReason };
+    });
   });
 
   readonly kpis = computed(() => ({

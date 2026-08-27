@@ -459,7 +459,10 @@
     "colPostcode": "Code postal",
     "colCityName": "Ville",
     "colCityCode": "Code ville",
-    "missing": "—",
+    "missingReason": {
+      "cityCode": "code ville manquant",
+      "areaNumber": "numéro de quartier manquant"
+    },
     "empty": "Aucun quartier",
     "confirmCityCode": "{{count}} quartier(s) seront renumérotés",
     "errorAreaNumberUsed": "Ce numéro est déjà utilisé dans cette ville.",
