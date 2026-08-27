@@ -48,7 +48,10 @@
 .map-card { padding: v.$space-4; display: flex; flex-direction: column; gap: v.$space-3;
   &__head { display: flex; align-items: baseline; justify-content: space-between; gap: v.$space-3; flex-wrap: wrap; }
   &__legend { display: flex; gap: v.$space-3; flex-wrap: wrap; }
-  &__canvas { height: 420px; border-radius: v.$radius-md; overflow: hidden; }
+  &__canvas { position: relative; height: 420px; border-radius: v.$radius-md; overflow: hidden; }
+  &__empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    padding: v.$space-6; text-align: center; background: rgb(255 255 255 / 82%);
+    font-size: v.$font-size-sm; color: var(--color-text-muted); pointer-events: none; }
 }
 .lg { display: inline-flex; align-items: center; gap: v.$space-1; font-size: v.$font-size-xs; color: var(--color-text-secondary); }
 .lg__dot { width: 9px; height: 9px; border-radius: 2px; }
@@ -58,16 +61,17 @@
     border: 1px solid var(--color-border); border-radius: v.$radius-sm; color: var(--color-text-muted);
     &:focus-within { border-color: var(--color-accent); }
     input { flex: 1; min-width: 0; border: none; background: transparent; outline: none; font: inherit; font-size: v.$font-size-sm; color: var(--color-text-primary); } }
-  /* Liste plate plutôt qu'un <select multiple> : la recherche filtre en direct et chaque ligne
-     porte le nom du quartier, qu'un select natif ne saurait pas afficher lisiblement. */
-  &__list { display: flex; flex-wrap: wrap; gap: v.$space-1; max-height: 132px; overflow: auto; @include m.slim-scrollbar; }
-  &__item { display: inline-flex; align-items: center; gap: v.$space-1; height: 28px; padding: 0 v.$space-2;
-    border: 1px solid var(--color-border); border-radius: v.$radius-full; background: var(--color-surface);
-    font-size: v.$font-size-xs; color: var(--color-text-secondary); cursor: pointer;
-    &:hover { border-color: var(--color-accent); }
-    &--on { border-color: var(--color-accent); background: var(--das-blue-50); color: var(--color-text-primary); } }
-  &__nom { color: var(--color-text-muted); }
-  &__empty { padding: v.$space-3; font-size: v.$font-size-sm; color: var(--color-text-muted); }
+  &__list { display: flex; flex-direction: column; max-height: 180px; overflow: auto;
+    border: 1px solid var(--color-border); border-radius: v.$radius-sm; @include m.slim-scrollbar; }
+  &__row { display: grid; grid-template-columns: auto 62px 1fr; gap: v.$space-2; align-items: center;
+    padding: v.$space-2 v.$space-3; font-size: v.$font-size-sm; color: var(--color-text-secondary); cursor: pointer;
+    border-bottom: 1px solid var(--color-surface-sunken);
+    &:last-child { border-bottom: none; }
+    &:hover { background: var(--color-surface-alt); }
+    &--on { background: var(--das-blue-50); color: var(--color-text-primary); } }
+  &__code { font-weight: v.$font-weight-medium; }
+  &__nom { color: var(--color-text-muted); @include m.truncate; }
+  &__empty { padding: v.$space-4; text-align: center; font-size: v.$font-size-sm; color: var(--color-text-muted); }
   &__clear { align-self: flex-start; border: none; background: none; font: inherit; font-size: v.$font-size-xs;
     color: var(--color-accent); cursor: pointer; text-decoration: underline; padding: 0; }
 }

@@ -32,17 +32,21 @@ export const selectTakenNumbers = createSelector(
 
 /**
  * Le plan tel qu'il sera ENVOYÉ : proposition du serveur, écrasée par les corrections manuelles.
- * Trié par numéro effectif — c'est l'ordre que l'opérateur relit sur la carte, il doit
- * correspondre à ce qu'il valide.
+ *
+ * ⚠️ **L'ordre du serveur est conservé tel quel, jamais retrié sur le numéro corrigé.** Retrier à
+ * la volée faisait sauter la ligne qu'on est en train d'éditer : on tape « 5 », la ligne file en
+ * cinquième position, et il faut courir après pour la corriger. L'ordre ne change donc qu'au
+ * rechargement de l'aperçu (inversion du sens, bloc ajouté), où il est légitime qu'il change.
+ *
+ * Le serveur renvoie déjà ses parcelles triées par numéro proposé — c'est cet ordre-là qui est
+ * l'ordre de parcours de la voie, celui que l'opérateur relit sur la carte.
  */
 export const selectEffectivePlan = createSelector(
   closesFeature.selectPlan,
   closesFeature.selectPlanEdits,
   (plan, edits) => {
     if (!plan) return null;
-    const adresses = plan.adresses
-      .map((a) => ({ ...a, effectiveNumero: edits[a.adresseId] ?? a.proposedNumero }))
-      .sort((x, y) => x.effectiveNumero - y.effectiveNumero);
+    const adresses = plan.adresses.map((a) => ({ ...a, effectiveNumero: edits[a.adresseId] ?? a.proposedNumero }));
     return { ...plan, adresses };
   },
 );

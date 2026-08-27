@@ -448,6 +448,7 @@
     "kpiWithPostcode": "Quarters with a postcode",
     "kpiWithoutPostcode": "Quarters without a postcode",
     "kpiCitiesWithoutCode": "Cities without a code",
+    "mapEmpty": "No quarter has a boundary in the database, so there is nothing to draw. The map will appear once boundaries are filled in.",
     "mapTitle": "Postcode map",
     "searchPlaceholder": "Search a postcode or a quarter…",
     "legendSelected": "Selected",

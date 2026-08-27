@@ -43,17 +43,21 @@
           <input type="text" [ngModel]="postcodeSearch()" (ngModelChange)="postcodeSearch.set($event)"
                  [attr.placeholder]="'postcodes.searchPlaceholder' | transloco" />
         </label>
-        <div class="pcpick__list">
+
+        <!-- Liste verticale cochable plutôt qu'un <select multiple> natif : celui-ci n'affiche
+             pas de case, se manipule au Ctrl+clic et tronque le nom du quartier. -->
+        <div class="pcpick__list" role="listbox" aria-multiselectable="true">
           @for (p of availablePostcodes(); track p.code) {
-            <label class="pcpick__item" [class.pcpick__item--on]="isHighlighted(p.code)">
+            <label class="pcpick__row" [class.pcpick__row--on]="isHighlighted(p.code)">
               <input type="checkbox" [checked]="isHighlighted(p.code)" (change)="toggleHighlight(p.code)" />
-              <span class="mono">{{ p.code }}</span>
+              <span class="pcpick__code mono">{{ p.code }}</span>
               <span class="pcpick__nom">{{ p.nom }}</span>
             </label>
           } @empty {
             <div class="pcpick__empty">{{ 'postcodes.noPostcodeYet' | transloco }}</div>
           }
         </div>
+
         @if (highlighted().length > 0) {
           <button type="button" class="pcpick__clear" (click)="clearHighlight()">{{ 'postcodes.clearHighlight' | transloco }}</button>
         }
@@ -62,6 +66,11 @@
       <div class="map-card__canvas">
         <das-map [features]="mapFeatures()" [layers]="mapLayers" [fitBbox]="mapFitBbox()"
                  [showLayerControl]="false" (featureSelect)="onMapQuartier($event)" />
+        <!-- Un quartier sans emprise ne peut pas être dessiné. Le dire, plutôt que de laisser
+             une carte vide qu'on prend pour un bug. -->
+        @if (mapFeatures().length === 0) {
+          <div class="map-card__empty">{{ 'postcodes.mapEmpty' | transloco }}</div>
+        }
       </div>
     </section>
 

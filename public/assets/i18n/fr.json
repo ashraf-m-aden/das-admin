@@ -448,6 +448,7 @@
     "kpiWithPostcode": "Quartiers avec code postal",
     "kpiWithoutPostcode": "Quartiers sans code postal",
     "kpiCitiesWithoutCode": "Villes sans code",
+    "mapEmpty": "Aucun quartier n'a de délimitation en base : il n'y a rien à dessiner. La carte s'affichera dès que les emprises seront renseignées.",
     "mapTitle": "Carte des codes postaux",
     "searchPlaceholder": "Chercher un code postal ou un quartier…",
     "legendSelected": "Sélectionné",
