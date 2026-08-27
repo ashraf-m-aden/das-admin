@@ -37,9 +37,14 @@ export class ClosesFacade {
     this.store.dispatch(ClosesActions.selectQuartier({ quartierId }));
   }
 
-  /** `id === null` → création. En modification, `quartierId` est ignoré (non modifiable côté back). */
-  save(id: UUID | null, payload: CreateClosePayload): void {
-    this.store.dispatch(ClosesActions.saveClose({ id, payload }));
+  /**
+   * `id === null` → création. En modification, `quartierId` est ignoré (non modifiable côté back).
+   *
+   * `streetName` renseigné nomme la rue dans la foulée. ⚠️ Une rue est partagée : la nommer
+   * change le libellé de TOUTES ses closes, y compris dans d'autres quartiers.
+   */
+  save(id: UUID | null, payload: CreateClosePayload, streetName?: string | null): void {
+    this.store.dispatch(ClosesActions.saveClose({ id, payload, streetName }));
   }
 
   remove(id: UUID): void {

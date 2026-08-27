@@ -149,21 +149,33 @@ export class MockAdresseApiService extends AdresseApiPort {
   override getDetail(id: UUID): Observable<AddressDetail> {
     const base = this.records.find((r) => r.id === id);
     if (!base) return throwError(() => ({ code: 'not_found', message: 'common.error' }));
+    // `...base` apporte les champs COMMUNS ; les quatre que la réponse détail ne porte pas
+    // (`zone`, `street`, `quartier`, `propertyType`) sont retirés par l'`Omit` du type, donc les
+    // laisser passer ici ferait diverger le mock du réel sans que rien ne le signale.
+    const { zone: _z, street: _s, quartier: _q, propertyType: _p, ...common } = base;
     const detail: AddressDetail = {
-      ...base,
+      ...common,
+      blocId: `${base.id}-bloc`,
+      blocCode: `BOULAOS-Q7-${base.id.slice(-1).toUpperCase()}`,
+      blocName: null,
+      quartierNom: base.quartier,
+      cityName: 'Djibouti',
+      locationWkt: 'POINT(43.1456 11.6004)',
       closeId: base.closeCode ? base.closeId : null,
       components: {
         street: base.street,
         quartierNom: base.quartier,
-        zone: base.zone ?? '—',
+        zone: base.zone,
         commune: 'Boulaos',
         region: 'Djibouti',
         postcode: base.postcode,
       },
       location: { latitude: 11.6004 + Math.random() * 0.01, longitude: 43.1456 + Math.random() * 0.01, parcelNumber: `PAR-${base.postcode?.replace(/\D/g, '')}-${base.id.slice(-4)}` },
-      propertyInfo: { propertyType: base.propertyType, occupancyType: 'occupied', buildingUse: base.propertyType === 'Villa' ? 'Single Family' : null },
+      // `occupancyType: null` comme le back : le régime d'occupation n'est relevé nulle part.
+      // Le mock affichait « occupied », ce qui laissait croire à une donnée qui n'arrive jamais.
+      propertyInfo: { propertyType: base.propertyType, occupancyType: null, buildingUse: base.propertyType === 'Villa' ? 'Single Family' : null },
       // score = nombre de relevés de l'agent (pas un pourcentage) — cf. §7 CLAUDE.md.
-      validation: { score: 1 + (base.id.charCodeAt(base.id.length - 1) % 6), notes: 'Adresse vérifiée sur site. Numéro de bâtiment visible.' },
+      validation: { score: 1 + (base.id.charCodeAt(base.id.length - 1) % 6), percentage: null, notes: 'Adresse vérifiée sur site. Numéro de bâtiment visible.' },
       linked: [
         { id: `${id}-l1`, kind: 'postcode', label: base.postcode ?? '—' },
         // La rue n'entre dans `linked` que si la parcelle a une close : sans close, il n'y a
@@ -171,7 +183,8 @@ export class MockAdresseApiService extends AdresseApiPort {
         ...(base.street ? [{ id: `${id}-l3`, kind: 'street' as const, label: base.street }] : []),
         { id: `${id}-l2`, kind: 'team', label: base.assignedTeamName ?? '—' },
       ],
-      units: [], // écrasé par le forkJoin de AdresseEffects.openDetail$ (MockUnitsApiService) — placeholder pour respecter AddressDetail.
+      units: [],
+      surveys: []
     };
     return of(detail).pipe(delay(MockAdresseApiService.LATENCY));
   }

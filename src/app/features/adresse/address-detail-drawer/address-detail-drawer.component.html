@@ -6,7 +6,8 @@
     <header class="drawer__head">
       <div>
         <div class="drawer__eyebrow">{{ d.addressCode ?? d.libelle }}</div>
-        <div class="drawer__title">{{ d.quartier }}</div>
+        <div class="drawer__title">{{ d.quartierNom }}</div>
+        <div class="drawer__sub">{{ d.libelle }}</div>
       </div>
       <span class="stage" [style.color]="stageColor(d.workflowStage)"><span class="stage__dot" [style.background]="stageColor(d.workflowStage)"></span>{{ stageLabelKey(d.workflowStage) | transloco }}</span>
       <button type="button" class="drawer__close" (click)="close()" aria-label="Fermer"><i class="ti ti-x" aria-hidden="true"></i></button>
@@ -14,6 +15,10 @@
 
     <nav class="tabs">
       <button type="button" class="tabs__tab" [class.tabs__tab--active]="tab() === 'details'" (click)="setTab('details')">{{ 'adresse.tabDetails' | transloco }}</button>
+      <button type="button" class="tabs__tab" [class.tabs__tab--active]="tab() === 'photos'" (click)="setTab('photos')">
+        {{ 'adresse.tabPhotos' | transloco }}
+        @if (photoTotal(d.surveys); as n) { <span class="tabs__badge">{{ n }}</span> }
+      </button>
       <button type="button" class="tabs__tab" [class.tabs__tab--active]="tab() === 'linked'" (click)="setTab('linked')">{{ 'adresse.tabLinked' | transloco }}</button>
     </nav>
 
@@ -23,13 +28,28 @@
           <div class="section">
             <div class="section__title">{{ 'adresse.components' | transloco }}</div>
             <dl class="kv">
-              <div><dt>{{ 'adresse.colStreet' | transloco }}</dt><dd>{{ d.components.street ?? '—' }}</dd></div>
-              <div><dt>{{ 'adresse.close' | transloco }}</dt><dd>{{ d.closeCode ?? '—' }}</dd></div>
+              <!--
+                `components.street` EST le libellé de la close (nom de rue → « close N » → code).
+                Il était affiché en double avec `closeCode`, qui n'est qu'un identifiant technique :
+                on garde le libellé, et le code passe en annotation discrète.
+              -->
+              <div>
+                <dt>{{ 'adresse.colStreet' | transloco }}</dt>
+                <dd>
+                  {{ d.components.street ?? '—' }}
+                  @if (d.closeCode) { <span class="kv__hint mono">{{ d.closeCode }}</span> }
+                </dd>
+              </div>
+              @if (!d.closeId) {
+                <div class="kv__full"><dd class="notes notes--warning">{{ 'adresse.noCloseHint' | transloco }}</dd></div>
+              }
               <div><dt>{{ 'adresse.colQuartier' | transloco }}</dt><dd>{{ d.components.quartierNom }}</dd></div>
-              <div><dt>{{ 'adresse.zone' | transloco }}</dt><dd>{{ d.components.zone }}</dd></div>
-              <div><dt>{{ 'addressing.commune' | transloco }}</dt><dd>{{ d.components.commune }}</dd></div>
+              <!-- Zone et commune sont facultatives : on masque la ligne au lieu d'afficher un vide. -->
+              @if (d.components.zone) { <div><dt>{{ 'adresse.zone' | transloco }}</dt><dd>{{ d.components.zone }}</dd></div> }
+              @if (d.components.commune) { <div><dt>{{ 'addressing.commune' | transloco }}</dt><dd>{{ d.components.commune }}</dd></div> }
               <div><dt>{{ 'addressing.region' | transloco }}</dt><dd>{{ d.components.region }}</dd></div>
-              <div><dt>{{ 'adresse.colPostcode' | transloco }}</dt><dd>{{ d.components.postcode }}</dd></div>
+              <div><dt>{{ 'adresse.colPostcode' | transloco }}</dt><dd>{{ d.components.postcode ?? '—' }}</dd></div>
+              <div><dt>{{ 'adresse.bloc' | transloco }}</dt><dd>{{ d.blocName ?? d.blocCode }}</dd></div>
             </dl>
           </div>
           <div class="section">
@@ -56,8 +76,14 @@
           <div class="section">
             <div class="section__title">{{ 'adresse.propertyInfo' | transloco }}</div>
             <dl class="kv">
-              <div><dt>{{ 'adresse.colType' | transloco }}</dt><dd>{{ d.propertyInfo.propertyType }}</dd></div>
-              <div><dt>{{ 'adresse.occupancyCol' | transloco }}</dt><dd>{{ occupancyLabelKey(d.propertyInfo.occupancyType) | transloco }}</dd></div>
+              <div><dt>{{ 'adresse.colType' | transloco }}</dt><dd>{{ d.propertyInfo.propertyType ?? '—' }}</dd></div>
+              <!--
+                `occupancyType` est TOUJOURS null côté back : le régime d'occupation n'est relevé
+                nulle part. La ligne rendait « adresse.occupancy.null » en clair.
+              -->
+              @if (d.propertyInfo.occupancyType; as occ) {
+                <div><dt>{{ 'adresse.occupancyCol' | transloco }}</dt><dd>{{ occupancyLabelKey(occ) | transloco }}</dd></div>
+              }
               @if (d.propertyInfo.buildingUse) { <div><dt>{{ 'adresse.buildingUse' | transloco }}</dt><dd>{{ d.propertyInfo.buildingUse }}</dd></div> }
             </dl>
           </div>
@@ -83,6 +109,55 @@
             }
           </div>
         }
+        @case ('photos') {
+          <!--
+            Trace du passage de l'agent terrain. Un relevé REJETÉ est affiché comme les autres :
+            c'est lui qui explique pourquoi la parcelle est retombée en « enregistrée ».
+          -->
+          @for (sv of d.surveys; track sv.id) {
+            <div class="section survey">
+              <div class="survey__head">
+                <span class="stage" [style.color]="surveyStatusColor(sv.status)">
+                  <span class="stage__dot" [style.background]="surveyStatusColor(sv.status)"></span>
+                  {{ surveyStatusKey(sv.status) | transloco }}
+                </span>
+                <span class="survey__date">{{ sv.capturedAtUtc | dasDate: 'long' }}</span>
+              </div>
+
+              @if (sv.outcome === 'NotSurveyable') {
+                <div class="notes notes--warning">
+                  {{ 'adresse.notSurveyable' | transloco }}
+                  @if (sv.notSurveyableReason; as r) { — {{ ('adresse.notSurveyableReason.' + r) | transloco }} }
+                </div>
+              }
+              @if (sv.rejectionReason) {
+                <div class="notes notes--warning">{{ 'adresse.rejectedFor' | transloco }} {{ sv.rejectionReason }}</div>
+              }
+
+              @if (sv.photos.length > 0) {
+                <div class="photos">
+                  @for (ph of sv.photos; track ph.id) {
+                    <button type="button" class="photos__item" (click)="openPhoto(ph)">
+                      <img [src]="ph.readUrl" [alt]="'adresse.photoAlt' | transloco" loading="lazy" />
+                    </button>
+                  }
+                </div>
+              } @else {
+                <p class="hint">{{ 'adresse.noPhotoOnSurvey' | transloco }}</p>
+              }
+
+              @if (photosMissing(sv); as missing) {
+                <p class="hint hint--warn">{{ 'adresse.photosUnavailable' | transloco: { n: missing } }}</p>
+              }
+            </div>
+          } @empty {
+            <div class="empty-state">
+              <i class="ti ti-camera-off" aria-hidden="true"></i>
+              <p>{{ 'adresse.noSurveyYet' | transloco }}</p>
+              <p class="hint">{{ 'adresse.noSurveyHint' | transloco }}</p>
+            </div>
+          }
+        }
         @case ('linked') {
           <div class="linked">
             @for (l of d.linked; track l.id) {
@@ -94,3 +169,12 @@
     </div>
   }
 </aside>
+
+@if (lightbox(); as ph) {
+  <div class="lightbox" (click)="closePhoto()">
+    <img [src]="ph.readUrl" [alt]="'adresse.photoAlt' | transloco" />
+    <button type="button" class="lightbox__close" (click)="closePhoto()" aria-label="Fermer">
+      <i class="ti ti-x" aria-hidden="true"></i>
+    </button>
+  </div>
+}

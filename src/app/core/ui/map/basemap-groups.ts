@@ -34,12 +34,22 @@ export const STREETS_BASEMAP_GROUP: BasemapLayerGroup = {
 /**
  * Les closes — le regroupement d'îlots qui nomme les adresses.
  *
- * Servie par `closes_tiles`, dont l'emprise est CALCULÉE par union des blocs rattachés :
- * `Closes."Boundary"` n'est jamais renseignée en base. Une close sans bloc n'est donc pas
- * dessinable et n'apparaît pas sur la carte, seulement dans la liste de l'écran /closes.
+ * Couche RÉPARÉE le 2026-08-27. Elle était inerte pour deux raisons cumulées :
+ *   1. la source `closes_tiles` n'existait pas — absente du catalogue Martin alors que
+ *      `blocs_tiles`, `streets_tiles` et `adresses_tiles` y étaient. La vue n'avait jamais été
+ *      créée en base, et une source Martin qui ne résout pas échoue en SILENCE ;
+ *   2. `Closes."Boundary"` n'est jamais renseignée — seuls Create/UpdateCloseHandler l'écrivent,
+ *      depuis le `boundaryWkt` du payload, que le front envoie toujours à `null`. Une vue qui se
+ *      serait contentée de relire la colonne aurait donc été vide elle aussi.
  *
- * Masquée par défaut : tant que la reprise de données n'a rattaché aucun bloc, la couche est
- * vide, et une case cochée sur une couche vide se lit comme une panne.
+ * La vue calcule maintenant l'union des blocs rattachés (`dasApi/scripts/creer-vues-tiles.sql`,
+ * appliqué). Une close sans bloc reste non dessinable : elle n'apparaît que dans la liste.
+ *
+ * Le cadrage de l'écran /closes ne dépend de rien de tout cela : il calcule l'union des bbox des
+ * blocs côté front (`ClosesComponent.mapFitBbox`).
+ *
+ * Masquée par défaut : une seule close existe aujourd'hui, et une case cochée sur une couche
+ * quasi vide se lit comme une panne.
  */
 export const CLOSES_BASEMAP_GROUP: BasemapLayerGroup = {
   id: 'closes',

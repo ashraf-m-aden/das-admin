@@ -48,6 +48,32 @@
           <p class="hint">{{ 'closes.streetHint' | transloco }}</p>
 
           <!--
+            Nommer la rue ici évite un aller-retour vers un écran des rues pour le cas le plus
+            courant : la rue vient de l'import et n'a pas de nom. Laissé vide, rien n'est envoyé.
+          -->
+          @if (canNameStreet()) {
+            <div class="field field--name">
+              <span>{{ 'closes.nameStreet' | transloco }}</span>
+              <input type="text" maxlength="201"
+                [ngModel]="formStreetName()" (ngModelChange)="formStreetName.set($event)"
+                [attr.placeholder]="'closes.nameStreetPlaceholder' | transloco"
+                [attr.aria-label]="'closes.nameStreet' | transloco" />
+            </div>
+            @if (streetNameTooLong()) {
+              <p class="hint hint--warn">{{ 'closes.nameStreetTooLong' | transloco }}</p>
+            } @else {
+              <p class="hint hint--warn">{{ 'closes.nameStreetHint' | transloco }}</p>
+            }
+          }
+
+          @if (formStreetId()) {
+            <div class="preview">
+              <span class="preview__label">{{ 'closes.labelPreview' | transloco }}</span>
+              <span class="preview__value">{{ labelPreview() }}</span>
+            </div>
+          }
+
+          <!--
             Numéro et code ne sont plus saisis : ils sont dérivés du quartier et du premier
             numéro libre. Ils restent AFFICHÉS avant l'enregistrement — un identifiant qui entre
             dans le code d'adresse ne doit pas apparaître par surprise après coup.
@@ -100,12 +126,32 @@
               <div class="panel__title panel__title--sub">{{ 'closes.blocsOf' | transloco: { name: mc.label } }}</div>
               <p class="hint">{{ 'closes.attachHint' | transloco }}</p>
 
+              <!--
+                Décocher un bloc DÉJÀ rattaché ne se contente pas de retirer une option : le back
+                remet `CloseId` à null sur le bloc et sur toutes ses parcelles, dont les numéros
+                dans la close sont alors perdus. D'où la confirmation en deux temps — la case
+                reste cochée tant qu'on n'a pas tranché.
+              -->
               @for (b of mc.blocs; track b.id) {
-                <label class="bloc bloc--on">
-                  <input type="checkbox" checked [disabled]="isSaving$ | async" (change)="detachBloc(b.id)" />
+                <label class="bloc bloc--on" [class.bloc--confirming]="pendingDetachId() === b.id">
+                  <input type="checkbox" [checked]="true" [disabled]="isSaving$ | async"
+                    (change)="requestDetach(b.id)" />
                   <span class="bloc__name">{{ b.name ?? b.code }}</span>
                   @if (b.number !== null) { <span class="bloc__num mono">{{ b.number }}</span> }
                 </label>
+
+                @if (pendingDetachId() === b.id) {
+                  <div class="detach-confirm">
+                    <p class="detach-confirm__text">
+                      {{ 'closes.detachConfirm' | transloco: { name: pendingDetachLabel() } }}
+                    </p>
+                    <div class="detach-confirm__actions">
+                      <button type="button" class="btn btn--danger" [disabled]="isSaving$ | async"
+                        (click)="confirmDetach()">{{ 'closes.detachConfirmYes' | transloco }}</button>
+                      <button type="button" class="btn" (click)="cancelDetach()">{{ 'common.cancel' | transloco }}</button>
+                    </div>
+                  </div>
+                }
               }
 
               @for (x of selectableBlocs(); track x.bloc.id) {
@@ -132,6 +178,20 @@
           La légende ne montre que ce qui est vrai à l'instant : hors gestion de blocs, aucune
           couleur n'est surchargée sur la carte, donc afficher une légende serait mentir.
         -->
+        <!--
+          La numérotation apparaît dès qu'une close est au point — gérée OU simplement survolée
+          dans la liste. C'est une lecture, elle n'exige pas d'entrer en mode gestion.
+        -->
+        @if (focusedClose(); as fc) {
+          <div class="map-panel__legend">
+            @if (fc.adresseCount > 0) {
+              <span class="lg"><span class="lg__dot" [style.background]="colors.numero"></span>{{ 'closes.legendNumbers' | transloco: { name: fc.label, n: fc.adresseCount } }}</span>
+            } @else {
+              <span class="lg lg--muted">{{ 'closes.noAdresseInClose' | transloco: { name: fc.label } }}</span>
+            }
+          </div>
+        }
+
         @if (managedClose(); as mc) {
           <div class="map-panel__legend">
             <span class="lg"><span class="lg__dot" [style.background]="colors.inClose"></span>{{ 'closes.legendInClose' | transloco: { name: mc.label } }}</span>
@@ -146,7 +206,7 @@
         <div class="map-panel__canvas">
           <das-map
             [features]="planFeatures()"
-            [layers]="planLayers"
+            [layers]="planLayers()"
             [tileLayers]="tileLayers"
             [tileFeatureStates]="tileFeatureStates()"
             [tileFilters]="tileFilters()"

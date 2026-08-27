@@ -72,6 +72,10 @@ export interface CloseStreetOption {
   code: string;
   /** `null` tant qu'aucune StreetSuggestion n'a été approuvée — on retombe sur `code` à l'affichage. */
   name: string | null;
+  /** `TypeVoie` côté back (Rue, Avenue, Boulevard, Piste, Impasse, Route) — renvoyé tel quel. */
+  type: string;
+  /** Tracé de la rue. Toujours `null` à ce jour : aucune rue n'en a. */
+  boundaryWkt: string | null;
 }
 
 /* =============================================================================

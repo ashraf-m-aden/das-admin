@@ -57,7 +57,49 @@ const STREETS_TILE: TileLayerBinding = {
   styleLayerIds: ['streets-track', 'streets-minor-case', 'streets-minor-fill',
     'streets-major-case', 'streets-major-fill', 'streets-name'],
   interactiveLayerId: 'streets-minor-fill', visible: true,
+  // Ces six couches appartiennent déjà à STREETS_BASEMAP_GROUP, qui en tient la case à cocher.
+  // Ce binding n'existe que pour le clic et la surbrillance au survol.
+  togglable: false,
 };
+
+/**
+ * Parcelles de la close mise au point, étiquetées de leur numéro de maison.
+ *
+ * La numérotation vient des TUILES (`adresses_tiles` porte `CloseId` et `Numero`), pas de l'API :
+ * c'est une lecture de l'état enregistré, elle doit rester disponible même quand le rattachement
+ * refuserait de s'exécuter. Passer par `preview` pour lire ferait traverser à un simple affichage
+ * les trois gardes d'écriture — une close au code d'adresse figé n'afficherait plus ses numéros.
+ *
+ * À ne pas confondre avec le calque du PLAN (`plan-adresses`) : le plan montre ce qui est
+ * PROPOSÉ, ce calque-ci ce qui EST.
+ */
+const CLOSE_ADRESSES_TILE: TileLayerBinding = {
+  id: 'close-adresses', labelKey: 'map.basemap.closeParcels', source: 'adresses',
+  sourceLayer: 'adresses_tiles',
+  styleLayerIds: ['close-adresses-fill', 'close-adresses-line'],
+  visible: true,
+  // Contour de contexte, pas une option : il suit la close au point. Une case à cocher de plus
+  // pour un simple fond n'apporterait rien.
+  togglable: false,
+};
+
+/**
+ * Les ÉTIQUETTES, séparées du contour — et c'est la raison d'être de la séparation : pendant un
+ * aperçu, il faut pouvoir masquer les numéros ACTUELS tout en gardant les parcelles visibles.
+ * Sans cela les anciens numéros se superposaient aux numéros proposés, exactement au même
+ * endroit, et l'aperçu devenait illisible : on ne pouvait plus vérifier ce qu'on validait.
+ */
+const CLOSE_NUMEROS_TILE: TileLayerBinding = {
+  id: 'close-numeros', labelKey: 'map.basemap.closeNumbers', source: 'adresses',
+  sourceLayer: 'adresses_tiles', styleLayerIds: ['close-adresses-numero'], visible: true,
+};
+
+/**
+ * Doit rester ALIGNÉ sur `close-adresses-numero` / `close-adresses-line` dans `map-style.json`.
+ * La couleur vit dans le style (coloration bakée, CLAUDE.md §4) ; la légende n'en garde qu'un
+ * reflet, faute de pouvoir interroger le style avant que la carte ne soit chargée.
+ */
+const CLOSE_NUMERO_COLOR = '#1d4ed8';
 
 /** Rue survolée dans la liste, ou cliquée sur la carte. */
 const STREET_HOVER_COLOR = '#dc2626';
@@ -124,12 +166,18 @@ export class ClosesComponent implements OnInit {
   protected readonly planReverse = signal(false);
   protected readonly highlightedCloseId = signal<UUID | null>(null);
 
+  /**
+   * Nom donné à la rue sélectionnée, sans quitter l'écran. Vide = on ne renomme rien et la close
+   * garde le repli « close N » — c'est le comportement par défaut, pas un oubli à corriger.
+   */
+  protected readonly formStreetName = signal('');
+
   /** Rue survolée dans la liste. Pilote la surbrillance carte, rien d'autre. */
   protected readonly hoveredStreetId = signal<UUID | null>(null);
   /** Filtre de la liste des rues — indispensable dès que l'import OSM en aura versé des centaines. */
   protected readonly streetSearch = signal('');
 
-  protected readonly tileLayers: TileLayerBinding[] = [BLOCS_TILE, STREETS_TILE];
+  protected readonly tileLayers: TileLayerBinding[] = [BLOCS_TILE, STREETS_TILE, CLOSE_ADRESSES_TILE, CLOSE_NUMEROS_TILE];
 
   constructor() {
     // Referme le formulaire UNIQUEMENT sur écriture réussie : sur un 409 il reste ouvert avec la
@@ -145,9 +193,30 @@ export class ClosesComponent implements OnInit {
   protected readonly managedClose = computed(() =>
     this.closes().find((c) => c.id === this.managing()) ?? null);
 
+  /**
+   * Close dont on montre le détail : celle qu'on gère, sinon celle survolée dans la liste.
+   * Une seule notion pour la couleur des blocs ET la numérotation — deux définitions
+   * divergeraient au premier changement.
+   */
+  protected readonly focusedCloseId = computed(() => this.managing() ?? this.highlightedCloseId());
+
+  protected readonly focusedClose = computed(() =>
+    this.closes().find((c) => c.id === this.focusedCloseId()) ?? null);
+
   protected readonly tileFilters = computed<Record<string, TileFilter>>(() => {
     const q = this.quartierId();
-    return { 'closes-blocs': q ? ['==', ['get', 'QuartierId'], q] : null };
+    const focus = this.focusedCloseId();
+    // Aucune close au point → un filtre qui ne matche rien, et non `null` : `null` laisserait
+    // sortir toutes les parcelles du référentiel d'un coup.
+    const ofFocus: TileFilter = ['==', ['get', 'CloseId'], focus ?? ''];
+    return {
+      'closes-blocs': q ? ['==', ['get', 'QuartierId'], q] : null,
+      'close-adresses': ofFocus,
+      // Pendant un aperçu, les numéros ENREGISTRÉS s'effacent : le plan dessine les numéros
+      // PROPOSÉS aux mêmes coordonnées. Les laisser tous les deux superposait deux chiffres
+      // différents sur la même parcelle.
+      'close-numeros': this.plan() ? ['==', ['get', 'CloseId'], ''] : ofFocus,
+    };
   });
 
   /**
@@ -161,7 +230,7 @@ export class ClosesComponent implements OnInit {
   protected readonly tileFeatureStates = computed<Record<string, TileFeatureStateMap>>(() => {
     const blocStates: TileFeatureStateMap = {};
     const managing = this.managing();
-    const focus = managing ?? this.highlightedCloseId();
+    const focus = this.focusedCloseId();
     const owner = this.blocOwner();
 
     for (const [blocId, close] of owner) {
@@ -197,8 +266,7 @@ export class ClosesComponent implements OnInit {
 
   /** Cadrage sur l'union des blocs de la close ciblée — la « géométrie » d'une close, ce sont ses blocs. */
   protected readonly mapFitBbox = computed(() => {
-    const focusId = this.managing() ?? this.highlightedCloseId();
-    const close = this.closes().find((c) => c.id === focusId);
+    const close = this.focusedClose();
     if (!close || close.blocs.length === 0) return null;
     const ids = close.blocs.map((b) => b.id);
     const blocs = this.blocs().filter((b) => ids.includes(b.id));
@@ -262,16 +330,44 @@ export class ClosesComponent implements OnInit {
    * back qui tranche (409), et l'effet recharge alors la liste pour que la tentative suivante
    * reparte d'un numéro libre.
    */
+  protected readonly selectedStreet = computed(() =>
+    this.streets().find((s) => s.id === this.formStreetId()) ?? null);
+
+  /**
+   * Le champ de nommage n'apparaît que sur une rue qui n'en a pas. Renommer une rue DÉJÀ nommée
+   * est un autre geste (il touche des adresses existantes) : il a sa place dans un écran des
+   * rues, pas en marge de la création d'une close.
+   */
+  protected readonly canNameStreet = computed(() => this.selectedStreet()?.name === null);
+
+  /** `MaximumLength(200)` côté back (`UpdateStreetRequestValidator`) — refusé en 400 au-delà. */
+  protected readonly streetNameTooLong = computed(() => this.formStreetName().trim().length > 200);
+
+  /**
+   * Ce que la close s'appellera. Le back dérive `Label` de `Street.Name`, puis retombe sur le
+   * numéro : montrer le résultat évite d'avoir à enregistrer pour découvrir « close 1 ».
+   */
+  protected readonly labelPreview = computed(() => {
+    const typed = this.formStreetName().trim();
+    if (typed) return typed;
+    const named = this.selectedStreet()?.name;
+    if (named) return named;
+    const n = this.editing() === 'new' ? this.nextFreeNumber() : this.editNumber();
+    return n === null ? '' : `close ${n}`;
+  });
+
   protected readonly canSave = computed(() =>
     this.formStreetId() !== null
     && this.quartierId() !== null
     && this.nextFreeNumber() <= 999
-    && (this.editing() !== 'new' || this.quartierCode() !== ''),
+    && (this.editing() !== 'new' || this.quartierCode() !== '')
+    && !this.streetNameTooLong(),
   );
 
   onHierarchy(sel: HierarchySelection): void {
     this.editing.set(null);
     this.managing.set(null);
+    this.pendingDetachId.set(null);
     this.facade.selectQuartier(sel.quartierId);
   }
 
@@ -281,6 +377,7 @@ export class ClosesComponent implements OnInit {
     this.managing.set(null);
     this.editing.set('new');
     this.formStreetId.set(null);
+    this.formStreetName.set('');
   }
 
   /** En modification on CONSERVE numéro et code : les régénérer renumérerait une close en place. */
@@ -288,6 +385,7 @@ export class ClosesComponent implements OnInit {
     this.managing.set(null);
     this.editing.set(c.id);
     this.formStreetId.set(c.streetId);
+    this.formStreetName.set('');
     this.editNumber.set(c.number);
     this.editCode.set(c.code);
   }
@@ -304,13 +402,14 @@ export class ClosesComponent implements OnInit {
       number: creating ? this.nextFreeNumber() : this.editNumber()!,
       code: creating ? this.generatedCode() : this.editCode(),
       boundaryWkt: null,
-    });
+    }, this.canNameStreet() ? this.formStreetName() : null);
   }
 
   remove(c: Close): void { this.facade.remove(c.id); }
 
   manageBlocs(c: Close): void {
     this.editing.set(null);
+    this.pendingDetachId.set(null);
     this.managing.update((cur) => (cur === c.id ? null : c.id));
   }
 
@@ -382,14 +481,45 @@ export class ClosesComponent implements OnInit {
     });
   });
 
-  protected readonly planLayers: MapLayerConfig[] = [
-    { id: 'plan', labelKey: 'closes.planLayer', type: 'point', visible: true, showLabels: true },
-  ];
+  /**
+   * Le calque du plan n'entre au panneau que quand un plan existe. Il n'a de contenu qu'entre un
+   * aperçu et son application : une case à cocher permanente sur un calque structurellement vide
+   * se lit comme une panne — même raison qui tient CLOSES_BASEMAP_GROUP masqué par défaut.
+   */
+  protected readonly planLayers = computed<MapLayerConfig[]>(() => this.plan()
+    ? [{ id: 'plan', labelKey: 'closes.planLayer', type: 'point' as const, visible: true, showLabels: true }]
+    : []);
 
-  detachBloc(blocId: UUID): void {
+  /**
+   * Bloc dont le détachement attend une confirmation.
+   *
+   * Détacher n'est pas décocher une option : `DetachBlocHandler` remet `CloseId` à `null` sur le
+   * bloc ET sur toutes ses parcelles. Leurs numéros de maison dans la close sont donc perdus, et
+   * les réattacher repartira d'une renumérotation. Un simple clic sur une case ne peut pas
+   * déclencher ça — c'était le cas jusqu'ici, sur la case comme sur la carte.
+   */
+  protected readonly pendingDetachId = signal<UUID | null>(null);
 
+  /**
+   * Libellé du bloc en attente de confirmation. Volontairement PAS un nombre de parcelles : ni
+   * `Block` ni `CloseBlocResponse` ne le portent, et il faudrait un appel de plus pour l'obtenir.
+   * Mieux vaut nommer le bloc et dire la conséquence que fabriquer un chiffre.
+   */
+  protected readonly pendingDetachLabel = computed(() => {
+    const blocId = this.pendingDetachId();
+    if (!blocId) return '';
+    const b = this.blocs().find((x) => x.id === blocId);
+    return b ? this.blocLabel(b) : '';
+  });
+
+  requestDetach(blocId: UUID): void { this.pendingDetachId.set(blocId); }
+  cancelDetach(): void { this.pendingDetachId.set(null); }
+
+  confirmDetach(): void {
+    const blocId = this.pendingDetachId();
     const closeId = this.managing();
-    if (closeId) this.facade.detachBloc(closeId, blocId);
+    if (blocId && closeId) this.facade.detachBloc(closeId, blocId);
+    this.pendingDetachId.set(null);
   }
 
   /**
@@ -411,7 +541,7 @@ export class ClosesComponent implements OnInit {
   private onMapBloc(blocId: UUID): void {
     if (!this.managing()) return;
     const owner = this.blocOwner().get(blocId);
-    if (owner?.id === this.managing()) this.detachBloc(blocId);
+    if (owner?.id === this.managing()) this.requestDetach(blocId);
     else if (!owner) this.togglePendingBloc(blocId);
   }
 
@@ -419,12 +549,18 @@ export class ClosesComponent implements OnInit {
   pickStreet(id: UUID | null): void {
     if (this.editing() === null) return;
     this.formStreetId.set(id);
+    // Changer de rue vide la saisie : un nom tapé pour une rue puis appliqué à une autre serait
+    // une erreur silencieuse, et le renommage porte sur TOUTES les closes de la rue touchée.
+    this.formStreetName.set('');
   }
 
   hoverStreet(id: UUID | null): void { this.hoveredStreetId.set(id); }
 
   /** La légende lit les mêmes constantes que la carte : deux sources de vérité divergeraient. */
-  protected readonly colors = { inClose: IN_CLOSE_COLOR, free: FREE_COLOR, taken: TAKEN_COLOR, pending: PENDING_COLOR };
+  protected readonly colors = {
+    inClose: IN_CLOSE_COLOR, free: FREE_COLOR, taken: TAKEN_COLOR,
+    pending: PENDING_COLOR, numero: CLOSE_NUMERO_COLOR,
+  };
 
   streetLabel(s: CloseStreetOption): string { return s.name ?? s.code; }
   blocLabel(b: Block): string { return b.name ?? b.code; }

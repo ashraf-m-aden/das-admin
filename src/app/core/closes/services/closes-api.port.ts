@@ -9,6 +9,13 @@ export abstract class ClosesApiPort {
   abstract list(query: CloseListQuery): Observable<Close[]>;
   /** `GET /api/streets` — une close exige une rue, c'est elle qui nomme l'adresse. */
   abstract listStreets(): Observable<CloseStreetOption[]>;
+
+  /**
+   * `PATCH /api/streets/{id}` — nomme une rue sans quitter l'écran des closes.
+   * Prend l'option complète et non le seul id : le PATCH est un REMPLACEMENT, il faut renvoyer
+   * `code` et `type` inchangés sous peine de les écraser.
+   */
+  abstract renameStreet(street: CloseStreetOption, name: string): Observable<CloseStreetOption>;
   abstract getById(id: UUID): Observable<Close>;
   abstract create(payload: CreateClosePayload): Observable<Close>;
   abstract update(id: UUID, payload: UpdateClosePayload): Observable<Close>;

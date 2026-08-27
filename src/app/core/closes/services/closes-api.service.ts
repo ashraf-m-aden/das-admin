@@ -43,6 +43,12 @@ function toClose(raw: RawCloseResponse): Close {
   };
 }
 
+interface RawStreetResponse { id: string; code: string; name: string | null; type: string; boundaryWkt: string | null; }
+
+function toStreetOption(r: RawStreetResponse): CloseStreetOption {
+  return { id: r.id, code: r.code, name: r.name, type: r.type, boundaryWkt: r.boundaryWkt };
+}
+
 @Injectable({ providedIn: 'root' })
 export class ClosesApiService extends ClosesApiPort {
   private http = inject(HttpClient);
@@ -51,9 +57,14 @@ export class ClosesApiService extends ClosesApiPort {
   private get streetsUrl() { return `${this.config.get('apiBaseUrl')}/streets`; }
 
   override listStreets(): Observable<CloseStreetOption[]> {
-    return this.http.get<{ id: string; code: string; name: string | null }[]>(this.streetsUrl).pipe(
-      map((rows) => rows.map((r) => ({ id: r.id, code: r.code, name: r.name }))),
-    );
+    return this.http.get<RawStreetResponse[]>(this.streetsUrl).pipe(map((rows) => rows.map(toStreetOption)));
+  }
+
+  override renameStreet(street: CloseStreetOption, name: string): Observable<CloseStreetOption> {
+    // Remplacement complet : `code` et `type` sont renvoyés tels quels. `boundaryWkt` à `null`
+    // laisse le tracé existant en place — le handler ne l'écrase que s'il reçoit une géométrie.
+    const body = { code: street.code, name, type: street.type, boundaryWkt: street.boundaryWkt };
+    return this.http.patch<RawStreetResponse>(`${this.streetsUrl}/${street.id}`, body).pipe(map(toStreetOption));
   }
 
   override list(query: CloseListQuery): Observable<Close[]> {

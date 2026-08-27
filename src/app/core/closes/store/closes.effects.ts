@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { concatLatestFrom } from '@ngrx/operators';
 import { Store } from '@ngrx/store';
-import { catchError, filter, map, of, switchMap } from 'rxjs';
+import { catchError, defer, filter, map, of, switchMap } from 'rxjs';
 import { ClosesActions } from './closes.actions';
 import { closesFeature } from './closes.reducer';
 import { selectEffectivePlan } from './closes.selectors';
@@ -47,6 +47,7 @@ const ERROR_KEY_BY_CODE: ErrorKeyMap = {
   'Closes.NumberingForeignAdresse': 'closes.errorNumberingForeign',
   'Closes.NumberingOutOfRange': 'closes.errorNumberingOutOfRange',
   'Blocs.NotFound': 'closes.errorNotFound',
+  'Streets.NotFound': 'closes.errorStreetNotFound',
 };
 
 const toKey = (err: unknown): string => toErrorKey(err, ERROR_KEY_BY_CODE);
@@ -93,21 +94,53 @@ export class ClosesEffects {
     }),
   ));
 
-  /** `quartierId` est retiré du corps en modification : le back ne le modifie pas (`Close.Update`). */
+  /**
+   * `quartierId` est retiré du corps en modification : le back ne le modifie pas (`Close.Update`).
+   *
+   * Nommage de rue « d'une pierre deux coups » : si l'action porte un `streetName`, la rue est
+   * renommée AVANT l'écriture de la close. L'ordre n'est pas cosmétique — le back dérive
+   * `Close.Label` de `Street.Name`, donc une close écrite avant le renommage repartirait avec
+   * l'ancien libellé jusqu'au prochain rechargement.
+   *
+   * La rue complète est relue dans le store et non portée par l'action : `PATCH /api/streets/{id}`
+   * est un REMPLACEMENT, il faut lui rendre `code` et `type` inchangés — les recomposer depuis
+   * l'écran les exposerait à être écrasés par une valeur par défaut.
+   *
+   * Un échec du renommage annule la close. C'est délibéré : enchaîner quand même laisserait une
+   * close créée sous un libellé que l'opérateur croit avoir corrigé.
+   */
   saveClose$ = createEffect(() => this.actions$.pipe(
     ofType(ClosesActions.saveClose),
-    switchMap(({ id, payload }) => {
-      const request$ = id
+    concatLatestFrom(() => this.store.select(closesFeature.selectStreets)),
+    switchMap(([{ id, payload, streetName }, streets]) => {
+      const write$ = defer(() => id
         ? this.api.update(id, {
           streetId: payload.streetId, number: payload.number,
           code: payload.code, boundaryWkt: payload.boundaryWkt,
         })
-        : this.api.create(payload);
+        : this.api.create(payload));
+
+      const street = streets.find((s) => s.id === payload.streetId);
+      const name = streetName?.trim();
+      const request$ = name && street && street.name !== name
+        ? this.api.renameStreet(street, name).pipe(switchMap(() => write$))
+        : write$;
+
       return request$.pipe(
         map(() => ClosesActions.saveCloseSuccess()),
         catchError((err: unknown) => of(ClosesActions.saveCloseFailure({ errorMessageKey: toKey(err) }))),
       );
     }),
+  ));
+
+  /**
+   * Le nom de rue affiché dans le sélecteur vient de `streets`, que `reloadAfterWrite$` ne
+   * recharge pas (il ne relit que closes et blocs). Sans ceci, une rue tout juste nommée
+   * réapparaîtrait sans nom dans le formulaire suivant.
+   */
+  reloadStreetsAfterSave$ = createEffect(() => this.actions$.pipe(
+    ofType(ClosesActions.saveCloseSuccess),
+    map(() => ClosesActions.loadStreets()),
   ));
 
   removeClose$ = createEffect(() => this.actions$.pipe(

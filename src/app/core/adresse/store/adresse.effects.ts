@@ -7,6 +7,7 @@ import { AdresseActions } from './adresse.actions';
 import { adresseFeature } from './adresse.reducer';
 import { AdresseApiPort } from '../services/adresse-api.port';
 import { UnitsApiPort } from '../../units/services/units-api.port';
+import { ReviewApiPort } from '../../review/services/review-api.port';
 import { ErrorKeyMap, toErrorKey } from '../../http/error-code';
 
 /** Seul code métier de `PATCH /api/adresses/{id}` — `UpdateAdresseHandler`, unicité du numéro dans la close. */
@@ -20,6 +21,7 @@ export class AdresseEffects {
   private store = inject(Store);
   private api = inject(AdresseApiPort);
   private unitsApi = inject(UnitsApiPort);
+  private reviewApi = inject(ReviewApiPort);
 
   loadSummary$ = createEffect(() => this.actions$.pipe(
     ofType(AdresseActions.loadSummary),
@@ -67,8 +69,20 @@ export class AdresseEffects {
       forkJoin({
         detail: this.api.getDetail(id),
         units: this.unitsApi.listByAdresse(id),
+        // Les relevés ne doivent JAMAIS faire échouer l'ouverture de la fiche : un AgentTerrain
+        // ne voit que les siens et reçoit un 403 sur ceux des autres. Un tiroir qui refuse de
+        // s'ouvrir parce qu'une photo est interdite serait une régression, pas une sécurité.
+        surveys: this.reviewApi.listSurveysByAdresse(id).pipe(catchError(() => of([]))),
       }).pipe(
-        map(({ detail, units }) => AdresseActions.loadDetailSuccess({ detail: { ...detail, units } })),
+        switchMap(({ detail, units, surveys }) => (surveys.length === 0
+          ? of({ detail, units, surveys })
+          : forkJoin(surveys.map((s) => this.reviewApi.getSurveyPhotos(s.id).pipe(
+            catchError(() => of([])),
+            map((photos) => ({ ...s, photos })),
+          ))).pipe(map((withPhotos) => ({ detail, units, surveys: withPhotos }))))),
+        map(({ detail, units, surveys }) => AdresseActions.loadDetailSuccess({
+          detail: { ...detail, units, surveys },
+        })),
         catchError(() => of(AdresseActions.loadDetailFailure({ errorMessageKey: 'common.error' }))),
       ),
     ),

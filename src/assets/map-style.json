@@ -589,6 +589,103 @@
       }
     },
     {
+      "id": "close-adresses-fill",
+      "type": "fill",
+      "source": "adresses",
+      "source-layer": "adresses_tiles",
+      "filter": [
+        "==",
+        [
+          "get",
+          "CloseId"
+        ],
+        ""
+      ],
+      "paint": {
+        "fill-color": "#2563eb",
+        "fill-opacity": 0.22
+      }
+    },
+    {
+      "id": "close-adresses-line",
+      "type": "line",
+      "source": "adresses",
+      "source-layer": "adresses_tiles",
+      "filter": [
+        "==",
+        [
+          "get",
+          "CloseId"
+        ],
+        ""
+      ],
+      "paint": {
+        "line-color": "#1d4ed8",
+        "line-width": 1.2
+      }
+    },
+    {
+      "id": "close-adresses-numero",
+      "type": "symbol",
+      "source": "adresses",
+      "source-layer": "adresses_tiles",
+      "filter": [
+        "==",
+        [
+          "get",
+          "CloseId"
+        ],
+        ""
+      ],
+      "layout": {
+        "text-field": [
+          "to-string",
+          [
+            "get",
+            "Numero"
+          ]
+        ],
+        "text-font": [
+          "Noto Sans Regular"
+        ],
+        "text-size": 12,
+        "text-allow-overlap": true,
+        "text-ignore-placement": true
+      },
+      "paint": {
+        "text-color": "#1d4ed8",
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.6
+      }
+    },
+    {
+      "id": "adresses-numero",
+      "type": "symbol",
+      "source": "adresses",
+      "source-layer": "adresses_tiles",
+      "minzoom": 16,
+      "layout": {
+        "text-field": [
+          "to-string",
+          [
+            "get",
+            "Numero"
+          ]
+        ],
+        "text-font": [
+          "Noto Sans Regular"
+        ],
+        "text-size": 11,
+        "text-allow-overlap": false,
+        "visibility": "none"
+      },
+      "paint": {
+        "text-color": "#1f2937",
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.5
+      }
+    },
+    {
       "id": "streets-name",
       "type": "symbol",
       "source": "streets",

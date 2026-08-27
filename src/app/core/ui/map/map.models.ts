@@ -59,8 +59,25 @@ export interface TileLayerBinding {
   source: string;               // id de source du style de base (ex. 'blocs')
   sourceLayer: string;          // source-layer MVT (ex. 'Blocs')
   styleLayerIds: string[];      // couches du style à toggler/filtrer ensemble
-  interactiveLayerId: string;   // couche recevant clic/hover (en général le fill)
+  /**
+   * Couche recevant clic/hover (en général le fill). **Omis = calque en lecture seule** : il se
+   * toggle et se filtre, mais ne reçoit aucun clic. Sans cette option, un calque d'affichage
+   * devrait déclarer une couche interactive factice — et le clic remonterait alors un id
+   * étranger (une adresse là où l'écran attend un bloc) au lieu de ne rien faire.
+   */
+  interactiveLayerId?: string;
   visible: boolean;
+  /**
+   * `false` = le binding ne pilote PAS la visibilité : absent du panneau, ignoré par
+   * `applyVisibility`.
+   *
+   * Sert quand un binding n'existe que pour l'interaction (clic, feature-state) sur des couches
+   * dont un `BasemapLayerGroup` possède déjà la case à cocher. Sans ce garde-fou, les deux
+   * entrées pilotent les mêmes `styleLayerIds` et le panneau affiche deux cases au même
+   * libellé, dont une inopérante : `applyVisibility` traite les groupes de fond APRÈS les
+   * tuiles, donc le groupe réécrit systématiquement ce que la tuile vient de poser.
+   */
+  togglable?: boolean;
 }
 
 /** Filtre appliqué à une couche tuile (`null` = aucun filtre, tout visible). */

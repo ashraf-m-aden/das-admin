@@ -46,3 +46,7 @@
   &__page--active { background: var(--color-accent); color: var(--color-on-accent); border-color: var(--color-accent); }
 }
 .reg-map { position: relative; padding: 0; overflow: hidden; height: 340px; }
+
+/* Survol d'une ligne : même rose que la surbrillance carte, pour que le lien entre les deux
+   soit lisible sans légende. */
+.trow--hover { background: rgb(244 63 94 / 7%); box-shadow: inset 3px 0 0 #f43f5e; }

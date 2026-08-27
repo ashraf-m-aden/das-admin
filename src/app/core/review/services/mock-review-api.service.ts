@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { ReviewApiPort } from './review-api.port';
-import { CurrentSurveyItem, ReviewPhoto, StalledSurveyItem, SurveyReviewItem } from '../models/review.models';
+import { AdresseSurvey, CurrentSurveyItem, ReviewPhoto, StalledSurveyItem, SurveyReviewItem } from '../models/review.models';
 import { UUID } from '../../models/das.models';
 
 /**
@@ -131,6 +131,24 @@ export class MockReviewApiService extends ReviewApiPort {
 
   override getSurveyPhotos(id: UUID): Observable<ReviewPhoto[]> {
     return of(this.photosBySurveyId[id] ?? []).pipe(delay(MockReviewApiService.SIMULATED_LATENCY_MS));
+  }
+
+  /**
+   * Les relevés soumis servent aussi d'historique par adresse : le mock n'a qu'un jeu de
+   * relevés, et en fabriquer un second divergerait du premier au premier changement.
+   */
+  override listSurveysByAdresse(adresseId: UUID): Observable<AdresseSurvey[]> {
+    const rows = this.surveys
+      .filter((s) => s.adresseId === adresseId)
+      .map((s): AdresseSurvey => ({
+        id: s.id, adresseId: s.adresseId, agentId: s.agentId,
+        status: 'Submitted', outcome: s.outcome,
+        notSurveyableReason: s.notSurveyableReason,
+        capturedAtUtc: s.capturedAtUtc, photoCount: s.photoCount,
+        rejectionReason: null, photos: [],
+      }))
+      .sort((a, b) => b.capturedAtUtc.localeCompare(a.capturedAtUtc));
+    return of(rows).pipe(delay(MockReviewApiService.SIMULATED_LATENCY_MS));
   }
 
   private stalledSurveys: StalledSurveyItem[] = [

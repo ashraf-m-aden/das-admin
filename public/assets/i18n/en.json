@@ -109,7 +109,38 @@
     "charge": "Load (blocs assigned)",
     "production": "Production (surveys)",
     "viewCampaign": "View campaign",
-    "quickActions": "Quick access"
+    "quickActions": "Quick access",
+    "kpiCoverage": "Addressing coverage",
+    "toRedo": "Surveys to redo",
+    "coverage": "Addressing coverage",
+    "coverageHint": "An address code requires a close (so a street), a quarter area number and a city code. While any lock holds, the address cannot be coded — however many parcels are on file.",
+    "coverageMeta": "{{done}} addresses with a street out of {{total}}",
+    "blocker": {
+      "adressesWithoutClose": "Addresses without a close",
+      "blocsWithoutClose": "Blocks not attached to a close",
+      "streetsUnnamed": "Unnamed streets",
+      "quartiersWithoutArea": "Quarters without an area number",
+      "citiesWithoutCode": "Cities without a postcode"
+    },
+    "debt": "Verification debt",
+    "debtHint": "What shows up nowhere else. A provisional validation never rechecked stays provisional forever; a survey submitted after closure is never decided.",
+    "debtTemporary": "Provisional, to recheck",
+    "debtStalled": "Submitted, undecided",
+    "debtOldest": "Days waiting, oldest",
+    "debtNone": "No verification debt.",
+    "assignedBlocs": "{{n}} blocks assigned",
+    "canBeClosed": "Closable",
+    "cannotBeClosed": "Not closable: work in progress",
+    "chargeToDo": "{{n}} to do",
+    "chargeAbandoned": "{{n}} abandoned",
+    "chargeVsProduction": "Load and output do not add up: load follows a reassignment, output stays with the agent who surveyed.",
+    "byAgent": "By agent",
+    "agentName": "Agent",
+    "agentHeld": "Blocks",
+    "agentToDo": "To do",
+    "agentDone": "Done",
+    "agentCaptured": "Surveys",
+    "agentValidated": "Validated"
   },
   "closes": {
     "eyebrow": "Street portions within a quarter — the number is part of the address code",
@@ -165,7 +196,17 @@
     "errorNumberingDuplicate": "Two parcels share the same number in the plan.",
     "errorNumberingIncomplete": "The plan does not cover every parcel of the close.",
     "errorNumberingForeign": "The plan contains a parcel that does not belong to this close.",
-    "errorNumberingOutOfRange": "A number in the plan is outside the allowed range."
+    "errorNumberingOutOfRange": "A number in the plan is outside the allowed range.",
+    "nameStreet": "Name this street",
+    "nameStreetPlaceholder": "Street name (optional)",
+    "nameStreetHint": "Optional. A street is shared: naming it changes the label of every close on it, including in other quarters. Left blank, the close keeps its “close N” fallback.",
+    "nameStreetTooLong": "Name too long: 200 characters maximum.",
+    "labelPreview": "The close will be called",
+    "errorStreetNotFound": "This street no longer exists. Reload the screen.",
+    "legendNumbers": "House numbers of “{{name}}” ({{n}} parcels) — zoom in to read them",
+    "noAdresseInClose": "“{{name}}” has no parcel yet: nothing to number.",
+    "detachConfirm": "Detach “{{name}}” from this close? Its parcels lose their number within the close, and re-attaching later will start from a fresh numbering.",
+    "detachConfirmYes": "Detach"
   },
   "discoveries": {
     "eyebrow": "Reports from the field",
@@ -441,7 +482,32 @@
     "colZone": "Zone",
     "colQuartier": "Quarter",
     "colStreet": "Street",
-    "close": "Close"
+    "close": "Close",
+    "tabPhotos": "Photos",
+    "bloc": "Block",
+    "noCloseHint": "This parcel is not attached to any close: it has no street yet, so its address code cannot be composed.",
+    "noSurveyYet": "No field survey yet",
+    "noSurveyHint": "Photos will appear here as soon as an agent surveys this parcel.",
+    "noPhotoOnSurvey": "This survey carries no photo.",
+    "photosUnavailable": "{{n}} photo(s) from this survey could not be loaded.",
+    "photoAlt": "Field survey photo",
+    "rejectedFor": "Rejected:",
+    "notSurveyable": "Parcel not surveyable",
+    "surveyStatus": {
+      "draft": "Draft",
+      "submitted": "Submitted",
+      "validated": "Validated",
+      "rejected": "Rejected"
+    },
+    "notSurveyableReason": {
+      "Demolished": "Demolished",
+      "Inaccessible": "Inaccessible",
+      "Refused": "Access refused",
+      "NotFound": "Not found",
+      "VacantLand": "Vacant land",
+      "OutOfTime": "Out of time"
+    },
+    "layerNumbers": "House numbers"
   },
   "postcodes": {
     "eyebrow": "Postcode = city code + quarter number, computed, never entered",
@@ -578,13 +644,17 @@
   "map": {
     "layers": "Layers",
     "error": "Map unavailable",
-    "legend": { "title": "Status" },
+    "legend": {
+      "title": "Status"
+    },
     "basemap": {
       "ilots": "Block outlines",
       "parcelles": "Parcel outlines",
       "adresses": "Address points",
       "streets": "Streets",
-      "closes": "Closes"
+      "closes": "Closes",
+      "closeNumbers": "Close house numbers",
+      "closeParcels": "Close parcels"
     }
   },
   "reports": {

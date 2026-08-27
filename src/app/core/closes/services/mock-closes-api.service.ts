@@ -60,13 +60,22 @@ export class MockClosesApiService extends ClosesApiPort {
 
   /** Mêmes ids que `MockAddressingApiService.streets`. */
   private streets: CloseStreetOption[] = [
-    { id: 'street-0001', code: 'STR-0001', name: null },
-    { id: 'street-0002', code: 'STR-0002', name: null },
-    { id: 'street-0003', code: 'STR-0003', name: 'Impasse du Puits' },
+    { id: 'street-0001', code: 'STR-0001', name: null, type: 'Rue', boundaryWkt: null },
+    { id: 'street-0002', code: 'STR-0002', name: null, type: 'Piste', boundaryWkt: null },
+    { id: 'street-0003', code: 'STR-0003', name: 'Impasse du Puits', type: 'Impasse', boundaryWkt: null },
   ];
 
   override listStreets(): Observable<CloseStreetOption[]> {
     return of(this.streets).pipe(delay(LATENCY_MS));
+  }
+
+  override renameStreet(street: CloseStreetOption, name: string): Observable<CloseStreetOption> {
+    const s = this.streets.find((x) => x.id === street.id);
+    if (!s) return throwError(() => ({ code: 'Streets.NotFound', message: 'Rue introuvable.' }));
+    s.name = name;
+    // La close porte le nom de sa rue : la renommer change le libellé de toutes ses closes.
+    for (const c of this.closes) if (c.streetId === s.id) c.streetName = name;
+    return of(s).pipe(delay(LATENCY_MS));
   }
 
   override list(query: CloseListQuery): Observable<Close[]> {

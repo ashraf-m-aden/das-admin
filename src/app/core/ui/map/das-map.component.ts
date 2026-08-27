@@ -132,7 +132,7 @@ export class DasMapComponent implements OnInit, OnDestroy {
   /** Éléments listés dans le panneau : overlays, puis couches tuiles, puis fond cadastral. */
   protected readonly panelLayers = computed<PanelItem[]>(() => [
     ...this.layers().map((l) => ({ id: l.id, labelKey: l.labelKey })),
-    ...this.tileLayers().map((t) => ({ id: t.id, labelKey: t.labelKey })),
+    ...this.tileLayers().filter((t) => t.togglable !== false).map((t) => ({ id: t.id, labelKey: t.labelKey })),
     ...this.basemapLayers().map((b) => ({ id: b.id, labelKey: b.labelKey })),
   ]);
 
@@ -141,7 +141,7 @@ export class DasMapComponent implements OnInit, OnDestroy {
     effect(() => {
       const map: Record<string, boolean> = {};
       for (const l of this.layers()) map[l.id] = l.visible;
-      for (const t of this.tileLayers()) map[t.id] = t.visible;
+      for (const t of this.tileLayers()) if (t.togglable !== false) map[t.id] = t.visible;
       for (const b of this.basemapLayers()) map[b.id] = b.visible;
       this.visibility.set(map);
     });
@@ -149,6 +149,17 @@ export class DasMapComponent implements OnInit, OnDestroy {
     effect(() => { this.internalSelected.set(this.selectedId()); });
     // Re-rendu des données overlay
     effect(() => { const f = this.features(); if (this.loaded) this.renderFeatures(f); });
+    // Couches overlay déclarées APRÈS le chargement du style. `buildLayers` ne tournait qu'une
+    // fois, à l'initialisation : un écran qui n'expose son calque qu'à partir d'un certain état
+    // (le plan de numérotation, révélé par un aperçu) n'obtenait jamais sa source, et son
+    // overlay restait invisible sans qu'aucune erreur ne le signale.
+    effect(() => {
+      const declared = this.layers();
+      if (!this.loaded) return;
+      this.buildLayers(declared);             // idempotent : ne matérialise que les nouvelles
+      this.renderFeatures(this.features());   // vide au passage les couches devenues orphelines
+      this.applyVisibility(this.visibility()); // une couche neuve n'a pas encore d'entrée
+    });
     // Application de la visibilité
     effect(() => { const v = this.visibility(); if (this.loaded) this.applyVisibility(v); });
     // Application du highlight overlay
@@ -251,8 +262,17 @@ export class DasMapComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Couches overlay déjà matérialisées sur la carte. `layers()` peut CHANGER en cours de vie —
+   * un écran n'expose son calque de plan que pendant un aperçu — alors que les sources MapLibre,
+   * elles, ne se recréent pas. Ce registre sert deux choses : ne jamais reconstruire une couche
+   * existante (ce qui réenregistrerait ses gestionnaires de clic, donc doublerait les
+   * émissions), et retrouver les couches devenues orphelines pour les vider.
+   */
+  private readonly builtLayerIds = new Set<string>();
+
   /** Crée une source (vide) + les couches de rendu et de highlight pour chaque couche déclarée. */
-  private buildLayers(): void {
+  private buildLayers(declared: readonly MapLayerConfig[] = this.layers()): void {
     const map = this.map!;
     const empty: FeatureCollection = { type: 'FeatureCollection', features: [] };
 
@@ -260,7 +280,9 @@ export class DasMapComponent implements OnInit, OnDestroy {
       if (!map.getLayer(config.id)) map.addLayer(config);
     };
 
-    for (const layer of this.layers()) {
+    for (const layer of declared) {
+      if (this.builtLayerIds.has(layer.id)) continue;
+      this.builtLayerIds.add(layer.id);
       const src = `src-${layer.id}`;
       if (!map.getSource(src)) map.addSource(src, { type: 'geojson', data: empty });
 
@@ -329,6 +351,7 @@ export class DasMapComponent implements OnInit, OnDestroy {
     const map = this.map!;
     for (const binding of this.tileLayers()) {
       const layerId = binding.interactiveLayerId;
+      if (!layerId) continue;   // calque en lecture seule
       map.on('click', layerId, (e) => {
         const f = e.features?.[0];
         const id = f?.id;
@@ -350,8 +373,11 @@ export class DasMapComponent implements OnInit, OnDestroy {
     // Ne conserver que les features réellement géométriques.
     const withGeom = (features ?? []).filter((f): f is MapFeature => !!f && !!f.geometry);
 
+    // Itérer sur les couches CONSTRUITES et non sur les couches déclarées : une couche retirée
+    // de `layers()` garderait sinon ses dernières données affichées pour toujours, personne ne
+    // venant plus vider sa source.
     const byLayer = new Map<string, Feature[]>();
-    for (const l of this.layers()) byLayer.set(l.id, []);
+    for (const id of this.builtLayerIds) byLayer.set(id, []);
 
     for (const feat of withGeom) {
       const bucket = byLayer.get(feat.layerId);
@@ -394,6 +420,7 @@ export class DasMapComponent implements OnInit, OnDestroy {
 
     // Couches tuiles interactives — no-op silencieux en mode mock (couches absentes).
     for (const t of this.tileLayers()) {
+      if (t.togglable === false) continue;   // visibilité pilotée par un groupe de fond
       const value = (vis[t.id] ?? true) ? 'visible' : 'none';
       for (const id of t.styleLayerIds) if (this.map.getLayer(id)) this.map.setLayoutProperty(id, 'visibility', value);
     }

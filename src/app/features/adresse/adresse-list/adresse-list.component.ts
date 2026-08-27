@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -29,9 +29,30 @@ const STAGE_COLOR: Record<AddressWorkflowStage, string> = {
 /** Bleu de surbrillance des résultats de recherche — override live, la coloration de base reste bakée dans le style. */
 const SEARCH_HIT_COLOR = '#2563eb';
 
+/**
+ * Ligne survolée dans la liste. Volontairement HORS de la palette des étapes et du bleu de
+ * recherche : le survol doit rester lisible par-dessus l'un comme l'autre, sinon pointer une
+ * ligne déjà bleue ne montrerait rien.
+ */
+const ROW_HOVER_COLOR = '#f43f5e';
+
 const ADRESSES_TILE: TileLayerBinding = {
   id: 'adresses', labelKey: 'adresse.layerParcels', source: 'adresses', sourceLayer: 'adresses_tiles',
   styleLayerIds: ['adresses-fill', 'adresses-line'], interactiveLayerId: 'adresses-fill', visible: true,
+};
+
+/**
+ * Numéros de maison, calque à cocher à part. Éteint par défaut et volontairement : la sélection
+ * peut porter les 2 512 parcelles du référentiel, et 2 512 étiquettes affichées d'office
+ * rendraient la carte inutilisable. C'est un outil de vérification fine, qu'on allume sur une
+ * zone après avoir zoomé.
+ *
+ * Calque de LECTURE : pas d'`interactiveLayerId`. Le rendre cliquable volerait les clics à
+ * `adresses-fill` en dessous, qui ouvre la fiche.
+ */
+const ADRESSES_NUMERO_TILE: TileLayerBinding = {
+  id: 'adresses-numero', labelKey: 'adresse.layerNumbers', source: 'adresses',
+  sourceLayer: 'adresses_tiles', styleLayerIds: ['adresses-numero'], visible: false,
 };
 
 @Component({
@@ -85,7 +106,7 @@ export class AdresseListComponent implements OnInit {
     ? [{ id: 'parcels', labelKey: 'adresse.layerParcels', type: 'fill', visible: true }]
     : [];
 
-  protected readonly tileLayers: TileLayerBinding[] = this.isMock ? [] : [ADRESSES_TILE];
+  protected readonly tileLayers: TileLayerBinding[] = this.isMock ? [] : [ADRESSES_TILE, ADRESSES_NUMERO_TILE];
 
   protected readonly basemapLayers: BasemapLayerGroup[] = [STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, BLOCS_BASEMAP_GROUP];
 
@@ -114,7 +135,9 @@ export class AdresseListComponent implements OnInit {
       clauses.length === 0 ? null :
         clauses.length === 1 ? (clauses[0] as FilterSpecification) :
           (['all', ...clauses] as FilterSpecification);
-    return { adresses: expr };
+    // Même expression sur les deux calques : des numéros qui déborderaient de la sélection
+    // désigneraient des parcelles absentes de la liste.
+    return { adresses: expr, 'adresses-numero': expr };
   });
 
   /**
@@ -130,8 +153,20 @@ export class AdresseListComponent implements OnInit {
     }
     const open = this.detail();
     if (open) states[open.id] = { colorOverride: SEARCH_HIT_COLOR, selected: true };
+    // Le survol passe EN DERNIER : il doit primer sur la recherche comme sur la fiche ouverte,
+    // sinon pointer une ligne déjà surlignée ne produirait aucun retour visuel.
+    const hovered = this.hoveredId();
+    if (hovered) states[hovered] = { colorOverride: ROW_HOVER_COLOR, selected: true };
     return { adresses: states };
   });
+
+  /**
+   * Ligne survolée dans le tableau. `promoteId: "Id"` sur la source `adresses` fait que l'id de
+   * feature de tuile EST l'id d'adresse : la surbrillance ne coûte aucun appel réseau.
+   */
+  protected readonly hoveredId = signal<string | null>(null);
+
+  hoverRow(id: string | null): void { this.hoveredId.set(id); }
 
   /**
    * Cadrage : l'adresse ouverte prime sur le niveau hiérarchique choisi.

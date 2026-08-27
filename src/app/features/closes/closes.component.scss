@@ -94,3 +94,23 @@
   &__bloc { @include m.truncate; }
   &__lock { color: var(--color-danger); font-size: 13px; }
 }
+
+/* ---- Nommage de rue en ligne ---------------------------------------------- */
+.field--name input { width: 100%; }
+.hint--warn { color: #b45309; }
+.preview { display: flex; align-items: baseline; gap: v.$space-2; flex-wrap: wrap;
+  padding: v.$space-2 v.$space-3; border-radius: v.$radius-sm; background: var(--color-surface-alt);
+  &__label { font-size: v.$font-size-xs; color: var(--color-text-muted); }
+  &__value { font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; color: var(--color-text-primary); }
+}
+
+.lg--muted { color: var(--color-text-muted); font-style: italic; }
+
+/* ---- Confirmation de détachement ------------------------------------------ */
+.bloc--confirming { background: var(--color-danger-bg); }
+.detach-confirm { display: flex; flex-direction: column; gap: v.$space-2;
+  margin: v.$space-1 0 v.$space-2; padding: v.$space-3;
+  border: 1px solid var(--color-danger); border-radius: v.$radius-sm; background: var(--color-danger-bg);
+  &__text { margin: 0; font-size: v.$font-size-sm; color: var(--color-text-primary); }
+  &__actions { display: flex; gap: v.$space-2; }
+}

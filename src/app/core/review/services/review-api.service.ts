@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { ReviewApiPort } from './review-api.port';
 import { AppConfigService } from '../../config/app-config.service';
-import { CurrentSurveyItem, ReviewPhoto, StalledSurveyItem, SurveyReviewItem } from '../models/review.models';
+import { AdresseSurvey, CurrentSurveyItem, ReviewPhoto, StalledSurveyItem, SurveyReviewItem } from '../models/review.models';
 import { UUID } from '../../models/das.models';
 
 /** Forme brute de `SurveyResponse` (guide §4.4 / OpenAPI) — seuls les champs utiles à la file de validation. */
@@ -25,6 +25,8 @@ interface RawSurveyResponse {
   photoCount: number | string;
   isMockLocation: boolean;
   capturedAtUtc: string;
+  status: 'Draft' | 'Submitted' | 'Validated' | 'Rejected';
+  rejectionReason: string | null;
 }
 
 interface RawSurveyPhotoResponse {
@@ -67,6 +69,21 @@ function toCurrentSurveyItem(raw: RawSurveyResponse): CurrentSurveyItem {
     typeOccupationId: raw.typeOccupationId,
     etatOccupationId: raw.etatOccupationId,
     capturedAtUtc: raw.capturedAtUtc,
+  };
+}
+
+function toAdresseSurvey(raw: RawSurveyResponse): AdresseSurvey {
+  return {
+    id: raw.id,
+    adresseId: raw.adresseId,
+    agentId: raw.agentId,
+    status: raw.status,
+    outcome: raw.outcome,
+    notSurveyableReason: raw.notSurveyableReason,
+    capturedAtUtc: raw.capturedAtUtc,
+    photoCount: Number(raw.photoCount),
+    rejectionReason: raw.rejectionReason,
+    photos: [],
   };
 }
 
@@ -121,6 +138,14 @@ export class ReviewApiService extends ReviewApiPort {
     return this.http
       .get<RawSurveyPhotoResponse[]>(`${this.baseUrl}/${id}/photos`)
       .pipe(map((photos) => photos.map((p) => ({ id: p.id, readUrl: p.readUrl, uploadedAtUtc: p.uploadedAtUtc }))));
+  }
+
+  override listSurveysByAdresse(adresseId: UUID): Observable<AdresseSurvey[]> {
+    return this.http
+      .get<RawSurveyResponse[]>(this.baseUrl, { params: { adresseId } })
+      // Plus récent d'abord : c'est le dernier relevé qui détermine l'étape de la parcelle.
+      .pipe(map((items) => items.map(toAdresseSurvey)
+        .sort((a, b) => b.capturedAtUtc.localeCompare(a.capturedAtUtc))));
   }
 
   override listStalledSurveys(): Observable<StalledSurveyItem[]> {

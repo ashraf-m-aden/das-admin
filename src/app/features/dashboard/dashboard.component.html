@@ -11,14 +11,97 @@
         <div class="kpi__top"><span class="kpi__label">{{ 'adresse.kpi.pending' | transloco }}</span><span class="kpi__ic kpi__ic--amber"><i class="ti ti-clipboard-list" aria-hidden="true"></i></span></div>
         <div class="kpi__value">{{ s.pendingReview | number }}</div>
       </div>
+      <!--
+        « Doublons » était un faux nom : ce compteur porte des relevés REJETÉS, à refaire.
+        « Publiées du jour » a été retiré — structurellement 0 jusqu'à la fin du programme, un
+        KPI qui ne bouge jamais n'informe pas, il occupe une place.
+      -->
       <div class="kpi">
-        <div class="kpi__top"><span class="kpi__label">{{ 'adresse.kpi.duplicates' | transloco }}</span><span class="kpi__ic kpi__ic--red"><i class="ti ti-alert-triangle" aria-hidden="true"></i></span></div>
+        <div class="kpi__top"><span class="kpi__label">{{ 'dashboard.toRedo' | transloco }}</span><span class="kpi__ic kpi__ic--red"><i class="ti ti-rotate-clockwise" aria-hidden="true"></i></span></div>
         <div class="kpi__value">{{ s.duplicatesFlagged | number }}</div>
       </div>
       <div class="kpi">
-        <div class="kpi__top"><span class="kpi__label">{{ 'adresse.kpi.published' | transloco }}</span><span class="kpi__ic kpi__ic--teal"><i class="ti ti-send" aria-hidden="true"></i></span></div>
-        <div class="kpi__value">{{ s.publishedToday | number }}</div>
+        <div class="kpi__top"><span class="kpi__label">{{ 'dashboard.kpiCoverage' | transloco }}</span><span class="kpi__ic kpi__ic--teal"><i class="ti ti-map-pin-check" aria-hidden="true"></i></span></div>
+        <div class="kpi__value">{{ coveragePercent() }} %</div>
       </div>
+    </div>
+
+    <!--
+      La carte est la pièce centrale de l'écran, pas une vignette de côté : c'est le seul endroit
+      où l'on voit le référentiel en entier. Elle porte désormais de VRAIES couches tuiles — elle
+      n'en avait aucune et n'affichait que le fond de style — et son panneau de calques est actif,
+      pour passer des parcelles aux blocs ou aux closes sans quitter le tableau de bord.
+    -->
+    <section class="das-card panel map-hero">
+      <div class="panel__title">{{ 'dashboard.addressMap' | transloco }}</div>
+      <div class="map-hero__canvas">
+        <das-map [zoom]="12" [fitToData]="false" [tileLayers]="tileLayers" [basemapLayers]="basemapLayers" />
+      </div>
+      <ul class="legend legend--row">
+        @for (st of workflowFunnel(); track st.stage) {
+          <li><span class="legend__dot" [style.background]="stageColor(st.stage)"></span>{{ stageLabelKey(st.stage) | transloco }}</li>
+        }
+      </ul>
+    </section>
+
+    <div class="grid--split">
+    <!-- A. Couverture d'adressage : le goulot réel de la phase actuelle. -->
+    <section class="das-card panel">
+      <div class="panel__title">{{ 'dashboard.coverage' | transloco }}</div>
+      <p class="panel__hint">{{ 'dashboard.coverageHint' | transloco }}</p>
+
+      <div class="cov">
+        <div class="cov__head">
+          <span class="cov__pct">{{ coveragePercent() }} %</span>
+          <span class="cov__meta">{{ 'dashboard.coverageMeta' | transloco: {
+            done: s.coverage.adressesWithClose, total: s.coverage.totalAdresses } }}</span>
+        </div>
+        <div class="segbar segbar--single"><span class="segbar__seg" [style.width.%]="coveragePercent()"></span></div>
+      </div>
+
+      <div class="blockers">
+        @for (b of blockers(); track b.key) {
+          <a class="blocker" [class.blocker--clear]="b.remaining === 0" [routerLink]="b.route">
+            <span class="blocker__label">{{ ('dashboard.blocker.' + b.key) | transloco }}</span>
+            <!--
+              Les chiffres restent affichés même à zéro. Les remplacer par une coche vidait la
+              ligne : « 0 sur 2 villes » est une information, une case vide ressemble à une panne.
+            -->
+            <span class="blocker__count">
+              @if (b.remaining === 0) { <i class="ti ti-check" aria-hidden="true"></i> }
+              <b>{{ b.remaining | number }}</b> / {{ b.total | number }}
+            </span>
+            <span class="blocker__bar"><span class="blocker__fill" [style.width.%]="b.percent"></span></span>
+          </a>
+        }
+      </div>
+    </section>
+
+    <!-- B. Dette de vérification : ce qui pourrit en silence, invisible partout ailleurs. -->
+    <section class="das-card panel">
+      <div class="panel__title">{{ 'dashboard.debt' | transloco }}</div>
+      <p class="panel__hint">{{ 'dashboard.debtHint' | transloco }}</p>
+      @if (hasDebt()) {
+        <div class="debt">
+          <div class="debt__item" [class.debt__item--warn]="s.verificationDebt.temporaryAwaitingRecheck > 0">
+            <span class="debt__value">{{ s.verificationDebt.temporaryAwaitingRecheck | number }}</span>
+            <span class="debt__label">{{ 'dashboard.debtTemporary' | transloco }}</span>
+          </div>
+          <div class="debt__item" [class.debt__item--warn]="s.verificationDebt.stalledSubmissions > 0">
+            <span class="debt__value">{{ s.verificationDebt.stalledSubmissions | number }}</span>
+            <span class="debt__label">{{ 'dashboard.debtStalled' | transloco }}</span>
+          </div>
+          @if (s.verificationDebt.oldestStalledDays; as days) {
+            <div class="debt__item debt__item--warn">
+              <span class="debt__value">{{ days }}</span>
+              <span class="debt__label">{{ 'dashboard.debtOldest' | transloco }}</span>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="debt__none"><i class="ti ti-check" aria-hidden="true"></i>{{ 'dashboard.debtNone' | transloco }}</div>
+      }
+    </section>
     </div>
 
     <section class="das-card panel">
@@ -36,19 +119,8 @@
       </div>
     </section>
 
-    <div class="grid">
-      <section class="das-card panel">
-        <div class="panel__title">{{ 'dashboard.addressMap' | transloco }}</div>
-        <div class="map-canvas">
-          <das-map [zoom]="11.5" [fitToData]="false" [showLayerControl]="false" />
-        </div>
-        <ul class="legend legend--row">
-          @for (st of workflowFunnel(); track st.stage) {
-            <li><span class="legend__dot" [style.background]="stageColor(st.stage)"></span>{{ stageLabelKey(st.stage) | transloco }}</li>
-          }
-        </ul>
-      </section>
-
+    <!-- Donut étroit, campagne large : c'est elle qui porte le tableau par agent. -->
+    <div class="grid grid--campaign">
       <section class="das-card panel">
         <div class="panel__title">{{ 'dashboard.verificationCompletion' | transloco }}</div>
         @if (verificationDonut(); as v) {
@@ -67,7 +139,6 @@
           </div>
         }
       </section>
-    </div>
 
     <section class="das-card panel">
       <div class="panel__title">{{ 'dashboard.activeCampaign' | transloco }}</div>
@@ -77,12 +148,28 @@
             <span class="camp__name">{{ c.name }}</span>
             <span class="camp__code mono">{{ c.code }}</span>
           </div>
-          <div class="camp__deadline">{{ 'fieldops.deadline' | transloco }} {{ c.deadline }}</div>
+          <div class="camp__deadline">
+            {{ 'fieldops.deadline' | transloco }} {{ c.deadline }}
+            · {{ 'dashboard.assignedBlocs' | transloco: { n: c.assignedBlocs } }}
+          </div>
+
+          <!--
+            `canBeClosed` vient du back : la clôture est refusée tant qu'une affectation est ToDo
+            ou qu'un relevé est Draft/Submitted. L'afficher évite de découvrir le refus au clic.
+          -->
+          <div class="camp__closable" [class.camp__closable--ok]="c.canBeClosed">
+            <i [class]="c.canBeClosed ? 'ti ti-lock-open' : 'ti ti-lock'" aria-hidden="true"></i>
+            {{ (c.canBeClosed ? 'dashboard.canBeClosed' : 'dashboard.cannotBeClosed') | transloco }}
+          </div>
 
           <div class="camp__block">
             <div class="camp__block-head"><span>{{ 'dashboard.charge' | transloco }}</span><span>{{ chargePercent() }} %</span></div>
             <div class="segbar segbar--single"><span class="segbar__seg" [style.width.%]="chargePercent()"></span></div>
-            <div class="camp__block-meta">{{ c.charge.done | number }} / {{ c.charge.total | number }}</div>
+            <div class="camp__block-meta">
+              {{ c.charge.done | number }} / {{ c.charge.total | number }}
+              · {{ 'dashboard.chargeToDo' | transloco: { n: c.charge.toDo } }}
+              @if (c.charge.abandoned > 0) { · {{ 'dashboard.chargeAbandoned' | transloco: { n: c.charge.abandoned } }} }
+            </div>
           </div>
 
           <div class="camp__production">
@@ -93,7 +180,34 @@
               <span>{{ 'fieldops.survey.validated' | transloco }} <b>{{ c.production.validated }}</b></span>
               <span>{{ 'fieldops.survey.rejected' | transloco }} <b>{{ c.production.rejected }}</b></span>
             </div>
+            <!-- Les deux blocs ne s'additionnent JAMAIS : la charge suit une réaffectation, la
+                 production non. Les totaliser ferait hériter un agent des chiffres d'un autre. -->
+            <p class="panel__hint">{{ 'dashboard.chargeVsProduction' | transloco }}</p>
           </div>
+
+          @if (c.byAgent.length > 0) {
+            <div class="agents">
+              <span class="camp__block-head">{{ 'dashboard.byAgent' | transloco }}</span>
+              <div class="agents__head">
+                <span>{{ 'dashboard.agentName' | transloco }}</span>
+                <span>{{ 'dashboard.agentHeld' | transloco }}</span>
+                <span>{{ 'dashboard.agentToDo' | transloco }}</span>
+                <span>{{ 'dashboard.agentDone' | transloco }}</span>
+                <span>{{ 'dashboard.agentCaptured' | transloco }}</span>
+                <span>{{ 'dashboard.agentValidated' | transloco }}</span>
+              </div>
+              @for (a of c.byAgent; track a.agentId) {
+                <div class="agents__row">
+                  <span class="agents__name">{{ a.agentFullName }}</span>
+                  <span>{{ a.heldBlocs }}</span>
+                  <span>{{ a.toDo }}</span>
+                  <span>{{ a.done }}</span>
+                  <span>{{ a.surveysCaptured }}</span>
+                  <span>{{ a.surveysValidated }}</span>
+                </div>
+              }
+            </div>
+          }
 
           <a class="btn btn--ghost" routerLink="/field-operations">{{ 'dashboard.viewCampaign' | transloco }}</a>
         </div>
@@ -101,6 +215,7 @@
         <div class="camp__empty">{{ 'dashboard.noActiveCampaign' | transloco }}</div>
       }
     </section>
+    </div>
 
     <section class="das-card panel">
       <div class="panel__title">{{ 'dashboard.quickActions' | transloco }}</div>

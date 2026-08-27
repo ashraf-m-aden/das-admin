@@ -18,8 +18,14 @@ export const ClosesActions = createActionGroup({
     'Load Blocs': emptyProps(),
     'Load Blocs Success': props<{ blocs: Block[] }>(),
 
-    /** `payload` porte toujours `quartierId` (contexte de l'écran) ; l'effet le retire pour `update` (non modifiable, §3.2). */
-    'Save Close': props<{ id: UUID | null; payload: CreateClosePayload }>(),
+    /**
+     * `payload` porte toujours `quartierId` (contexte de l'écran) ; l'effet le retire pour `update` (non modifiable, §3.2).
+     *
+     * `streetName` non vide = l'opérateur nomme la rue au passage. Le renommage part AVANT
+     * l'écriture de la close, parce que le libellé de la close est dérivé du nom de la rue côté
+     * back. Laissé vide, rien n'est renommé et la close retombe sur « close N » comme avant.
+     */
+    'Save Close': props<{ id: UUID | null; payload: CreateClosePayload; streetName?: string | null }>(),
     'Save Close Success': emptyProps(),
     'Save Close Failure': props<{ errorMessageKey: string }>(),
 

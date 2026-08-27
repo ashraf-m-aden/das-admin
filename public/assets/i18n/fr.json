@@ -109,7 +109,38 @@
     "charge": "Charge (blocs affectés)",
     "production": "Production (relevés)",
     "viewCampaign": "Voir la campagne",
-    "quickActions": "Accès rapide"
+    "quickActions": "Accès rapide",
+    "kpiCoverage": "Couverture d'adressage",
+    "toRedo": "Relevés à refaire",
+    "coverage": "Couverture d'adressage",
+    "coverageHint": "Un code d'adresse exige une close (donc une rue), un numéro de quartier et un code de ville. Tant qu'un verrou tient, l'adresse n'est pas codifiable — quel que soit le nombre de parcelles en base.",
+    "coverageMeta": "{{done}} adresses pourvues d'une voie sur {{total}}",
+    "blocker": {
+      "adressesWithoutClose": "Adresses sans close",
+      "blocsWithoutClose": "Blocs non rattachés à une close",
+      "streetsUnnamed": "Rues sans nom",
+      "quartiersWithoutArea": "Quartiers sans numéro de zone",
+      "citiesWithoutCode": "Villes sans code postal"
+    },
+    "debt": "Dette de vérification",
+    "debtHint": "Ce qui n'apparaît nulle part ailleurs. Une validation provisoire jamais revue reste provisoire indéfiniment ; un relevé soumis après clôture n'est jamais tranché.",
+    "debtTemporary": "Provisoires à recontrôler",
+    "debtStalled": "Soumis sans décision",
+    "debtOldest": "Jours d'attente du plus ancien",
+    "debtNone": "Aucune dette de vérification.",
+    "assignedBlocs": "{{n}} blocs affectés",
+    "canBeClosed": "Clôturable",
+    "cannotBeClosed": "Non clôturable : travail en cours",
+    "chargeToDo": "{{n}} à faire",
+    "chargeAbandoned": "{{n}} abandonnées",
+    "chargeVsProduction": "Charge et production ne s'additionnent pas : la charge suit une réaffectation, la production reste à l'agent qui a relevé.",
+    "byAgent": "Par agent",
+    "agentName": "Agent",
+    "agentHeld": "Blocs",
+    "agentToDo": "À faire",
+    "agentDone": "Faites",
+    "agentCaptured": "Relevés",
+    "agentValidated": "Validés"
   },
   "closes": {
     "eyebrow": "Portions de rue dans un quartier — le numéro entre dans le code d'adresse",
@@ -165,7 +196,17 @@
     "errorNumberingDuplicate": "Deux parcelles portent le même numéro dans le plan.",
     "errorNumberingIncomplete": "Le plan ne couvre pas toutes les parcelles de la close.",
     "errorNumberingForeign": "Le plan contient une parcelle qui n'appartient pas à cette close.",
-    "errorNumberingOutOfRange": "Un numéro du plan est hors des valeurs autorisées."
+    "errorNumberingOutOfRange": "Un numéro du plan est hors des valeurs autorisées.",
+    "nameStreet": "Nommer cette rue",
+    "nameStreetPlaceholder": "Nom de la rue (facultatif)",
+    "nameStreetHint": "Facultatif. Une rue est partagée : la nommer change le libellé de toutes ses closes, y compris dans d'autres quartiers. Laissé vide, la close garde son repli « close N ».",
+    "nameStreetTooLong": "Nom trop long : 200 caractères au maximum.",
+    "labelPreview": "La close s'appellera",
+    "errorStreetNotFound": "Cette rue n'existe plus. Rechargez l'écran.",
+    "legendNumbers": "Numéros de « {{name}} » ({{n}} parcelles) — zoomez pour les lire",
+    "noAdresseInClose": "« {{name}} » ne porte encore aucune parcelle : rien à numéroter.",
+    "detachConfirm": "Détacher « {{name}} » de cette close ? Ses parcelles perdent leur numéro dans la close, et les rattacher plus tard repartira d'une renumérotation.",
+    "detachConfirmYes": "Détacher"
   },
   "discoveries": {
     "eyebrow": "Canal montant du terrain",
@@ -441,7 +482,32 @@
     "colZone": "Zone",
     "colQuartier": "Quartier",
     "colStreet": "Rue",
-    "close": "Close"
+    "close": "Close",
+    "tabPhotos": "Photos",
+    "bloc": "Bloc",
+    "noCloseHint": "Cette parcelle n'est rattachée à aucune close : elle n'a donc pas encore de voie, et son code d'adresse ne peut pas être composé.",
+    "noSurveyYet": "Aucun relevé terrain",
+    "noSurveyHint": "Les photos apparaîtront ici dès qu'un agent aura relevé cette parcelle.",
+    "noPhotoOnSurvey": "Ce relevé ne porte aucune photo.",
+    "photosUnavailable": "{{n}} photo(s) de ce relevé n'ont pas pu être chargées.",
+    "photoAlt": "Photo du relevé terrain",
+    "rejectedFor": "Rejeté :",
+    "notSurveyable": "Parcelle non relevable",
+    "surveyStatus": {
+      "draft": "Brouillon",
+      "submitted": "Soumis",
+      "validated": "Validé",
+      "rejected": "Rejeté"
+    },
+    "notSurveyableReason": {
+      "Demolished": "Démolie",
+      "Inaccessible": "Inaccessible",
+      "Refused": "Refus d'accès",
+      "NotFound": "Introuvable",
+      "VacantLand": "Terrain nu",
+      "OutOfTime": "Hors délai"
+    },
+    "layerNumbers": "Numéros de maison"
   },
   "postcodes": {
     "eyebrow": "Code postal = code ville + numéro de quartier, calculé, jamais saisi",
@@ -578,13 +644,17 @@
   "map": {
     "layers": "Couches",
     "error": "Carte indisponible",
-    "legend": { "title": "Statut" },
+    "legend": {
+      "title": "Statut"
+    },
     "basemap": {
       "ilots": "Contours îlots",
       "parcelles": "Contours parcelles",
       "adresses": "Points adresses",
       "streets": "Rues",
-      "closes": "Closes"
+      "closes": "Closes",
+      "closeNumbers": "Numéros de la close",
+      "closeParcels": "Parcelles de la close"
     }
   },
   "reports": {
