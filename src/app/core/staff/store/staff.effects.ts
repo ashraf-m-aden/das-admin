@@ -1,19 +1,35 @@
 import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { catchError, exhaustMap, map, mergeMap, of } from 'rxjs';
+import { concatLatestFrom } from '@ngrx/operators';
+import { Store } from '@ngrx/store';
+import { catchError, exhaustMap, map, mergeMap, of, switchMap } from 'rxjs';
 import { StaffActions } from './staff.actions';
+import { staffFeature } from './staff.reducer';
 import { StaffApiPort } from '../services/staff-api.port';
 
 @Injectable()
 export class StaffEffects {
   private actions$ = inject(Actions);
+  private store = inject(Store);
   private staffApi = inject(StaffApiPort);
 
+  /**
+   * Les filtres sont RELUS DANS L'ÉTAT (CLAUDE.md §4), pas passés en payload.
+   *
+   * ⚠️ Cet effet appelait `list({ search: '', role: null })` **en dur** : `setFilters` mettait
+   * bien l'état à jour, mais rien ne rechargeait avec, et l'API — qui filtre pourtant, en mock
+   * comme en réel — recevait toujours un filtre vide. Ni la recherche ni le rôle n'ont donc
+   * jamais rien filtré, sans qu'aucune erreur ne le signale : la liste répondait, complète.
+   *
+   * `switchMap` et non `exhaustMap` : sur un filtre, c'est la DERNIÈRE demande qui compte.
+   * `exhaustMap` aurait ignoré la nouvelle frappe tant que la précédente n'était pas revenue.
+   */
   loadStaff$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(StaffActions.loadStaff),
-      exhaustMap(() =>
-        this.staffApi.list({ search: '', role: null }).pipe(
+      ofType(StaffActions.loadStaff, StaffActions.setFilters),
+      concatLatestFrom(() => this.store.select(staffFeature.selectFilters)),
+      switchMap(([, filters]) =>
+        this.staffApi.list(filters).pipe(
           map((items) => StaffActions.loadStaffSuccess({ items })),
           catchError(() => of(StaffActions.loadStaffFailure({ errorMessageKey: 'common.error' }))),
         ),

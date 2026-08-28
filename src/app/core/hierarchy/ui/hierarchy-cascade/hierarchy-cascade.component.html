@@ -13,12 +13,36 @@
     }
   </select>
 
-  <select class="cascade__select" [disabled]="!selection().communeId" (change)="onZone($any($event.target).value)">
-    <option value="">{{ 'hierarchy.allZones' | transloco }}</option>
-    @for (z of zones(); track z.id) {
-    <option [value]="z.id" [selected]="z.id === selection().zoneId">{{ z.name }}</option>
+  <!--
+    Filtre zone MULTIPLE, en cases a cocher. Un select simple obligeait a relancer la recherche
+    zone par zone alors qu'on veut souvent les regarder ensemble.
+
+    Depend de la VILLE, pas de la commune : « toutes les communes » veut dire la ville entiere,
+    pas l'absence de critere. Desactive uniquement quand il n'y a reellement aucune zone, avec
+    un libelle qui le dit - sinon on ne distingue pas « pas de zone ici » de « filtre casse ».
+  -->
+  <div class="zsel" [class.zsel--disabled]="!selection().cityId || zones().length === 0">
+    <button type="button" class="zsel__button" [disabled]="!selection().cityId || zones().length === 0"
+            [attr.aria-expanded]="zonesOpen()" (click)="toggleZonesPanel()">
+      <span class="zsel__label">{{ zoneButtonLabel() | transloco: { count: selection().zoneIds.length } }}</span>
+      <i class="ti" [class.ti-chevron-down]="!zonesOpen()" [class.ti-chevron-up]="zonesOpen()" aria-hidden="true"></i>
+    </button>
+
+    @if (zonesOpen()) {
+      <div class="zsel__panel" role="group">
+        <label class="zsel__row">
+          <input type="checkbox" [checked]="selection().zoneIds.length === 0" (change)="clearZones()" />
+          <span>{{ 'hierarchy.allZones' | transloco }}</span>
+        </label>
+        @for (z of zones(); track z.id) {
+          <label class="zsel__row" [class.zsel__row--on]="isZoneSelected(z.id)">
+            <input type="checkbox" [checked]="isZoneSelected(z.id)" (change)="onToggleZone(z.id)" />
+            <span>{{ z.name }}</span>
+          </label>
+        }
+      </div>
     }
-  </select>
+  </div>
 
   <!-- Mise en évidence par zone : multi-sélection, à ne pas confondre avec le select Zone
        ci-dessus, qui FILTRE. Surligner n'est pas filtrer — les autres zones restent visibles.

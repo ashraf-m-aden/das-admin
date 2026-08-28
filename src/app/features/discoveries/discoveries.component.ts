@@ -12,7 +12,9 @@ import { wktPoint } from '../../core/ui/map/wkt.util';
 import { DasDatePipe } from '../../core/i18n/das-locale.pipes';
 import { DiscoveryReport, DiscoveryStatus } from '../../core/discoveries/models/discoveries.models';
 import { UUID, UserRole } from '../../core/models/das.models';
-import { STREETS_BASEMAP_GROUP, BLOCS_BASEMAP_GROUP } from '../../core/ui/map/basemap-groups';
+import {
+  STREETS_BASEMAP_GROUP, BLOCS_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP,
+} from '../../core/ui/map/basemap-groups';
 
 /**
  * Trier un signalement demande `discoveries.review`, seedée pour `Gestionnaire` (Admin par
@@ -46,7 +48,9 @@ export class DiscoveriesComponent implements OnInit {
    * a été activé sur cette carte le 2026-08-25 : depuis le retrait du fond CARTO, la voirie est
    * la seule référence de terrain, et il faut pouvoir la masquer pour lire les contours dessous.
    */
-  protected readonly basemapLayers: BasemapLayerGroup[] = [STREETS_BASEMAP_GROUP, BLOCS_BASEMAP_GROUP];
+  protected readonly basemapLayers: BasemapLayerGroup[] = [
+    STREETS_BASEMAP_GROUP, BLOCS_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP,
+  ];
   private facade = inject(DiscoveriesFacade);
   private authFacade = inject(AuthFacade);
 

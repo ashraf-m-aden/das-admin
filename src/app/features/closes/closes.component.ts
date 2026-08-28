@@ -14,7 +14,9 @@ import { HierarchySelection } from '../../core/hierarchy/models/hierarchy.models
 import { HierarchyFacade } from '../../core/hierarchy/store/hierarchy.facade';
 import { Close, CloseStreetOption } from '../../core/closes/models/closes.models';
 import { Block, UUID, UserRole } from '../../core/models/das.models';
-import { STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP } from '../../core/ui/map/basemap-groups';
+import {
+  STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP,
+} from '../../core/ui/map/basemap-groups';
 
 const CAN_EDIT_ROLES: UserRole[] = ['Admin', 'Gestionnaire'];
 
@@ -118,7 +120,9 @@ export class ClosesComponent implements OnInit {
    * a été activé sur cette carte le 2026-08-25 : depuis le retrait du fond CARTO, la voirie est
    * la seule référence de terrain, et il faut pouvoir la masquer pour lire les contours dessous.
    */
-  protected readonly basemapLayers: BasemapLayerGroup[] = [STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP];
+  protected readonly basemapLayers: BasemapLayerGroup[] = [
+    STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP,
+  ];
   private facade = inject(ClosesFacade);
   private authFacade = inject(AuthFacade);
   private hierarchy = inject(HierarchyFacade);
@@ -264,13 +268,23 @@ export class ClosesComponent implements OnInit {
       || this.streetLabel(a).localeCompare(this.streetLabel(b)));
   });
 
-  /** Cadrage sur l'union des blocs de la close ciblée — la « géométrie » d'une close, ce sont ses blocs. */
+  /**
+   * Cadrage, du plus précis au plus large : la close ciblée — dont la « géométrie » est l'union
+   * de ses blocs — puis, à défaut, le niveau le plus fin choisi dans la cascade.
+   *
+   * Ce repli est ce qui rend la carte utile AVANT qu'une close soit désignée : depuis qu'elle
+   * s'affiche dès l'arrivée sur l'écran, elle doit suivre le filtre, sans quoi elle resterait
+   * sur un cadrage par défaut pendant qu'on navigue de ville en quartier.
+   */
   protected readonly mapFitBbox = computed(() => {
     const close = this.focusedClose();
-    if (!close || close.blocs.length === 0) return null;
-    const ids = close.blocs.map((b) => b.id);
-    const blocs = this.blocs().filter((b) => ids.includes(b.id));
-    return unionBounds(blocs.map((b) => (b.boundaryWkt ? wktBounds(b.boundaryWkt) : null)));
+    if (close && close.blocs.length > 0) {
+      const ids = close.blocs.map((b) => b.id);
+      const blocs = this.blocs().filter((b) => ids.includes(b.id));
+      const bbox = unionBounds(blocs.map((b) => (b.boundaryWkt ? wktBounds(b.boundaryWkt) : null)));
+      if (bbox) return bbox;
+    }
+    return this.hierarchy.selectedBbox();
   });
 
   /**

@@ -6,13 +6,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslocoModule } from '@jsverse/transloco';
 import type { Feature, FeatureCollection } from 'geojson';
 import * as maplibregl from 'maplibre-gl';
-import { AppConfigService } from '../../config/app-config.service';
 import { MapStyleService } from '../../map/map-style.service';
 import {
   MapFeature, MapLayerConfig, TileFeatureStateMap, TileFillColor, TileFilter, TileLayerBinding,
 } from './map.models';
 
-const MOCK_BASEMAP_STYLE_URL = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
 const HIGHLIGHT = '#2563eb';
 const NONE = '___none___';
 
@@ -99,7 +97,6 @@ export class DasMapComponent implements OnInit, OnDestroy {
   private readonly mapContainer = viewChild.required<ElementRef<HTMLDivElement>>('mapContainer');
 
   private readonly mapStyle = inject(MapStyleService);
-  private readonly config = inject(AppConfigService);
   private readonly ngZone = inject(NgZone);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -120,8 +117,6 @@ export class DasMapComponent implements OnInit, OnDestroy {
 
   /** Coloration d'origine par couche de style, pour pouvoir la restaurer à l'identique. */
   private readonly bakedFillColors = new Map<string, unknown>();
-
-  private readonly isMockMode = this.config.get('useMockApi');
 
   protected readonly initError = signal(false);
   protected readonly panelOpen = signal(false);
@@ -174,10 +169,28 @@ export class DasMapComponent implements OnInit, OnDestroy {
     effect(() => { const b = this.fitBbox(); if (this.loaded && b) this.applyFitBbox(b); });
   }
 
+  /**
+   * Le style maison est chargé DANS LES DEUX MODES depuis le 2026-08-28.
+   *
+   * Auparavant `useMockApi: true` chargeait un fond CARTO à la place. Conséquence : aucune
+   * source ni couche de `map-style.json` n'existait, donc TOUTES les cases du panneau de
+   * couches (blocs, closes, adresses, rues, zones, codes postaux) étaient inertes — elles
+   * s'affichaient, se cochaient, et ne pilotaient rien. Un écran de test en mock ne pouvait
+   * donc pas montrer qu'une couche fonctionne, ni qu'elle est cassée : le seul symptôme,
+   * une carte sans données, était identique dans les deux cas.
+   *
+   * C'est précisément la divergence entre branches que le toggle mock/réel doit éviter
+   * (CLAUDE.md §3.4). Le mock porte sur l'API métier, pas sur les tuiles : celles-ci viennent
+   * de Martin, qui n'a rien à voir avec `useMockApi`.
+   *
+   * Contrepartie assumée : si `mapTileUrl` ne pointe pas sur un Martin joignable, la carte est
+   * vide au lieu d'afficher un joli fond sans aucune donnée. C'est le comportement honnête —
+   * un fond qui s'affiche pendant que les données manquent se lit comme « il n'y a rien à
+   * voir », alors que le vrai problème est ailleurs.
+   */
   ngOnInit(): void {
     this.ngZone.runOutsideAngular(() => {
-      if (this.isMockMode) this.initMap(MOCK_BASEMAP_STYLE_URL);
-      else this.mapStyle.getStyle().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((s) => this.initMap(s));
+      this.mapStyle.getStyle().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((s) => this.initMap(s));
     });
   }
 
@@ -237,10 +250,10 @@ export class DasMapComponent implements OnInit, OnDestroy {
    * - les couches déclarées par `tileLayers` / `basemapLayers` (Blocs, Adresses,
    *   contours cadastraux) sont exclues : leur visibilité reste pilotée par le
    *   panneau des couches, pas par ce filtre.
-   * En mode réel, depuis le 2026-08-25, le style maison ne contient PLUS de fond de carte tiers :
-   * la voirie vient de la table `Streets` via la source `streets`, protégée par
-   * `DAS_TILE_SOURCES`. La méthode n'a donc plus rien à masquer — elle reste en place pour le
-   * mode mock, qui charge un vrai style CARTO complet (`MOCK_BASEMAP_STYLE_URL`).
+   * Depuis le 2026-08-25, le style maison ne contient PLUS de fond de carte tiers : la voirie
+   * vient de la table `Streets` via la source `streets`, protégée par `DAS_TILE_SOURCES`. La
+   * méthode n'a donc en pratique plus rien à masquer — elle reste en place parce qu'un style
+   * qui réintroduirait un fond tiers la retrouverait utile, et qu'elle ne coûte rien à vide.
    */
   private hideNonRoadBasemapLayers(): void {
     const map = this.map!;

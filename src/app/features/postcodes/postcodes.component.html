@@ -74,6 +74,107 @@
       </div>
     </section>
 
+    <!-- SECTION ZONES — MASQUÉE le 2026-08-28, à la demande : la colonne Zone de la liste
+         des quartiers suffit pour piloter le rattachement.
+
+         Neutralisée par `@if (false)` et NON mise en commentaire HTML, pour deux raisons :
+         le bloc contient des classes BEM (`zrow--open`, `abtn--save`) dont le `--` rend la
+         fermeture d'un commentaire HTML ambiguë ; et surtout un bloc commenté cesse d'être
+         compilé, donc il pourrit en silence au premier renommage de méthode. Ainsi neutralisé,
+         il reste vérifié par le compilateur de gabarits et n'émet rien.
+
+         Le rétablir = remplacer `@if (false)` par le contenu direct. Le port, la facade,
+         l'état du composant et les clés i18n qu'il utilise sont tous restés en place. -->
+    @if (false) {
+    <section class="das-card table-card zones-card">
+      <div class="table-card__head">
+        <div class="panel__title">{{ 'postcodes.zonesTitle' | transloco }}</div>
+        <div class="zones-card__hint">{{ 'postcodes.zonesHint' | transloco }}</div>
+      </div>
+
+      <!-- Un quartier sans commune ne peut rejoindre aucune zone : une zone est une partie
+           d'une commune. Le dire ici évite de le chercher en vain dans les listes déroulantes. -->
+      @if (facade.quartiersWithoutCommune().length > 0) {
+        <div class="zones-card__notice">
+          {{ 'postcodes.zonesNoCommune' | transloco: { count: facade.quartiersWithoutCommune().length } }}
+        </div>
+      }
+
+      @for (z of facade.zonesWithQuartiers(); track z.id) {
+        <div class="zrow" [class.zrow--open]="isZoneExpanded(z)">
+          <button type="button" class="zrow__head" (click)="toggleZone(z)"
+                  [attr.aria-expanded]="isZoneExpanded(z)">
+            <i class="ti" [class.ti-chevron-down]="isZoneExpanded(z)" [class.ti-chevron-right]="!isZoneExpanded(z)" aria-hidden="true"></i>
+            <span class="zrow__name">{{ z.name }}</span>
+            <span class="mono zrow__code">{{ z.code }}</span>
+            <span class="zrow__commune">{{ z.communeName }}</span>
+            <span class="zrow__count">{{ 'postcodes.zoneQuartierCount' | transloco: { count: z.quartiers.length } }}</span>
+          </button>
+
+          @if (isZoneExpanded(z)) {
+            <div class="zrow__body">
+              @for (q of z.quartiers; track q.id) {
+                <div class="zq">
+                  <span class="zq__nom">{{ q.nom }}</span>
+                  <span class="mono zq__code">{{ q.postcode ?? '—' }}</span>
+                  @if (canEdit()) {
+                    @if (detachingQuartierId() === q.id) {
+                      <span class="actions">
+                        <span class="confirm-text">{{ 'postcodes.confirmDetach' | transloco }}</span>
+                        <button type="button" class="abtn abtn--save" [disabled]="facade.savingId() === q.id" (click)="confirmDetach(q)">{{ 'common.apply' | transloco }}</button>
+                        <button type="button" class="abtn" (click)="cancelDetach()">{{ 'common.cancel' | transloco }}</button>
+                      </span>
+                    } @else {
+                      <span class="actions">
+                        <button type="button" class="abtn" [attr.title]="'postcodes.detachQuartier' | transloco" (click)="requestDetach(q)">
+                          <i class="ti ti-unlink" aria-hidden="true"></i>
+                        </button>
+                      </span>
+                    }
+                  } @else {
+                    <span></span>
+                  }
+                </div>
+              } @empty {
+                <div class="zrow__empty">{{ 'postcodes.zoneEmpty' | transloco }}</div>
+              }
+
+              @if (canEdit()) {
+                @if (addingZoneId() === z.id) {
+                  @if (eligibleFor(z).length === 0) {
+                    <div class="zrow__empty">{{ 'postcodes.noEligibleQuartier' | transloco: { commune: z.communeName } }}</div>
+                    <div class="zadd">
+                      <button type="button" class="abtn" (click)="cancelAddQuartier()">{{ 'common.cancel' | transloco }}</button>
+                    </div>
+                  } @else {
+                    <div class="zadd">
+                      <select class="fselect" [ngModel]="quartierToAdd()" (ngModelChange)="quartierToAdd.set($event || null)">
+                        <option value="">{{ 'postcodes.pickQuartier' | transloco }}</option>
+                        @for (q of eligibleFor(z); track q.id) {
+                          <option [value]="q.id">{{ q.nom }} — {{ q.postcode ?? ('postcodes.noPostcodeShort' | transloco) }}</option>
+                        }
+                      </select>
+                      <button type="button" class="abtn abtn--save" [disabled]="!quartierToAdd()" (click)="confirmAddQuartier(z)">{{ 'common.add' | transloco }}</button>
+                      <button type="button" class="abtn" (click)="cancelAddQuartier()">{{ 'common.cancel' | transloco }}</button>
+                    </div>
+                  }
+                } @else {
+                  <div class="zadd">
+                    <button type="button" class="abtn abtn--add" (click)="startAddQuartier(z)">
+                      <i class="ti ti-plus" aria-hidden="true"></i> {{ 'postcodes.addQuartier' | transloco }}
+                    </button>
+                  </div>
+                }
+              }
+            </div>
+          }
+        </div>
+      } @empty {
+        <div class="empty">{{ 'postcodes.zonesEmpty' | transloco }}</div>
+      }
+    </section>
+    }
+
     <section class="das-card table-card">
       <div class="table-card__head">
         <div class="panel__title">{{ 'postcodes.quartiersTitle' | transloco }}</div>
@@ -95,6 +196,7 @@
         <span>{{ 'postcodes.colCode' | transloco }}</span>
         <span>{{ 'postcodes.colAreaNumber' | transloco }}</span>
         <span>{{ 'postcodes.colPostcode' | transloco }}</span>
+        <span>{{ 'postcodes.colZone' | transloco }}</span>
         <span></span>
       </div>
       @for (q of filteredQuartiers(); track q.id) {
@@ -115,6 +217,27 @@
             <span class="trow__missing" [attr.title]="('postcodes.missingReason.' + q.missingReason) | transloco">
               {{ ('postcodes.missingReason.' + q.missingReason) | transloco }}
             </span>
+          }
+          <!-- Une zone appartient à une commune : sans commune, aucune zone n'est proposable.
+               On affiche la raison plutôt qu'un menu vide, qui se lirait comme une panne. -->
+          @if (q.communeId === null) {
+            <span class="trow__missing" [attr.title]="'postcodes.zoneNeedsCommune' | transloco">
+              {{ 'postcodes.zoneNeedsCommune' | transloco }}
+            </span>
+          } @else if (canEdit()) {
+            <span>
+              <select class="zselect" [disabled]="facade.savingId() === q.id"
+                      [attr.aria-label]="'postcodes.colZone' | transloco"
+                      [ngModel]="q.zoneId ?? ''" [ngModelOptions]="{ standalone: true }"
+                      (ngModelChange)="onZoneChange(q, $event)">
+                <option value="">{{ 'postcodes.noZone' | transloco }}</option>
+                @for (z of zonesFor(q); track z.id) {
+                  <option [value]="z.id">{{ z.name }}</option>
+                }
+              </select>
+            </span>
+          } @else {
+            <span>{{ zoneNameOf(q) }}</span>
           }
           @if (canEdit()) {
             @if (editingQuartierId() === q.id) {

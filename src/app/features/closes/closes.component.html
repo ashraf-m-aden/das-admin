@@ -7,10 +7,17 @@
 
   @if (errorMessageKey$ | async; as err) { <div class="cl__error">{{ err | transloco }}</div> }
 
-  @if (!quartierId()) {
-    <div class="cl__empty">{{ 'closes.pickQuartier' | transloco }}</div>
-  } @else {
-    <div class="cl__grid">
+  <!--
+    La carte n'attend plus qu'un quartier soit choisi : elle est affichée dès l'arrivée et suit
+    la cascade, du cadrage sur la ville jusqu'à celui du quartier. Attendre le quartier privait
+    l'écran de son seul repérage au moment où on en a le plus besoin — quand on cherche
+    justement OÙ aller. Seule la colonne de gestion, qui manipule les closes d'un quartier,
+    reste conditionnée.
+  -->
+  <div class="cl__grid">
+    @if (!quartierId()) {
+      <div class="das-card cl__empty">{{ 'closes.pickQuartier' | transloco }}</div>
+    } @else {
       <section class="das-card panel">
         @if (editing() !== null) {
           <div class="panel__head">
@@ -172,8 +179,9 @@
           }
         }
       </section>
+    }
 
-      <section class="das-card map-panel">
+    <section class="das-card map-panel">
         <!--
           La légende ne montre que ce qui est vrai à l'instant : hors gestion de blocs, aucune
           couleur n'est surchargée sur la carte, donc afficher une légende serait mentir.
@@ -263,7 +271,6 @@
               </div>
               <p class="hint">{{ 'closes.previewHint' | transloco }}</p>
             }
-      </section>
-    </div>
-  }
+    </section>
+  </div>
 </div>

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, input, output, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { TranslocoModule } from '@jsverse/transloco';
 import { HierarchyFacade } from '../../store/hierarchy.facade';
 import { HierarchySelection } from '../../models/hierarchy.models';
@@ -50,7 +50,26 @@ export class HierarchyCascadeComponent implements OnInit {
 
   onCity(id: string): void { this.hierarchy.selectCity(id || null); this.emit(); }
   onCommune(id: string): void { this.hierarchy.selectCommune(id || null); this.emit(); }
-  onZone(id: string): void { this.hierarchy.selectZone(id || null); this.emit(); }
+  /** Panneau des zones. Fermé par défaut : ouvert, il pousserait les niveaux suivants hors de vue. */
+  protected readonly zonesOpen = signal(false);
+  toggleZonesPanel(): void { this.zonesOpen.update((o) => !o); }
+
+  isZoneSelected(id: UUID): boolean { return this.selection().zoneIds.includes(id); }
+
+  onToggleZone(id: UUID): void { this.hierarchy.toggleZone(id); this.emit(); }
+  clearZones(): void { this.hierarchy.clearZones(); this.emit(); }
+
+  /**
+   * Libellé du bouton : « toutes », le nom quand il n'y en a qu'une, le compte au-delà.
+   * Afficher les noms concaténés ferait déborder un contrôle qui doit rester de la taille
+   * des autres selects de la cascade.
+   */
+  protected readonly zoneButtonLabel = computed(() => {
+    const n = this.selection().zoneIds.length;
+    if (n === 0) return 'hierarchy.allZones';
+    if (n === 1) return 'hierarchy.oneZone';
+    return 'hierarchy.someZones';
+  });
   onQuartier(id: string): void { this.hierarchy.selectQuartier(id || null); this.emit(); }
   onClose(id: string): void { this.hierarchy.selectClose(id || null); this.emit(); }
 

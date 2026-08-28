@@ -1,0 +1,43 @@
+﻿motif,areaNumber,nomPlan,zone,communePlan,propositionBase,quartierId,note
+ecarte-decision,207,Brise de mer,boulaos-2,Boulaos,Brise de mer 1,03030c58-b26d-4ccb-986f-8c8b49d5f90a,"le plan rattache Brise de mer a Boulaos, la base a Ras Dika : decision de territoire"
+proximite-douteuse,311,Brise de mer 2,boulaos-3,Boulaos,Brise de mer 1,03030c58-b26d-4ccb-986f-8c8b49d5f90a,rapprochement lexical approximatif
+proximite-douteuse,403,Gabode,boulaos-4,Boulaos,Gabode 5,fd4b2d25-4645-4a63-98bc-c205a009803b,rapprochement lexical approximatif
+proximite-douteuse,616,Barwaqo 2,balbala-6,Balbala,Cite Barwaqo,5a13ea8c-e165-4fbe-b251-84e10c0568f0,rapprochement lexical approximatif
+absent-du-referentiel,103,Gare,ras-dika-1,Ras-Dika,,,introuvable en base comme dans le SIG
+absent-du-referentiel,302,Cite Sacuudi 2,boulaos-3,Boulaos,,,introuvable en base comme dans le SIG
+absent-du-referentiel,305,Riyad,boulaos-3,Boulaos,,,introuvable en base comme dans le SIG
+absent-du-referentiel,408,Fiyetnam,boulaos-4,Boulaos,Vietnam,,"graphie proche dans delimitations_quartiers, a confirmer"
+absent-du-referentiel,501,City Saba,balbala-5,Balbala,,,introuvable en base comme dans le SIG
+absent-du-referentiel,502,Uma Salma,balbala-5,Balbala,,,introuvable en base comme dans le SIG
+absent-du-referentiel,504,Cité Rawabi,balbala-5,Balbala,,,introuvable en base comme dans le SIG
+absent-du-referentiel,510,Gouled,balbala-5,Balbala,,,introuvable en base comme dans le SIG
+absent-du-referentiel,513,Afar Mitirley,balbala-5,Balbala,,,introuvable en base comme dans le SIG
+absent-du-referentiel,606,Cagadaalis,balbala-6,Balbala,,,introuvable en base comme dans le SIG
+absent-du-referentiel,611,Bambada,balbala-6,Balbala,,,introuvable en base comme dans le SIG
+absent-du-referentiel,617,Cité Nassib,balbala-6,Balbala,,,introuvable en base comme dans le SIG
+absent-du-referentiel,901,Port of Djibouti,special-9,,,,introuvable en base comme dans le SIG
+absent-du-referentiel,904,Djibouti-Ambouli International Airport,special-9,,,,introuvable en base comme dans le SIG
+hors-plan,,,,BALBALA,CITE C. MOUSSA,a120e7f0-e431-4e5e-ac9a-bb1ba3f03c23,quartier en base absent du plan : il lui faut un areaNumber
+hors-plan,,,,BALBALA,CITE HAYABLEY,d9e734e8-8be9-4ea2-aecb-e7e69006ef7a,quartier en base absent du plan : il lui faut un areaNumber
+hors-plan,,,,BALBALA,Lotissement 55 Logements,af9d4b44-68ab-4e2b-a4c8-690958442efb,quartier en base absent du plan : il lui faut un areaNumber
+hors-plan,,,,BALBALA,MIDJADHERE,612752e9-fc66-4700-9016-8765e5f6465d,quartier en base absent du plan : il lui faut un areaNumber
+hors-plan,,,,BALBALA,PHARE DE BALBALA,8930b9a5-3bc1-43de-be75-cb7e433a4b2b,quartier en base absent du plan : il lui faut un areaNumber
+hors-plan,,,,BALBALA,WAHLADABA N.,b25a0133-a147-4963-a91f-d85c0cfed192,quartier en base absent du plan : il lui faut un areaNumber
+hors-plan,,,,BOULAOS,13 éme DBLE,a03fe6ab-0cd8-4ae5-ae11-449f53b41d7b,quartier en base absent du plan : il lui faut un areaNumber
+hors-plan,,,,BOULAOS,Boulaos,ed291971-9dc5-44b7-9e81-adb71775cdee,quartier en base absent du plan : il lui faut un areaNumber
+hors-plan,,,,BOULAOS,Cimetière d' Ambouli,6352e681-eb80-4543-8c34-13bcd71826d8,quartier en base absent du plan : il lui faut un areaNumber
+hors-plan,,,,BOULAOS,Cité Hache,e53ca92f-b4f1-4fd3-a248-7d3fcf48f113,quartier en base absent du plan : il lui faut un areaNumber
+hors-plan,,,,BOULAOS,Cité Wadagir 1,e9b1da08-7dee-499e-8993-042ce6cac1d6,quartier en base absent du plan : il lui faut un areaNumber
+hors-plan,,,,BOULAOS,Cité Wadagir 2,a5e12271-65e4-4e23-ad1f-cf7efbb42a2e,quartier en base absent du plan : il lui faut un areaNumber
+hors-plan,,,,BOULAOS,Cité Willo,241bddcf-1f4c-49ee-9b34-4354f363776b,quartier en base absent du plan : il lui faut un areaNumber
+hors-plan,,,,BOULAOS,Gabode 1,133247f4-19d6-4506-a7a2-7164dea3013b,quartier en base absent du plan : il lui faut un areaNumber
+hors-plan,,,,BOULAOS,Gabode 2,8d5ee9f2-36b7-41c7-b047-79dd29030783,quartier en base absent du plan : il lui faut un areaNumber
+hors-plan,,,,BOULAOS,Gabode 3,f6abc27d-b54c-4186-928f-ab15f8b30e94,quartier en base absent du plan : il lui faut un areaNumber
+hors-plan,,,,BOULAOS,Gabode 4,378376ea-8f8a-4f15-bdd2-3e078ed45de7,quartier en base absent du plan : il lui faut un areaNumber
+hors-plan,,,,BOULAOS,Les Salines Ouest,82096341-426c-47d9-b5ff-68e2d99e8b86,quartier en base absent du plan : il lui faut un areaNumber
+hors-plan,,,,BOULAOS,Lotissement d' Ambouli,5338a704-c7a5-4a24-bccf-c7e640d05760,quartier en base absent du plan : il lui faut un areaNumber
+hors-plan,,,,BOULAOS,Lotissement du Bourakibir,5514b90e-12b4-45fc-a33d-3bf50da6dad8,quartier en base absent du plan : il lui faut un areaNumber
+hors-plan,,,,BOULAOS,Lotissement du Quartier 7 Sud,9bead72a-a2b0-44d4-bae9-071d8ff2fb91,quartier en base absent du plan : il lui faut un areaNumber
+hors-plan,,,,BOULAOS,Quartier Brière de l'Isle,bdcea81c-759f-4609-9e70-5ad7907372dc,quartier en base absent du plan : il lui faut un areaNumber
+hors-plan,,,,RAS DIKA,Ilôt du Héron,c4a325d9-3cfb-43a2-855b-5ac542b6f9bd,quartier en base absent du plan : il lui faut un areaNumber
+hors-plan,,,,RAS DIKA,La Plaine,42578684-b4ba-4367-a8c7-152012bde06a,quartier en base absent du plan : il lui faut un areaNumber

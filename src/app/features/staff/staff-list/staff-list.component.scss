@@ -45,3 +45,14 @@
 }
 .btn { height: 36px; padding: 0 v.$space-4; display: inline-flex; align-items: center; border: none; border-radius: v.$radius-sm; font: inherit; font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; cursor: pointer; &:disabled { opacity: 0.55; }
   &--primary { background: var(--color-accent); color: var(--color-on-accent); } &--ghost { background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text-secondary); } }
+
+.stfilters { display: flex; align-items: center; gap: v.$space-2; flex-wrap: wrap;
+  &__count { margin-left: auto; font-size: v.$font-size-xs; color: var(--color-text-muted); }
+  &__clear { border: none; background: none; padding: 0; font: inherit; font-size: v.$font-size-xs;
+    color: var(--color-accent); cursor: pointer; text-decoration: underline; }
+}
+.create__pwd { display: flex; align-items: center; gap: v.$space-1;
+  input { flex: 1; min-width: 0; } }
+.create__hint { font-size: v.$font-size-xs; color: var(--color-text-muted); margin: 0; }
+.confirm { font-size: v.$font-size-xs; color: #b45309; }
+.icon-btn--danger { color: var(--color-danger); border-color: var(--color-danger); }

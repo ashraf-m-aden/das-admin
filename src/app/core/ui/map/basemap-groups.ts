@@ -75,14 +75,67 @@ export const ADRESSES_BASEMAP_GROUP: BasemapLayerGroup = {
 };
 
 /**
- * Livraison SIG du 2026-08-27 — matière PREMIÈRE, pas du référentiel.
+ * Les zones, en aplat de contexte. Servies par la vue `quartiers_tiles` — la zone elle-même
+ * n'a pas d'emprise (`Zones."Boundary"` est NULL partout), son dessin est celui de ses
+ * quartiers, coloriés par `ZoneCode`.
  *
- * Ces 2 224 îlots couvrent Hayableh, PK12, Cité Hodan et Balbala, c'est-à-dire des zones où
- * `Quartiers` n'a aucune entrée et `Blocs` aucun bloc : le référentiel s'arrête au Quartier 7.
- * Les afficher sert à voir CE QUI RESTE À REPRENDRE, pas de la donnée validée — d'où le contour
- * seul, sans aplat, qui les distingue des blocs du référentiel.
+ * Le coloriage est BAKÉ dans `map-style.json` via un `match` sur `ZoneCode`, jamais en
+ * feature-state (CLAUDE.md §4) : c'est une coloration de base, pas un override live.
  *
- * Masqués par défaut : ils débordent très largement du périmètre de travail actuel.
+ * Le `match` porte sur le CODE et non sur le nom : les noms ont été renommés une fois
+ * (Boulaos 2 → Boulaos 1…), les codes Z1..Z9 n'ont pas bougé.
+ */
+export const ZONES_BASEMAP_GROUP: BasemapLayerGroup = {
+  id: 'zones',
+  labelKey: 'map.basemap.zones',
+  styleLayerIds: ['zones-fill', 'zones-line', 'zones-label'],
+  visible: false,
+};
+
+/**
+ * Les codes postaux, en contour et étiquette sur l'emprise du quartier.
+ *
+ * `Postcode` est calculé DANS la vue (`scripts/sig/vue-quartiers-tiles.sql`), pas ici : le
+ * front n'a pas le droit de recomposer un code postal (CLAUDE.md §9), et aucune table ne le
+ * porte — c'est un dérivé de `City."Code"` et `Quartier."AreaNumber"`.
+ *
+ * Le contour distingue les quartiers SANS code postal (gris clair) de ceux qui en ont un
+ * (ardoise) : sur cet écran comme ailleurs, le vide est une information.
+ *
+ * 76 quartiers sur 84 sont dessinables, 55 portent un code postal (état du 2026-08-28).
+ */
+export const POSTCODES_BASEMAP_GROUP: BasemapLayerGroup = {
+  id: 'postcodes',
+  labelKey: 'map.basemap.postcodes',
+  styleLayerIds: ['postcodes-line', 'postcodes-label'],
+  visible: false,
+};
+
+/* -------------------------------------------------------------------------------------------
+ * RETIRÉS DES ÉCRANS le 2026-08-28 — les deux groupes qui suivent ne sont plus proposés dans
+ * aucun panneau de couches (tableau de bord, carte des blocs, liste des adresses).
+ *
+ * Ils restent définis pour deux raisons : leurs couches et leurs sources Martin existent
+ * toujours dans `map-style.json` (en `visibility: none`, donc invisibles tant que personne ne
+ * les rallume), et le constat ci-dessous a coûté assez cher à établir pour ne pas être effacé.
+ * Les remettre = les rajouter au tableau `basemapLayers` de l'écran voulu, rien d'autre.
+ *
+ * Les clés i18n `map.basemap.sigIlots` / `sigVoirie` sont conservées pour la même raison.
+ * ---------------------------------------------------------------------------------------- */
+
+/**
+ * Livraison SIG du 2026-08-27 — la matière PREMIÈRE d'où viennent les blocs de Balbala.
+ *
+ * ⚠️ Cette couche s'appelait « Îlots SIG (à reprendre) », et son commentaire affirmait qu'elle
+ * couvrait des zones où `Quartiers` n'avait aucune entrée et `Blocs` aucun bloc. **C'est faux
+ * depuis l'import.** Vérifié le 2026-08-27 : les 2 224 îlots sont déjà dans `Blocs`, au bloc
+ * près par quartier (Hayableh 1068 = 1068, PK12 540 = 540, Cité Hodan 153 = 153…), et les
+ * `Blocs` portent même le `code_ilot` du SIG comme `Code`. Seuls 37 ne sont recouverts par
+ * aucun bloc, et ce sont des échardes de géométrie — 6,6 m² au maximum, 0,3 m² en moyenne,
+ * contre 1 505 m² de moyenne. Rien de réel ne manque : c'est ce doublon intégral avec la
+ * couche `blocs` qui a fait retirer celle-ci du panneau.
+ *
+ * Requête de contrôle : `scripts/sig/ilots-non-repris.sql`.
  */
 export const SIG_ILOTS_BASEMAP_GROUP: BasemapLayerGroup = {
   id: 'sig-ilots',
@@ -97,6 +150,27 @@ export const SIG_ILOTS_BASEMAP_GROUP: BasemapLayerGroup = {
  * Distincte de STREETS_BASEMAP_GROUP, qui montre la voirie DU RÉFÉRENTIEL (`Streets`). Les deux
  * ne se recouvrent pas : la livraison n'a aucun tronçon en commun avec route_principaux ni
  * voierie_secondaire (vérifié par ST_Equals croisé le 2026-08-27).
+ *
+ * Contrairement aux îlots, celle-ci reste À REPRENDRE. Fusion partielle appliquée le
+ * 2026-08-27 (`scripts/sig/fusion-voirie-streets.sql`) : 32 rues créées, `Streets` passe de
+ * 160 à 192. Il reste **942 tronçons sur 1 401**, soit 202 km — dont **890 sans nom**.
+ *
+ * Le reste ne se fusionne pas mécaniquement, pour trois raisons distinctes :
+ *   - 890 tronçons n'ont PAS DE NOM. Une rue sans nom n'a pas d'identité dans `Streets` ;
+ *     les créer produirait 890 lignes indistinguables. Il faut un relevé terrain.
+ *   - 24 noms nouveaux donnent une MultiLineString (tronçons disjoints) que
+ *     `Streets."Boundary"`, typé geometry(LineString,4326), ne peut pas stocker. Les insérer
+ *     un tronçon par ligne recréerait le faux différent qu'on cherche à éviter, et changer le
+ *     type de la colonne serait une migration du schéma back — hors périmètre de ce dépôt.
+ *   - 67 noms SIG désignent une rue DÉJÀ dans `Streets` : rien à créer, seulement une
+ *     géométrie plus fine qu'on ne peut pas fusionner tant que la colonne est mono-ligne.
+ *
+ * ⚠️ `Streets` porte 17 doublons ANTÉRIEURS à tout ça (143 noms pour 160 lignes avant fusion) :
+ * `AV ADM BERNARD`, `BLD BONHOURE`… en double. Les dédoublonner suppose de fusionner leurs
+ * géométries et de repointer `Closes."StreetId"` et `StreetSuggestions."StreetId"` — destructif,
+ * non traité ici.
+ *
+ * Liste de travail : `scripts/sig/voirie-non-reprise.sql`.
  */
 export const SIG_VOIRIE_BASEMAP_GROUP: BasemapLayerGroup = {
   id: 'sig-voirie',

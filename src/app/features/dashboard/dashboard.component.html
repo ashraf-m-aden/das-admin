@@ -27,22 +27,46 @@
     </div>
 
     <!--
-      La carte est la pièce centrale de l'écran, pas une vignette de côté : c'est le seul endroit
-      où l'on voit le référentiel en entier. Elle porte désormais de VRAIES couches tuiles — elle
-      n'en avait aucune et n'affichait que le fond de style — et son panneau de calques est actif,
-      pour passer des parcelles aux blocs ou aux closes sans quitter le tableau de bord.
+      Carte et avancement cote a cote, moitie / moitie. La carte reste au centre de l'ecran mais
+      n'en occupe plus toute la largeur : a 520 px de haut sur toute la page, elle repoussait
+      sous la ligne de flottaison tout ce qui dit OU EN EST le travail.
+
+      Le voisin choisi n'est pas arbitraire : l'entonnoir porte exactement les couleurs que la
+      carte utilise pour les etapes. Cote a cote, ils repondent aux deux moities de la meme
+      question - ou en est-on, et ou. La legende sous la carte a donc ete retiree : elle repetait
+      mot pour mot ce que l'entonnoir affiche a cote, avec les comptes en plus.
+
+      La carte porte de VRAIES couches tuiles et son panneau de calques est actif, pour passer
+      des parcelles aux blocs ou aux closes sans quitter le tableau de bord.
     -->
-    <section class="das-card panel map-hero">
-      <div class="panel__title">{{ 'dashboard.addressMap' | transloco }}</div>
-      <div class="map-hero__canvas">
-        <das-map [zoom]="12" [fitToData]="false" [tileLayers]="tileLayers" [basemapLayers]="basemapLayers" />
-      </div>
-      <ul class="legend legend--row">
-        @for (st of workflowFunnel(); track st.stage) {
-          <li><span class="legend__dot" [style.background]="stageColor(st.stage)"></span>{{ stageLabelKey(st.stage) | transloco }}</li>
-        }
-      </ul>
-    </section>
+    <div class="grid--map">
+      <section class="das-card panel map-hero">
+        <div class="panel__title">{{ 'dashboard.addressMap' | transloco }}</div>
+        <div class="map-hero__canvas">
+          <das-map [zoom]="12" [fitToData]="false" [tileLayers]="tileLayers" [basemapLayers]="basemapLayers" />
+        </div>
+      </section>
+
+      <section class="das-card panel">
+        <div class="panel__title">{{ 'dashboard.workflowProgress' | transloco }}</div>
+        <p class="panel__hint">{{ 'dashboard.workflowHint' | transloco }}</p>
+        <div class="stepper">
+          @for (w of workflowFunnel(); track w.stage) {
+            <div class="step">
+              <div class="step__ic" [style.background]="stageColor(w.stage)"><i [class]="stageIcon(w.stage)" aria-hidden="true"></i></div>
+              <div class="step__text">
+                <span class="step__label">{{ stageLabelKey(w.stage) | transloco }}</span>
+                <span class="step__bar"><span class="step__fill" [style.width.%]="w.percent" [style.background]="stageColor(w.stage)"></span></span>
+              </div>
+              <div class="step__nums">
+                <span class="step__value">{{ w.count | number }}</span>
+                <span class="step__pct">{{ w.percent }}%</span>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    </div>
 
     <div class="grid--split">
     <!-- A. Couverture d'adressage : le goulot réel de la phase actuelle. -->
@@ -103,21 +127,6 @@
       }
     </section>
     </div>
-
-    <section class="das-card panel">
-      <div class="panel__title">{{ 'dashboard.workflowProgress' | transloco }}</div>
-      <div class="stepper">
-        @for (w of workflowFunnel(); track w.stage; let last = $last) {
-          <div class="step">
-            <div class="step__ic" [style.background]="stageColor(w.stage)"><i [class]="stageIcon(w.stage)" aria-hidden="true"></i></div>
-            <div class="step__value">{{ w.count | number }}</div>
-            <div class="step__label">{{ stageLabelKey(w.stage) | transloco }}</div>
-            <div class="step__pct">{{ w.percent }}%</div>
-          </div>
-          @if (!last) { <div class="step__line"></div> }
-        }
-      </div>
-    </section>
 
     <!-- Donut étroit, campagne large : c'est elle qui porte le tableau par agent. -->
     <div class="grid grid--campaign">

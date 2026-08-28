@@ -10,7 +10,7 @@ import { MapFeature, MapLayerConfig } from '../../core/ui/map/map.models';
 import { unionBounds, wktBounds, wktPolygon } from '../../core/ui/map/wkt.util';
 import { AuthFacade } from '../../core/auth/store/auth.facade';
 import { UUID, UserRole } from '../../core/models/das.models';
-import { CityPostcodeRow, QuartierPostcodeRow } from '../../core/postcodes/models/postcodes.models';
+import { CityPostcodeRow, QuartierPostcodeRow, ZoneRow } from '../../core/postcodes/models/postcodes.models';
 
 const CAN_EDIT_ROLES: UserRole[] = ['Admin', 'Gestionnaire'];
 
@@ -170,5 +170,73 @@ export class PostcodesComponent implements OnInit {
 
   quartierCountForCity(cityId: UUID): number {
     return this.facade.quartiers().filter((q) => q.cityId === cityId).length;
+  }
+
+  /* ---- Colonne Zone de la liste des quartiers ------------------------------ */
+
+  zonesFor(q: QuartierPostcodeRow) { return this.facade.zonesForQuartier(q.communeId); }
+
+  zoneNameOf(q: QuartierPostcodeRow): string {
+    return this.facade.zones().find((z) => z.id === q.zoneId)?.name ?? '—';
+  }
+
+  /**
+   * Le choix s'applique immédiatement, sans étape de confirmation : rattacher un quartier est
+   * réversible d'un seul geste — il suffit de reprendre la valeur précédente dans la même
+   * liste. Une confirmation coûterait un clic à chaque ligne sans rien protéger.
+   */
+  onZoneChange(q: QuartierPostcodeRow, zoneId: string): void {
+    const next = zoneId || null;
+    if (next === q.zoneId) return;
+    this.facade.assignZone(q, next);
+  }
+
+  /* ---- Section Zones (masquée) ---------------------------------------------
+   * Le bloc dépliable de gestion des zones est commenté dans le gabarit : la colonne Zone de
+   * la liste des quartiers suffit pour l'instant. Ce qui suit reste en place pour que le
+   * rétablir soit un simple décommentage, sans avoir à réécrire l'état.
+   * ------------------------------------------------------------------------- */
+
+  /** Zone dépliée : la composition n'a d'intérêt qu'une zone à la fois, sinon la page double de long. */
+  protected readonly expandedZoneId = signal<UUID | null>(null);
+  protected readonly addingZoneId = signal<UUID | null>(null);
+  protected readonly quartierToAdd = signal<UUID | null>(null);
+  protected readonly detachingQuartierId = signal<UUID | null>(null);
+
+  toggleZone(zone: ZoneRow): void {
+    const open = this.expandedZoneId() === zone.id;
+    this.expandedZoneId.set(open ? null : zone.id);
+    if (open) this.cancelAddQuartier();
+  }
+
+  isZoneExpanded(zone: ZoneRow): boolean { return this.expandedZoneId() === zone.id; }
+
+  eligibleFor(zone: ZoneRow) { return this.facade.eligibleQuartiers(zone); }
+
+  startAddQuartier(zone: ZoneRow): void {
+    this.expandedZoneId.set(zone.id);
+    this.addingZoneId.set(zone.id);
+    this.quartierToAdd.set(null);
+  }
+
+  cancelAddQuartier(): void { this.addingZoneId.set(null); this.quartierToAdd.set(null); }
+
+  confirmAddQuartier(zone: ZoneRow): void {
+    const id = this.quartierToAdd();
+    const quartier = this.facade.quartiers().find((q) => q.id === id);
+    if (!quartier) return;
+    this.facade.assignZone(quartier, zone.id);
+    this.cancelAddQuartier();
+  }
+
+  /**
+   * Détacher demande une confirmation : le geste est discret à l'écran mais il retire le
+   * quartier du regroupement qui colorie la carte, et rien ne le signale ensuite.
+   */
+  requestDetach(q: QuartierPostcodeRow): void { this.detachingQuartierId.set(q.id); }
+  cancelDetach(): void { this.detachingQuartierId.set(null); }
+  confirmDetach(q: QuartierPostcodeRow): void {
+    this.facade.assignZone(q, null);
+    this.detachingQuartierId.set(null);
   }
 }

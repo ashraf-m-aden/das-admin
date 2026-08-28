@@ -7,6 +7,20 @@
 </das-page-header>
 
 <div class="staff">
+  <!-- Le filtre par role existait deja dans le store, sans aucune commande pour s'en servir. -->
+  <div class="stfilters">
+    <button type="button" class="rolechip rolechip--sm" [class.rolechip--on]="roleFilter() === null"
+            (click)="filterRole(null)">{{ 'staff.allRoles' | transloco }}</button>
+    @for (r of allRoles; track r) {
+      <button type="button" class="rolechip rolechip--sm" [class.rolechip--on]="roleFilter() === r"
+              (click)="filterRole(r)">{{ roleLabelKey(r) | transloco }}</button>
+    }
+    <span class="stfilters__count">{{ 'staff.count' | transloco: { count: items().length } }}</span>
+    @if (isFiltered()) {
+      <button type="button" class="stfilters__clear" (click)="clearFilters()">{{ 'staff.clearFilters' | transloco }}</button>
+    }
+  </div>
+
   @if (showProductivity()) {
     <section class="das-card table-card">
       <div class="phead">
@@ -41,8 +55,16 @@
       <div class="create__grid">
         <input type="text" formControlName="fullName" [attr.placeholder]="'staff.fullName' | transloco" />
         <input type="text" formControlName="username" [attr.placeholder]="'staff.username' | transloco" />
-        <input type="password" formControlName="password" [attr.placeholder]="'staff.password' | transloco" />
+        <label class="create__pwd">
+          <input [type]="showPassword() ? 'text' : 'password'" formControlName="password"
+                 [attr.placeholder]="'staff.password' | transloco" />
+          <button type="button" class="icon-btn" (click)="togglePassword()"
+                  [attr.aria-label]="'staff.togglePassword' | transloco">
+            <i class="ti" [class.ti-eye]="!showPassword()" [class.ti-eye-off]="showPassword()" aria-hidden="true"></i>
+          </button>
+        </label>
       </div>
+      <p class="create__hint">{{ 'staff.createHint' | transloco }}</p>
       <div class="create__roles">
         @for (r of allRoles; track r) { <button type="button" class="rolechip" [class.rolechip--on]="hasCreateRole(r)" (click)="toggleCreateRole(r)">{{ roleLabelKey(r) | transloco }}</button> }
       </div>
@@ -76,12 +98,18 @@
           @if (editingRolesId() === m.id) {
             <button type="button" class="icon-btn" (click)="saveRoles(m)" [attr.aria-label]="'common.save' | transloco"><i class="ti ti-check" aria-hidden="true"></i></button>
             <button type="button" class="icon-btn" (click)="cancelEditRoles()" [attr.aria-label]="'common.cancel' | transloco"><i class="ti ti-x" aria-hidden="true"></i></button>
+          } @else if (confirmingActiveId() === m.id) {
+            <span class="confirm">{{ (m.isActive ? 'staff.confirmSuspend' : 'staff.confirmReactivate') | transloco: { name: m.fullName } }}</span>
+            <button type="button" class="icon-btn icon-btn--danger" (click)="confirmToggleActive(m)" [attr.aria-label]="'common.apply' | transloco"><i class="ti ti-check" aria-hidden="true"></i></button>
+            <button type="button" class="icon-btn" (click)="cancelToggleActive()" [attr.aria-label]="'common.cancel' | transloco"><i class="ti ti-x" aria-hidden="true"></i></button>
           } @else {
             <button type="button" class="icon-btn" (click)="startEditRoles(m)" [attr.aria-label]="'staff.editRoles' | transloco"><i class="ti ti-user-cog" aria-hidden="true"></i></button>
-            <button type="button" class="icon-btn" (click)="toggleActive(m)" [attr.aria-label]="'staff.toggleActive' | transloco"><i class="ti" [class.ti-lock]="m.isActive" [class.ti-lock-open]="!m.isActive" aria-hidden="true"></i></button>
+            <button type="button" class="icon-btn" (click)="requestToggleActive(m)" [attr.aria-label]="'staff.toggleActive' | transloco"><i class="ti" [class.ti-lock]="m.isActive" [class.ti-lock-open]="!m.isActive" aria-hidden="true"></i></button>
           }
         </div>
       </div>
-    } @empty { <div class="empty">{{ 'staff.empty' | transloco }}</div> }
+    } @empty {
+      <div class="empty">{{ (isFiltered() ? 'staff.noMatch' : 'staff.empty') | transloco }}</div>
+    }
   </section>
 </div>

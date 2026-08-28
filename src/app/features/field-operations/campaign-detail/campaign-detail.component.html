@@ -47,132 +47,165 @@
       }
     </section>
 
-    @if (campaignBlocs().length) {
-      <section class="das-card map-panel">
-        <div class="panel__title">{{ 'fieldops.mapTitle' | transloco }}</div>
-        <div class="map-panel__legend">
-          <button type="button" class="chip" [class.chip--on]="mapAgentFilter() === null" (click)="filterMapAgent(null)">{{ 'fieldops.all' | transloco }}</button>
-          @for (a of mapAgents(); track a.id) {
-            <button type="button" class="chip" [class.chip--on]="mapAgentFilter() === a.id" (click)="filterMapAgent(a.id)">
-              <span class="chip__dot" [style.background]="a.color"></span>{{ a.name }}
-            </button>
-          }
-        </div>
-        <div class="map-panel__canvas">
-          <das-map [tileLayers]="tileLayers" [tileFeatureStates]="tileFeatureStates()" [tileFilters]="tileFilters()" [fitBbox]="mapFitBbox()" [basemapLayers]="basemapLayers" />
-        </div>
-      </section>
+    @if (progress(); as p) {
+      <das-campaign-progress class="das-card progress" [progress]="p" [agentColor]="agentColor" />
     }
 
-    @if (progress(); as p) {
-      <section class="das-card progress">
-        <div class="panel__title">{{ 'fieldops.progress' | transloco }}</div>
-        <div class="progress__groups">
-          <div class="pgroup">
-            <div class="pgroup__title">{{ 'fieldops.assignmentsGroup' | transloco }}</div>
-            <div class="facts">
-              <div class="fact"><span class="fact__l">{{ 'fieldops.assignedBlocs' | transloco }}</span><span class="fact__v">{{ p.assignedBlocs }}</span></div>
-              <div class="fact"><span class="fact__l">{{ 'fieldops.status.todo' | transloco }}</span><span class="fact__v">{{ p.toDo }}</span></div>
-              <div class="fact"><span class="fact__l">{{ 'fieldops.status.done' | transloco }}</span><span class="fact__v">{{ p.done }}</span></div>
-              <div class="fact"><span class="fact__l">{{ 'fieldops.status.abandoned' | transloco }}</span><span class="fact__v">{{ p.abandoned }}</span></div>
-              <div class="fact"><span class="fact__l">{{ 'fieldops.total' | transloco }}</span><span class="fact__v">{{ p.totalAssignments }}</span></div>
-            </div>
-            @if (p.totalAssignments > 0) {
-              <div class="segbar">
-                <span class="segbar__seg segbar__seg--done" [style.width.%]="(p.done / p.totalAssignments) * 100"></span>
-                <span class="segbar__seg segbar__seg--todo" [style.width.%]="(p.toDo / p.totalAssignments) * 100"></span>
-                <span class="segbar__seg segbar__seg--abandoned" [style.width.%]="(p.abandoned / p.totalAssignments) * 100"></span>
-              </div>
-            }
-          </div>
-          <div class="pgroup">
-            <div class="pgroup__title">{{ 'fieldops.surveysGroup' | transloco }}</div>
-            <div class="facts">
-              <div class="fact"><span class="fact__l">{{ 'fieldops.survey.draft' | transloco }}</span><span class="fact__v">{{ p.surveysDraft }}</span></div>
-              <div class="fact"><span class="fact__l">{{ 'fieldops.survey.submitted' | transloco }}</span><span class="fact__v">{{ p.surveysSubmitted }}</span></div>
-              <div class="fact"><span class="fact__l">{{ 'fieldops.survey.validated' | transloco }}</span><span class="fact__v">{{ p.surveysValidated }}</span></div>
-              <div class="fact"><span class="fact__l">{{ 'fieldops.survey.rejected' | transloco }}</span><span class="fact__v">{{ p.surveysRejected }}</span></div>
-              <div class="fact"><span class="fact__l">{{ 'fieldops.awaitingRecheck' | transloco }}</span><span class="fact__v">{{ p.temporaryAwaitingRecheck }}</span></div>
-              <div class="fact"><span class="fact__l">{{ 'fieldops.stalled' | transloco }}</span><span class="fact__v">{{ p.stalledSubmissions }}</span></div>
-            </div>
-          </div>
+    <!-- Carte a gauche sur la moitie, panneau d'affectation a droite : les deux moities
+         forment UN geste - on filtre, on clique les blocs sur la carte, on choisit l'agent.
+         Les separer obligeait a faire l'aller-retour entre une carte et une liste de codes. -->
+    <section class="work">
+      <div class="das-card work__map">
+        <div class="work__head">
+          <div class="panel__title">{{ 'fieldops.mapTitle' | transloco }}</div>
+          @if (focusedBlocId()) {
+            <button type="button" class="btn btn--ghost btn--sm" (click)="clearFocus()">{{ 'fieldops.clearFocus' | transloco }}</button>
+          }
         </div>
 
-        @if (p.byAgent.length) {
-          <div class="agents">
-            <div class="ahead"><span>{{ 'fieldops.agent' | transloco }}</span><span>{{ 'fieldops.heldBlocs' | transloco }}</span><span>{{ 'fieldops.status.todo' | transloco }}</span><span>{{ 'fieldops.status.done' | transloco }}</span><span>{{ 'fieldops.status.abandoned' | transloco }}</span><span>{{ 'fieldops.surveysCaptured' | transloco }}</span></div>
-            @for (a of p.byAgent; track a.agentId) {
-              <div class="arow"><span class="arow__agent"><span class="dot" [style.background]="agentColor(a.agentId)"></span>{{ a.agentFullName }}</span><span>{{ a.heldBlocs }}</span><span>{{ a.toDo }}</span><span>{{ a.done }}</span><span>{{ a.abandoned }}</span><span>{{ a.surveysCaptured }}</span></div>
+        @if (mapAgents().length) {
+          <div class="work__legend">
+            <button type="button" class="chip" [class.chip--on]="mapAgentFilter() === null" (click)="filterMapAgent(null)">{{ 'fieldops.all' | transloco }}</button>
+            @for (a of mapAgents(); track a.id) {
+              <button type="button" class="chip" [class.chip--on]="mapAgentFilter() === a.id" (click)="filterMapAgent(a.id)">
+                <span class="chip__dot" [style.background]="a.color"></span>{{ a.name }}
+              </button>
             }
           </div>
         }
-      </section>
-    }
 
-    <section class="das-card assign-bloc">
-      <div class="panel__title">{{ 'fieldops.assignBlocs' | transloco }}</div>
-      <das-hierarchy-cascade (selectionChange)="onHierarchy($event)" />
-
-      @if (blocks().length) {
-        <div class="blocklist">
-          @for (b of blocks(); track b.id) {
-            <label class="blocklist__item" [class.blocklist__item--taken]="assignedBlocIds().has(b.id)">
-              <input type="checkbox" [checked]="selectedBlocIds().has(b.id)" [disabled]="assignedBlocIds().has(b.id)" (change)="toggleBloc(b.id)" />
-              <span>{{ b.code }}@if (b.name) { — {{ b.name }} }@if (assignedBlocIds().has(b.id)) { ({{ 'fieldops.alreadyAssigned' | transloco }}) }</span>
-            </label>
-          }
+        <div class="work__canvas">
+          <das-map [tileLayers]="tileLayers" [tileFeatureStates]="tileFeatureStates()"
+                   [tileFilters]="tileFilters()" [fitBbox]="mapFitBbox()"
+                   [basemapLayers]="basemapLayers" (featureSelect)="onMapBloc($event)" />
         </div>
-      }
+        <div class="work__hint">{{ 'fieldops.mapPickHint' | transloco }}</div>
+      </div>
 
-      <form class="assign-bloc__form" [formGroup]="assignBlocForm" (ngSubmit)="submitAssignBlocs()">
-        <select formControlName="agentId">
-          <option value="">{{ 'fieldops.selectAgent' | transloco }}</option>
-          @for (a of agents(); track a.id) { <option [value]="a.id">{{ a.fullName }}</option> }
-        </select>
-        <button type="submit" class="btn btn--primary" [disabled]="(facade.isAssigningBloc$ | async)">{{ 'fieldops.assign' | transloco }}</button>
-      </form>
-      @if (facade.assignBlocErrorMessageKey$ | async; as err) { <div class="assign-bloc__error">{{ err | transloco }}</div> }
+      <div class="das-card work__assign">
+        <div class="panel__title">{{ 'fieldops.assignBlocs' | transloco }}</div>
 
-      @if (campaignBlocs().length) {
+        <!-- Le MEME filtre que la carte : il pilote a la fois les blocs candidats charges et
+             les blocs affiches sur la carte, il n'y a donc qu'un seul etat a comprendre. -->
+        <das-hierarchy-cascade (selectionChange)="onHierarchy($event)" />
+
+        @if (candidateBlocs().length) {
+          <div class="work__count">{{ 'fieldops.candidateCount' | transloco: { count: candidateBlocs().length } }}</div>
+        } @else {
+          <div class="work__count work__count--muted">{{ 'fieldops.noCandidate' | transloco }}</div>
+        }
+
+        @if (selectedBlocs().length) {
+          <div class="picked">
+            <div class="picked__head">
+              <span>{{ 'fieldops.selectedCount' | transloco: { count: selectedBlocs().length } }}</span>
+              <button type="button" class="picked__clear" (click)="clearSelection()">{{ 'fieldops.clearSelection' | transloco }}</button>
+            </div>
+            <div class="picked__list">
+              @for (b of selectedBlocs(); track b.id) {
+                <button type="button" class="chip pchip" (click)="toggleBloc(b.id)" [attr.title]="'fieldops.removeFromSelection' | transloco">
+                  <span class="mono">{{ b.code }}</span><i class="ti ti-x" aria-hidden="true"></i>
+                </button>
+              }
+            </div>
+          </div>
+        } @else {
+          <div class="picked picked--empty">{{ 'fieldops.noSelection' | transloco }}</div>
+        }
+
+        <!-- Un bloc sans emprise n'apparait pas sur la carte : sans cette liste, il deviendrait
+             inatteignable depuis que la liste complete a disparu. -->
+        @if (candidatesWithoutGeometry().length) {
+          <details class="nogeom">
+            <summary>{{ 'fieldops.noGeometryCount' | transloco: { count: candidatesWithoutGeometry().length } }}</summary>
+            <div class="nogeom__list">
+              @for (b of candidatesWithoutGeometry(); track b.id) {
+                <label class="nogeom__item">
+                  <input type="checkbox" [checked]="selectedBlocIds().has(b.id)" (change)="toggleBloc(b.id)" />
+                  <span class="mono">{{ b.code }}</span>@if (b.name) { <span>{{ b.name }}</span> }
+                </label>
+              }
+            </div>
+          </details>
+        }
+
+        <form class="work__form" [formGroup]="assignBlocForm" (ngSubmit)="submitAssignBlocs()">
+          <select formControlName="agentId">
+            <option value="">{{ 'fieldops.selectAgent' | transloco }}</option>
+            @for (a of agents(); track a.id) { <option [value]="a.id">{{ a.fullName }}</option> }
+          </select>
+          <button type="submit" class="btn btn--primary"
+                  [disabled]="selectedBlocs().length === 0 || assignBlocForm.invalid || (facade.isAssigningBloc$ | async)">
+            {{ 'fieldops.assign' | transloco }}
+          </button>
+        </form>
+        @if (facade.assignBlocErrorMessageKey$ | async; as err) { <div class="assign-bloc__error">{{ err | transloco }}</div> }
+      </div>
+    </section>
+
+    @if (campaignBlocs().length) {
+      <section class="das-card assigned">
+        <div class="panel__title">{{ 'fieldops.assignedBlocsList' | transloco }}</div>
         <div class="blocs">
           <div class="bhead"><span>{{ 'fieldops.bloc' | transloco }}</span><span>{{ 'fieldops.agent' | transloco }}</span><span>{{ 'fieldops.assignedAt' | transloco }}</span><span></span></div>
           @for (cb of campaignBlocs(); track cb.id) {
-            <div class="brow">
-              <span>{{ cb.blocCode }}@if (cb.blocName) { — {{ cb.blocName }} }</span>
+            <div class="brow" [class.brow--focused]="focusedBlocId() === cb.blocId">
+              <span>{{ cb.blocCode }}@if (cb.blocName) { &mdash; {{ cb.blocName }} }</span>
               <span><span class="dot" [style.background]="agentColor(cb.agentId)"></span>{{ cb.agentFullName }}</span>
               <span>{{ cb.assignedAtUtc | dasDate: 'short' }}</span>
-              @if (c.status !== 'Closed') {
-                @if (reassigningBlocId() === cb.blocId) {
-                  <form class="inline" [formGroup]="reassignBlocForm" (ngSubmit)="confirmReassignBloc(cb.blocId)">
-                    <select formControlName="agentId">
-                      <option value="">{{ 'fieldops.selectAgent' | transloco }}</option>
-                      @for (a of agents(); track a.id) { <option [value]="a.id">{{ a.fullName }}</option> }
-                    </select>
-                    <button type="submit" class="btn btn--ghost">{{ 'common.save' | transloco }}</button>
-                    <button type="button" class="btn btn--ghost" (click)="cancelReassignBloc()">{{ 'common.cancel' | transloco }}</button>
-                  </form>
-                } @else {
-                  <button type="button" class="btn btn--ghost" [disabled]="(facade.isDecidingBloc$(cb.blocId) | async)" (click)="startReassignBloc(cb.blocId)">{{ 'fieldops.reassign' | transloco }}</button>
+              <span class="brow__actions">
+                <button type="button" class="btn btn--ghost btn--sm" (click)="focusBloc(cb.blocId)">
+                  <i class="ti ti-eye" aria-hidden="true"></i>{{ 'fieldops.see' | transloco }}
+                </button>
+                @if (c.status !== 'Closed') {
+                  @if (reassigningBlocId() === cb.blocId) {
+                    <form class="inline" [formGroup]="reassignBlocForm" (ngSubmit)="confirmReassignBloc(cb.blocId)">
+                      <select formControlName="agentId">
+                        <option value="">{{ 'fieldops.selectAgent' | transloco }}</option>
+                        @for (a of agents(); track a.id) { <option [value]="a.id">{{ a.fullName }}</option> }
+                      </select>
+                      <button type="submit" class="btn btn--ghost btn--sm">{{ 'common.save' | transloco }}</button>
+                      <button type="button" class="btn btn--ghost btn--sm" (click)="cancelReassignBloc()">{{ 'common.cancel' | transloco }}</button>
+                    </form>
+                  } @else {
+                    <button type="button" class="btn btn--ghost btn--sm" [disabled]="(facade.isDecidingBloc$(cb.blocId) | async)" (click)="startReassignBloc(cb.blocId)">{{ 'fieldops.reassign' | transloco }}</button>
+                  }
                 }
-              }
+              </span>
             </div>
           }
         </div>
-      }
-    </section>
+      </section>
+    }
 
     <section class="das-card assignments">
-      <div class="panel__title">{{ 'fieldops.assignmentsList' | transloco }}</div>
+      <div class="afilters">
+        <div class="panel__title">{{ 'fieldops.assignmentsList' | transloco }}</div>
+        <div>
+          <select class="fselect" (change)="filterAssignmentAgent($any($event.target).value)">
+            <option value="">{{ 'fieldops.allAgents' | transloco }}</option>
+            @for (a of assignmentAgents(); track a.id) {
+              <option [value]="a.id" [selected]="a.id === assignmentAgentId()">{{ a.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <!-- L'onglet actif est marque : sans etat visible, on ne sait plus sur quoi on filtre,
+           et une liste courte se lit comme une liste vide. -->
       <div class="fo__tabs">
-        <button type="button" class="tab" (click)="filterAssignmentStatus(null)">{{ 'fieldops.all' | transloco }}</button>
+        <button type="button" class="tab" [class.tab--on]="assignmentStatus() === null"
+                (click)="filterAssignmentStatus(null)">{{ 'fieldops.all' | transloco }}</button>
         @for (s of assignmentStatuses; track s) {
-          <button type="button" class="tab" (click)="filterAssignmentStatus(s)">{{ ('fieldops.status.' + s.toLowerCase()) | transloco }}</button>
+          <button type="button" class="tab" [class.tab--on]="assignmentStatus() === s"
+                  (click)="filterAssignmentStatus(s)">{{ ('fieldops.status.' + s.toLowerCase()) | transloco }}</button>
         }
       </div>
 
-      @for (a of assignments(); track a.id) {
-        <div class="arow2">
-          <span class="arow2__adresse mono">{{ a.adresseId }}</span>
+      @for (a of pagedAssignments(); track a.id) {
+        <!-- L'identifiant d'adresse n'est plus affiche : c'est un UUID, illisible et sans usage
+             a l'ecran. Il reste dans l'info-bulle de la ligne, pour rester citable en support. -->
+        <div class="arow2" [attr.title]="a.adresseId">
           <span>@if (a.agentId) { <span class="dot" [style.background]="agentColor(a.agentId)"></span> }{{ a.agentFullName ?? ('fieldops.noAgent' | transloco) }}</span>
           <span [class]="statusBadgeClass(a.status)">{{ ('fieldops.status.' + a.status.toLowerCase()) | transloco }}</span>
           @if (a.abandonReason) { <span class="arow2__reason">{{ a.abandonReason }}</span> }
@@ -192,6 +225,11 @@
         </div>
       } @empty {
         <div class="list__empty">@if (facade.isAssignmentsLoading$ | async) { {{ 'common.loading' | transloco }} } @else { {{ 'fieldops.empty' | transloco }} }</div>
+      }
+
+      @if (assignments().length) {
+        <das-pager [page]="assignmentPage()" [pageSize]="assignmentPageSize()" [total]="assignments().length"
+                   (pageChange)="goToAssignmentPage($event)" (pageSizeChange)="setAssignmentPageSize($event)" />
       }
     </section>
 

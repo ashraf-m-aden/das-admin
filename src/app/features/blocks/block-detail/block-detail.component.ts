@@ -14,7 +14,9 @@ import { TileFilter, TileLayerBinding } from '../../../core/ui/map/map.models';
 import { wktBounds } from '../../../core/ui/map/wkt.util';
 import { UUID } from '../../../core/models/das.models';
 import { NotSurveyableReason } from '../../../core/review/models/review.models';
-import { STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP } from '../../../core/ui/map/basemap-groups';
+import {
+  STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP,
+} from '../../../core/ui/map/basemap-groups';
 
 const BLOC_TILE: TileLayerBinding = {
   id: 'bloc', labelKey: 'nav.blocks', source: 'blocs', sourceLayer: 'blocs_tiles',
@@ -35,7 +37,9 @@ export class BlockDetailComponent implements OnInit, OnDestroy {
    * a été activé sur cette carte le 2026-08-25 : depuis le retrait du fond CARTO, la voirie est
    * la seule référence de terrain, et il faut pouvoir la masquer pour lire les contours dessous.
    */
-  protected readonly basemapLayers: BasemapLayerGroup[] = [STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP];
+  protected readonly basemapLayers: BasemapLayerGroup[] = [
+    STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP,
+  ];
   private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);
   protected facade = inject(BlocksFacade);

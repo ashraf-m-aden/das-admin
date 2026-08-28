@@ -32,3 +32,21 @@
   &__clear { height: 28px; padding: 0 v.$space-2; border: none; background: none; font: inherit;
     font-size: v.$font-size-xs; color: var(--color-accent); cursor: pointer; text-decoration: underline; }
 }
+
+// Filtre zone multiple : un bouton de la taille des autres selects, et un panneau a cocher.
+.zsel { position: relative; min-width: 10rem; flex: 1 1 10rem;
+  &__button { width: 100%; height: 100%; min-height: 2.1rem; display: flex; align-items: center;
+    justify-content: space-between; gap: v.$space-1; padding: 0.4rem 0.6rem;
+    border: 1px solid #d0d7e2; border-radius: 6px; background: #fff; font: inherit;
+    font-size: 0.875rem; color: inherit; cursor: pointer; text-align: left;
+    &:disabled { background: #f1f4f8; color: #9aa3b5; cursor: not-allowed; } }
+  &__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  &__panel { position: absolute; z-index: 20; top: calc(100% + 2px); left: 0; right: 0;
+    max-height: 220px; overflow: auto; padding: v.$space-1;
+    border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface);
+    box-shadow: 0 6px 16px rgb(0 0 0 / 12%); }
+  &__row { display: flex; align-items: center; gap: v.$space-2; padding: v.$space-1 v.$space-2;
+    font-size: v.$font-size-sm; color: var(--color-text-secondary); cursor: pointer; border-radius: 4px;
+    &:hover { background: var(--color-surface-alt); }
+    &--on { color: var(--color-text-primary); font-weight: v.$font-weight-medium; } }
+}

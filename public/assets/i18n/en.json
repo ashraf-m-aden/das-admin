@@ -36,7 +36,11 @@
     "error": "Something went wrong",
     "apply": "Apply",
     "mockBadge": "Mock",
-    "mockBadgeHint": "This screen shows demo data: no backend wired yet."
+    "mockBadgeHint": "This screen shows demo data: no backend wired yet.",
+    "rowsPerPage": "Rows per page",
+    "pageRange": "{{from}}–{{to}} of {{total}}",
+    "previousPage": "Previous page",
+    "nextPage": "Next page"
   },
   "mockBadge": {
     "notifications": "No /api/notifications route on the backend — event mapping awaiting a business decision.",
@@ -140,7 +144,8 @@
     "agentToDo": "To do",
     "agentDone": "Done",
     "agentCaptured": "Surveys",
-    "agentValidated": "Validated"
+    "agentValidated": "Validated",
+    "workflowHint": "Addresses by workflow stage."
   },
   "closes": {
     "eyebrow": "Street portions within a quarter — the number is part of the address code",
@@ -376,7 +381,15 @@
       "validated": "Validated",
       "rejected": "Rejected",
       "empty": "No productivity data"
-    }
+    },
+    "allRoles": "All roles",
+    "count": "{{count}} user(s)",
+    "clearFilters": "Reset",
+    "togglePassword": "Show / hide the password",
+    "createHint": "Password: 6 characters minimum. At least one role is required.",
+    "confirmSuspend": "Suspend {{name}}?",
+    "confirmReactivate": "Reactivate {{name}}?",
+    "noMatch": "No user matches this filter"
   },
   "notifications": {
     "unreadCount": "{{count}} unread",
@@ -540,7 +553,24 @@
     "empty": "No quarters",
     "confirmCityCode": "{{count}} quarter(s) will be renumbered",
     "errorAreaNumberUsed": "This number is already used in this city.",
-    "errorCityCodeUsed": "This code is already used by another city."
+    "errorCityCodeUsed": "This code is already used by another city.",
+    "zonesTitle": "Zones",
+    "zonesHint": "A zone groups quarters of a single commune. Quarters are attached one at a time, from the quarter itself.",
+    "zonesEmpty": "No zones",
+    "zonesNoCommune": "{{count}} quarter(s) have no commune: no zone can take them until their commune is filled in.",
+    "zoneQuartierCount": "{{count}} quarter(s)",
+    "zoneEmpty": "No quarters in this zone",
+    "addQuartier": "Add a quarter",
+    "pickQuartier": "Pick a quarter…",
+    "noEligibleQuartier": "Every quarter of {{commune}} is already in this zone.",
+    "noPostcodeShort": "no postcode",
+    "detachQuartier": "Remove from the zone",
+    "confirmDetach": "Remove this quarter from the zone?",
+    "errorZoneWithoutCommune": "This quarter has no commune: a zone is a part of a commune, not a replacement for one.",
+    "errorZoneOutsideCommune": "This zone belongs to a different commune than the quarter.",
+    "colZone": "Zone",
+    "noZone": "No zone",
+    "zoneNeedsCommune": "commune missing"
   },
   "fieldops": {
     "eyebrow": "Census campaigns and field assignments",
@@ -626,7 +656,19 @@
     "errorSameAgent": "This block is already assigned to that agent.",
     "errorAssignmentNotPending": "Only an assignment still to do can be abandoned.",
     "errorAssignmentHasSurvey": "A survey is in progress on this assignment: handle it before abandoning.",
-    "errorNotFound": "This item no longer exists. Reload the screen."
+    "errorNotFound": "This item no longer exists. Reload the screen.",
+    "clearFocus": "Back to the overview",
+    "mapPickHint": "Click a block on the map to add it to the selection. Blocks already assigned cannot be selected — clicking one highlights it.",
+    "candidateCount": "{{count}} block(s) available in this filter",
+    "noCandidate": "No block available here — pick a quarter in the filter.",
+    "selectedCount": "{{count}} block(s) selected",
+    "clearSelection": "Remove all",
+    "removeFromSelection": "Remove from the selection",
+    "noSelection": "No block selected. Click one on the map.",
+    "noGeometryCount": "{{count}} block(s) without a boundary, missing from the map",
+    "assignedBlocsList": "Assigned blocks",
+    "see": "View",
+    "allAgents": "All agents"
   },
   "dataquality": {
     "eyebrow": "Anti-fraud control queue — field signals",
@@ -655,8 +697,10 @@
       "closes": "Closes",
       "closeNumbers": "Close house numbers",
       "closeParcels": "Close parcels",
-      "sigIlots": "GIS blocks (to import)",
-      "sigVoirie": "GIS roads (to import)"
+      "sigIlots": "GIS blocks (raw delivery)",
+      "sigVoirie": "GIS roads (to import)",
+      "zones": "Zones",
+      "postcodes": "Postcodes"
     }
   },
   "reports": {
@@ -742,7 +786,10 @@
     "allZones": "All zones",
     "allQuartiers": "All quartiers",
     "allCloses": "All closes",
-    "noCloses": "No close in this quarter"
+    "noCloses": "No close in this quarter",
+    "noZones": "No zones",
+    "oneZone": "1 zone",
+    "someZones": "{{count}} zones"
   },
   "profile": {
     "eyebrow": "My account",

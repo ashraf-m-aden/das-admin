@@ -36,18 +36,22 @@
   b { margin-left: auto; color: var(--color-text-primary); }
   &__dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   &__pct { @extend %muted-xs; min-width: 40px; text-align: right; }
-  &--row { flex-direction: row; flex-wrap: wrap; gap: v.$space-3; margin-top: v.$space-3;
-    li { gap: v.$space-1; }
-  }
 }
 
-.stepper { display: flex; align-items: flex-start; }
-.step { display: flex; flex-direction: column; align-items: center; gap: v.$space-1; flex: 1; min-width: 0;
-  &__ic { width: 40px; height: 40px; border-radius: 50%; @include m.flex-center; color: #fff; font-size: 18px; }
-  &__value { font-size: v.$font-size-lg; font-weight: v.$font-weight-semibold; color: var(--color-text-primary); margin-top: v.$space-1; }
-  &__label { font-size: v.$font-size-xs; color: var(--color-text-secondary); text-align: center; }
+/* Entonnoir VERTICAL : a mi-largeur, cinq etapes alignees horizontalement tronquaient leurs
+   libelles et ecrasaient les barres. En colonne, chaque etape garde son nom, son compte et sa
+   part lisibles, et l'ensemble tient dans la hauteur de la carte d'a cote. */
+.stepper { display: flex; flex-direction: column; gap: v.$space-3; }
+.step { display: flex; align-items: center; gap: v.$space-3;
+  &__ic { width: 32px; height: 32px; border-radius: 50%; @include m.flex-center; color: #fff;
+    font-size: 15px; flex-shrink: 0; }
+  &__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  &__label { font-size: v.$font-size-xs; color: var(--color-text-secondary); }
+  &__bar { display: block; height: 6px; border-radius: v.$radius-full; background: var(--color-surface-sunken); overflow: hidden; }
+  &__fill { display: block; height: 100%; transition: width 0.3s ease; }
+  &__nums { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
+  &__value { font-size: v.$font-size-lg; font-weight: v.$font-weight-semibold; color: var(--color-text-primary); }
   &__pct { @extend %muted-xs; }
-  &__line { flex: 0 0 auto; width: 100%; max-width: 60px; height: 2px; background: var(--color-border); margin-top: 20px; }
 }
 
 
@@ -137,13 +141,17 @@
 }
 
 /* ---- La carte comme pièce centrale ---------------------------------------- */
-/* Pleine largeur et haute : c'est le seul endroit de l'application où l'on voit le référentiel
-   entier. En vignette de 300 px dans une colonne latérale, elle ne servait à rien. */
+/* Moitie de largeur depuis le 2026-08-28. Hauteur ramenee de 520 a 420 px : a demi-largeur,
+   520 px donnaient un format en colonne ou l'on ne voyait plus la ville d'un coup. */
 .map-hero {
-  &__canvas { position: relative; height: 520px; border-radius: v.$radius-md; overflow: hidden;
-    @include m.respond-below(lg) { height: 400px; }
-    @include m.respond-below(md) { height: 320px; } }
+  &__canvas { position: relative; height: 420px; border-radius: v.$radius-md; overflow: hidden;
+    @include m.respond-below(lg) { height: 340px; }
+    @include m.respond-below(md) { height: 280px; } }
 }
+
+/* Moitie / moitie. Sous `lg` la carte repasse au-dessus, en pleine largeur. */
+.grid--map { display: grid; grid-template-columns: 1fr 1fr; gap: v.$space-3; align-items: start;
+  @include m.respond-below(lg) { grid-template-columns: 1fr; } }
 
 /* Couverture et dette côte à côte, la couverture plus large : elle porte cinq verrous, la dette
    trois compteurs. */

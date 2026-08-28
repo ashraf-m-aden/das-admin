@@ -28,9 +28,11 @@ export class HierarchyMockService extends HierarchyApiPort {
     if (cityId === this.aliSabiehCityId) return of([]); // ville non découpée en communes
     return of([{ id: this.communeId, level: 'commune', code: 'BLS', name: 'Boulaos', parentId: cityId, bbox: this.boulaos } as HierarchyNode]);
   }
-  override zones(communeId: UUID): Observable<HierarchyNode[]> {
-    if (communeId !== this.communeId) return of([]);
-    return of([{ id: this.zoneId, level: 'zone', code: 'Z-Q7', name: 'Zone Quartier 7', parentId: communeId, bbox: this.boulaos } as HierarchyNode]);
+  override zones(cityId: UUID, communeId?: UUID | null): Observable<HierarchyNode[]> {
+    // Sans commune, on rend les zones de la ville : c'est le cas « toutes les communes ».
+    if (communeId && communeId !== this.communeId) return of([]);
+    if (cityId === this.aliSabiehCityId) return of([]);
+    return of([{ id: this.zoneId, level: 'zone', code: 'Z-Q7', name: 'Zone Quartier 7', parentId: this.communeId, bbox: this.boulaos } as HierarchyNode]);
   }
   override quartiers(cityId: UUID, communeId?: UUID | null, zoneId?: UUID | null): Observable<HierarchyNode[]> {
     if (cityId === this.aliSabiehCityId) {

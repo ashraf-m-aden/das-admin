@@ -38,7 +38,7 @@ export const BACKEND_READINESS: Record<FeatureKey, FeatureReadiness> = {
   units: { status: 'wired', routes: ['/api/units'] },
   dataquality: { status: 'wired', routes: ['/api/surveys/suspicious'] },
   dashboard: { status: 'wired', routes: ['/api/adresses/summary', '/api/campaigns/{id}/progress'] },
-  postcodes: { status: 'wired', routes: ['/api/quartiers', '/api/quartiers/{id}', '/api/cities', '/api/cities/{id}'] },
+  postcodes: { status: 'wired', routes: ['/api/quartiers', '/api/quartiers/{id}', '/api/cities', '/api/cities/{id}', '/api/zones'] },
 
   discoveries: { status: 'wired', routes: ['/api/discoveries', '/api/discoveries/export.geojson', '/api/discoveries/{id}/accept', '/api/discoveries/{id}/reject'] },
   closes: { status: 'wired', routes: ['/api/closes', '/api/closes/{id}', '/api/closes/{id}/blocs', '/api/closes/{id}/blocs/{blocId}'] },

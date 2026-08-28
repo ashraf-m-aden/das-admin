@@ -22,7 +22,8 @@
 .fselect { height: 32px; padding: 0 v.$space-2; border: 1px solid var(--color-border); border-radius: v.$radius-sm; font: inherit; font-size: v.$font-size-sm; background: var(--color-surface); }
 .fcheck { display: flex; align-items: center; gap: v.$space-1; font-size: v.$font-size-sm; color: var(--color-text-secondary); cursor: pointer; }
 
-.thead, .trow { display: grid; grid-template-columns: 1.2fr 1fr 0.7fr 0.9fr 0.9fr 0.8fr; gap: v.$space-2; align-items: center; padding: v.$space-2 v.$space-4; }
+// 7 colonnes depuis l'ajout de la zone : quartier, ville, code, numéro, code postal, zone, actions.
+.thead, .trow { display: grid; grid-template-columns: 1.2fr 0.9fr 0.6fr 0.7fr 0.8fr 1fr 0.8fr; gap: v.$space-2; align-items: center; padding: v.$space-2 v.$space-4; }
 .thead { font-size: v.$font-size-xs; color: var(--color-text-muted); border-bottom: 1px solid var(--color-border); }
 .trow { border-bottom: 1px solid var(--color-surface-sunken); font-size: v.$font-size-sm; color: var(--color-text-secondary); &:last-child { border-bottom: none; } }
 .trow__nom { color: var(--color-text-primary); font-weight: v.$font-weight-medium; }
@@ -74,4 +75,48 @@
   &__empty { padding: v.$space-4; text-align: center; font-size: v.$font-size-sm; color: var(--color-text-muted); }
   &__clear { align-self: flex-start; border: none; background: none; font: inherit; font-size: v.$font-size-xs;
     color: var(--color-accent); cursor: pointer; text-decoration: underline; padding: 0; }
+}
+
+/* ---- Gestion des zones ---------------------------------------------------- */
+.zones-card {
+  &__hint { font-size: v.$font-size-xs; color: var(--color-text-muted); }
+  &__notice { margin: 0 v.$space-4 v.$space-3; padding: v.$space-2 v.$space-3; border-radius: v.$radius-sm;
+    background: var(--color-surface-alt); font-size: v.$font-size-xs; color: var(--color-text-secondary); }
+}
+
+.zrow { border-bottom: 1px solid var(--color-surface-sunken);
+  &:last-child { border-bottom: none; }
+  &--open { background: var(--color-surface-alt); }
+
+  &__head { width: 100%; display: grid; grid-template-columns: 18px 1.4fr 60px 1fr auto; gap: v.$space-2;
+    align-items: center; padding: v.$space-3 v.$space-4; border: none; background: none; text-align: left;
+    font: inherit; font-size: v.$font-size-sm; color: var(--color-text-secondary); cursor: pointer;
+    &:hover { background: var(--color-surface-alt); } }
+  &__name { color: var(--color-text-primary); font-weight: v.$font-weight-medium; }
+  &__code { color: var(--color-text-muted); }
+  &__commune { color: var(--color-text-muted); @include m.truncate; }
+  &__count { font-size: v.$font-size-xs; color: var(--color-text-muted); }
+
+  &__body { padding: 0 v.$space-4 v.$space-3 calc(#{v.$space-4} + 18px); display: flex; flex-direction: column; gap: v.$space-1; }
+  &__empty { padding: v.$space-2 0; font-size: v.$font-size-xs; color: var(--color-text-muted); font-style: italic; }
+}
+
+.zq { display: grid; grid-template-columns: 1.4fr 90px auto; gap: v.$space-2; align-items: center;
+  padding: v.$space-1 0; font-size: v.$font-size-sm; color: var(--color-text-secondary);
+  &__nom { color: var(--color-text-primary); }
+  &__code { color: var(--color-text-muted); }
+}
+
+.zadd { display: flex; align-items: center; gap: v.$space-2; padding-top: v.$space-2; flex-wrap: wrap;
+  .fselect { max-width: 320px; }
+}
+.abtn--add { border-style: dashed; }
+
+// Sélecteur de zone de la liste des quartiers. Plus compact que `.fselect`, qui est dimensionné
+// pour les filtres d'en-tête et déborderait de la cellule.
+.zselect { width: 100%; max-width: 170px; height: 28px; padding: 0 v.$space-1; border: 1px solid var(--color-border);
+  border-radius: v.$radius-sm; font: inherit; font-size: v.$font-size-xs; background: var(--color-surface);
+  color: var(--color-text-secondary); cursor: pointer;
+  &:hover:not(:disabled) { border-color: var(--color-accent); }
+  &:disabled { opacity: 0.6; cursor: default; }
 }

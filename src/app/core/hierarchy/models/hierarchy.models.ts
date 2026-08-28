@@ -43,11 +43,25 @@ export interface HierarchyBoundary {
 export interface HierarchySelection {
   cityId: UUID | null;
   communeId: UUID | null;
+  /**
+   * Zones cochées. Vide = « toutes ». Le filtre zone est MULTIPLE : une commune se découpe en
+   * plusieurs zones qu'on veut souvent regarder ensemble, et un select simple obligeait à
+   * relancer la recherche zone par zone.
+   */
+  zoneIds: UUID[];
+  /**
+   * Zone unique — `zoneIds[0]` quand une SEULE est cochée, `null` sinon.
+   *
+   * Conservé parce que les filtres d'API en aval (`GET /api/adresses?zoneId=`) n'acceptent
+   * qu'une valeur. Le mettre à `null` dès qu'il y en a plusieurs est volontaire : c'est un
+   * aveu d'imprécision, pas une perte silencieuse — envoyer arbitrairement la première
+   * filtrerait sur une zone que l'opérateur n'a pas demandée seule.
+   */
   zoneId: UUID | null;
   quartierId: UUID | null;
   closeId: UUID | null;
 }
 
 export const EMPTY_HIERARCHY_SELECTION: HierarchySelection = {
-  cityId: null, communeId: null, zoneId: null, quartierId: null, closeId: null,
+  cityId: null, communeId: null, zoneIds: [], zoneId: null, quartierId: null, closeId: null,
 };

@@ -1,0 +1,39 @@
+<div class="panel__title">{{ 'fieldops.progress' | transloco }}</div>
+<div class="progress__groups">
+  <div class="pgroup">
+    <div class="pgroup__title">{{ 'fieldops.assignmentsGroup' | transloco }}</div>
+    <div class="facts">
+      <div class="fact"><span class="fact__l">{{ 'fieldops.assignedBlocs' | transloco }}</span><span class="fact__v">{{ progress().assignedBlocs }}</span></div>
+      <div class="fact"><span class="fact__l">{{ 'fieldops.status.todo' | transloco }}</span><span class="fact__v">{{ progress().toDo }}</span></div>
+      <div class="fact"><span class="fact__l">{{ 'fieldops.status.done' | transloco }}</span><span class="fact__v">{{ progress().done }}</span></div>
+      <div class="fact"><span class="fact__l">{{ 'fieldops.status.abandoned' | transloco }}</span><span class="fact__v">{{ progress().abandoned }}</span></div>
+      <div class="fact"><span class="fact__l">{{ 'fieldops.total' | transloco }}</span><span class="fact__v">{{ progress().totalAssignments }}</span></div>
+    </div>
+    @if (progress().totalAssignments > 0) {
+      <div class="segbar">
+        <span class="segbar__seg segbar__seg--done" [style.width.%]="(progress().done / progress().totalAssignments) * 100"></span>
+        <span class="segbar__seg segbar__seg--todo" [style.width.%]="(progress().toDo / progress().totalAssignments) * 100"></span>
+        <span class="segbar__seg segbar__seg--abandoned" [style.width.%]="(progress().abandoned / progress().totalAssignments) * 100"></span>
+      </div>
+    }
+  </div>
+  <div class="pgroup">
+    <div class="pgroup__title">{{ 'fieldops.surveysGroup' | transloco }}</div>
+    <div class="facts">
+      <div class="fact"><span class="fact__l">{{ 'fieldops.survey.draft' | transloco }}</span><span class="fact__v">{{ progress().surveysDraft }}</span></div>
+      <div class="fact"><span class="fact__l">{{ 'fieldops.survey.submitted' | transloco }}</span><span class="fact__v">{{ progress().surveysSubmitted }}</span></div>
+      <div class="fact"><span class="fact__l">{{ 'fieldops.survey.validated' | transloco }}</span><span class="fact__v">{{ progress().surveysValidated }}</span></div>
+      <div class="fact"><span class="fact__l">{{ 'fieldops.survey.rejected' | transloco }}</span><span class="fact__v">{{ progress().surveysRejected }}</span></div>
+      <div class="fact"><span class="fact__l">{{ 'fieldops.awaitingRecheck' | transloco }}</span><span class="fact__v">{{ progress().temporaryAwaitingRecheck }}</span></div>
+      <div class="fact"><span class="fact__l">{{ 'fieldops.stalled' | transloco }}</span><span class="fact__v">{{ progress().stalledSubmissions }}</span></div>
+    </div>
+  </div>
+</div>
+@if (progress().byAgent.length) {
+  <div class="agents">
+    <div class="ahead"><span>{{ 'fieldops.agent' | transloco }}</span><span>{{ 'fieldops.heldBlocs' | transloco }}</span><span>{{ 'fieldops.status.todo' | transloco }}</span><span>{{ 'fieldops.status.done' | transloco }}</span><span>{{ 'fieldops.status.abandoned' | transloco }}</span><span>{{ 'fieldops.surveysCaptured' | transloco }}</span></div>
+    @for (a of progress().byAgent; track a.agentId) {
+      <div class="arow"><span class="arow__agent"><span class="dot" [style.background]="agentColor()(a.agentId)"></span>{{ a.agentFullName }}</span><span>{{ a.heldBlocs }}</span><span>{{ a.toDo }}</span><span>{{ a.done }}</span><span>{{ a.abandoned }}</span><span>{{ a.surveysCaptured }}</span></div>
+    }
+  </div>
+}

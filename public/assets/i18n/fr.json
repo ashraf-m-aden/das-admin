@@ -36,7 +36,11 @@
     "error": "Une erreur est survenue",
     "apply": "Appliquer",
     "mockBadge": "Mock",
-    "mockBadgeHint": "Cet écran affiche des données de démonstration : aucun backend câblé pour l'instant."
+    "mockBadgeHint": "Cet écran affiche des données de démonstration : aucun backend câblé pour l'instant.",
+    "rowsPerPage": "Lignes par page",
+    "pageRange": "{{from}}–{{to}} sur {{total}}",
+    "previousPage": "Page précédente",
+    "nextPage": "Page suivante"
   },
   "mockBadge": {
     "notifications": "Aucune route /api/notifications côté backend — mapping des événements en attente d'arbitrage métier.",
@@ -140,7 +144,8 @@
     "agentToDo": "À faire",
     "agentDone": "Faites",
     "agentCaptured": "Relevés",
-    "agentValidated": "Validés"
+    "agentValidated": "Validés",
+    "workflowHint": "Répartition des adresses par étape du workflow."
   },
   "closes": {
     "eyebrow": "Portions de rue dans un quartier — le numéro entre dans le code d'adresse",
@@ -376,7 +381,15 @@
       "validated": "Validé",
       "rejected": "Rejeté",
       "empty": "Aucune donnée de productivité"
-    }
+    },
+    "allRoles": "Tous les rôles",
+    "count": "{{count}} utilisateur(s)",
+    "clearFilters": "Réinitialiser",
+    "togglePassword": "Afficher / masquer le mot de passe",
+    "createHint": "Mot de passe : 6 caractères minimum. Au moins un rôle est requis.",
+    "confirmSuspend": "Suspendre {{name}} ?",
+    "confirmReactivate": "Réactiver {{name}} ?",
+    "noMatch": "Aucun utilisateur ne correspond à ce filtre"
   },
   "notifications": {
     "unreadCount": "{{count}} non lues",
@@ -540,7 +553,24 @@
     "empty": "Aucun quartier",
     "confirmCityCode": "{{count}} quartier(s) seront renumérotés",
     "errorAreaNumberUsed": "Ce numéro est déjà utilisé dans cette ville.",
-    "errorCityCodeUsed": "Ce code est déjà utilisé par une autre ville."
+    "errorCityCodeUsed": "Ce code est déjà utilisé par une autre ville.",
+    "zonesTitle": "Zones",
+    "zonesHint": "Une zone regroupe des quartiers d'une même commune. Le rattachement se fait depuis le quartier, un à la fois.",
+    "zonesEmpty": "Aucune zone",
+    "zonesNoCommune": "{{count}} quartier(s) sans commune : aucune zone ne peut les accueillir tant que leur commune n'est pas renseignée.",
+    "zoneQuartierCount": "{{count}} quartier(s)",
+    "zoneEmpty": "Aucun quartier dans cette zone",
+    "addQuartier": "Ajouter un quartier",
+    "pickQuartier": "Choisir un quartier…",
+    "noEligibleQuartier": "Tous les quartiers de {{commune}} sont déjà dans cette zone.",
+    "noPostcodeShort": "sans code postal",
+    "detachQuartier": "Retirer de la zone",
+    "confirmDetach": "Retirer ce quartier de la zone ?",
+    "errorZoneWithoutCommune": "Ce quartier n'a pas de commune : une zone est une partie d'une commune, pas un remplacement.",
+    "errorZoneOutsideCommune": "Cette zone appartient à une autre commune que le quartier.",
+    "colZone": "Zone",
+    "noZone": "Aucune zone",
+    "zoneNeedsCommune": "commune manquante"
   },
   "fieldops": {
     "eyebrow": "Campagnes de recensement et affectations terrain",
@@ -626,7 +656,19 @@
     "errorSameAgent": "Ce bloc est déjà affecté à cet agent.",
     "errorAssignmentNotPending": "Seule une affectation encore à faire peut être abandonnée.",
     "errorAssignmentHasSurvey": "Un relevé est en cours sur cette affectation : traitez-le avant de l'abandonner.",
-    "errorNotFound": "Cet élément n'existe plus. Rechargez l'écran."
+    "errorNotFound": "Cet élément n'existe plus. Rechargez l'écran.",
+    "clearFocus": "Revenir à la vue générale",
+    "mapPickHint": "Cliquez un bloc sur la carte pour l'ajouter à la sélection. Les blocs déjà affectés ne sont pas sélectionnables — les cliquer les met en évidence.",
+    "candidateCount": "{{count}} bloc(s) disponible(s) dans ce filtre",
+    "noCandidate": "Aucun bloc disponible ici — choisissez un quartier dans le filtre.",
+    "selectedCount": "{{count}} bloc(s) sélectionné(s)",
+    "clearSelection": "Tout retirer",
+    "removeFromSelection": "Retirer de la sélection",
+    "noSelection": "Aucun bloc sélectionné. Cliquez-en un sur la carte.",
+    "noGeometryCount": "{{count}} bloc(s) sans emprise, absents de la carte",
+    "assignedBlocsList": "Blocs affectés",
+    "see": "Voir",
+    "allAgents": "Tous les agents"
   },
   "dataquality": {
     "eyebrow": "File de contrôle anti-fraude — signaux terrain",
@@ -655,8 +697,10 @@
       "closes": "Closes",
       "closeNumbers": "Numéros de la close",
       "closeParcels": "Parcelles de la close",
-      "sigIlots": "Îlots SIG (à reprendre)",
-      "sigVoirie": "Voirie SIG (à reprendre)"
+      "sigIlots": "Îlots SIG (livraison brute)",
+      "sigVoirie": "Voirie SIG (à reprendre)",
+      "zones": "Zones",
+      "postcodes": "Codes postaux"
     }
   },
   "reports": {
@@ -742,7 +786,10 @@
     "allZones": "Toutes les zones",
     "allQuartiers": "Tous les quartiers",
     "allCloses": "Toutes les closes",
-    "noCloses": "Aucune close dans ce quartier"
+    "noCloses": "Aucune close dans ce quartier",
+    "noZones": "Aucune zone",
+    "oneZone": "1 zone",
+    "someZones": "{{count}} zones"
   },
   "profile": {
     "eyebrow": "Mon compte",

@@ -17,7 +17,13 @@ import { wktBounds } from '../../ui/map/wkt.util';
  */
 interface RawCityNode { id: string; name: string; boundaryWkt: string | null; }
 interface RawCommuneNode { id: string; name: string; code: string; cityId: string; boundaryWkt: string | null; }
-interface RawZoneNode { id: string; name: string; code: string; communeId: string; boundaryWkt: string | null; }
+// `cityId` est renvoye par `ZoneResponse` (guide 3.2) et sert a restreindre les zones a la
+// ville quand aucune commune n'est choisie. Optionnel par prudence : une reponse qui ne le
+// porterait pas doit faire afficher TOUTES les zones, pas aucune.
+interface RawZoneNode {
+  id: string; name: string; code: string; communeId: string; cityId?: string | null;
+  boundaryWkt: string | null;
+}
 interface RawQuartierNode {
   id: string; nom: string; code: string;
   cityId: string; communeId: string | null; zoneId: string | null; boundaryWkt: string | null;
@@ -61,12 +67,18 @@ export class HierarchyApiService extends HierarchyApiPort {
     );
   }
 
-  override zones(communeId: UUID): Observable<HierarchyNode[]> {
-    return this.http.get<RawZoneNode[]>(`${this.baseUrl}/zones`, { params: { communeId } }).pipe(
-      map((rows) => rows.map((z): HierarchyNode => ({
-        id: z.id, level: 'zone', code: z.code, name: z.name,
-        parentId: z.communeId, bbox: toBbox(z.boundaryWkt),
-      }))),
+  override zones(cityId: UUID, communeId?: UUID | null): Observable<HierarchyNode[]> {
+    // `GET /api/zones` n'accepte que `communeId` : sans commune on demande tout, puis on
+    // restreint a la ville cote front. C'est le seul moyen de servir « toutes les communes »
+    // sans inventer un parametre que le contrat n'a pas.
+    const params: Record<string, string> = communeId ? { communeId } : {};
+    return this.http.get<RawZoneNode[]>(`${this.baseUrl}/zones`, { params }).pipe(
+      map((rows) => rows
+        .filter((z) => communeId || !z.cityId || z.cityId === cityId)
+        .map((z): HierarchyNode => ({
+          id: z.id, level: 'zone', code: z.code, name: z.name,
+          parentId: z.communeId, bbox: toBbox(z.boundaryWkt),
+        }))),
     );
   }
 

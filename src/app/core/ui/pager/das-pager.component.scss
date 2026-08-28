@@ -1,0 +1,18 @@
+@use "styles/variables" as v;
+
+.pager { display: flex; align-items: center; gap: v.$space-3; padding: v.$space-2 v.$space-4;
+  border-top: 1px solid var(--color-border); font-size: v.$font-size-xs; color: var(--color-text-muted);
+  flex-wrap: wrap;
+
+  &__size { display: inline-flex; align-items: center; gap: v.$space-2;
+    select { height: 28px; border: 1px solid var(--color-border); border-radius: v.$radius-sm;
+      background: var(--color-surface); font: inherit; color: inherit; } }
+  &__range { margin-left: auto; }
+  &__nav { display: flex; gap: 2px;
+    button { min-width: 28px; height: 28px; border: 1px solid var(--color-border);
+      background: var(--color-surface); border-radius: v.$radius-sm; cursor: pointer;
+      color: var(--color-text-secondary); font: inherit;
+      &:disabled { opacity: 0.4; cursor: default; } } }
+  &__page--active { background: var(--color-accent); color: var(--color-on-accent);
+    border-color: var(--color-accent); }
+}

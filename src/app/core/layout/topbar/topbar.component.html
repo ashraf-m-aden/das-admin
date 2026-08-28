@@ -1,7 +1,8 @@
 <header class="tb">
   <label class="tb__search">
     <i class="ti ti-search" aria-hidden="true"></i>
-    <input type="text" #searchInput [attr.placeholder]="'topbar.search' | transloco" (keyup.enter)="search(searchInput.value)" />
+    <input type="text" #searchInput [attr.placeholder]="'topbar.search' | transloco"
+      (keyup.enter)="search(searchInput.value)" />
     <span class="tb__kbd">⌘K</span>
   </label>
 
@@ -13,7 +14,7 @@
     <a class="tb__icon-btn" routerLink="/notifications" [attr.aria-label]="'nav.notifications' | transloco">
       <i class="ti ti-bell" aria-hidden="true"></i>
       @if ((unreadCount$ | async); as count) {
-        @if (count > 0) { <span class="tb__badge">{{ count }}</span> }
+      @if (count > 0) { <span class="tb__badge">{{ count }}</span> }
       }
     </a>
 
@@ -22,14 +23,16 @@
     </button>
 
     <div class="tb__profile">
-    <a class="tb__profile-link" routerLink="/profile">
-        <span class="tb__avatar" aria-hidden="true">{{ initials$ | async }}</span>
+      <a class="tb__profile-link" routerLink="/profile">
+        <!-- <span class="tb__avatar" aria-hidden="true">{{ initials$ | async }}</span> -->
         <div class="tb__profile-text">
           <span class="tb__profile-name">{{ fullName$ | async }}</span>
-          @if ((roles$ | async)?.[0]; as role) { <span class="tb__profile-role">{{ ('roles.' + role) | transloco }}</span> }
+          @if ((roles$ | async)?.[0]; as role) { <span class="tb__profile-role">{{ ('roles.' + role) | transloco
+            }}</span> }
         </div>
       </a>
-      <button type="button" class="tb__icon-btn tb__logout" (click)="logout()" [attr.aria-label]="'nav.logout' | transloco">
+      <button type="button" class="tb__icon-btn tb__logout" (click)="logout()"
+        [attr.aria-label]="'nav.logout' | transloco">
         <i class="ti ti-logout" aria-hidden="true"></i>
       </button>
     </div>

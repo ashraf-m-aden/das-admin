@@ -1,0 +1,26 @@
+<div class="pager">
+  <label class="pager__size">
+    {{ 'common.rowsPerPage' | transloco }}
+    <select (change)="changeSize($any($event.target).value)">
+      @for (s of pageSizes(); track s) {
+        <option [value]="s" [selected]="s === pageSize()">{{ s }}</option>
+      }
+    </select>
+  </label>
+
+  <span class="pager__range">{{ 'common.pageRange' | transloco: { from: from(), to: to(), total: total() } }}</span>
+
+  <div class="pager__nav">
+    <button type="button" [attr.aria-label]="'common.previousPage' | transloco"
+            (click)="goTo(page() - 1)" [disabled]="page() <= 1">
+      <i class="ti ti-chevron-left" aria-hidden="true"></i>
+    </button>
+    @for (p of pages(); track p) {
+      <button type="button" class="pager__page" [class.pager__page--active]="p === page()" (click)="goTo(p)">{{ p }}</button>
+    }
+    <button type="button" [attr.aria-label]="'common.nextPage' | transloco"
+            (click)="goTo(page() + 1)" [disabled]="page() >= pageCount()">
+      <i class="ti ti-chevron-right" aria-hidden="true"></i>
+    </button>
+  </div>
+</div>

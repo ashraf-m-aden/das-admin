@@ -47,9 +47,29 @@ describe('HierarchyFacade — reloadQuartiers', () => {
   it('ajoute zoneId aux quartiers dès qu\'une zone est choisie', () => {
     facade.selectCity('city-1');
     facade.selectCommune('commune-1');
-    facade.selectZone('zone-1');
+    facade.toggleZone('zone-1');
 
     expect(quartiersSpy).toHaveBeenCalledWith('city-1', 'commune-1', 'zone-1');
+  });
+
+  // Plusieurs zones : `?zoneId=` n'en accepte qu'une, donc un appel par zone puis fusion.
+  it('interroge une fois par zone quand plusieurs sont cochees', () => {
+    facade.selectCity('city-1');
+    facade.selectCommune('commune-1');
+    facade.toggleZone('zone-1');
+    facade.toggleZone('zone-2');
+
+    expect(quartiersSpy).toHaveBeenCalledWith('city-1', 'commune-1', 'zone-1');
+    expect(quartiersSpy).toHaveBeenCalledWith('city-1', 'commune-1', 'zone-2');
+  });
+
+  it('revient a toutes les zones quand on decoche la derniere', () => {
+    facade.selectCity('city-1');
+    facade.toggleZone('zone-1');
+    facade.toggleZone('zone-1');
+
+    expect(facade.selection().zoneIds).toEqual([]);
+    expect(facade.selection().zoneId).toBeNull();
   });
 
   it('revient à cityId seul quand la commune repasse à "tous"', () => {

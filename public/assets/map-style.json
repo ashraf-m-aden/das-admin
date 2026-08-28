@@ -68,6 +68,15 @@
       "minzoom": 8,
       "maxzoom": 18,
       "promoteId": "ogc_fid"
+    },
+    "quartiers": {
+      "type": "vector",
+      "tiles": [
+        "__TILES_BASE_URL__/quartiers_tiles/{z}/{x}/{y}"
+      ],
+      "minzoom": 0,
+      "maxzoom": 22,
+      "promoteId": "Id"
     }
   },
   "glyphs": "https://tiles.basemaps.cartocdn.com/fonts/{fontstack}/{range}.pbf",
@@ -77,6 +86,103 @@
       "type": "background",
       "paint": {
         "background-color": "#f8f9fa"
+      }
+    },
+    {
+      "id": "zones-fill",
+      "type": "fill",
+      "source": "quartiers",
+      "source-layer": "quartiers_tiles",
+      "layout": {
+        "visibility": "none"
+      },
+      "paint": {
+        "fill-color": [
+          "match",
+          [
+            "get",
+            "ZoneCode"
+          ],
+          "Z1",
+          "#2563eb",
+          "Z2",
+          "#d97706",
+          "Z3",
+          "#7c3aed",
+          "Z4",
+          "#0d9488",
+          "Z5",
+          "#16a34a",
+          "Z6",
+          "#db2777",
+          "Z9",
+          "#64748b",
+          "ZC",
+          "#65a30d",
+          "#94a3b8"
+        ],
+        "fill-opacity": 0.35
+      }
+    },
+    {
+      "id": "zones-line",
+      "type": "line",
+      "source": "quartiers",
+      "source-layer": "quartiers_tiles",
+      "layout": {
+        "visibility": "none"
+      },
+      "paint": {
+        "line-color": [
+          "match",
+          [
+            "get",
+            "ZoneCode"
+          ],
+          "Z1",
+          "#2563eb",
+          "Z2",
+          "#d97706",
+          "Z3",
+          "#7c3aed",
+          "Z4",
+          "#0d9488",
+          "Z5",
+          "#16a34a",
+          "Z6",
+          "#db2777",
+          "Z9",
+          "#64748b",
+          "ZC",
+          "#65a30d",
+          "#94a3b8"
+        ],
+        "line-width": 2
+      }
+    },
+    {
+      "id": "postcodes-line",
+      "type": "line",
+      "source": "quartiers",
+      "source-layer": "quartiers_tiles",
+      "layout": {
+        "visibility": "none"
+      },
+      "paint": {
+        "line-color": [
+          "case",
+          [
+            "has",
+            "Postcode"
+          ],
+          "#0f172a",
+          "#94a3b8"
+        ],
+        "line-width": 1.8,
+        "line-dasharray": [
+          2,
+          2
+        ]
       }
     },
     {
@@ -859,6 +965,80 @@
         "text-color": "#5b21b6",
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.6
+      }
+    },
+    {
+      "id": "zones-label",
+      "type": "symbol",
+      "source": "quartiers",
+      "source-layer": "quartiers_tiles",
+      "minzoom": 10,
+      "layout": {
+        "visibility": "none",
+        "text-field": [
+          "get",
+          "ZoneName"
+        ],
+        "text-font": [
+          "Montserrat Regular",
+          "Open Sans Regular",
+          "Noto Sans Regular"
+        ],
+        "text-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          11,
+          10,
+          16,
+          14
+        ]
+      },
+      "paint": {
+        "text-color": "#1e293b",
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.6
+      }
+    },
+    {
+      "id": "postcodes-label",
+      "type": "symbol",
+      "source": "quartiers",
+      "source-layer": "quartiers_tiles",
+      "minzoom": 11,
+      "layout": {
+        "visibility": "none",
+        "text-field": [
+          "get",
+          "Postcode"
+        ],
+        "text-font": [
+          "Montserrat Regular",
+          "Open Sans Regular",
+          "Noto Sans Regular"
+        ],
+        "text-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          12,
+          10,
+          17,
+          14
+        ]
+      },
+      "paint": {
+        "text-color": "#0f172a",
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.8
       }
     }
   ]

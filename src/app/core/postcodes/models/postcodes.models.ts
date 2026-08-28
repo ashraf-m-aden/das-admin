@@ -19,10 +19,25 @@ export interface QuartierPostcodeRow {
   boundaryWkt: string | null;
 }
 
-/** Zone postale — regroupe des quartiers. Sert au coloriage de fond de la carte. */
-export interface ZoneOption {
+/**
+ * Zone postale — regroupe des quartiers d'UNE commune. Sert au coloriage de fond de la carte
+ * et au rattachement des quartiers.
+ *
+ * `communeId` n'est pas décoratif : une zone est une PARTIE d'une commune, jamais un parent
+ * alternatif. C'est lui qui dit quels quartiers peuvent la rejoindre — le back refuse le reste
+ * en `Quartiers.ZoneOutsideCommune`. Le libellé de la chaîne de rattachement est renvoyé par
+ * `GET /api/zones`, ce qui évite une cascade d'appels pour afficher « Boulaos 3 · Boulaos ».
+ */
+export interface ZoneRow {
   id: UUID;
   name: string;
+  code: string;
+  communeId: UUID;
+  communeName: string;
+  cityId: UUID | null;
+  cityName: string;
+  /** Composition renvoyée par l'API, en lecture seule : on rattache DEPUIS le quartier. */
+  quartierCount: number;
 }
 
 export interface CityPostcodeRow {
@@ -35,6 +50,18 @@ export interface CityPostcodeRow {
 export interface UpdateQuartierAreaNumberPayload {
   current: QuartierPostcodeRow;
   areaNumber: number;
+}
+
+/**
+ * Rattachement d'un quartier à une zone, ou détachement avec `zoneId: null`.
+ *
+ * Il n'existe pas de `POST /api/zones { quartierIds }` : la composition d'une zone se modifie
+ * un quartier à la fois, depuis le quartier. Ce n'est pas une limite de l'API, c'est la forme
+ * du domaine — le rattachement appartient au quartier.
+ */
+export interface AssignQuartierZonePayload {
+  current: QuartierPostcodeRow;
+  zoneId: UUID | null;
 }
 
 export interface UpdateCityCodePayload {
