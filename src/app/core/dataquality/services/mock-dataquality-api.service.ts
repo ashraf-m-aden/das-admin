@@ -3,6 +3,7 @@ import { Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { DataQualityApiPort } from './dataquality-api.port';
 import { SuspiciousSurveysData } from '../models/dataquality.models';
+import { UUID } from '../../models/das.models';
 
 @Injectable({ providedIn: 'root' })
 export class MockDataQualityApiService extends DataQualityApiPort {
@@ -23,9 +24,14 @@ export class MockDataQualityApiService extends DataQualityApiPort {
         isMockLocation: true,
         photoCount: 1,
         reasons: [
-          'Position GPS simulée signalée par l’appareil.',
-          'Relevé effectué à 138 m de l’adresse (seuil : 100 m).',
+          { code: 'mock_location', args: {} },
+          { code: 'too_far', args: { distance: 138, threshold: 100 } },
         ],
+        agentFullName: 'Warsama Robleh',
+        adresseLibelle: '4, close 3, Balbala Ancien Djibouti',
+        quartierNom: 'Balbala Ancien',
+        suspicionDismissedAtUtc: null,
+        suspicionDismissReason: null,
       },
       {
         id: 'survey-0009',
@@ -38,13 +44,33 @@ export class MockDataQualityApiService extends DataQualityApiPort {
         gpsAccuracyM: 5.1,
         isMockLocation: false,
         photoCount: 2,
-        reasons: ['Remonté après la clôture, pendant la fenêtre de remontée.'],
+        reasons: [{ code: 'pushed_after_close', args: {} }],
+        agentFullName: 'Warsama Robleh',
+        adresseLibelle: '9, bloc 5, PK12 Djibouti',
+        quartierNom: 'PK12',
+        suspicionDismissedAtUtc: null,
+        suspicionDismissReason: null,
       },
     ],
     pushedAfterCloseByAgent: [{ agentId: 'mock-surveyor-0002', agentFullName: 'Warsama Robleh', pushedAfterClose: 6 }],
+    suspiciousDistanceM: 100,
   };
 
-  override load(): Observable<SuspiciousSurveysData> {
-    return of(this.data).pipe(delay(MockDataQualityApiService.SIMULATED_LATENCY_MS));
+  override dismissSuspicion(surveyId: UUID, reason: string): Observable<void> {
+    const survey = this.data.surveys.find((s) => s.id === surveyId);
+    if (survey) {
+      survey.suspicionDismissedAtUtc = new Date().toISOString();
+      survey.suspicionDismissReason = reason;
+    }
+    return of(undefined).pipe(delay(MockDataQualityApiService.SIMULATED_LATENCY_MS));
+  }
+
+  override load(includeDismissed: boolean): Observable<SuspiciousSurveysData> {
+    // Le filtre est APPLIQUÉ, comme côté back : sans cela, écarter un relevé en mock ne le
+    // ferait pas sortir de la liste et la fonctionnalité paraîtrait cassée.
+    const surveys = includeDismissed
+      ? this.data.surveys
+      : this.data.surveys.filter((s) => s.suspicionDismissedAtUtc === null);
+    return of({ ...this.data, surveys }).pipe(delay(MockDataQualityApiService.SIMULATED_LATENCY_MS));
   }
 }

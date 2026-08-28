@@ -29,3 +29,41 @@
 }
 
 .empty { padding: v.$space-6; text-align: center; color: var(--color-text-muted); }
+
+.dqfilters { display: flex; align-items: center; gap: v.$space-2; flex-wrap: wrap;
+  margin-bottom: v.$space-3;
+  &__count { margin-left: auto; font-size: v.$font-size-xs; color: var(--color-text-muted); }
+  &__clear { border: none; background: none; padding: 0; font: inherit; font-size: v.$font-size-xs;
+    color: var(--color-accent); cursor: pointer; text-decoration: underline; }
+}
+// `dqchip` et non `chip` : `.chip` est deja pris dans cet ecran par la pastille de danger
+// (`chip--danger`), et la redefinir ecraserait son fond rouge.
+.dqchip { display: inline-flex; align-items: center; height: 28px; padding: 0 v.$space-3;
+  border: 1px solid var(--color-border); border-radius: v.$radius-full; background: var(--color-surface);
+  font: inherit; font-size: v.$font-size-xs; color: var(--color-text-secondary); cursor: pointer;
+  &:hover { border-color: var(--color-accent); }
+  &--on { border-color: var(--color-accent); background: var(--das-blue-50); color: var(--color-text-primary); }
+}
+.dqsort { height: 28px; padding: 0 v.$space-2; border: 1px solid var(--color-border);
+  border-radius: v.$radius-sm; font: inherit; font-size: v.$font-size-xs; background: var(--color-surface); }
+
+.trow__adresse { font-weight: v.$font-weight-medium; color: var(--color-text-primary); }
+
+// La ligne devient un lien : meme grille, mais cliquable et signalee comme telle.
+a.trow { text-decoration: none; color: inherit; cursor: pointer;
+  &:hover { background: var(--color-surface-alt); } }
+
+// L'action vit DANS la ligne, qui est un lien : les evenements sont stoppes cote gabarit,
+// sinon un clic sur « Ecarter » naviguerait vers la file de verification.
+.dismiss { display: inline-flex; align-items: center; gap: v.$space-1; flex-wrap: wrap;
+  input { height: 26px; padding: 0 v.$space-2; border: 1px solid var(--color-border);
+    border-radius: v.$radius-sm; font: inherit; font-size: v.$font-size-xs; min-width: 180px; } }
+.abtn { height: 26px; padding: 0 v.$space-2; border: 1px solid var(--color-border);
+  border-radius: v.$radius-sm; background: var(--color-surface); font: inherit;
+  font-size: v.$font-size-xs; color: var(--color-text-secondary); cursor: pointer;
+  &:hover:not(:disabled) { border-color: var(--color-accent); color: var(--color-accent); }
+  &:disabled { opacity: 0.5; cursor: default; } }
+// La cellule est en grille : sans largeur explicite, le bouton s'etire sur toute la colonne
+// et se lit comme une barre plutot que comme une action.
+.dismiss__start { margin-top: v.$space-1; width: fit-content; }
+.dismissed { font-size: v.$font-size-xs; color: var(--color-success); }

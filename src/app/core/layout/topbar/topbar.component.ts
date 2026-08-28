@@ -4,7 +4,6 @@ import { Router, RouterLink } from '@angular/router';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { map } from 'rxjs';
 import { AuthFacade } from '../../auth/store/auth.facade';
-import { NotificationsFacade } from '../../notifications/store/notifications.facade';
 
 @Component({
   selector: 'das-topbar',
@@ -15,13 +14,11 @@ import { NotificationsFacade } from '../../notifications/store/notifications.fac
 })
 export class TopbarComponent {
   private authFacade = inject(AuthFacade);
-  private notificationsFacade = inject(NotificationsFacade);
   private transloco = inject(TranslocoService);
   private router = inject(Router);
 
   protected readonly fullName$ = this.authFacade.fullName$;
   protected readonly roles$ = this.authFacade.roles$;
-  protected readonly unreadCount$ = this.notificationsFacade.unreadCount$;
 
   protected readonly activeLang = signal(this.transloco.getActiveLang());
 

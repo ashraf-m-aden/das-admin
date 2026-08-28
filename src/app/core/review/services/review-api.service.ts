@@ -27,6 +27,13 @@ interface RawSurveyResponse {
   capturedAtUtc: string;
   status: 'Draft' | 'Submitted' | 'Validated' | 'Rejected';
   rejectionReason: string | null;
+  // Optionnels : le back ne les renseigne que sur les réponses de LECTURE.
+  agentFullName?: string | null;
+  adresseLibelle?: string | null;
+  addressCode?: string | null;
+  quartierNom?: string | null;
+  gpsCaptureWkt?: string | null;
+  adresseLocationWkt?: string | null;
 }
 
 interface RawSurveyPhotoResponse {
@@ -107,6 +114,14 @@ function toSurveyReviewItem(raw: RawSurveyResponse): SurveyReviewItem {
     distanceFromAddressM: raw.distanceFromAddressM === null ? null : Number(raw.distanceFromAddressM),
     photoCount: Number(raw.photoCount),
     isMockLocation: raw.isMockLocation,
+    // `?? null` et non `?? ''` : un contexte absent est une information (réponse d'écriture),
+    // pas une chaîne vide à afficher.
+    agentFullName: raw.agentFullName ?? null,
+    adresseLibelle: raw.adresseLibelle ?? null,
+    addressCode: raw.addressCode ?? null,
+    quartierNom: raw.quartierNom ?? null,
+    gpsCaptureWkt: raw.gpsCaptureWkt ?? null,
+    adresseLocationWkt: raw.adresseLocationWkt ?? null,
   };
 }
 

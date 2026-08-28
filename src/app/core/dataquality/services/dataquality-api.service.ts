@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { DataQualityApiPort } from './dataquality-api.port';
+import { UUID } from '../../models/das.models';
 import { AppConfigService } from '../../config/app-config.service';
 import { AgentPushVolumeItem, SuspiciousSurveyItem, SuspiciousSurveysData } from '../models/dataquality.models';
 import { NotSurveyableReason, SurveyOutcome } from '../../review/models/review.models';
@@ -18,11 +19,21 @@ interface RawSurveyResponse {
   isMockLocation: boolean;
   photoCount: number | string;
   capturedAtUtc: string;
+  agentFullName?: string | null;
+  adresseLibelle?: string | null;
+  quartierNom?: string | null;
+  suspicionDismissedAtUtc?: string | null;
+  suspicionDismissReason?: string | null;
+}
+
+interface RawSuspiciousReason {
+  code: string;
+  args: Record<string, number>;
 }
 
 interface RawSuspiciousSurveyResponse {
   survey: RawSurveyResponse;
-  reasons: string[];
+  reasons: RawSuspiciousReason[];
 }
 
 interface RawAgentPushVolumeResponse {
@@ -34,6 +45,7 @@ interface RawAgentPushVolumeResponse {
 interface RawSuspiciousSurveysResponse {
   surveys: RawSuspiciousSurveyResponse[];
   pushedAfterCloseByAgent: RawAgentPushVolumeResponse[];
+  suspiciousDistanceM?: number | string;
 }
 
 function toSuspiciousSurveyItem(raw: RawSuspiciousSurveyResponse): SuspiciousSurveyItem {
@@ -49,7 +61,14 @@ function toSuspiciousSurveyItem(raw: RawSuspiciousSurveyResponse): SuspiciousSur
     gpsAccuracyM: s.gpsAccuracyM === null ? null : Number(s.gpsAccuracyM),
     isMockLocation: s.isMockLocation,
     photoCount: Number(s.photoCount),
-    reasons: raw.reasons,
+    // `args` peut manquer sur un motif sans paramètre : un objet vide évite un garde
+    // à chaque interpolation côté gabarit.
+    reasons: raw.reasons.map((r) => ({ code: r.code, args: r.args ?? {} })),
+    agentFullName: s.agentFullName ?? null,
+    adresseLibelle: s.adresseLibelle ?? null,
+    quartierNom: s.quartierNom ?? null,
+    suspicionDismissedAtUtc: s.suspicionDismissedAtUtc ?? null,
+    suspicionDismissReason: s.suspicionDismissReason ?? null,
   };
 }
 
@@ -63,11 +82,21 @@ export class DataQualityApiService extends DataQualityApiPort {
   private config = inject(AppConfigService);
   private get suspiciousUrl() { return `${this.config.get('apiBaseUrl')}/surveys/suspicious`; }
 
-  override load(): Observable<SuspiciousSurveysData> {
-    return this.http.get<RawSuspiciousSurveysResponse>(this.suspiciousUrl).pipe(
+  override dismissSuspicion(surveyId: UUID, reason: string): Observable<void> {
+    return this.http
+      .post(`${this.config.get('apiBaseUrl')}/surveys/${surveyId}/dismiss-suspicion`, { reason })
+      .pipe(map(() => undefined));
+  }
+
+  override load(includeDismissed: boolean): Observable<SuspiciousSurveysData> {
+    const params: Record<string, boolean> = includeDismissed ? { includeDismissed: true } : {};
+    return this.http.get<RawSuspiciousSurveysResponse>(this.suspiciousUrl, { params }).pipe(
       map((raw) => ({
         surveys: raw.surveys.map(toSuspiciousSurveyItem),
         pushedAfterCloseByAgent: raw.pushedAfterCloseByAgent.map(toAgentPushVolumeItem),
+        // Repli à 100 seulement si un back antérieur ne renvoie pas le champ — il ne doit
+        // pas devenir la valeur de référence.
+        suspiciousDistanceM: raw.suspiciousDistanceM === undefined ? 100 : Number(raw.suspiciousDistanceM),
       })),
     );
   }

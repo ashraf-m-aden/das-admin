@@ -6,16 +6,46 @@
   } @else {
     <section class="das-card panel">
       <div class="panel__title">{{ 'dataquality.suspicious' | transloco }} <span class="badge">{{ facade.surveys().length }}</span></div>
+
+      <!-- On filtre sur les champs STRUCTURES du releve, pas sur le texte des motifs : ceux-ci
+           arrivent en phrases redigees cote back, non traduites et susceptibles de changer. -->
+      <div class="dqfilters">
+        <button type="button" class="dqchip" [class.dqchip--on]="onlyMock()" (click)="toggleMock()">{{ 'dataquality.filterMock' | transloco }}</button>
+        <button type="button" class="dqchip" [class.dqchip--on]="onlyFar()" (click)="toggleFar()">{{ 'dataquality.filterFar' | transloco: { threshold: facade.suspiciousDistanceM() } }}</button>
+        <button type="button" class="dqchip" [class.dqchip--on]="onlyNoPhoto()" (click)="toggleNoPhoto()">{{ 'dataquality.filterNoPhoto' | transloco }}</button>
+
+        <select class="dqsort" (change)="setSort($any($event.target).value)">
+          <option value="recent">{{ 'dataquality.sortRecent' | transloco }}</option>
+          <option value="distance">{{ 'dataquality.sortDistance' | transloco }}</option>
+          <option value="photos">{{ 'dataquality.sortPhotos' | transloco }}</option>
+        </select>
+
+        <span class="dqfilters__count">{{ 'dataquality.shown' | transloco: { count: filtered().length } }}</span>
+        <button type="button" class="dqchip" [class.dqchip--on]="facade.includeDismissed()"
+                (click)="toggleDismissed()">{{ 'dataquality.showDismissed' | transloco }}</button>
+        @if (isFiltered()) {
+          <button type="button" class="dqfilters__clear" (click)="clearFilters()">{{ 'staff.clearFilters' | transloco }}</button>
+        }
+      </div>
+
       <div class="thead">
-        <span>{{ 'dataquality.capturedAt' | transloco }}</span>
+        <span>{{ 'dataquality.survey' | transloco }}</span>
         <span>{{ 'dataquality.distance' | transloco }}</span>
         <span>{{ 'dataquality.photos' | transloco }}</span>
         <span>{{ 'dataquality.reasons' | transloco }}</span>
       </div>
-      @for (s of facade.surveys(); track s.id) {
-        <div class="trow">
+      @for (s of paged(); track s.id) {
+        <!-- L'ecran n'etait qu'un constat : on voyait un releve suspect sans pouvoir y aller.
+             La ligne mene desormais a la file de verification, ouverte sur ce releve. -->
+        <a class="trow" [routerLink]="['/verification', s.id]">
           <span>
-            {{ s.capturedAtUtc | dasDate: 'long' }}
+            <!-- L'identité vient du contrat enrichi le 2026-08-28 : un relevé signalé sans
+                 parcelle ni agent ne peut être ni situé ni imputé. -->
+            @if (s.adresseLibelle) { <div class="trow__adresse">{{ s.adresseLibelle }}</div> }
+            <div class="trow__meta">
+              @if (s.agentFullName) { {{ s.agentFullName }} · }
+              {{ s.capturedAtUtc | dasDate: 'long' }}
+            </div>
             @if (s.outcome === 'NotSurveyable' && s.notSurveyableReason) {
               <div class="trow__meta">{{ notSurveyableReasonKey(s.notSurveyableReason) | transloco }}</div>
             }
@@ -26,11 +56,41 @@
           </span>
           <span class="trow__num">{{ s.photoCount }}</span>
           <span class="trow__reasons">
-            @for (r of s.reasons; track r) { <div class="reason">{{ r }}</div> }
+            <!-- Ecarter le SIGNAL n'est pas valider le RELEVE : celui-ci reste a trancher dans
+                 la file de verification, ou mene le lien de la ligne. -->
+            @if (s.suspicionDismissedAtUtc) {
+              <div class="dismissed">
+                <i class="ti ti-check" aria-hidden="true"></i>
+                {{ 'dataquality.dismissedOn' | transloco: { date: (s.suspicionDismissedAtUtc | dasDate: 'short') } }}
+                @if (s.suspicionDismissReason) { — {{ s.suspicionDismissReason }} }
+              </div>
+            } @else if (dismissingId() === s.id) {
+              <span class="dismiss" (click)="$event.stopPropagation(); $event.preventDefault()">
+                <input type="text" [value]="dismissReason()" (input)="dismissReason.set($any($event.target).value)"
+                       [attr.placeholder]="'dataquality.dismissPlaceholder' | transloco" />
+                <button type="button" class="abtn" [disabled]="!canDismiss()" (click)="confirmDismiss(s.id)">{{ 'common.apply' | transloco }}</button>
+                <button type="button" class="abtn" (click)="cancelDismiss()">{{ 'common.cancel' | transloco }}</button>
+              </span>
+            } @else {
+              <button type="button" class="abtn dismiss__start"
+                      (click)="$event.stopPropagation(); $event.preventDefault(); startDismiss(s.id)">
+                {{ 'dataquality.dismiss' | transloco }}
+              </button>
+            }
+            <!-- Motif TRADUIT depuis son code, avec ses valeurs interpolées : le back ne
+                 renvoie plus de phrase, il ne connaît pas la langue de l'utilisateur. -->
+            @for (r of s.reasons; track r.code) {
+              <div class="reason">{{ ('dataquality.reason.' + r.code) | transloco: r.args }}</div>
+            }
           </span>
-        </div>
+        </a>
       } @empty {
-        <div class="empty">{{ 'dataquality.noSuspicious' | transloco }}</div>
+        <div class="empty">{{ (isFiltered() ? 'dataquality.noMatch' : 'dataquality.noSuspicious') | transloco }}</div>
+      }
+
+      @if (filtered().length) {
+        <das-pager [page]="page()" [pageSize]="pageSize()" [total]="filtered().length"
+                   (pageChange)="goToPage($event)" (pageSizeChange)="setPageSize($event)" />
       }
     </section>
 

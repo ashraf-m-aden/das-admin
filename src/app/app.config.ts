@@ -23,9 +23,6 @@ import { BlocksEffects } from './core/blocks/store/blocks.effects';
 import { provideReviewApi } from './core/review/services/review-api.provider';
 import { reviewFeature } from './core/review/store/review.reducer';
 import { ReviewEffects } from './core/review/store/review.effects';
-import { provideNotificationsApi } from './core/notifications/services/notifications-api.provider';
-import { notificationsFeature } from './core/notifications/store/notifications.reducer';
-import { NotificationsEffects } from './core/notifications/store/notifications.effects';
 import { provideAddressingApi } from './core/addressing/services/addressing-api.provider';
 import { addressingFeature } from './core/addressing/store/addressing.reducer';
 import { AddressingEffects } from './core/addressing/store/addressing.effects';
@@ -84,7 +81,6 @@ export const appConfig: ApplicationConfig = {
     provideStaffApi(),
     provideBlocksApi(),
     provideReviewApi(),
-    provideNotificationsApi(),
     provideAddressingApi(),
     provideClientsApi(),
 
@@ -95,7 +91,6 @@ export const appConfig: ApplicationConfig = {
       [blocksFeature.name]: blocksFeature.reducer,
       [reviewFeature.name]: reviewFeature.reducer,
       [fieldOpsFeature.name]: fieldOpsFeature.reducer,
-      [notificationsFeature.name]: notificationsFeature.reducer,
       [addressingFeature.name]: addressingFeature.reducer,
       [clientsFeature.name]: clientsFeature.reducer,
     }),
@@ -106,7 +101,6 @@ export const appConfig: ApplicationConfig = {
       BlocksEffects,
       ReviewEffects,
       FieldOpsEffects,
-      NotificationsEffects,
       AddressingEffects,
       ClientsEffects,
       FeedbackEffects

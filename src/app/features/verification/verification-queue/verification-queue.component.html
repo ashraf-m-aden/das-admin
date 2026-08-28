@@ -6,7 +6,36 @@
     <button type="button" class="tab" [class.tab--on]="typeFilter() === 'property'" (click)="filterType('property')">{{ 'verification.type.property' | transloco }}</button>
     <button type="button" class="tab" [class.tab--on]="typeFilter() === 'street'" (click)="filterType('street')">{{ 'verification.type.street' | transloco }}</button>
     <button type="button" class="tab" [class.tab--on]="typeFilter() === 'block'" (click)="filterType('block')">{{ 'verification.type.block' | transloco }}</button>
+
+    <button type="button" class="tab tab--sort" [class.tab--on]="oldestFirst()" (click)="toggleOldestFirst()">
+      <i class="ti ti-clock" aria-hidden="true"></i>{{ 'verification.oldestFirst' | transloco }}
+    </button>
   </div>
+
+  <!-- Validation groupee uniquement : le rejet reste individuel, son motif etant destine a
+       un agent precis sur un releve precis. -->
+  @if (selectableItems().length) {
+    <div class="bulk">
+      <label class="bulk__all">
+        <input type="checkbox" [checked]="allPageSelected()" (change)="toggleSelectPage()" />
+        {{ 'verification.selectPage' | transloco }}
+      </label>
+
+      @if (selectedIds().size) {
+        <span class="bulk__count">{{ 'verification.selectedCount' | transloco: { count: selectedIds().size } }}</span>
+        @if (confirmingBulk()) {
+          <span class="bulk__confirm">{{ 'verification.confirmBulk' | transloco: { count: selectedIds().size } }}</span>
+          <button type="button" class="btn btn--approve" (click)="confirmBulkValidate()">{{ 'common.apply' | transloco }}</button>
+          <button type="button" class="btn btn--ghost" (click)="cancelBulkValidate()">{{ 'common.cancel' | transloco }}</button>
+        } @else {
+          <button type="button" class="btn btn--approve" (click)="requestBulkValidate()">
+            <i class="ti ti-checks" aria-hidden="true"></i>{{ 'verification.validateSelection' | transloco }}
+          </button>
+          <button type="button" class="btn btn--ghost" (click)="clearSelection()">{{ 'verification.clearSelection' | transloco }}</button>
+        }
+      }
+    </div>
+  }
 
   @if (decisionError$ | async; as err) { <div class="vq__error">{{ err | transloco }}</div> }
 
@@ -18,6 +47,9 @@
           {{ (stalled.length === 1 ? 'verification.stalled.bannerOne' : 'verification.stalled.banner') | transloco: { count: stalled.length } }}
           <i class="ti" [class.ti-chevron-down]="!showStalled()" [class.ti-chevron-up]="showStalled()" aria-hidden="true"></i>
         </button>
+        @if (notInQueueId()) {
+          <div class="stalled__missing">{{ 'verification.stalled.notInQueue' | transloco }}</div>
+        }
         @if (showStalled()) {
           <div class="stalled__list">
             <div class="stalled__head">
@@ -27,12 +59,13 @@
               <span>{{ 'verification.stalled.daysWaiting' | transloco }}</span>
             </div>
             @for (s of stalled; track s.surveyId) {
-              <div class="stalled__row">
+              <!-- Cliquable : le bandeau annoncait un probleme sans permettre d'y aller. -->
+              <button type="button" class="stalled__row" (click)="focusSurvey(s.surveyId)">
                 <span>{{ s.campaignCode }}</span>
                 <span>{{ s.agentFullName }}</span>
                 <span>{{ s.capturedAtUtc | dasDate: 'long' }}</span>
                 <span class="stalled__days">{{ 'verification.stalled.days' | transloco: { count: s.daysWaiting } }}</span>
-              </div>
+              </button>
             }
           </div>
         }
@@ -40,13 +73,29 @@
     }
   }
 
-  @for (item of (items$ | async) ?? []; track item.id) {
-    <section class="das-card card">
+  @for (item of pagedItems(); track item.id) {
+    <section class="das-card card" [class.card--focused]="focusedId() === item.id">
       <div class="card__head">
         <div>
+          @if (item.submissionType === 'property') {
+            <label class="card__pick">
+              <input type="checkbox" [checked]="isSelected(item)" (change)="toggleSelection(item)" />
+            </label>
+          }
           <span class="card__type">{{ typeLabelKey(item.submissionType) | transloco }}</span>
           @if (item.submissionType === 'property') {
-            <div class="card__meta">{{ item.capturedAtUtc | dasDate: 'long' }}</div>
+            <!-- L'identité du relevé, ajoutée au contrat le 2026-08-28. Sans elle, on validait
+                 ou rejetait un relevé sans savoir sur quelle parcelle ni de quel agent. -->
+            @if (item.adresseLibelle) {
+              <div class="card__adresse">
+                {{ item.adresseLibelle }}
+                @if (item.addressCode) { <span class="card__code mono">{{ item.addressCode }}</span> }
+              </div>
+            }
+            <div class="card__meta">
+              @if (item.agentFullName) { <span class="card__agent">{{ item.agentFullName }}</span> · }
+              {{ item.capturedAtUtc | dasDate: 'long' }}
+            </div>
           } @else {
             <div class="card__suggestion">{{ item.suggestedName }}</div>
             <div class="card__meta">{{ item.proposedAtUtc | dasDate: 'long' }}</div>
@@ -87,7 +136,8 @@
                 <span class="photos__loading">{{ 'common.loading' | transloco }}</span>
               } @else {
                 @for (p of (facade.photosFor$(item.id) | async) ?? []; track p.id) {
-                  <div class="photo photo--img" [style.backgroundImage]="'url(' + p.readUrl + ')'"></div>
+                  <button type="button" class="photo photo--img" [style.backgroundImage]="'url(' + p.readUrl + ')'"
+                          [attr.aria-label]="'verification.openPhoto' | transloco" (click)="openPhoto(p.readUrl)"></button>
                 }
               }
             </div>
@@ -97,12 +147,25 @@
         @if (item.comment) { <div class="notes"><i class="ti ti-note" aria-hidden="true"></i>{{ item.comment }}</div> }
       }
 
+      @if (hasGeometry(item)) {
+        <button type="button" class="btn btn--ghost" (click)="toggleMap(item)">
+          <i class="ti ti-map-pin" aria-hidden="true"></i>{{ 'verification.viewMap' | transloco }}
+        </button>
+        @if (mapOpenId() === item.id) {
+          <div class="gapmap">
+            <das-map [features]="mapFeaturesFor(item)" [layers]="mapLayers" [showLayerControl]="false" />
+          </div>
+        }
+      }
+
       @if (rejectingId() === item.id) {
         <div class="reject" [formGroup]="rejectForm">
           <input type="text" formControlName="reason" [attr.placeholder]="'verification.reasonPlaceholder' | transloco" />
-          <button type="button" class="btn btn--reject" (click)="confirmReject(item)">{{ 'verification.confirmReject' | transloco }}</button>
+          <button type="button" class="btn btn--reject" [disabled]="rejectForm.invalid" (click)="confirmReject(item)">{{ 'verification.confirmReject' | transloco }}</button>
           <button type="button" class="btn btn--ghost" (click)="cancelReject()">{{ 'common.cancel' | transloco }}</button>
         </div>
+        <!-- Le motif part tel quel a l'agent : le dire evite un rejet vide, puis un aller-retour. -->
+        <p class="reject__hint">{{ 'verification.reasonRequired' | transloco }}</p>
       } @else {
         <div class="actions">
           @if (item.submissionType === 'property') {
@@ -119,4 +182,20 @@
   } @empty {
     <div class="empty">@if (isLoading$ | async) { {{ 'common.loading' | transloco }} } @else { {{ 'verification.empty' | transloco }} }</div>
   }
+
+  @if (items().length) {
+    <das-pager [page]="page()" [pageSize]="pageSize()" [total]="items().length"
+               (pageChange)="goToPage($event)" (pageSizeChange)="setPageSize($event)" />
+  }
 </div>
+
+@if (lightboxUrl(); as url) {
+  <!-- Fermeture au clic n'importe ou : la visionneuse ne sert qu'a regarder, il n'y a rien
+       a y faire d'autre, donc rien qui justifie de chercher un bouton. -->
+  <div class="lightbox" (click)="closePhoto()">
+    <img [src]="url" [attr.alt]="'verification.photos' | transloco" />
+    <button type="button" class="lightbox__close" [attr.aria-label]="'common.cancel' | transloco">
+      <i class="ti ti-x" aria-hidden="true"></i>
+    </button>
+  </div>
+}

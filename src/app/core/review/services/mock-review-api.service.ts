@@ -40,6 +40,12 @@ export class MockReviewApiService extends ReviewApiPort {
       distanceFromAddressM: 1.8,
       photoCount: 3,
       isMockLocation: false,
+      agentFullName: 'Idriss Agent',
+      adresseLibelle: '12, rue de la Mosquée, Quartier 7 Djibouti',
+      addressCode: '77-310-2-12',
+      quartierNom: 'Quartier 7',
+      gpsCaptureWkt: 'POINT(43.1451 11.5952)',
+      adresseLocationWkt: 'POINT(43.1450 11.5951)',
     },
     {
       submissionType: 'property',
@@ -60,6 +66,13 @@ export class MockReviewApiService extends ReviewApiPort {
       distanceFromAddressM: 22.4,
       photoCount: 1,
       isMockLocation: true,
+      agentFullName: 'Warsama Robleh',
+      adresseLibelle: '4, close 3, Balbala Ancien Djibouti',
+      addressCode: null,
+      quartierNom: 'Balbala Ancien',
+      // Ecart volontairement visible : c'est le releve signale comme trop eloigne.
+      gpsCaptureWkt: 'POINT(43.1102 11.5605)',
+      adresseLocationWkt: 'POINT(43.1085 11.5598)',
     },
     {
       submissionType: 'property',
@@ -80,6 +93,12 @@ export class MockReviewApiService extends ReviewApiPort {
       distanceFromAddressM: null,
       photoCount: 0,
       isMockLocation: false,
+      agentFullName: 'Idriss Agent',
+      adresseLibelle: '7, bloc 2, Einguela Djibouti',
+      addressCode: '77-202-2-7',
+      quartierNom: 'Einguela',
+      gpsCaptureWkt: 'POINT(43.1389 11.5871)',
+      adresseLocationWkt: 'POINT(43.1388 11.5872)',
     },
   ];
 
@@ -153,7 +172,9 @@ export class MockReviewApiService extends ReviewApiPort {
 
   private stalledSurveys: StalledSurveyItem[] = [
     {
-      surveyId: 'survey-stalled-0001',
+      // Designe un releve REELLEMENT dans la file : sinon la branche mock ne peut pas montrer
+      // le saut depuis le bandeau, et on ne verrait que le cas d'echec.
+      surveyId: 'survey-0002',
       adresseId: 'addr-12361',
       agentId: 'mock-surveyor-0002',
       agentFullName: 'Warsama Robleh',

@@ -46,3 +46,45 @@
   &--ghost { background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text-secondary); }
 }
 .empty { padding: v.$space-10; text-align: center; color: var(--color-text-muted); }
+
+.reject__hint { margin: v.$space-1 0 0; font-size: v.$font-size-xs; color: var(--color-text-muted); }
+
+// La vignette devient un bouton : meme rendu, mais cliquable et atteignable au clavier.
+.photo--img { border: none; padding: 0; cursor: zoom-in; }
+
+.lightbox { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center;
+  justify-content: center; padding: v.$space-5; background: rgb(0 0 0 / 82%); cursor: zoom-out;
+  img { max-width: 100%; max-height: 100%; border-radius: v.$radius-md; }
+  &__close { position: absolute; top: v.$space-4; right: v.$space-4; width: 36px; height: 36px;
+    border: none; border-radius: 50%; background: rgb(255 255 255 / 18%); color: #fff;
+    font-size: 18px; cursor: pointer; }
+}
+
+// L'identité passe avant les chiffres : c'est ce qu'on lit d'abord pour savoir sur quoi on statue.
+.card__adresse { font-size: v.$font-size-sm; font-weight: v.$font-weight-medium;
+  color: var(--color-text-primary); display: flex; align-items: center; gap: v.$space-2;
+  flex-wrap: wrap; }
+.card__code { font-size: v.$font-size-xs; color: var(--color-text-muted); }
+.card__agent { color: var(--color-text-secondary); }
+
+.gapmap { height: 260px; border-radius: v.$radius-md; overflow: hidden; margin-top: v.$space-2; }
+.card--focused { outline: 2px solid var(--color-accent); }
+
+// La ligne du bandeau devient un bouton : meme grille, mais cliquable et atteignable au clavier.
+.stalled__row { width: 100%; border: none; background: none; font: inherit; text-align: left;
+  cursor: pointer;
+  &:hover { background: var(--color-surface-alt); } }
+
+.stalled__missing { padding: v.$space-2 v.$space-3; font-size: v.$font-size-xs; color: #b45309; }
+
+.tab--sort { margin-left: v.$space-3; display: inline-flex; align-items: center; gap: 4px; }
+
+.bulk { display: flex; align-items: center; gap: v.$space-3; flex-wrap: wrap;
+  padding: v.$space-2 v.$space-3; border: 1px solid var(--color-border);
+  border-radius: v.$radius-sm; background: var(--color-surface); font-size: v.$font-size-xs;
+  &__all { display: inline-flex; align-items: center; gap: v.$space-1; cursor: pointer;
+    color: var(--color-text-secondary); }
+  &__count { color: var(--color-text-primary); font-weight: v.$font-weight-medium; }
+  &__confirm { color: #b45309; }
+}
+.card__pick { display: inline-flex; margin-right: v.$space-2; cursor: pointer; }

@@ -23,6 +23,25 @@ export interface SurveyReviewItem {
   distanceFromAddressM: number | null;
   photoCount: number;
   isMockLocation: boolean;
+  /**
+   * Identité du relevé, ajoutée au contrat le 2026-08-28.
+   *
+   * Avant, la file affichait un relevé à valider ou rejeter **sans dire lequel ni de qui** :
+   * `SurveyResponse` ne portait que `adresseId` et `agentId`, deux UUID. Ces trois champs
+   * sont `null` sur les réponses d'ÉCRITURE (création, rejet), qui renvoient un relevé dont
+   * l'appelant connaît déjà le contexte.
+   */
+  agentFullName: string | null;
+  adresseLibelle: string | null;
+  addressCode: string | null;
+  quartierNom: string | null;
+  /**
+   * Les DEUX points nécessaires pour juger l'écart : où l'agent a capturé, et où est la
+   * parcelle. `distanceFromAddressM` seul ne dit pas si le releveur était dans la rue d'à côté
+   * ou dans le bâtiment voisin.
+   */
+  gpsCaptureWkt: string | null;
+  adresseLocationWkt: string | null;
 }
 
 /** Une suggestion de nom de bloc ou de rue en attente (`GET /api/{blocs,streets}/suggestions?status=Pending`). */

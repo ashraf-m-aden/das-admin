@@ -1,6 +1,15 @@
 <das-page-header [eyebrow]="'fieldops.eyebrow' | transloco" [title]="'nav.fieldOps' | transloco" />
 
 <div class="fo">
+  <div class="fo__bar">
+    <button type="button" class="btn btn--primary" (click)="toggleCreateForm()">
+      <i class="ti" [class.ti-plus]="!showCreateForm()" [class.ti-x]="showCreateForm()" aria-hidden="true"></i>
+      {{ (showCreateForm() ? 'common.cancel' : 'fieldops.newCampaign') | transloco }}
+    </button>
+    <span class="fo__count">{{ 'fieldops.campaignCount' | transloco: { count: campaigns().length } }}</span>
+  </div>
+
+  @if (showCreateForm()) {
   <section class="das-card create">
     <div class="panel__title">{{ 'fieldops.newCampaign' | transloco }}</div>
     <form class="create__form" [formGroup]="createForm" (ngSubmit)="createCampaign()">
@@ -12,11 +21,14 @@
     </form>
     @if (createErrorMessageKey$ | async; as err) { <div class="create__error">{{ err | transloco }}</div> }
   </section>
+  }
 
   <div class="fo__tabs">
-    <button type="button" class="tab" (click)="filterStatus(null)">{{ 'fieldops.all' | transloco }}</button>
+    <button type="button" class="tab" [class.tab--on]="statusFilter() === null"
+            (click)="filterStatus(null)">{{ 'fieldops.all' | transloco }}</button>
     @for (s of statuses; track s) {
-      <button type="button" class="tab" (click)="filterStatus(s)">{{ ('fieldops.status.' + s.toLowerCase()) | transloco }}</button>
+      <button type="button" class="tab" [class.tab--on]="statusFilter() === s"
+              (click)="filterStatus(s)">{{ ('fieldops.status.' + s.toLowerCase()) | transloco }}</button>
     }
   </div>
 
@@ -27,15 +39,29 @@
       <span>{{ 'fieldops.deadline' | transloco }}</span>
       <span>{{ 'fieldops.openedAt' | transloco }}</span>
     </div>
-    @for (c of (campaigns$ | async) ?? []; track c.id) {
-      <a class="trow" [routerLink]="['/field-operations', c.id]">
+    @for (c of pagedCampaigns(); track c.id) {
+      <a class="trow" [class.trow--late]="isLate(c)" [routerLink]="['/field-operations', c.id]">
         <span class="trow__name">{{ c.name }} <span class="trow__code mono">{{ c.code }}</span></span>
         <span [class]="statusBadgeClass(c.status)">{{ ('fieldops.status.' + c.status.toLowerCase()) | transloco }}</span>
-        <span>{{ c.deadline }}</span>
+        <!-- La date limite ne servait a rien tant qu'elle ne disait pas si elle est tenue.
+             Le calcul respecte l'heure de Djibouti (UTC+3), cf. djibouti-date.util. -->
+        <span class="trow__deadline">
+          {{ c.deadline | dasDate: 'short' }}
+          @if (isLate(c)) {
+            <span class="late">{{ 'fieldops.late' | transloco: { count: -(daysLeft(c) ?? 0) } }}</span>
+          } @else if (daysLeft(c) !== null && (daysLeft(c) ?? 0) <= 7) {
+            <span class="soon">{{ 'fieldops.daysLeft' | transloco: { count: daysLeft(c) } }}</span>
+          }
+        </span>
         <span>{{ c.openedAtUtc ? (c.openedAtUtc | dasDate: 'long') : '—' }}</span>
       </a>
     } @empty {
       <div class="list__empty">@if (isLoading$ | async) { {{ 'common.loading' | transloco }} } @else { {{ 'fieldops.empty' | transloco }} }</div>
+    }
+
+    @if (campaigns().length) {
+      <das-pager [page]="page()" [pageSize]="pageSize()" [total]="campaigns().length"
+                 (pageChange)="goToPage($event)" (pageSizeChange)="setPageSize($event)" />
     }
   </section>
 </div>

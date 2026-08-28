@@ -30,3 +30,15 @@
 .btn { height: 36px; padding: 0 v.$space-4; display: inline-flex; align-items: center; gap: v.$space-1; border: none; border-radius: v.$radius-sm; font: inherit; font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; cursor: pointer;
   &--primary { background: var(--color-accent); color: var(--color-on-accent); &:disabled { opacity: 0.5; cursor: not-allowed; } }
 }
+
+.fo__bar { display: flex; align-items: center; gap: v.$space-3; flex-wrap: wrap; }
+.fo__count { margin-left: auto; font-size: v.$font-size-xs; color: var(--color-text-muted); }
+.tab--on { background: var(--color-surface); color: var(--color-text-primary); font-weight: v.$font-weight-medium; }
+
+// Le retard se lit sur la ligne entiere, pas seulement dans une pastille : c'est l'information
+// qui doit sauter aux yeux quand on parcourt la liste.
+.trow--late { background: var(--color-danger-bg); }
+.trow__deadline { display: flex; align-items: center; gap: v.$space-2; flex-wrap: wrap; }
+.late, .soon { font-size: v.$font-size-xs; padding: 1px v.$space-1; border-radius: v.$radius-sm; }
+.late { background: var(--color-danger); color: #fff; }
+.soon { color: #b45309; border: 1px solid currentcolor; }

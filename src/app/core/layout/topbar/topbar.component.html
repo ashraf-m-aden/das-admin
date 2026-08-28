@@ -11,13 +11,6 @@
       {{ activeLang() | uppercase }}
     </button>
 
-    <a class="tb__icon-btn" routerLink="/notifications" [attr.aria-label]="'nav.notifications' | transloco">
-      <i class="ti ti-bell" aria-hidden="true"></i>
-      @if ((unreadCount$ | async); as count) {
-      @if (count > 0) { <span class="tb__badge">{{ count }}</span> }
-      }
-    </a>
-
     <button type="button" class="tb__icon-btn" [attr.aria-label]="'topbar.help' | transloco">
       <i class="ti ti-help-circle" aria-hidden="true"></i>
     </button>

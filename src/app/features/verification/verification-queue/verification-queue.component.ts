@@ -1,11 +1,16 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute } from '@angular/router';
 import { map } from 'rxjs';
-import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { TranslocoModule } from '@jsverse/transloco';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { ReviewFacade } from '../../../core/review/store/review.facade';
 import { PageHeaderComponent } from '../../../core/layout/page-header/page-header.component';
+import { DasPagerComponent } from '../../../core/ui/pager/das-pager.component';
+import { DasMapComponent } from '../../../core/ui/map/das-map.component';
+import { MapFeature, MapLayerConfig } from '../../../core/ui/map/map.models';
+import { wktPoint } from '../../../core/ui/map/wkt.util';
 import { DasDatePipe } from '../../../core/i18n/das-locale.pipes';
 import { ReviewItem } from '../../../core/review/models/review.models';
 import { RedoSubmissionType, UUID } from '../../../core/models/das.models';
@@ -13,12 +18,14 @@ import { RedoSubmissionType, UUID } from '../../../core/models/das.models';
 @Component({
   selector: 'das-verification-queue',
   standalone: true,
-  imports: [AsyncPipe, ReactiveFormsModule, TranslocoModule, DasDatePipe, PageHeaderComponent],
+  imports: [AsyncPipe, ReactiveFormsModule, TranslocoModule, DasDatePipe, PageHeaderComponent, DasPagerComponent, DasMapComponent],
   templateUrl: './verification-queue.component.html',
   styleUrl: './verification-queue.component.scss',
 })
 export class VerificationQueueComponent implements OnInit {
   private fb = inject(FormBuilder);
+  private transloco = inject(TranslocoService);
+  private route = inject(ActivatedRoute);
   protected facade = inject(ReviewFacade);
 
   protected readonly items$ = this.facade.items$;
@@ -30,7 +37,116 @@ export class VerificationQueueComponent implements OnInit {
   protected readonly expandedPhotosId = signal<string | null>(null);
   protected readonly showStalled = signal(false);
 
-  protected readonly rejectForm = this.fb.nonNullable.group({ reason: [''] });
+  /**
+   * Motif OBLIGATOIRE. Il ne l'était pas — or un rejet fait retomber l'adresse en `registered`
+   * (CLAUDE.md §5) et ce motif est le SEUL message que l'agent recevra. Rejeter sans rien dire,
+   * c'est renvoyer quelqu'un sur le terrain sans lui dire quoi corriger.
+   * 5 caractères minimum : « non » ou « ko » n'est pas un motif.
+   */
+  protected readonly rejectForm = this.fb.nonNullable.group({
+    reason: ['', [Validators.required, Validators.minLength(5)]],
+  });
+
+  /** Photo ouverte en grand. La photo EST la preuve : la juger en vignette n'a pas de sens. */
+  protected readonly lightboxUrl = signal<string | null>(null);
+
+  /** Relevé dont la carte est dépliée. Une seule à la fois : elles coûtent une instance MapLibre. */
+  protected readonly mapOpenId = signal<string | null>(null);
+
+  /**
+   * Relevé mis en évidence, désigné depuis le bandeau « en souffrance ».
+   * Sans ce lien, le bandeau annonçait un problème sans permettre d'aller le traiter.
+   */
+  protected readonly focusedId = signal<string | null>(null);
+
+  protected readonly mapLayers: MapLayerConfig[] = [
+    { id: 'survey-gap', labelKey: 'verification.mapLayer', type: 'point', visible: true, showLabels: true },
+  ];
+
+  protected readonly items = toSignal(this.facade.items$, { initialValue: [] as ReviewItem[] });
+  protected readonly page = signal(1);
+  protected readonly pageSize = signal(10);
+
+  /**
+   * Tri de la file. « Les plus anciens d'abord » est le tri de TRAVAIL : c'est celui qui vide
+   * la file sans y laisser des relevés oubliés, alors que l'ordre par défaut fait remonter les
+   * derniers arrivés et enterre les plus vieux à mesure que la file grossit.
+   */
+  protected readonly oldestFirst = signal(false);
+
+  private readonly sortedItems = computed(() => {
+    const items = this.items();
+    if (!this.oldestFirst()) return items;
+    return [...items].sort((a, b) => this.waitedSince(a).localeCompare(this.waitedSince(b)));
+  });
+
+  /** Date d'attente : capture pour un relevé, proposition pour une suggestion de nom. */
+  private waitedSince(item: ReviewItem): string {
+    return item.submissionType === 'property' ? item.capturedAtUtc : item.proposedAtUtc;
+  }
+
+  toggleOldestFirst(): void { this.oldestFirst.update((v) => !v); this.page.set(1); }
+
+  // ---- Validation groupée ----------------------------------------------------
+
+  /**
+   * Sélection pour une validation en lot.
+   *
+   * ⚠️ **Il n'y a délibérément PAS de rejet groupé.** Le motif de rejet part tel quel à l'agent
+   * et doit dire ce qu'IL doit corriger : un motif unique appliqué à dix relevés de plusieurs
+   * agents ne dit rien à personne. Rejeter reste donc une décision une par une, avec son motif.
+   *
+   * La validation groupée, elle, se justifie : elle n'écrit aucun texte et sert le cas réel
+   * d'une série de relevés propres du même agent, examinés à la suite.
+   */
+  protected readonly selectedIds = signal<Set<string>>(new Set());
+
+  protected readonly selectableItems = computed(() => this.pagedItems().filter((i) => i.submissionType === 'property'));
+
+  protected readonly allPageSelected = computed(() => {
+    const selectables = this.selectableItems();
+    return selectables.length > 0 && selectables.every((i) => this.selectedIds().has(i.id));
+  });
+
+  isSelected(item: ReviewItem): boolean { return this.selectedIds().has(item.id); }
+
+  toggleSelection(item: ReviewItem): void {
+    this.selectedIds.update((set) => {
+      const next = new Set(set);
+      next.has(item.id) ? next.delete(item.id) : next.add(item.id);
+      return next;
+    });
+  }
+
+  /** Ne porte que sur la PAGE courante : sélectionner à l'aveugle une file entière n'a pas de sens. */
+  toggleSelectPage(): void {
+    const selectables = this.selectableItems();
+    this.selectedIds.update((set) => {
+      const next = new Set(set);
+      const toutCoche = selectables.every((i) => next.has(i.id));
+      for (const item of selectables) {
+        if (toutCoche) next.delete(item.id); else next.add(item.id);
+      }
+      return next;
+    });
+  }
+
+  clearSelection(): void { this.selectedIds.set(new Set()); }
+
+  /** Confirmation obligatoire : valider en lot est irréversible et porte sur plusieurs relevés. */
+  protected readonly confirmingBulk = signal(false);
+  requestBulkValidate(): void { this.confirmingBulk.set(true); }
+  cancelBulkValidate(): void { this.confirmingBulk.set(false); }
+  confirmBulkValidate(): void {
+    for (const id of this.selectedIds()) this.facade.validate(id);
+    this.clearSelection();
+    this.confirmingBulk.set(false);
+  }
+
+  protected readonly pagedItems = computed(() => {
+    const debut = (this.page() - 1) * this.pageSize();
+    return this.sortedItems().slice(debut, debut + this.pageSize());
+  });
 
   protected readonly stalledItems$ = this.facade.stalledItems$;
 
@@ -43,6 +159,30 @@ export class VerificationQueueComponent implements OnInit {
     { initialValue: new Map<UUID, string>() },
   );
 
+  /** Relevé demandé par l'URL, en flux : naviguer d'un relevé à l'autre réutilise le composant. */
+  private readonly routeSurveyId = toSignal(
+    this.route.paramMap.pipe(map((p) => p.get('surveyId'))),
+    { initialValue: null },
+  );
+
+  constructor() {
+    /**
+     * La file arrive de façon asynchrone : on ne peut pas focaliser au montage, il n'y a
+     * encore rien à trouver. Cet effet attend que la liste soit là, puis focalise une seule
+     * fois par relevé demandé — sans le garde, il rouvrirait la carte à chaque rechargement,
+     * y compris après que l'opérateur l'ait refermée.
+     */
+    effect(() => {
+      const demande = this.routeSurveyId();
+      const items = this.items();
+      if (!demande || items.length === 0 || this.dejaFocalise === demande) return;
+      this.dejaFocalise = demande;
+      this.focusSurvey(demande);
+    });
+  }
+
+  private dejaFocalise: string | null = null;
+
   ngOnInit(): void {
     this.facade.load();
     this.facade.loadStalled();
@@ -54,7 +194,72 @@ export class VerificationQueueComponent implements OnInit {
 
   filterType(type: RedoSubmissionType | null): void {
     this.typeFilter.set(type);
+    this.page.set(1);
     this.facade.setFilters({ submissionType: type });
+  }
+
+  goToPage(p: number): void { this.page.set(p); }
+  setPageSize(size: number): void { this.pageSize.set(size); this.page.set(1); }
+
+  openPhoto(url: string): void { this.lightboxUrl.set(url); }
+  closePhoto(): void { this.lightboxUrl.set(null); }
+
+  toggleMap(item: ReviewItem): void {
+    this.mapOpenId.set(this.mapOpenId() === item.id ? null : item.id);
+  }
+
+  /**
+   * Deux points et rien d'autre : où la parcelle est censée être, et où l'agent a capturé.
+   * C'est ce qui transforme « 22 m d'écart » en fait vérifiable — de l'autre côté de la rue,
+   * ou dans le bâtiment voisin, ce n'est pas la même décision.
+   */
+  mapFeaturesFor(item: ReviewItem): MapFeature[] {
+    if (item.submissionType !== 'property') return [];
+    const features: MapFeature[] = [];
+
+    const parcelle = item.adresseLocationWkt ? wktPoint(item.adresseLocationWkt) : null;
+    if (parcelle) {
+      features.push({ id: `${item.id}-adresse`, layerId: 'survey-gap', geometry: parcelle,
+        color: '#2563eb', label: this.transloco.translate('verification.mapParcel'), selectable: false });
+    }
+
+    const capture = item.gpsCaptureWkt ? wktPoint(item.gpsCaptureWkt) : null;
+    if (capture) {
+      features.push({ id: `${item.id}-capture`, layerId: 'survey-gap', geometry: capture,
+        color: item.isMockLocation ? '#dc2626' : '#d97706',
+        label: this.transloco.translate('verification.mapCapture'), selectable: false });
+    }
+
+    return features;
+  }
+
+  hasGeometry(item: ReviewItem): boolean {
+    return item.submissionType === 'property' && (!!item.gpsCaptureWkt || !!item.adresseLocationWkt);
+  }
+
+  /** Relevé en souffrance introuvable dans la file — voir `focusSurvey`. */
+  protected readonly notInQueueId = signal<string | null>(null);
+
+  /**
+   * Depuis le bandeau : met le relevé en évidence et ouvre sa carte.
+   *
+   * Le filtre par type est levé d'abord — un relevé masqué par l'onglet courant serait
+   * introuvable alors qu'il est bien là. S'il reste absent, on le DIT : un clic qui ne fait
+   * rien laisse croire à un bouton cassé, alors que la cause est réelle (relevé déjà tranché
+   * par quelqu'un d'autre, ou file rechargée depuis).
+   */
+  focusSurvey(surveyId: string): void {
+    this.notInQueueId.set(null);
+    if (this.typeFilter() !== null) this.filterType(null);
+
+    const index = this.items().findIndex((i) => i.id === surveyId);
+    if (index < 0) { this.notInQueueId.set(surveyId); return; }
+
+    // Amener la bonne PAGE, sinon la mise en évidence porte sur une carte hors écran.
+    this.page.set(Math.floor(index / this.pageSize()) + 1);
+    this.focusedId.set(surveyId);
+    this.mapOpenId.set(surveyId);
+    this.showStalled.set(false);
   }
 
   validate(item: ReviewItem): void {
@@ -75,6 +280,7 @@ export class VerificationQueueComponent implements OnInit {
   }
 
   confirmReject(item: ReviewItem): void {
+    if (this.rejectForm.invalid) { this.rejectForm.markAllAsTouched(); return; }
     const reason = this.rejectForm.getRawValue().reason.trim();
     this.facade.reject(item.id, item.submissionType, reason);
     this.rejectingId.set(null);

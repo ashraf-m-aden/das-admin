@@ -14,7 +14,6 @@
     "auditLogs": "Journaux d'audit",
     "users": "Utilisateurs",
     "integrations": "Intégrations",
-    "notifications": "Notifications",
     "logout": "Déconnexion",
     "blocks": "Blocs",
     "closes": "Closes",
@@ -43,7 +42,6 @@
     "nextPage": "Page suivante"
   },
   "mockBadge": {
-    "notifications": "Aucune route /api/notifications côté backend — mapping des événements en attente d'arbitrage métier.",
     "reports": "Aucune route de rapports côté backend.",
     "audit": "Aucune route /api/audit côté backend — pas de journal d'audit exposé.",
     "clients": "Aucune route /api/clients côté backend — module de l'API commerciale, hors périmètre backend actuel.",
@@ -391,16 +389,6 @@
     "confirmReactivate": "Réactiver {{name}} ?",
     "noMatch": "Aucun utilisateur ne correspond à ce filtre"
   },
-  "notifications": {
-    "unreadCount": "{{count}} non lues",
-    "markAll": "Tout marquer lu",
-    "empty": "Aucune notification",
-    "task_completed": "Tâche terminée sur {{code}}",
-    "block_submitted": "Bloc {{code}} soumis",
-    "property_approved": "Propriété {{code}} approuvée",
-    "property_needs_redo": "Propriété {{code}} à reprendre",
-    "redo_resolved": "Reprise résolue sur {{code}}"
-  },
   "feedback": {
     "saved": "Enregistré",
     "error": "L'action a échoué",
@@ -668,7 +656,10 @@
     "noGeometryCount": "{{count}} bloc(s) sans emprise, absents de la carte",
     "assignedBlocsList": "Blocs affectés",
     "see": "Voir",
-    "allAgents": "Tous les agents"
+    "allAgents": "Tous les agents",
+    "campaignCount": "{{count}} campagne(s)",
+    "late": "En retard de {{count}} j",
+    "daysLeft": "J-{{count}}"
   },
   "dataquality": {
     "eyebrow": "File de contrôle anti-fraude — signaux terrain",
@@ -681,7 +672,28 @@
     "pushedAfterClose": "Remontées après clôture par agent",
     "agent": "Agent",
     "pushedCount": "Relevés remontés",
-    "noPushedAfterClose": "Aucune remontée après clôture"
+    "noPushedAfterClose": "Aucune remontée après clôture",
+    "filterMock": "Position simulée",
+    "filterFar": "Trop éloigné (> {{threshold}} m)",
+    "filterNoPhoto": "Sans photo",
+    "sortRecent": "Plus récents",
+    "sortDistance": "Plus éloignés",
+    "sortPhotos": "Moins de photos",
+    "shown": "{{count}} affiché(s)",
+    "noMatch": "Aucun relevé ne correspond à ce filtre",
+    "survey": "Relevé",
+    "reason": {
+      "mock_location": "Position GPS simulée signalée par l'appareil.",
+      "too_far": "Relevé effectué à {{distance}} m de l'adresse (seuil : {{threshold}} m).",
+      "clock_ahead": "Horodatage terrain postérieur à l'enregistrement serveur.",
+      "late_sync": "Synchronisation tardive : plus de {{days}} jours entre le relevé et son envoi.",
+      "pushed_after_close": "Remonté après la clôture, pendant la fenêtre de remontée.",
+      "captured_late": "Capturé après la date limite, pendant une prolongation."
+    },
+    "dismiss": "Écarter",
+    "dismissPlaceholder": "Pourquoi ce signal est acceptable…",
+    "dismissedOn": "Écarté le {{date}}",
+    "showDismissed": "Voir les écartés"
   },
   "map": {
     "layers": "Couches",
@@ -852,8 +864,21 @@
       "agent": "Agent",
       "capturedAt": "Capturé le",
       "daysWaiting": "En attente depuis",
-      "days": "{{count}} j"
-    }
+      "days": "{{count}} j",
+      "notInQueue": "Ce relevé n'est plus dans la file — il a pu être tranché entre-temps."
+    },
+    "reasonRequired": "Le motif part tel quel à l'agent : dites ce qui doit être corrigé (5 caractères minimum).",
+    "openPhoto": "Agrandir la photo",
+    "viewMap": "Voir l'écart sur la carte",
+    "mapLayer": "Écart de position",
+    "mapParcel": "Parcelle",
+    "mapCapture": "Capture GPS",
+    "oldestFirst": "Les plus anciens d'abord",
+    "selectPage": "Tout sélectionner sur cette page",
+    "selectedCount": "{{count}} sélectionné(s)",
+    "validateSelection": "Valider la sélection",
+    "clearSelection": "Tout désélectionner",
+    "confirmBulk": "Valider {{count}} relevé(s) sans les rouvrir ?"
   },
   "period": {
     "last7": "7 derniers jours",

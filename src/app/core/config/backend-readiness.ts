@@ -4,7 +4,7 @@ import { AppConfigService } from './app-config.service';
 export type FeatureKey =
   | 'adresse' | 'blocks' | 'addressing' | 'review' | 'fieldops' | 'staff'
   | 'hierarchy' | 'reference' | 'units' | 'dataquality' | 'dashboard'
-  | 'postcodes' | 'closes' | 'discoveries' | 'notifications' | 'reports' | 'audit' | 'clients'
+  | 'postcodes' | 'closes' | 'discoveries' | 'reports' | 'audit' | 'clients'
   | 'integrations';
 
 export type BackendStatus = 'wired' | 'mock';
@@ -43,7 +43,6 @@ export const BACKEND_READINESS: Record<FeatureKey, FeatureReadiness> = {
   discoveries: { status: 'wired', routes: ['/api/discoveries', '/api/discoveries/export.geojson', '/api/discoveries/{id}/accept', '/api/discoveries/{id}/reject'] },
   closes: { status: 'wired', routes: ['/api/closes', '/api/closes/{id}', '/api/closes/{id}/blocs', '/api/closes/{id}/blocs/{blocId}'] },
 
-  notifications: { status: 'mock', routes: [], noteKey: 'mockBadge.notifications' },
   reports: { status: 'mock', routes: [], noteKey: 'mockBadge.reports' },
   audit: { status: 'mock', routes: [], noteKey: 'mockBadge.audit' },
   clients: { status: 'mock', routes: [], noteKey: 'mockBadge.clients' },

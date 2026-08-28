@@ -14,7 +14,6 @@
     "auditLogs": "Audit Logs",
     "users": "Users",
     "integrations": "Integrations",
-    "notifications": "Notifications",
     "logout": "Logout",
     "blocks": "Blocks",
     "closes": "Closes",
@@ -43,7 +42,6 @@
     "nextPage": "Next page"
   },
   "mockBadge": {
-    "notifications": "No /api/notifications route on the backend — event mapping awaiting a business decision.",
     "reports": "No reporting route on the backend.",
     "audit": "No /api/audit route on the backend — no audit log exposed.",
     "clients": "No /api/clients route on the backend — commercial API module, outside current backend scope.",
@@ -391,16 +389,6 @@
     "confirmReactivate": "Reactivate {{name}}?",
     "noMatch": "No user matches this filter"
   },
-  "notifications": {
-    "unreadCount": "{{count}} unread",
-    "markAll": "Mark all read",
-    "empty": "No notifications",
-    "task_completed": "Task completed on {{code}}",
-    "block_submitted": "Block {{code}} submitted",
-    "property_approved": "Property {{code}} approved",
-    "property_needs_redo": "Property {{code}} needs redo",
-    "redo_resolved": "Redo resolved on {{code}}"
-  },
   "feedback": {
     "saved": "Saved",
     "error": "Action failed",
@@ -668,7 +656,10 @@
     "noGeometryCount": "{{count}} block(s) without a boundary, missing from the map",
     "assignedBlocsList": "Assigned blocks",
     "see": "View",
-    "allAgents": "All agents"
+    "allAgents": "All agents",
+    "campaignCount": "{{count}} campaign(s)",
+    "late": "{{count}} day(s) late",
+    "daysLeft": "{{count}} day(s) left"
   },
   "dataquality": {
     "eyebrow": "Anti-fraud control queue — field signals",
@@ -681,7 +672,28 @@
     "pushedAfterClose": "Post-closure submissions by agent",
     "agent": "Agent",
     "pushedCount": "Surveys pushed",
-    "noPushedAfterClose": "No post-closure submission"
+    "noPushedAfterClose": "No post-closure submission",
+    "filterMock": "Mock location",
+    "filterFar": "Too far (> {{threshold}} m)",
+    "filterNoPhoto": "No photo",
+    "sortRecent": "Most recent",
+    "sortDistance": "Farthest",
+    "sortPhotos": "Fewest photos",
+    "shown": "{{count}} shown",
+    "noMatch": "No survey matches this filter",
+    "survey": "Survey",
+    "reason": {
+      "mock_location": "Mock GPS location reported by the device.",
+      "too_far": "Captured {{distance}} m from the address (threshold: {{threshold}} m).",
+      "clock_ahead": "Field timestamp later than the server record.",
+      "late_sync": "Late sync: more than {{days}} days between capture and upload.",
+      "pushed_after_close": "Pushed after closing, during the catch-up window.",
+      "captured_late": "Captured after the deadline, during an extension."
+    },
+    "dismiss": "Dismiss",
+    "dismissPlaceholder": "Why this signal is acceptable…",
+    "dismissedOn": "Dismissed on {{date}}",
+    "showDismissed": "Show dismissed"
   },
   "map": {
     "layers": "Layers",
@@ -852,8 +864,21 @@
       "agent": "Agent",
       "capturedAt": "Captured on",
       "daysWaiting": "Waiting since",
-      "days": "{{count}} d"
-    }
+      "days": "{{count}} d",
+      "notInQueue": "This survey is no longer in the queue — it may have been decided since."
+    },
+    "reasonRequired": "The reason goes to the agent as written: say what must be fixed (5 characters minimum).",
+    "openPhoto": "Enlarge the photo",
+    "viewMap": "View the gap on the map",
+    "mapLayer": "Position gap",
+    "mapParcel": "Parcel",
+    "mapCapture": "GPS capture",
+    "oldestFirst": "Oldest first",
+    "selectPage": "Select all on this page",
+    "selectedCount": "{{count}} selected",
+    "validateSelection": "Validate the selection",
+    "clearSelection": "Clear selection",
+    "confirmBulk": "Validate {{count}} survey(s) without reopening them?"
   },
   "period": {
     "last7": "Last 7 days",
