@@ -1,0 +1,21 @@
+# Normalisation des fins de ligne.
+#
+# ⚠️ Sans ce fichier, `core.autocrlf=true` (valeur par défaut de Git for Windows) convertit les
+# scripts shell en CRLF À LA SORTIE DU DÉPÔT. Le poste qui les a créés ne voit rien : ses copies
+# sont déjà en LF. C'est le CLONE SUIVANT — Jenkins, un collègue, un conteneur — qui reçoit des
+# CRLF et casse.
+#
+# Le symptôme est illisible : `sh` lit le `\r` final comme faisant partie de la commande et
+# répond `command not found` sur une ligne qui paraît juste. `docker/env-config.sh` est
+# l'entrypoint nginx de l'image : converti, il fait échouer le démarrage du conteneur.
+
+* text=auto
+
+# Toujours LF, quelle que soit la plateforme : ces fichiers sont lus par un shell POSIX.
+*.sh              text eol=lf
+Dockerfile        text eol=lf
+*.conf            text eol=lf
+
+# Le lock est généré dans un conteneur Linux (`npm run lock:linux`) : le figer en LF évite qu'un
+# passage sous Windows le réécrive entièrement en CRLF et rende ses diffs illisibles.
+package-lock.json text eol=lf
