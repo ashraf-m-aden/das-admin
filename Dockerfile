@@ -10,6 +10,14 @@ FROM node:22-alpine AS build
 WORKDIR /app
 
 COPY package.json package-lock.json ./
+
+# ⚠️ Si ce `npm ci` casse sur « EUSAGE — Missing: … from lock file » alors que rien n'a
+# changé dans les dépendances : le lock a été réécrit par un `npm install` lancé depuis
+# Windows. npm y élague les binaires optionnels des AUTRES plateformes — ici le repli
+# WebAssembly de rolldown (`@rolldown/binding-wasm32-wasi` et sa chaîne `@emnapi/*`) —
+# que Linux, lui, réclame. Le build local continue de passer : seul celui-ci tombe.
+#
+#   Correction :  npm run lock:linux    (régénère le lock ici, dans cette image)
 RUN npm ci
 
 COPY . .
