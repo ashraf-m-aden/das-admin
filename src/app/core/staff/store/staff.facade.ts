@@ -16,6 +16,8 @@ export class StaffFacade {
 
   isFormSaving$ = this.store.select(staffFeature.selectFormStatus).pipe(map((s) => s === 'saving'));
   formErrorMessageKey$ = this.store.select(staffFeature.selectFormErrorMessageKey);
+  /** Compteur de créations réussies — l'écran y accroche la remise à zéro de son formulaire. */
+  createTick$ = this.store.select(staffFeature.selectCreateTick);
 
   load(): void {
     this.store.dispatch(StaffActions.loadStaff());

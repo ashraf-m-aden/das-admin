@@ -387,7 +387,12 @@
     "createHint": "Mot de passe : 6 caractères minimum. Au moins un rôle est requis.",
     "confirmSuspend": "Suspendre {{name}} ?",
     "confirmReactivate": "Réactiver {{name}} ?",
-    "noMatch": "Aucun utilisateur ne correspond à ce filtre"
+    "noMatch": "Aucun utilisateur ne correspond à ce filtre",
+    "errorUsernameTaken": "Ce nom d'utilisateur est déjà pris.",
+    "errorRoleUnknown": "Un des rôles choisis n'existe pas.",
+    "errorForbidden": "Seul un Admin peut créer un compte. Votre rôle ne le permet pas.",
+    "errorInvalid": "Saisie refusée par le serveur : le mot de passe doit faire au moins 8 caractères, et au moins un rôle est obligatoire.",
+    "passwordHint": "8 caractères minimum."
   },
   "feedback": {
     "saved": "Enregistré",
@@ -558,7 +563,11 @@
     "errorZoneOutsideCommune": "Cette zone appartient à une autre commune que le quartier.",
     "colZone": "Zone",
     "noZone": "Aucune zone",
-    "zoneNeedsCommune": "commune manquante"
+    "zoneNeedsCommune": "commune manquante",
+    "focusOnMap": "Centrer la carte sur ce quartier",
+    "noBoundary": "Ce quartier n'a pas d'emprise : il ne peut pas être dessiné.",
+    "filteredFromMap": "Liste réduite à « {{name}} », désigné sur la carte.",
+    "showAllQuartiers": "Tout afficher"
   },
   "fieldops": {
     "eyebrow": "Campagnes de recensement et affectations terrain",

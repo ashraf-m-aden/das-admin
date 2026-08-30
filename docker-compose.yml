@@ -21,7 +21,7 @@ services:
     image: ghcr.io/maplibre/martin:latest
     container_name: martin
     environment:
-      DATABASE_URL: "postgresql://postgres:kfYy%3C1GsD0Jt%29%23Fn%3EEs%28%5BZYJoQLY@host.docker.internal:5433/das?sslmode=require"
+      DATABASE_URL: "postgresql://martin_ro:HuVFVEfNfUpOQI1Puc7hfBgszcxO0zCT@host.docker.internal:5433/das?sslmode=require"
     # --pool-size : la base plafonne à max_connections=79 et un Martin v0.11.0 déployé ailleurs
     #   en retient déjà ~56. Le défaut de 20 ne peut donc pas être servi : Martin échoue à
     #   construire son pool, considère l'échec comme FATAL, sort, et `restart: unless-stopped`

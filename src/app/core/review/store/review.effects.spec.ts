@@ -18,6 +18,12 @@ const survey: SurveyReviewItem = {
   typeOccupationId: 'type-1', etatOccupationId: 'etat-1', name: null,
   floorCount: 1, apartmentCount: 0, shopCount: 0, wheelchairAccessible: false,
   gpsAccuracyM: 4, distanceFromAddressM: 2, photoCount: 3, isMockLocation: false,
+  // Champs d'identité et de position ajoutés au contrat le 2026-08-28. Renseignés ici — et non
+  // laissés à `null` — parce que la file de validation les affiche : un fixture qui les tait
+  // laisserait passer une régression sur l'écran qu'il est censé couvrir.
+  agentFullName: 'Warsama Robleh', adresseLibelle: '12, Rue Ayaan, Quartier 7 Djibouti',
+  addressCode: '77-007-3-12', quartierNom: 'Quartier 7',
+  gpsCaptureWkt: 'POINT(43.1462 11.5788)', adresseLocationWkt: 'POINT(43.1463 11.5789)',
 };
 
 const typeOccupationOptions: OccupationCatalogItem[] = [{ id: 'type-1', nom: 'Villa' }];

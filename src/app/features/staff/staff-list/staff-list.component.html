@@ -57,14 +57,18 @@
         <input type="text" formControlName="username" [attr.placeholder]="'staff.username' | transloco" />
         <label class="create__pwd">
           <input [type]="showPassword() ? 'text' : 'password'" formControlName="password"
-                 [attr.placeholder]="'staff.password' | transloco" />
+                 minlength="8" [attr.placeholder]="'staff.password' | transloco" />
           <button type="button" class="icon-btn" (click)="togglePassword()"
                   [attr.aria-label]="'staff.togglePassword' | transloco">
             <i class="ti" [class.ti-eye]="!showPassword()" [class.ti-eye-off]="showPassword()" aria-hidden="true"></i>
           </button>
         </label>
       </div>
-      <p class="create__hint">{{ 'staff.createHint' | transloco }}</p>
+      @if (createForm.controls.password.touched && createForm.controls.password.hasError('minlength')) {
+        <p class="create__hint create__hint--warn">{{ 'staff.passwordHint' | transloco }}</p>
+      } @else {
+        <p class="create__hint">{{ 'staff.createHint' | transloco }} — {{ 'staff.passwordHint' | transloco }}</p>
+      }
       <div class="create__roles">
         @for (r of allRoles; track r) { <button type="button" class="rolechip" [class.rolechip--on]="hasCreateRole(r)" (click)="toggleCreateRole(r)">{{ roleLabelKey(r) | transloco }}</button> }
       </div>

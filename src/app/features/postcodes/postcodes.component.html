@@ -190,6 +190,17 @@
         </div>
       </div>
 
+      <!-- Une liste soudain réduite à une ligne doit dire pourquoi, et comment en sortir. -->
+      @if (filterFromMap() && selectedQuartier(); as sel) {
+        <div class="mapfilter">
+          <i class="ti ti-map-pin" aria-hidden="true"></i>
+          <span>{{ 'postcodes.filteredFromMap' | transloco: { name: sel.nom } }}</span>
+          <button type="button" class="mapfilter__clear" (click)="clearQuartierSelection()">
+            {{ 'postcodes.showAllQuartiers' | transloco }}
+          </button>
+        </div>
+      }
+
       <div class="thead">
         <span>{{ 'postcodes.colQuartier' | transloco }}</span>
         <span>{{ 'postcodes.colCity' | transloco }}</span>
@@ -200,8 +211,19 @@
         <span></span>
       </div>
       @for (q of filteredQuartiers(); track q.id) {
-        <div class="trow">
-          <span class="trow__nom">{{ q.nom }}</span>
+        <div class="trow" [class.trow--focused]="selectedQuartierId() === q.id">
+          <!--
+            Bouton sur le NOM seul, et non sur la ligne entière : la ligne porte un champ de
+            saisie et un select, un gestionnaire posé dessus se déclencherait en les manipulant.
+          -->
+          <button type="button" class="trow__nom trow__nom--btn" (click)="focusQuartier(q.id)"
+                  [attr.title]="'postcodes.focusOnMap' | transloco">
+            {{ q.nom }}
+            @if (!q.boundaryWkt) {
+              <i class="ti ti-map-off trow__nogeom" aria-hidden="true"
+                 [attr.title]="'postcodes.noBoundary' | transloco"></i>
+            }
+          </button>
           <span>{{ q.cityName }}</span>
           <span class="mono">{{ q.code }}</span>
           @if (editingQuartierId() === q.id) {

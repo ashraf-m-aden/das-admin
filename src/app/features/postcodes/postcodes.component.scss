@@ -120,3 +120,21 @@
   &:hover:not(:disabled) { border-color: var(--color-accent); }
   &:disabled { opacity: 0.6; cursor: default; }
 }
+
+/* ---- Aller-retour liste <-> carte ------------------------------------------ */
+.mapfilter { display: flex; align-items: center; gap: v.$space-2; margin: 0 v.$space-4 v.$space-2;
+  padding: v.$space-2 v.$space-3; border-radius: v.$radius-sm;
+  background: var(--das-blue-50); font-size: v.$font-size-sm; color: var(--color-text-primary);
+  i { color: var(--color-accent); }
+  &__clear { margin-left: auto; border: none; background: none; font: inherit;
+    font-size: v.$font-size-xs; color: var(--color-accent); cursor: pointer; text-decoration: underline; }
+}
+
+/* Le nom reste visuellement un nom : le bouton n'apporte que l'affordance de clic. */
+.trow__nom--btn { padding: 0; border: none; background: none; font: inherit;
+  font-weight: v.$font-weight-medium; color: var(--color-text-primary); text-align: left;
+  cursor: pointer; display: inline-flex; align-items: center; gap: v.$space-1;
+  &:hover { color: var(--color-accent); text-decoration: underline; }
+}
+.trow__nogeom { font-size: 13px; color: var(--color-text-muted); }
+.trow--focused { background: rgb(220 38 38 / 6%); box-shadow: inset 3px 0 0 #dc2626; }

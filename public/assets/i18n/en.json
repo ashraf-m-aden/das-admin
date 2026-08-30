@@ -387,7 +387,12 @@
     "createHint": "Password: 6 characters minimum. At least one role is required.",
     "confirmSuspend": "Suspend {{name}}?",
     "confirmReactivate": "Reactivate {{name}}?",
-    "noMatch": "No user matches this filter"
+    "noMatch": "No user matches this filter",
+    "errorUsernameTaken": "This username is already taken.",
+    "errorRoleUnknown": "One of the selected roles does not exist.",
+    "errorForbidden": "Only an Admin can create an account. Your role does not allow it.",
+    "errorInvalid": "Rejected by the server: the password must be at least 8 characters, and at least one role is required.",
+    "passwordHint": "8 characters minimum."
   },
   "feedback": {
     "saved": "Saved",
@@ -558,7 +563,11 @@
     "errorZoneOutsideCommune": "This zone belongs to a different commune than the quarter.",
     "colZone": "Zone",
     "noZone": "No zone",
-    "zoneNeedsCommune": "commune missing"
+    "zoneNeedsCommune": "commune missing",
+    "focusOnMap": "Centre the map on this quarter",
+    "noBoundary": "This quarter has no boundary: it cannot be drawn.",
+    "filteredFromMap": "List narrowed to “{{name}}”, picked on the map.",
+    "showAllQuartiers": "Show all"
   },
   "fieldops": {
     "eyebrow": "Census campaigns and field assignments",

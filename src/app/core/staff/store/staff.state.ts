@@ -16,6 +16,12 @@ export interface StaffState {
   filters: StaffFilters;
   formStatus: FormStatus;
   formErrorMessageKey: string | null;
+  /**
+   * Incrémenté à chaque création RÉUSSIE. L'écran s'en sert pour vider son formulaire — un
+   * booléen ne conviendrait pas : deux créations successives ne le feraient pas changer de
+   * valeur, donc la seconde ne déclencherait rien.
+   */
+  createTick: number;
 
   productivity: AgentProductivity[];
   isProductivityLoading: boolean;
@@ -29,6 +35,7 @@ export const initialStaffState: StaffState = {
   filters: { search: '', role: null },
   formStatus: 'idle',
   formErrorMessageKey: null,
+  createTick: 0,
 
   productivity: [],
   isProductivityLoading: false,

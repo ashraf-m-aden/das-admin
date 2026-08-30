@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
@@ -27,6 +27,7 @@ export class StaffListComponent implements OnInit {
   protected readonly items = toSignal(this.facade.items$, { initialValue: [] as StaffMember[] });
   protected readonly isFormSaving$ = this.facade.isFormSaving$;
   protected readonly formErrorMessageKey$ = this.facade.formErrorMessageKey$;
+  private readonly createTick = toSignal(this.facade.createTick$, { initialValue: 0 });
   protected readonly allRoles = ALL_ROLES;
 
   protected readonly showCreateForm = signal(false);
@@ -57,7 +58,10 @@ export class StaffListComponent implements OnInit {
   protected readonly createForm = this.fb.nonNullable.group({
     fullName: ['', [Validators.required]],
     username: ['', [Validators.required]],
-    password: ['', [Validators.required, Validators.minLength(6)]],
+    // 8, et non 6 : `CreateUserRequestValidator` côté back impose `MinimumLength(8)`. Le
+    // formulaire acceptait 6, laissait partir la requête, et le 400 revenait sans que rien ne
+    // l'explique — c'est ce qui rendait la création « impossible » sans message.
+    password: ['', [Validators.required, Validators.minLength(8)]],
     roles: this.fb.nonNullable.control<UserRole[]>([]),
   });
 initialsOf(name: string): string {
@@ -65,6 +69,13 @@ initialsOf(name: string): string {
     return ((p[0]?.[0] ?? '') + (p[1]?.[0] ?? '')).toUpperCase() || '?';
   }
   roleLabelKey(role: UserRole): string { return `roles.${role}`; }
+
+  /** Vide le formulaire au SUCCÈS seulement — sur refus, la saisie doit rester corrigeable. */
+  private readonly resetOnSuccess = effect(() => {
+    if (this.createTick() > 0) {
+      this.createForm.reset({ fullName: '', username: '', password: '', roles: [] });
+    }
+  });
   ngOnInit(): void {
     this.facade.load();
     // Débounce : sans lui, chaque frappe dispatchait un filtre — et donc un rechargement.
@@ -111,8 +122,10 @@ initialsOf(name: string): string {
       this.createForm.markAllAsTouched();
       return;
     }
+    // Le formulaire n'est PAS vidé ici : `create` est asynchrone, et le vider aussitôt effaçait
+    // la saisie même quand le back refusait. La remise à zéro se fait sur succès, dans l'effet
+    // ci-dessous.
     this.facade.create(this.createForm.getRawValue());
-    this.createForm.reset({ fullName: '', username: '', password: '', roles: [] });
     this.showCreateForm.set(false);
   }
 

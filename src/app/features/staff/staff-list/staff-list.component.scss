@@ -56,3 +56,5 @@
 .create__hint { font-size: v.$font-size-xs; color: var(--color-text-muted); margin: 0; }
 .confirm { font-size: v.$font-size-xs; color: #b45309; }
 .icon-btn--danger { color: var(--color-danger); border-color: var(--color-danger); }
+
+.create__hint--warn { color: #b45309; }

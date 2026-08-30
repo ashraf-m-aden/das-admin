@@ -18,6 +18,7 @@ export const staffFeature = createFeature({
     on(StaffActions.createStaff, (state) => ({ ...state, formStatus: 'saving' as const, formErrorMessageKey: null })),
     on(StaffActions.createStaffSuccess, (state, { user }) => ({
       ...state, items: [...state.items, user], formStatus: 'idle' as const,
+      formErrorMessageKey: null, createTick: state.createTick + 1,
     })),
     on(StaffActions.createStaffFailure, (state, { errorMessageKey }) => ({
       ...state, formStatus: 'error' as const, formErrorMessageKey: errorMessageKey,

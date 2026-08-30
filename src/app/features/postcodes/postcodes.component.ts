@@ -16,6 +16,12 @@ const CAN_EDIT_ROLES: UserRole[] = ['Admin', 'Gestionnaire'];
 
 /** Quartier explicitement sélectionné dans la liste des codes postaux. */
 const HIGHLIGHT_COLOR = '#2563eb';
+/**
+ * Quartier DÉSIGNÉ, par un clic sur sa ligne ou sur la carte. Volontairement distinct du bleu
+ * de surbrillance des codes postaux : les deux notions se superposent — on peut désigner un
+ * quartier qui fait partie de la sélection de codes — et doivent rester distinguables.
+ */
+const FOCUS_COLOR = '#dc2626';
 /** Quartier sans code postal calculable : le vide est une information, il doit se voir. */
 const NO_POSTCODE_COLOR = '#dfe3ea';
 /** Palette de fond par zone — lisible seulement quand aucun code postal n'est sélectionné. */
@@ -42,6 +48,38 @@ export class PostcodesComponent implements OnInit {
 
   /** Codes postaux mis en évidence. Vide = coloriage par zone, qui donne la structure d'ensemble. */
   protected readonly highlighted = signal<string[]>([]);
+
+  /**
+   * Quartier désigné. Un seul, alimenté par les DEUX sens : clic sur une ligne du tableau, ou
+   * clic sur la carte. C'est lui qui commande le cadrage.
+   */
+  protected readonly selectedQuartierId = signal<UUID | null>(null);
+
+  /**
+   * Vrai quand la désignation vient de la CARTE. Le tableau ne se réduit alors qu'à ce quartier.
+   *
+   * Deux drapeaux plutôt qu'un, parce que les deux gestes n'attendent pas la même chose : cliquer
+   * une ligne demande à voir OÙ elle est, sans perdre le reste de la liste ; cliquer la carte
+   * demande à savoir CE QUE c'est, donc à isoler la ligne. Un seul drapeau ferait disparaître la
+   * liste sous le doigt de qui vient d'y cliquer.
+   */
+  protected readonly filterFromMap = signal(false);
+
+  /** Clic sur une ligne : on désigne, on cadre, on ne touche pas au filtrage de la liste. */
+  focusQuartier(id: UUID): void {
+    const same = this.selectedQuartierId() === id && !this.filterFromMap();
+    this.selectedQuartierId.set(same ? null : id);
+    this.filterFromMap.set(false);
+  }
+
+  clearQuartierSelection(): void {
+    this.selectedQuartierId.set(null);
+    this.filterFromMap.set(false);
+  }
+
+  /** Le quartier désigné, pour l'afficher dans la bannière de filtrage. */
+  protected readonly selectedQuartier = computed(() =>
+    this.facade.quartiers().find((q) => q.id === this.selectedQuartierId()) ?? null);
   protected readonly postcodeSearch = signal('');
 
   /** Codes postaux réellement calculables, dédoublonnés et triés — c'est ce qu'on peut surligner. */
@@ -89,9 +127,12 @@ export class PostcodesComponent implements OnInit {
       if (!q.boundaryWkt) return [];
       const geometry = wktPolygon(q.boundaryWkt);
       if (!geometry) return [];
-      const color = !q.postcode ? NO_POSTCODE_COLOR
-        : picked.length > 0 ? (this.isHighlighted(q.postcode) ? HIGHLIGHT_COLOR : NO_POSTCODE_COLOR)
-          : this.zoneColor(q.zoneId);
+      // Le quartier désigné prime sur tout le reste : c'est la réponse au clic qu'on vient de
+      // faire, elle doit se voir même sur un quartier sans code postal.
+      const color = q.id === this.selectedQuartierId() ? FOCUS_COLOR
+        : !q.postcode ? NO_POSTCODE_COLOR
+          : picked.length > 0 ? (this.isHighlighted(q.postcode) ? HIGHLIGHT_COLOR : NO_POSTCODE_COLOR)
+            : this.zoneColor(q.zoneId);
       return [{
         id: q.id, layerId: 'quartiers', geometry, color,
         label: q.postcode ?? '', selectable: true,
@@ -105,6 +146,10 @@ export class PostcodesComponent implements OnInit {
 
   /** Cadrage sur les quartiers surlignés — sinon sur l'ensemble, via `fitToData` de la carte. */
   protected readonly mapFitBbox = computed(() => {
+    // Le quartier désigné passe devant : c'est le geste le plus récent de l'utilisateur.
+    const sel = this.selectedQuartier();
+    if (sel?.boundaryWkt) return wktBounds(sel.boundaryWkt);
+
     const picked = this.highlighted();
     if (picked.length === 0) return null;
     const boxes = this.facade.quartiers()
@@ -113,15 +158,29 @@ export class PostcodesComponent implements OnInit {
     return unionBounds(boxes);
   });
 
-  /** Clic sur un quartier de la carte : bascule son code postal dans la sélection. */
+  /**
+   * Clic sur un quartier de la carte : on le désigne et on réduit la liste à lui.
+   *
+   * Remplace l'ancien comportement, qui basculait son code postal dans la surbrillance : ce
+   * geste-là reste disponible dans la liste cochable au-dessus de la carte, et il ne répondait
+   * pas à la question qu'on se pose en cliquant une forme — « c'est lequel, celui-là ? ».
+   */
   onMapQuartier(id: string): void {
-    const q = this.facade.quartiers().find((x) => x.id === id);
-    if (q?.postcode) this.toggleHighlight(q.postcode);
+    const same = this.selectedQuartierId() === id && this.filterFromMap();
+    this.selectedQuartierId.set(same ? null : id);
+    this.filterFromMap.set(!same);
   }
 
-  protected readonly filteredQuartiers = computed(() =>
-    this.facade.quartiers().filter((q) => (!this.filterCityId() || q.cityId === this.filterCityId()) && (!this.onlyMissing() || q.postcode === null)),
-  );
+  protected readonly filteredQuartiers = computed(() => {
+    // Désignation venue de la carte : elle court-circuite les autres filtres. Les combiner
+    // pourrait rendre une liste vide — « j'ai cliqué un quartier et il a disparu ».
+    const fromMap = this.filterFromMap() ? this.selectedQuartierId() : null;
+    if (fromMap) return this.facade.quartiers().filter((q) => q.id === fromMap);
+
+    return this.facade.quartiers().filter((q) =>
+      (!this.filterCityId() || q.cityId === this.filterCityId())
+      && (!this.onlyMissing() || q.postcode === null));
+  });
 
   protected readonly editingQuartierId = signal<UUID | null>(null);
   protected readonly editAreaNumber = signal<number | null>(null);
