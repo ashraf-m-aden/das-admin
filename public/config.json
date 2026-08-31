@@ -1,8 +1,8 @@
 {
-  "apiBaseUrl": "http://localhost:5026/api",
+  "apiBaseUrl": "http://localhost:5000/api",
   "mapTileUrl": "http://localhost:3000",
   "cognitoUserPoolId": "",
   "cognitoClientId": "",
   "environment": "development",
-  "useMockApi": true
+  "useMockApi": false
 }

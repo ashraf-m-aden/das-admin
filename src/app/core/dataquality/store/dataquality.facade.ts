@@ -17,6 +17,27 @@ export class DataQualityFacade {
   /** Seuil appliqué par le back — l'écran ne doit pas en inventer un. */
   readonly suspiciousDistanceM = computed(() => this._data()?.suspiciousDistanceM ?? 100);
 
+  /**
+   * Le seuil, ou `null` tant que le serveur ne l'a pas dit.
+   *
+   * Distinct de `suspiciousDistanceM`, qui replie sur 100 : ce repli convient à l'écran
+   * anti-fraude, qui affiche de toute façon une liste déjà filtrée par le serveur. Ailleurs il
+   * mentirait — annoncer « seuil 100 m » alors que le back applique 150 est pire que ne rien
+   * annoncer, parce que l'opérateur en tire une conclusion sur un relevé précis.
+   */
+  readonly knownThresholdM = computed(() => this._data()?.suspiciousDistanceM ?? null);
+
+  /**
+   * Charge une seule fois, pour les écrans qui n'ont besoin QUE du seuil (file de validation,
+   * relevés d'une campagne). Sans le garde, chaque ouverture de fiche relancerait la requête
+   * anti-fraude complète pour en extraire un nombre.
+   */
+  ensureThresholdLoaded(): void {
+    if (this._data() === null && !this._loading()) {
+      this.load();
+    }
+  }
+
   /** Inclure les écartés est un choix d'écran, pas un état durable : il repart à faux au rechargement. */
   private readonly _includeDismissed = signal(false);
   readonly includeDismissed = this._includeDismissed.asReadonly();

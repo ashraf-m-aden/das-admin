@@ -43,6 +43,11 @@
 .btn { height: 34px; padding: 0 v.$space-3; display: inline-flex; align-items: center; gap: v.$space-1; border: none; border-radius: v.$radius-sm; font: inherit; font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; cursor: pointer;
   &--approve { background: var(--color-success); color: #fff; }
   &--reject { background: var(--color-surface); border: 1px solid #f0c2c2; color: var(--color-danger); }
+  // Contour et non aplat : la validation courante reste le bouton plein. Celle-ci fige le
+  // code d'adresse — elle doit se distinguer sans se presenter comme le geste par defaut.
+  &--definitive { background: var(--color-surface); border: 1px solid var(--color-status-in-progress);
+    color: var(--color-status-in-progress);
+    &:hover { background: var(--color-warning-bg); } }
   &--ghost { background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text-secondary); }
 }
 .empty { padding: v.$space-10; text-align: center; color: var(--color-text-muted); }
@@ -86,5 +91,17 @@
     color: var(--color-text-secondary); }
   &__count { color: var(--color-text-primary); font-weight: v.$font-weight-medium; }
   &__confirm { color: #b45309; }
+  // Occupe toute la largeur : la consequence se lit AVANT de viser un bouton, pas a cote.
+  &__warn { flex-basis: 100%; margin: 0; display: flex; align-items: center; gap: v.$space-2;
+    color: var(--color-danger); }
+}
+
+// Confirmation d'une validation definitive, en place des actions de la ligne : on ne peut plus
+// cliquer « Valider » par reflexe tant qu'on n'a pas repondu.
+.definitive { display: flex; flex-direction: column; gap: v.$space-2; width: 100%;
+  padding: v.$space-3; border-radius: v.$radius-sm; background: var(--color-warning-bg);
+  &__text { margin: 0; display: flex; align-items: center; gap: v.$space-2;
+    font-size: v.$font-size-sm; color: #92400e; }
+  &__actions { display: flex; gap: v.$space-2; flex-wrap: wrap; }
 }
 .card__pick { display: inline-flex; margin-right: v.$space-2; cursor: pointer; }

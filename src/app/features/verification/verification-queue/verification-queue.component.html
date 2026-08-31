@@ -24,9 +24,21 @@
       @if (selectedIds().size) {
         <span class="bulk__count">{{ 'verification.selectedCount' | transloco: { count: selectedIds().size } }}</span>
         @if (confirmingBulk()) {
+          <!-- L'issue se choisit ICI. Un bouton « Appliquer » unique aurait pose un type par
+               defaut invisible — c'est ce qui gelait le code d'adresse de toute une page. -->
           <span class="bulk__confirm">{{ 'verification.confirmBulk' | transloco: { count: selectedIds().size } }}</span>
-          <button type="button" class="btn btn--approve" (click)="confirmBulkValidate()">{{ 'common.apply' | transloco }}</button>
+          <button type="button" class="btn btn--approve" (click)="confirmBulkValidate('Temporary')">
+            {{ 'verification.validateTemporary' | transloco }}
+          </button>
+          <button type="button" class="btn btn--definitive" (click)="confirmBulkValidate('Definitive')">
+            {{ 'verification.validateDefinitive' | transloco }}
+          </button>
           <button type="button" class="btn btn--ghost" (click)="cancelBulkValidate()">{{ 'common.cancel' | transloco }}</button>
+          <p class="bulk__warn">
+            <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+            {{ (selectedIds().size === 1 ? 'verification.definitiveWarningOne' : 'verification.definitiveWarning')
+               | transloco: { count: selectedIds().size } }}
+          </p>
         } @else {
           <button type="button" class="btn btn--approve" (click)="requestBulkValidate()">
             <i class="ti ti-checks" aria-hidden="true"></i>{{ 'verification.validateSelection' | transloco }}
@@ -104,61 +116,37 @@
       </div>
 
       @if (item.submissionType === 'property') {
-        @if (item.outcome === 'Surveyed') {
-          @if (item.name) { <div class="card__building">{{ item.name }}</div> }
-          <div class="facts">
-            @if (typeOccupationLabel(item.typeOccupationId); as t) { <div class="fact"><span class="fact__l">{{ 'verification.typeOccupation' | transloco }}</span><span class="fact__v">{{ t }}</span></div> }
-            @if (etatOccupationLabel(item.etatOccupationId); as e) { <div class="fact"><span class="fact__l">{{ 'verification.etatOccupation' | transloco }}</span><span class="fact__v">{{ e }}</span></div> }
-            <div class="fact"><span class="fact__l">{{ 'verification.floors' | transloco }}</span><span class="fact__v">{{ item.floorCount }}</span></div>
-            @if (item.apartmentCount > 0) { <div class="fact"><span class="fact__l">{{ 'verification.apartments' | transloco }}</span><span class="fact__v">{{ item.apartmentCount }}</span></div> }
-            @if (item.shopCount > 0) { <div class="fact"><span class="fact__l">{{ 'verification.shops' | transloco }}</span><span class="fact__v">{{ item.shopCount }}</span></div> }
-            @if (item.wheelchairAccessible) { <div class="fact"><span class="fact__l">{{ 'verification.wheelchairAccessible' | transloco }}</span><span class="fact__v"><i class="ti ti-wheelchair" aria-hidden="true"></i></span></div> }
-          </div>
-        }
-        <div class="facts">
-          @if (item.gpsAccuracyM !== null) { <div class="fact"><span class="fact__l">{{ 'verification.gpsAccuracy' | transloco }}</span><span class="fact__v">±{{ item.gpsAccuracyM }} m</span></div> }
-          @if (item.distanceFromAddressM !== null) { <div class="fact"><span class="fact__l">{{ 'verification.distance' | transloco }}</span><span class="fact__v">{{ item.distanceFromAddressM }} m</span></div> }
-          <div class="fact"><span class="fact__l">{{ 'verification.photos' | transloco }}</span><span class="fact__v">{{ item.photoCount }}</span></div>
-        </div>
-
-        @if (item.isMockLocation) { <div class="notes notes--warning"><i class="ti ti-alert-triangle" aria-hidden="true"></i>{{ 'verification.mockLocationWarning' | transloco }}</div> }
-        @if (item.outcome === 'NotSurveyable' && item.notSurveyableReason) {
-          <div class="notes"><i class="ti ti-ban" aria-hidden="true"></i>{{ 'verification.notSurveyable' | transloco }} — {{ notSurveyableReasonKey(item.notSurveyableReason) | transloco }}</div>
-        }
-
-        @if (item.photoCount > 0) {
-          <button type="button" class="btn btn--ghost" (click)="togglePhotos(item)">
-            <i class="ti ti-photo" aria-hidden="true"></i>{{ (item.photoCount === 1 ? 'verification.viewPhotosOne' : 'verification.viewPhotos') | transloco: { count: item.photoCount } }}
-          </button>
-          @if (expandedPhotosId() === item.id) {
-            <div class="photos">
-              @if (facade.isLoadingPhotos$(item.id) | async) {
-                <span class="photos__loading">{{ 'common.loading' | transloco }}</span>
-              } @else {
-                @for (p of (facade.photosFor$(item.id) | async) ?? []; track p.id) {
-                  <button type="button" class="photo photo--img" [style.backgroundImage]="'url(' + p.readUrl + ')'"
-                          [attr.aria-label]="'verification.openPhoto' | transloco" (click)="openPhoto(p.readUrl)"></button>
-                }
-              }
-            </div>
-          }
-        }
+        <!-- Les faits d'un releve sont rendus par `das-survey-facts`, partage avec le detail de
+             campagne. Cet ecran en portait sa PROPRE copie : ajouter le seuil d'ecart ne
+             l'aurait affiche que d'un cote, et les deux lectures d'un meme releve auraient
+             cesse de dire la meme chose. -->
+        <das-survey-facts
+          [survey]="item"
+          [typeOccupations]="(facade.typeOccupationOptions$ | async) ?? []"
+          [etatOccupations]="(facade.etatOccupationOptions$ | async) ?? []"
+          [suspiciousDistanceM]="suspiciousDistanceM()"
+          [photos]="(facade.photosFor$(item.id) | async) ?? []"
+          [photosLoading]="(facade.isLoadingPhotos$(item.id) | async) ?? false"
+          [photosOpen]="expandedPhotosId() === item.id"
+          [mapOpen]="mapOpenId() === item.id"
+          (togglePhotos)="togglePhotos(item)"
+          (toggleMap)="toggleMap(item)"
+          (openPhoto)="openPhoto($event)" />
       } @else {
         @if (item.comment) { <div class="notes"><i class="ti ti-note" aria-hidden="true"></i>{{ item.comment }}</div> }
       }
 
-      @if (hasGeometry(item)) {
-        <button type="button" class="btn btn--ghost" (click)="toggleMap(item)">
-          <i class="ti ti-map-pin" aria-hidden="true"></i>{{ 'verification.viewMap' | transloco }}
-        </button>
-        @if (mapOpenId() === item.id) {
-          <div class="gapmap">
-            <das-map [features]="mapFeaturesFor(item)" [layers]="mapLayers" [showLayerControl]="false" />
-          </div>
-        }
-      }
-
-      @if (rejectingId() === item.id) {
+      @if (item.submissionType === 'property') {
+        <!-- Les trois issues d'un releve vivent dans `das-survey-decision`, partage avec le
+             detail de campagne : un motif obligatoire ou une confirmation qui differeraient
+             d'un ecran a l'autre changeraient la decision qu'on prend. -->
+        <das-survey-decision
+          [surveyId]="item.id"
+          [deciding]="(facade.isDeciding$(item.id) | async) ?? false"
+          (validate)="onValidate(item, $event)"
+          (reject)="onReject(item, $event)"
+          (requestCorrection)="requestCorrection(item)" />
+      } @else if (rejectingId() === item.id) {
         <div class="reject" [formGroup]="rejectForm">
           <input type="text" formControlName="reason" [attr.placeholder]="'verification.reasonPlaceholder' | transloco" />
           <button type="button" class="btn btn--reject" [disabled]="rejectForm.invalid" (click)="confirmReject(item)">{{ 'verification.confirmReject' | transloco }}</button>
@@ -167,15 +155,11 @@
         <!-- Le motif part tel quel a l'agent : le dire evite un rejet vide, puis un aller-retour. -->
         <p class="reject__hint">{{ 'verification.reasonRequired' | transloco }}</p>
       } @else {
+        <!-- Les suggestions de nom gardent leur propre couple approuver / rejeter : elles n'ont
+             ni validation provisoire, ni renvoi en correction. -->
         <div class="actions">
-          @if (item.submissionType === 'property') {
-            <button type="button" class="btn btn--approve" (click)="validate(item)"><i class="ti ti-check" aria-hidden="true"></i>{{ 'verification.validate' | transloco }}</button>
-            <button type="button" class="btn btn--reject" (click)="startReject(item)"><i class="ti ti-x" aria-hidden="true"></i>{{ 'verification.reject' | transloco }}</button>
-            <button type="button" class="btn btn--ghost" (click)="requestCorrection(item)"><i class="ti ti-rotate" aria-hidden="true"></i>{{ 'verification.requestCorrection' | transloco }}</button>
-          } @else {
-            <button type="button" class="btn btn--approve" (click)="approveSuggestion(item)"><i class="ti ti-check" aria-hidden="true"></i>{{ 'verification.approve' | transloco }}</button>
-            <button type="button" class="btn btn--reject" (click)="startReject(item)"><i class="ti ti-x" aria-hidden="true"></i>{{ 'verification.reject' | transloco }}</button>
-          }
+          <button type="button" class="btn btn--approve" (click)="approveSuggestion(item)"><i class="ti ti-check" aria-hidden="true"></i>{{ 'verification.approve' | transloco }}</button>
+          <button type="button" class="btn btn--reject" (click)="startReject(item)"><i class="ti ti-x" aria-hidden="true"></i>{{ 'verification.reject' | transloco }}</button>
         </div>
       }
     </section>

@@ -19,7 +19,21 @@
         {{ 'fieldops.create' | transloco }}
       </button>
     </form>
-    @if (createErrorMessageKey$ | async; as err) { <div class="create__error">{{ err | transloco }}</div> }
+    @if (createErrorMessageKey(); as err) {
+      <div class="create__error">
+        {{ err | transloco }}
+        <!--
+          Le refus le plus courant se répare en un clic, à condition de savoir sur quelle
+          campagne agir. On la nomme et on y conduit.
+        -->
+        @if (blockingPlanned(); as p) {
+          <a class="create__error-link" [routerLink]="['/field-operations', p.id]">
+            <i class="ti ti-arrow-right" aria-hidden="true"></i>
+            {{ 'fieldops.goToPlanned' | transloco: { name: p.name, code: p.code } }}
+          </a>
+        }
+      </div>
+    }
   </section>
   }
 

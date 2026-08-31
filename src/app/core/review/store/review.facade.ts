@@ -8,9 +8,12 @@ import {
   selectIsLoadingPhotos,
   selectIsReviewListLoading,
   selectPhotosFor,
+  selectFilteredCampaignSurveys,
+  selectCampaignSurveyCounts,
 } from './review.selectors';
 import { RedoSubmissionType, UUID } from '../../models/das.models';
 import { ReviewFilters } from './review.state';
+import { SurveyStatus, ValidationType } from '../models/review.models';
 
 @Injectable({ providedIn: 'root' })
 export class ReviewFacade {
@@ -36,8 +39,9 @@ export class ReviewFacade {
     return this.store.select(selectIsDeciding(id));
   }
 
-  validate(id: UUID): void {
-    this.store.dispatch(ReviewActions.validate({ id }));
+  /** `validationType` explicite : `Definitive` fige le `addressCode`, ce n'est jamais un défaut. */
+  validate(id: UUID, validationType: ValidationType): void {
+    this.store.dispatch(ReviewActions.validate({ id, validationType }));
   }
 
   reject(id: UUID, submissionType: RedoSubmissionType, rejectionReason: string): void {
@@ -69,6 +73,28 @@ export class ReviewFacade {
 
   loadStalled(): void {
     this.store.dispatch(ReviewActions.loadStalled());
+  }
+
+  /** Liste réduite à l'onglet courant ; `campaignSurveyTotal$` reste le total, tous statuts. */
+  campaignSurveys$ = this.store.select(selectFilteredCampaignSurveys);
+  campaignSurveyCounts$ = this.store.select(selectCampaignSurveyCounts);
+  campaignSurveyStatus$ = this.store.select(reviewFeature.selectCampaignSurveyStatus);
+  isCampaignSurveysLoading$ = this.store.select(reviewFeature.selectIsCampaignSurveysLoading);
+  campaignSurveysErrorMessageKey$ = this.store.select(reviewFeature.selectCampaignSurveysErrorMessageKey);
+
+  /** Un seul appel par campagne : tous les relevés, tous statuts. Les onglets filtrent ensuite. */
+  loadCampaignSurveys(campaignId: UUID): void {
+    this.store.dispatch(ReviewActions.loadCampaignSurveys({ campaignId }));
+  }
+
+  /** À la fermeture de l'écran : aucune décision ultérieure ne doit plus recharger cette liste. */
+  clearCampaignSurveys(): void {
+    this.store.dispatch(ReviewActions.clearCampaignSurveys());
+  }
+
+  /** Onglet de statut — filtre d'affichage, pas de rechargement. */
+  setCampaignSurveyStatus(status: SurveyStatus | null): void {
+    this.store.dispatch(ReviewActions.setCampaignSurveyStatus({ status }));
   }
 
   currentSurveys$ = this.store.select(reviewFeature.selectCurrentSurveys);

@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, computed, effect, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -8,16 +8,19 @@ import type { ExpressionSpecification, FilterSpecification } from 'maplibre-gl';
 import { FieldOpsFacade } from '../../../core/fieldops/store/fieldops.facade';
 import { StaffFacade } from '../../../core/staff/store/staff.facade';
 import { BlocksFacade } from '../../../core/blocks/store/blocks.facade';
+import { ReviewFacade } from '../../../core/review/store/review.facade';
 import { PageHeaderComponent } from '../../../core/layout/page-header/page-header.component';
 import { DasDatePipe } from '../../../core/i18n/das-locale.pipes';
 import { HierarchyCascadeComponent } from '../../../core/hierarchy/ui/hierarchy-cascade/hierarchy-cascade.component';
 import { HierarchySelection } from '../../../core/hierarchy/models/hierarchy.models';
 import { BasemapLayerGroup, DasMapComponent } from '../../../core/ui/map/das-map.component';
-import { DasPagerComponent } from '../../../core/ui/pager/das-pager.component';
 import { CampaignProgressComponent } from '../campaign-progress/campaign-progress.component';
+import { CampaignSurveysComponent } from '../campaign-surveys/campaign-surveys.component';
+import { CampaignRoadmapComponent } from '../campaign-roadmap/campaign-roadmap.component';
 import { TileFeatureStateMap, TileFilter, TileLayerBinding } from '../../../core/ui/map/map.models';
 import { unionBounds, wktBounds } from '../../../core/ui/map/wkt.util';
-import { AssignmentStatus, Block, CampaignBloc, UUID } from '../../../core/models/das.models';
+import { Assignment, AssignmentStatus, Block, CampaignBloc, UUID } from '../../../core/models/das.models';
+import { SurveyStatus } from '../../../core/review/models/review.models';
 import { StaffMember } from '../../../core/staff/models/staff.models';
 import {
   STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP,
@@ -52,7 +55,7 @@ function hashColor(id: string): string {
 @Component({
   selector: 'das-campaign-detail',
   standalone: true,
-  imports: [AsyncPipe, ReactiveFormsModule, RouterLink, TranslocoModule, DasDatePipe, PageHeaderComponent, HierarchyCascadeComponent, DasMapComponent, DasPagerComponent, CampaignProgressComponent],
+  imports: [AsyncPipe, ReactiveFormsModule, RouterLink, TranslocoModule, DasDatePipe, PageHeaderComponent, HierarchyCascadeComponent, DasMapComponent, CampaignProgressComponent, CampaignSurveysComponent, CampaignRoadmapComponent],
   templateUrl: './campaign-detail.component.html',
   styleUrl: './campaign-detail.component.scss',
 })
@@ -71,8 +74,12 @@ export class CampaignDetailComponent implements OnInit, OnDestroy {
   protected facade = inject(FieldOpsFacade);
   private staffFacade = inject(StaffFacade);
   protected blocksFacade = inject(BlocksFacade);
+  private reviewFacade = inject(ReviewFacade);
 
-  private readonly campaignId = this.route.snapshot.paramMap.get('id') ?? '';
+  protected readonly campaignId = this.route.snapshot.paramMap.get('id') ?? '';
+
+  /** Cible du défilement depuis les compteurs de l'avancement. Absente tant que la campagne charge. */
+  private readonly surveysSection = viewChild('surveysSection', { read: ElementRef<HTMLElement> });
 
   protected readonly campaign = toSignal(this.facade.selectedCampaign$);
   protected readonly progress = toSignal(this.facade.progress$);
@@ -86,24 +93,12 @@ export class CampaignDetailComponent implements OnInit, OnDestroy {
   protected readonly selectedBlocIds = signal<Set<UUID>>(new Set());
   protected readonly assignedBlocIds = computed(() => new Set(this.campaignBlocs().map((cb) => cb.blocId)));
 
-  protected readonly assignmentStatuses: AssignmentStatus[] = ['ToDo', 'Done', 'Abandoned'];
-
-  protected readonly reassigningBlocId = signal<UUID | null>(null);
-  protected readonly abandoningId = signal<UUID | null>(null);
   protected readonly editingCampaign = signal(false);
 
   protected readonly assignBlocForm = this.fb.nonNullable.group({ agentId: ['', [Validators.required]] });
-  protected readonly reassignBlocForm = this.fb.nonNullable.group({ agentId: ['', [Validators.required]] });
-  protected readonly abandonForm = this.fb.nonNullable.group({ reason: ['', [Validators.required]] });
   protected readonly editForm = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
     deadline: ['', [Validators.required]],
-  });
-
-  protected readonly transferForm = this.fb.nonNullable.group({
-    fromAgentId: ['', [Validators.required]],
-    toAgentId: ['', [Validators.required]],
-    thisCampaignOnly: [true],
   });
 
   // ---- Carte de travail ------------------------------------------------------
@@ -285,15 +280,18 @@ export class CampaignDetailComponent implements OnInit, OnDestroy {
     this.selectedBlocIds.set(new Set());
   }
 
-  startReassignBloc(blocId: UUID): void {
-    this.reassignBlocForm.reset({ agentId: '' });
-    this.reassigningBlocId.set(blocId);
-  }
-  cancelReassignBloc(): void { this.reassigningBlocId.set(null); }
-  confirmReassignBloc(blocId: UUID): void {
-    if (this.reassignBlocForm.invalid) { this.reassignBlocForm.markAllAsTouched(); return; }
-    this.facade.reassignBloc(this.campaignId, blocId, this.reassignBlocForm.getRawValue().agentId);
-    this.reassigningBlocId.set(null);
+  /**
+   * Clic sur un compteur de relevés de l'avancement : la section des relevés se recharge sur
+   * ce statut, puis on l'amène à l'écran.
+   *
+   * L'ordre passe par la facade review, pas par une entrée du composant : c'est le store qui
+   * porte déjà l'onglet affiché, et `das-campaign-surveys` l'y lit. Deux sources — une entrée
+   * ici, le store là-bas — se seraient désynchronisées dès que la section change d'onglet
+   * elle-même. Aucun appel réseau : la liste est déjà chargée, on ne fait que la filtrer.
+   */
+  showSurveys(status: SurveyStatus): void {
+    this.reviewFacade.setCampaignSurveyStatus(status);
+    this.surveysSection()?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   startCampaign(): void { this.facade.startCampaign(this.campaignId); }
@@ -301,67 +299,12 @@ export class CampaignDetailComponent implements OnInit, OnDestroy {
   extendCampaign(): void { this.facade.extendCampaign(this.campaignId); }
   closeCampaign(): void { this.facade.closeCampaign(this.campaignId); }
 
-  // ---- Feuille de route : filtres + pagination -------------------------------
-
   /**
-   * Statut et agent sont filtres PAR LE STORE (le back les prend en charge), la pagination est
-   * front : `assignments$` expose une liste deja complete, sans enveloppe `{items,total}`.
-   * Paginer ici ne masque donc aucun appel reseau — il n'y en a pas d'autre a faire.
+   * Pastille de statut de la CAMPAGNE, dans l'en-tête. Les statuts de parcelle ont leur propre
+   * copie dans `das-campaign-roadmap` : les deux vocabulaires (`Planned/InProgress/Closed` et
+   * `ToDo/Done/Abandoned`) n'ont rien en commun, les partager créerait une dépendance entre
+   * deux panneaux qui n'en ont pas.
    */
-  protected readonly assignmentStatus = signal<AssignmentStatus | null>(null);
-  protected readonly assignmentAgentId = signal<UUID | null>(null);
-  protected readonly assignmentPage = signal(1);
-  protected readonly assignmentPageSize = signal(25);
-
-  /** Agents reellement presents dans la feuille de route — filtrer sur un agent absent ne dit rien. */
-  protected readonly assignmentAgents = computed(() => {
-    const vus = new Map<UUID, string>();
-    for (const a of this.assignments()) {
-      if (a.agentId) vus.set(a.agentId, a.agentFullName ?? a.agentId);
-    }
-    return [...vus.entries()].map(([id, name]) => ({ id, name }));
-  });
-
-  protected readonly pagedAssignments = computed(() => {
-    const debut = (this.assignmentPage() - 1) * this.assignmentPageSize();
-    return this.assignments().slice(debut, debut + this.assignmentPageSize());
-  });
-
-  filterAssignmentStatus(status: AssignmentStatus | null): void {
-    this.assignmentStatus.set(status);
-    // Tout changement de filtre ramene en page 1 : rester en page 4 d'une liste qui vient de
-    // se reduire a 2 pages afficherait un vide qu'on prendrait pour une absence de resultat.
-    this.assignmentPage.set(1);
-    this.facade.setAssignmentFilters({ status });
-  }
-
-  filterAssignmentAgent(agentId: string): void {
-    const id = agentId || null;
-    this.assignmentAgentId.set(id);
-    this.assignmentPage.set(1);
-    this.facade.setAssignmentFilters({ agentId: id });
-  }
-
-  goToAssignmentPage(page: number): void { this.assignmentPage.set(page); }
-  setAssignmentPageSize(size: number): void { this.assignmentPageSize.set(size); this.assignmentPage.set(1); }
-
-  startAbandon(id: UUID): void {
-    this.abandonForm.reset({ reason: '' });
-    this.abandoningId.set(id);
-  }
-  cancelAbandon(): void { this.abandoningId.set(null); }
-  confirmAbandon(id: UUID): void {
-    if (this.abandonForm.invalid) { this.abandonForm.markAllAsTouched(); return; }
-    this.facade.abandonAssignment(id, this.abandonForm.getRawValue().reason);
-    this.abandoningId.set(null);
-  }
-
-  submitTransfer(): void {
-    if (this.transferForm.invalid) { this.transferForm.markAllAsTouched(); return; }
-    const v = this.transferForm.getRawValue();
-    this.facade.transferBlocs(v.fromAgentId, v.toAgentId, v.thisCampaignOnly ? this.campaignId : null);
-  }
-
   statusBadgeClass(status: string): string {
     return `das-badge das-badge--${status.toLowerCase()}`;
   }

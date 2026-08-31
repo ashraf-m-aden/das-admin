@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { ReviewApiPort } from './review-api.port';
 import { AppConfigService } from '../../config/app-config.service';
-import { AdresseSurvey, CurrentSurveyItem, ReviewPhoto, StalledSurveyItem, SurveyReviewItem } from '../models/review.models';
+import { AdresseSurvey, CampaignSurveyItem, CurrentSurveyItem, ReviewPhoto, StalledSurveyItem, SurveyReviewItem, ValidationType } from '../models/review.models';
 import { UUID } from '../../models/das.models';
 
 /** Forme brute de `SurveyResponse` (guide §4.4 / OpenAPI) — seuls les champs utiles à la file de validation. */
@@ -26,6 +26,8 @@ interface RawSurveyResponse {
   isMockLocation: boolean;
   capturedAtUtc: string;
   status: 'Draft' | 'Submitted' | 'Validated' | 'Rejected';
+  /** `null` tant que le relevé n'est pas validé (ajouté au contrat le 2026-08-31). */
+  validationType?: 'Definitive' | 'Temporary' | null;
   rejectionReason: string | null;
   // Optionnels : le back ne les renseigne que sur les réponses de LECTURE.
   agentFullName?: string | null;
@@ -39,6 +41,8 @@ interface RawSurveyResponse {
 interface RawSurveyPhotoResponse {
   id: string;
   readUrl: string;
+  /** Absente sur les photos antérieures au plan de clés du 2026-08-30. */
+  thumbnailUrl?: string | null;
   uploadedAtUtc: string;
 }
 
@@ -94,6 +98,18 @@ function toAdresseSurvey(raw: RawSurveyResponse): AdresseSurvey {
   };
 }
 
+/** Même relevé que la file de décision, plus son statut : ici on lit une production, pas une file. */
+function toCampaignSurveyItem(raw: RawSurveyResponse): CampaignSurveyItem {
+  return {
+    ...toSurveyReviewItem(raw),
+    status: raw.status,
+    // `?? null` : un back antérieur au 2026-08-31 ne renvoie pas le champ, l'écran doit
+    // continuer à afficher la liste plutôt que de montrer « undefined ».
+    validationType: raw.validationType ?? null,
+    rejectionReason: raw.rejectionReason,
+  };
+}
+
 function toSurveyReviewItem(raw: RawSurveyResponse): SurveyReviewItem {
   return {
     submissionType: 'property',
@@ -137,8 +153,16 @@ export class ReviewApiService extends ReviewApiPort {
       .pipe(map((items) => items.map(toSurveyReviewItem)));
   }
 
-  override validateSurvey(id: UUID): Observable<void> {
-    return this.http.post(`${this.baseUrl}/${id}/validate`, {}).pipe(map(() => undefined));
+  /**
+   * Le corps était `{}` jusqu'au 2026-08-31. Or `ValidateSurveyBody.ValidationType` est un enum
+   * dont `Definitive` est le premier membre : un corps vide arrivait donc en `Definitive`, ce
+   * qui **gelait le `addressCode`** de chaque parcelle validée — irréversible, et jamais
+   * demandé par l'opérateur, y compris sur la validation groupée.
+   *
+   * Le type part maintenant toujours explicitement, choisi par l'opérateur dans la file.
+   */
+  override validateSurvey(id: UUID, validationType: ValidationType): Observable<void> {
+    return this.http.post(`${this.baseUrl}/${id}/validate`, { validationType }).pipe(map(() => undefined));
   }
 
   override rejectSurvey(id: UUID, rejectionReason: string): Observable<void> {
@@ -152,7 +176,12 @@ export class ReviewApiService extends ReviewApiPort {
   override getSurveyPhotos(id: UUID): Observable<ReviewPhoto[]> {
     return this.http
       .get<RawSurveyPhotoResponse[]>(`${this.baseUrl}/${id}/photos`)
-      .pipe(map((photos) => photos.map((p) => ({ id: p.id, readUrl: p.readUrl, uploadedAtUtc: p.uploadedAtUtc }))));
+      .pipe(map((photos) => photos.map((p) => ({
+        id: p.id,
+        readUrl: p.readUrl,
+        thumbnailUrl: p.thumbnailUrl ?? null,
+        uploadedAtUtc: p.uploadedAtUtc,
+      }))));
   }
 
   override listSurveysByAdresse(adresseId: UUID): Observable<AdresseSurvey[]> {
@@ -160,6 +189,14 @@ export class ReviewApiService extends ReviewApiPort {
       .get<RawSurveyResponse[]>(this.baseUrl, { params: { adresseId } })
       // Plus récent d'abord : c'est le dernier relevé qui détermine l'étape de la parcelle.
       .pipe(map((items) => items.map(toAdresseSurvey)
+        .sort((a, b) => b.capturedAtUtc.localeCompare(a.capturedAtUtc))));
+  }
+
+  override listCampaignSurveys(campaignId: UUID): Observable<CampaignSurveyItem[]> {
+    return this.http
+      .get<RawSurveyResponse[]>(this.baseUrl, { params: { campaignId } })
+      // Plus récent d'abord : on ouvre cet écran pour voir ce qui vient d'être relevé.
+      .pipe(map((items) => items.map(toCampaignSurveyItem)
         .sort((a, b) => b.capturedAtUtc.localeCompare(a.capturedAtUtc))));
   }
 

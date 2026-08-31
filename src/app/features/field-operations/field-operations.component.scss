@@ -42,3 +42,8 @@
 .late, .soon { font-size: v.$font-size-xs; padding: 1px v.$space-1; border-radius: v.$radius-sm; }
 .late { background: var(--color-danger); color: #fff; }
 .soon { color: #b45309; border: 1px solid currentcolor; }
+
+.create__error-link { display: inline-flex; align-items: center; gap: v.$space-1; margin-top: v.$space-2;
+  font-size: v.$font-size-sm; color: var(--color-accent); text-decoration: none;
+  &:hover { text-decoration: underline; }
+}

@@ -39,7 +39,8 @@
     "rowsPerPage": "Rows per page",
     "pageRange": "{{from}}–{{to}} of {{total}}",
     "previousPage": "Previous page",
-    "nextPage": "Next page"
+    "nextPage": "Next page",
+    "retry": "Retry"
   },
   "mockBadge": {
     "reports": "No reporting route on the backend.",
@@ -610,7 +611,24 @@
       "draft": "Draft",
       "submitted": "Submitted",
       "validated": "Validated",
+      "validatedTemporary": "Validated (provisional)",
       "rejected": "Rejected"
+    },
+    "surveys": {
+      "title": "Field agents' surveys",
+      "hint": "What each agent actually captured in the field, drafts included.",
+      "showDetail": "Details",
+      "hideDetail": "Hide",
+      "openStatus": "View the surveys with this status",
+      "openInQueue": "Handle in the review queue",
+      "draftNote": "Draft: survey not submitted — still being captured, or sent back for correction by a supervisor. No decision can be made before submission.",
+      "unknownAddress": "Parcel without a label",
+      "seeAll": "View all surveys",
+      "emptyNone": "No survey on this campaign yet.",
+      "emptyFilteredOne": "No \"{{status}}\" survey — 1 survey under the other tabs.",
+      "emptyFiltered": "No \"{{status}}\" survey — {{count}} surveys under the other tabs.",
+      "emptyMismatchOne": "Progress reports 1 survey, but the API returns none for this campaign.",
+      "emptyMismatch": "Progress reports {{count}} surveys, but the API returns none for this campaign."
     },
     "agent": "Agent",
     "heldBlocs": "Blocs held",
@@ -622,6 +640,10 @@
     "populateResultOne": "{{created}} assignment created out of {{total}} total",
     "populateResult": "{{created}} assignments created out of {{total}} total",
     "bloc": "Bloc",
+    "parcels": "Parcels",
+    "parcelNo": "no. {{numero}}",
+    "noBlocGroup": "Bloc removed from the campaign",
+    "noParcelForFilter": "No parcel with this status in this bloc",
     "assignedAt": "Assigned on",
     "reassign": "Reassign",
     "assignmentsList": "Roadmap",
@@ -636,7 +658,7 @@
     "thisCampaignOnly": "Limit to this campaign",
     "transferResultOne": "{{count}} block transferred",
     "transferResult": "{{count}} blocks transferred",
-    "errorPlannedAlreadyExists": "A campaign is already being prepared. Start or delete it before creating another.",
+    "errorPlannedAlreadyExists": "A campaign is already being prepared. Start it before creating another — only one at a time is allowed.",
     "errorCodeCollision": "Could not assign a campaign code. Try again.",
     "errorNotPlanned": "Only a campaign in preparation can be started.",
     "errorAnotherInProgress": "Another campaign is already running. Close it first.",
@@ -668,7 +690,10 @@
     "allAgents": "All agents",
     "campaignCount": "{{count}} campaign(s)",
     "late": "{{count}} day(s) late",
-    "daysLeft": "{{count}} day(s) left"
+    "daysLeft": "{{count}} day(s) left",
+    "goToPlanned": "Open “{{name}}” ({{code}})",
+    "detachBloc": "Remove",
+    "detachUnavailable": "Removing a block from a campaign is not possible yet: the API exposes no deletion on /api/campaigns/{id}/blocs."
   },
   "dataquality": {
     "eyebrow": "Anti-fraud control queue — field signals",
@@ -833,6 +858,8 @@
     "all": "All",
     "gpsAccuracy": "GPS accuracy",
     "distance": "Distance from parcel",
+    "threshold": "threshold {{threshold}} m",
+    "overThreshold": "beyond the {{threshold}} m threshold",
     "typeOccupation": "Occupation type",
     "etatOccupation": "Building condition",
     "floors": "Floors",
@@ -847,6 +874,12 @@
     "suggestedName": "Suggested name",
     "comment": "Comment",
     "validate": "Validate",
+    "validateTemporary": "Validate (provisional)",
+    "validateDefinitive": "Validate definitively",
+    "confirmDefinitive": "Yes, freeze the code",
+    "definitiveHint": "Freezes the address code and removes the parcel from later campaigns. Irreversible.",
+    "definitiveWarningOne": "Validating definitively freezes this parcel’s code and removes it from later campaigns. This is irreversible.",
+    "definitiveWarning": "Validating definitively freezes the code of {{count}} parcels and removes them from later campaigns. This is irreversible.",
     "approve": "Approve",
     "reject": "Reject",
     "requestCorrection": "Request correction",
@@ -879,6 +912,8 @@
     "reasonRequired": "The reason goes to the agent as written: say what must be fixed (5 characters minimum).",
     "openPhoto": "Enlarge the photo",
     "viewMap": "View the gap on the map",
+    "viewMapCaptureOnly": "View the captured position on the map",
+    "viewMapParcelOnly": "View the parcel on the map",
     "mapLayer": "Position gap",
     "mapParcel": "Parcel",
     "mapCapture": "GPS capture",
@@ -887,7 +922,9 @@
     "selectedCount": "{{count}} selected",
     "validateSelection": "Validate the selection",
     "clearSelection": "Clear selection",
-    "confirmBulk": "Validate {{count}} survey(s) without reopening them?"
+    "confirmBulk": "Validate {{count}} survey(s) without reopening them?",
+    "noPhotoYet": "This survey carries no photo.",
+    "photosUnavailable": "Photos unavailable — read links expire, close then reopen."
   },
   "period": {
     "last7": "Last 7 days",

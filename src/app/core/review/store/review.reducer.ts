@@ -82,6 +82,43 @@ export const reviewFeature = createFeature({
       stalledErrorMessageKey: errorMessageKey,
     })),
 
+    /**
+     * Un chargement remet l'onglet sur « Toutes » : on ouvre une campagne sur l'ensemble de sa
+     * production, pas sur le filtre laissé par la campagne consultée juste avant.
+     */
+    /**
+     * La liste n'est PAS vidée ici et l'onglet n'est PAS réinitialisé : ce chargement se rejoue
+     * après chaque décision. Vider ferait clignoter la liste, et revenir sur « Toutes » ferait
+     * perdre à l'opérateur le filtre sur lequel il travaille — au moment précis où il vient
+     * d'agir. Le passage d'une campagne à l'autre, lui, est couvert par `clearCampaignSurveys`
+     * au départ de l'écran.
+     */
+    on(ReviewActions.loadCampaignSurveys, (state, { campaignId }) => ({
+      ...state,
+      campaignSurveysCampaignId: campaignId,
+      isCampaignSurveysLoading: true,
+      campaignSurveysErrorMessageKey: null,
+    })),
+    on(ReviewActions.clearCampaignSurveys, (state) => ({
+      ...state, campaignSurveys: [], campaignSurveysCampaignId: null, campaignSurveyStatus: null,
+    })),
+    on(ReviewActions.setCampaignSurveyStatus, (state, { status }) => ({ ...state, campaignSurveyStatus: status })),
+    on(ReviewActions.loadCampaignSurveysSuccess, (state, { items, typeOccupationOptions, etatOccupationOptions }) => ({
+      ...state,
+      campaignSurveys: items,
+      typeOccupationOptions,
+      etatOccupationOptions,
+      isCampaignSurveysLoading: false,
+    })),
+    on(ReviewActions.loadCampaignSurveysFailure, (state, { errorMessageKey }) => ({
+      ...state,
+      // Liste vidée : garder les relevés du filtre précédent sous un onglet qui a échoué
+      // afficherait des lignes qui ne correspondent plus à ce qui est demandé.
+      campaignSurveys: [],
+      isCampaignSurveysLoading: false,
+      campaignSurveysErrorMessageKey: errorMessageKey,
+    })),
+
     on(ReviewActions.loadCurrentSurveys, (state) => ({
       ...state,
       isCurrentSurveysLoading: true,
@@ -118,6 +155,11 @@ export const {
   selectStalledItems,
   selectIsStalledLoading,
   selectStalledErrorMessageKey,
+  selectCampaignSurveys,
+  selectCampaignSurveysCampaignId,
+  selectCampaignSurveyStatus,
+  selectIsCampaignSurveysLoading,
+  selectCampaignSurveysErrorMessageKey,
   selectCurrentSurveys,
   selectIsCurrentSurveysLoading,
   selectCurrentSurveysErrorMessageKey,

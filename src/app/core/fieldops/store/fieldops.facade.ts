@@ -25,6 +25,8 @@ export class FieldOpsFacade {
   isCampaignsLoading$ = this.store.select(selectIsCampaignsLoading);
   isCreatingCampaign$ = this.store.select(fieldOpsFeature.selectIsCreatingCampaign);
   createCampaignErrorMessageKey$ = this.store.select(fieldOpsFeature.selectCreateCampaignErrorMessageKey);
+  /** Compteur de créations réussies — sert à ne vider le formulaire qu'en cas de succès. */
+  createTick$ = this.store.select(fieldOpsFeature.selectCreateTick);
   isUpdatingCampaign$ = this.store.select(fieldOpsFeature.selectIsUpdatingCampaign);
   updateCampaignErrorMessageKey$ = this.store.select(fieldOpsFeature.selectUpdateCampaignErrorMessageKey);
 

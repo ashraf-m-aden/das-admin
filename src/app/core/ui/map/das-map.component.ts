@@ -81,6 +81,15 @@ export class DasMapComponent implements OnInit, OnDestroy {
   readonly center = input<[number, number]>([43.145, 11.595]);
   readonly zoom = input<number>(12);
   readonly fitToData = input<boolean>(true);
+  /**
+   * Zoom maximal atteint par le recadrage automatique. 16 par défaut : c'est l'échelle d'un
+   * quartier, celle de tous les écrans qui affichent des blocs ou des parcelles.
+   *
+   * À relever seulement pour une comparaison MÉTRIQUE. À la latitude de Djibouti, z16 vaut
+   * ~2,3 m par pixel : deux points distants de 2 m s'y superposent. L'écart entre une capture
+   * GPS et sa parcelle se lit vers z19 (~0,3 m/px), pas à l'échelle du quartier.
+   */
+  readonly fitMaxZoom = input<number>(16);
   /** Emprise [minLng, minLat, maxLng, maxLat] à recadrer (prioritaire sur fitToData). */
   readonly fitBbox = input<[number, number, number, number] | null>(null);
   readonly selectedId = input<string | null>(null);
@@ -526,7 +535,9 @@ export class DasMapComponent implements OnInit, OnDestroy {
     if (!this.map || !this.loaded) return;
     this.map.fitBounds(
       [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
-      { padding: 48, maxZoom: 16, duration: 400 },
+      // Meme plafond que le recadrage auto : deux chemins de cadrage qui ne s'arretent pas au
+      // meme zoom donneraient deux echelles differentes pour la meme carte.
+      { padding: 48, maxZoom: this.fitMaxZoom(), duration: 400 },
     );
   }
 
@@ -534,7 +545,7 @@ export class DasMapComponent implements OnInit, OnDestroy {
     const bounds = new maplibregl.LngLatBounds();
     for (const f of features) this.extend(bounds, f);
     if (!bounds.isEmpty()) {
-      this.map!.fitBounds(bounds, { padding: 48, maxZoom: 16, duration: 0 });
+      this.map!.fitBounds(bounds, { padding: 48, maxZoom: this.fitMaxZoom(), duration: 0 });
     }
   }
 

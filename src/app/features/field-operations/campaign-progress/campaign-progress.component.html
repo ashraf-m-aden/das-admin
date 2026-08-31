@@ -20,10 +20,14 @@
   <div class="pgroup">
     <div class="pgroup__title">{{ 'fieldops.surveysGroup' | transloco }}</div>
     <div class="facts">
-      <div class="fact"><span class="fact__l">{{ 'fieldops.survey.draft' | transloco }}</span><span class="fact__v">{{ progress().surveysDraft }}</span></div>
-      <div class="fact"><span class="fact__l">{{ 'fieldops.survey.submitted' | transloco }}</span><span class="fact__v">{{ progress().surveysSubmitted }}</span></div>
-      <div class="fact"><span class="fact__l">{{ 'fieldops.survey.validated' | transloco }}</span><span class="fact__v">{{ progress().surveysValidated }}</span></div>
-      <div class="fact"><span class="fact__l">{{ 'fieldops.survey.rejected' | transloco }}</span><span class="fact__v">{{ progress().surveysRejected }}</span></div>
+      <button type="button" class="fact fact--link" (click)="pickSurveyStatus.emit('Draft')"
+              [attr.title]="'fieldops.surveys.openStatus' | transloco"><span class="fact__l">{{ 'fieldops.survey.draft' | transloco }}</span><span class="fact__v">{{ progress().surveysDraft }}</span></button>
+      <button type="button" class="fact fact--link" (click)="pickSurveyStatus.emit('Submitted')"
+              [attr.title]="'fieldops.surveys.openStatus' | transloco"><span class="fact__l">{{ 'fieldops.survey.submitted' | transloco }}</span><span class="fact__v">{{ progress().surveysSubmitted }}</span></button>
+      <button type="button" class="fact fact--link" (click)="pickSurveyStatus.emit('Validated')"
+              [attr.title]="'fieldops.surveys.openStatus' | transloco"><span class="fact__l">{{ 'fieldops.survey.validated' | transloco }}</span><span class="fact__v">{{ progress().surveysValidated }}</span></button>
+      <button type="button" class="fact fact--link" (click)="pickSurveyStatus.emit('Rejected')"
+              [attr.title]="'fieldops.surveys.openStatus' | transloco"><span class="fact__l">{{ 'fieldops.survey.rejected' | transloco }}</span><span class="fact__v">{{ progress().surveysRejected }}</span></button>
       <div class="fact"><span class="fact__l">{{ 'fieldops.awaitingRecheck' | transloco }}</span><span class="fact__v">{{ progress().temporaryAwaitingRecheck }}</span></div>
       <div class="fact"><span class="fact__l">{{ 'fieldops.stalled' | transloco }}</span><span class="fact__v">{{ progress().stalledSubmissions }}</span></div>
     </div>

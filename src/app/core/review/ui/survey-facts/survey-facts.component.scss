@@ -1,0 +1,43 @@
+@use "styles/variables" as v;
+@use "styles/mixins" as m;
+
+/* Styles repris de la file de validation, d'où ce bloc a été extrait. Ils vivent ici pour que
+   les deux écrans qui l'affichent restent identiques : dupliqués, ils auraient divergé. */
+
+:host { display: flex; flex-direction: column; gap: v.$space-3; }
+
+.sf__building { font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; color: var(--color-text-primary); }
+.sf__hint { margin: 0; font-size: v.$font-size-xs; color: var(--color-text-muted); }
+
+.facts { display: flex; flex-wrap: wrap; gap: v.$space-5 v.$space-4; }
+.fact { display: flex; flex-direction: column;
+  &__l { font-size: v.$font-size-xs; color: var(--color-text-muted); }
+  &__v { font-size: v.$font-size-sm; color: var(--color-text-primary);
+    display: inline-flex; align-items: center; gap: v.$space-1;
+    // Au-dela du seuil serveur : c'est un signal, pas un verdict — d'ou l'ambre du « a
+    // regarder » et non le rouge d'une erreur.
+    &--far { color: var(--color-status-in-progress); font-weight: v.$font-weight-semibold; } }
+  &__hint { font-size: v.$font-size-xs; color: var(--color-text-muted); }
+}
+
+.notes { display: flex; align-items: center; gap: v.$space-2; padding: v.$space-2 v.$space-3;
+  background: var(--color-warning-bg); color: #92400e; border-radius: v.$radius-sm;
+  font-size: v.$font-size-sm;
+  &--warning { background: var(--color-danger-bg); color: var(--color-danger); }
+}
+
+.photos { display: flex; gap: v.$space-2; flex-wrap: wrap; }
+.photo { width: 60px; height: 46px; border-radius: v.$radius-sm; background: var(--color-surface-sunken);
+  @include m.flex-center; color: var(--color-text-muted); font-size: 18px;
+  &--img { background-size: cover; background-position: center; border: none; padding: 0; cursor: zoom-in; }
+}
+.photos__loading { font-size: v.$font-size-sm; color: var(--color-text-muted); }
+
+.gapmap { height: 260px; border-radius: v.$radius-md; overflow: hidden; }
+
+.btn { height: 34px; padding: 0 v.$space-3; display: inline-flex; align-items: center; gap: v.$space-1;
+  align-self: flex-start; border: none; border-radius: v.$radius-sm; font: inherit;
+  font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; cursor: pointer;
+  &--ghost { background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text-secondary);
+    &:hover { border-color: var(--color-accent); color: var(--color-accent); } }
+}

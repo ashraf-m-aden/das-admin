@@ -1,11 +1,14 @@
 import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { catchError, exhaustMap, forkJoin, map, mergeMap, of } from 'rxjs';
+import { concatLatestFrom } from '@ngrx/operators';
+import { Store } from '@ngrx/store';
+import { catchError, exhaustMap, filter, forkJoin, map, mergeMap, of, switchMap } from 'rxjs';
 import { ReviewActions } from './review.actions';
 import { ReviewApiPort } from '../services/review-api.port';
 import { AddressingApiPort } from '../../addressing/services/addressing-api.port';
 import { ReferenceApiPort } from '../../reference/services/reference-api.port';
 import { ReviewItem } from '../models/review.models';
+import { reviewFeature } from './review.reducer';
 import { ErrorKeyMap, toErrorKey } from '../../http/error-code';
 
 /**
@@ -45,6 +48,7 @@ export class ReviewEffects {
   private reviewApi = inject(ReviewApiPort);
   private addressingApi = inject(AddressingApiPort);
   private referenceApi = inject(ReferenceApiPort);
+  private store = inject(Store);
 
   loadQueue$ = createEffect(() =>
     this.actions$.pipe(
@@ -88,8 +92,8 @@ export class ReviewEffects {
   validate$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ReviewActions.validate),
-      mergeMap(({ id }) =>
-        this.reviewApi.validateSurvey(id).pipe(
+      mergeMap(({ id, validationType }) =>
+        this.reviewApi.validateSurvey(id, validationType).pipe(
           map(() => ReviewActions.validateSuccess({ id })),
           catchError((err: unknown) => of(ReviewActions.validateFailure({ errorMessageKey: toKey(err) }))),
         ),
@@ -162,6 +166,53 @@ export class ReviewEffects {
           catchError(() => of(ReviewActions.loadStalledFailure({ errorMessageKey: 'common.error' }))),
         ),
       ),
+    ),
+  );
+
+  /**
+   * `switchMap` : passer d'une campagne à l'autre annule le chargement en cours, sinon la
+   * réponse de la précédente peut arriver après et remplir l'écran avec les relevés d'une
+   * campagne qu'on ne regarde plus.
+   */
+  loadCampaignSurveys$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(ReviewActions.loadCampaignSurveys),
+      switchMap(({ campaignId }) =>
+        forkJoin({
+          items: this.reviewApi.listCampaignSurveys(campaignId),
+          typeOccupationOptions: this.referenceApi.getTypesOccupation(),
+          etatOccupationOptions: this.referenceApi.getEtatsOccupation(),
+        }).pipe(
+          map(({ items, typeOccupationOptions, etatOccupationOptions }) =>
+            ReviewActions.loadCampaignSurveysSuccess({ items, typeOccupationOptions, etatOccupationOptions }),
+          ),
+          catchError((err: unknown) => of(ReviewActions.loadCampaignSurveysFailure({ errorMessageKey: toKey(err) }))),
+        ),
+      ),
+    ),
+  );
+
+  /**
+   * Après une décision, relit la campagne ouverte — si elle l'est.
+   *
+   * Sans cela, un relevé validé depuis le détail de campagne gardait sa pastille « Soumis »
+   * jusqu'à un rechargement manuel : l'écran affirmait le contraire de ce qui venait d'être
+   * fait. Le store est relu plutôt que rafistolé localement parce que la décision change plus
+   * que le statut (`validationType`, `rejectionReason`) et que le serveur en est la source.
+   *
+   * `campaignSurveysCampaignId` vaut `null` hors de cet écran : une décision prise dans la file
+   * de vérification ne déclenche donc aucun appel.
+   */
+  reloadCampaignSurveysAfterDecision$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(
+        ReviewActions.validateSuccess,
+        ReviewActions.rejectSuccess,
+        ReviewActions.requestCorrectionSuccess,
+      ),
+      concatLatestFrom(() => this.store.select(reviewFeature.selectCampaignSurveysCampaignId)),
+      filter(([, campaignId]) => campaignId !== null),
+      map(([, campaignId]) => ReviewActions.loadCampaignSurveys({ campaignId: campaignId! })),
     ),
   );
 

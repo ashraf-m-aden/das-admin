@@ -1,0 +1,36 @@
+@use "styles/variables" as v;
+
+/* Styles repris de la file de validation, d'où ce bloc a été extrait. Ils vivent ici pour que
+   les deux écrans qui rendent ces décisions restent identiques : dupliqués, ils auraient
+   divergé — et un bouton « valider » qui n'a pas le même poids visuel d'un écran à l'autre
+   change la décision qu'on prend. */
+
+:host { display: flex; flex-direction: column; gap: v.$space-1; }
+
+.actions, .reject { display: flex; gap: v.$space-2; align-items: center; flex-wrap: wrap; }
+.reject input { flex: 1; min-width: 180px; height: 34px; border: 1px solid var(--color-border);
+  border-radius: v.$radius-sm; font: inherit; font-size: v.$font-size-sm; padding: 0 v.$space-2; outline: none; }
+.reject__hint { margin: 0; font-size: v.$font-size-xs; color: var(--color-text-muted); }
+
+// Confirmation d'une validation definitive, EN PLACE des actions : on ne peut plus cliquer
+// « valider » par reflexe tant qu'on n'a pas repondu.
+.definitive { display: flex; flex-direction: column; gap: v.$space-2;
+  padding: v.$space-3; border-radius: v.$radius-sm; background: var(--color-warning-bg);
+  &__text { margin: 0; display: flex; align-items: center; gap: v.$space-2;
+    font-size: v.$font-size-sm; color: #92400e; }
+  &__actions { display: flex; gap: v.$space-2; flex-wrap: wrap; }
+}
+
+.btn { height: 34px; padding: 0 v.$space-3; display: inline-flex; align-items: center; gap: v.$space-1;
+  border: none; border-radius: v.$radius-sm; font: inherit; font-size: v.$font-size-sm;
+  font-weight: v.$font-weight-medium; cursor: pointer;
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  &--approve { background: var(--color-success); color: #fff; }
+  &--reject { background: var(--color-surface); border: 1px solid #f0c2c2; color: var(--color-danger); }
+  // Contour et non aplat : la validation courante reste le bouton plein. Celle-ci fige le
+  // code d'adresse — elle doit se distinguer sans se presenter comme le geste par defaut.
+  &--definitive { background: var(--color-surface); border: 1px solid var(--color-status-in-progress);
+    color: var(--color-status-in-progress);
+    &:hover:not(:disabled) { background: var(--color-warning-bg); } }
+  &--ghost { background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text-secondary); }
+}

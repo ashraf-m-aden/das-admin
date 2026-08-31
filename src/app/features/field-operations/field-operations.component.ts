@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
@@ -24,7 +24,20 @@ export class FieldOperationsComponent implements OnInit {
 
   protected readonly campaigns$ = this.facade.campaigns$;
   protected readonly isLoading$ = this.facade.isCampaignsLoading$;
-  protected readonly createErrorMessageKey$ = this.facade.createCampaignErrorMessageKey$;
+  protected readonly createErrorMessageKey = toSignal(this.facade.createCampaignErrorMessageKey$, { initialValue: null });
+  private readonly createTick = toSignal(this.facade.createTick$, { initialValue: 0 });
+
+  /**
+   * La campagne déjà en préparation, quand c'est elle qui bloque la création.
+   *
+   * Le back refuse par `Campaigns.PlannedAlreadyExists` — une seule campagne peut être en
+   * préparation à la fois — mais son message ne dit pas LAQUELLE. Le front, lui, a la liste :
+   * autant la nommer et y conduire, plutôt que de laisser chercher.
+   */
+  protected readonly blockingPlanned = computed(() =>
+    this.createErrorMessageKey() === 'fieldops.errorPlannedAlreadyExists'
+      ? this.campaigns().find((c) => c.status === 'Planned') ?? null
+      : null);
 
   protected readonly statuses: CampaignStatus[] = ['Planned', 'InProgress', 'Closed'];
 
@@ -78,10 +91,17 @@ export class FieldOperationsComponent implements OnInit {
     this.facade.setCampaignFilters({ status });
   }
 
+  /** Vide le formulaire au SUCCÈS seulement — sur refus, la saisie doit rester corrigeable. */
+  private readonly resetOnSuccess = effect(() => {
+    if (this.createTick() > 0) this.createForm.reset({ name: '', deadline: '' });
+  });
+
   createCampaign(): void {
     if (this.createForm.invalid) { this.createForm.markAllAsTouched(); return; }
+    // Pas de remise à zéro ici : `createCampaign` est asynchrone, et vider le formulaire tout de
+    // suite effaçait la saisie même quand le back refusait — un 409 « une campagne est déjà en
+    // préparation » faisait perdre le nom et la date qu'on venait de taper.
     this.facade.createCampaign(this.createForm.getRawValue());
-    this.createForm.reset({ name: '', deadline: '' });
     this.showCreateForm.set(false);
   }
 

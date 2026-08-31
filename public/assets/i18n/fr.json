@@ -39,7 +39,8 @@
     "rowsPerPage": "Lignes par page",
     "pageRange": "{{from}}–{{to}} sur {{total}}",
     "previousPage": "Page précédente",
-    "nextPage": "Page suivante"
+    "nextPage": "Page suivante",
+    "retry": "Réessayer"
   },
   "mockBadge": {
     "reports": "Aucune route de rapports côté backend.",
@@ -610,7 +611,24 @@
       "draft": "Brouillon",
       "submitted": "Soumis",
       "validated": "Validé",
+      "validatedTemporary": "Validé (provisoire)",
       "rejected": "Rejeté"
+    },
+    "surveys": {
+      "title": "Relevés des agents",
+      "hint": "Le détail de ce que chaque agent a saisi sur le terrain, brouillons compris.",
+      "showDetail": "Détail",
+      "hideDetail": "Masquer",
+      "openStatus": "Voir les relevés de ce statut",
+      "openInQueue": "Traiter dans la file de validation",
+      "draftNote": "Brouillon : relevé non soumis — saisie en cours, ou renvoyé en correction par un superviseur. Aucune décision n'est possible avant sa soumission.",
+      "unknownAddress": "Parcelle sans libellé",
+      "seeAll": "Voir tous les relevés",
+      "emptyNone": "Aucun relevé sur cette campagne pour l'instant.",
+      "emptyFilteredOne": "Aucun relevé « {{status}} » — 1 relevé sous les autres onglets.",
+      "emptyFiltered": "Aucun relevé « {{status}} » — {{count}} relevés sous les autres onglets.",
+      "emptyMismatchOne": "L'avancement annonce 1 relevé, mais l'API n'en renvoie aucun pour cette campagne.",
+      "emptyMismatch": "L'avancement annonce {{count}} relevés, mais l'API n'en renvoie aucun pour cette campagne."
     },
     "agent": "Agent",
     "heldBlocs": "Blocs tenus",
@@ -622,6 +640,10 @@
     "populateResultOne": "{{created}} affectation créée sur {{total}} au total",
     "populateResult": "{{created}} affectations créées sur {{total}} au total",
     "bloc": "Bloc",
+    "parcels": "Parcelles",
+    "parcelNo": "n° {{numero}}",
+    "noBlocGroup": "Bloc retiré de la campagne",
+    "noParcelForFilter": "Aucune parcelle dans ce statut pour ce bloc",
     "assignedAt": "Affecté le",
     "reassign": "Réaffecter",
     "assignmentsList": "Feuille de route",
@@ -636,7 +658,7 @@
     "thisCampaignOnly": "Limiter à cette campagne",
     "transferResultOne": "{{count}} bloc transféré",
     "transferResult": "{{count}} blocs transférés",
-    "errorPlannedAlreadyExists": "Une campagne est déjà en préparation. Démarrez-la ou supprimez-la avant d'en créer une autre.",
+    "errorPlannedAlreadyExists": "Une campagne est déjà en préparation. Démarrez-la avant d'en créer une autre — il ne peut y en avoir qu'une à la fois.",
     "errorCodeCollision": "Impossible d'attribuer un code de campagne. Réessayez.",
     "errorNotPlanned": "Seule une campagne en préparation peut être démarrée.",
     "errorAnotherInProgress": "Une autre campagne est déjà en cours. Clôturez-la d'abord.",
@@ -668,7 +690,10 @@
     "allAgents": "Tous les agents",
     "campaignCount": "{{count}} campagne(s)",
     "late": "En retard de {{count}} j",
-    "daysLeft": "J-{{count}}"
+    "daysLeft": "J-{{count}}",
+    "goToPlanned": "Ouvrir « {{name}} » ({{code}})",
+    "detachBloc": "Retirer",
+    "detachUnavailable": "Retirer un bloc d'une campagne n'est pas encore possible : l'API n'expose aucune suppression sur /api/campaigns/{id}/blocs."
   },
   "dataquality": {
     "eyebrow": "File de contrôle anti-fraude — signaux terrain",
@@ -833,6 +858,8 @@
     "all": "Toutes",
     "gpsAccuracy": "Précision GPS",
     "distance": "Écart à la parcelle",
+    "threshold": "seuil {{threshold}} m",
+    "overThreshold": "au-delà du seuil de {{threshold}} m",
     "typeOccupation": "Type d'occupation",
     "etatOccupation": "État du bâti",
     "floors": "Étages",
@@ -847,6 +874,12 @@
     "suggestedName": "Nom proposé",
     "comment": "Commentaire",
     "validate": "Valider",
+    "validateTemporary": "Valider (provisoire)",
+    "validateDefinitive": "Valider définitivement",
+    "confirmDefinitive": "Oui, figer le code",
+    "definitiveHint": "Fige le code d'adresse et sort la parcelle des campagnes suivantes. Irréversible.",
+    "definitiveWarningOne": "Valider définitivement fige le code de cette parcelle et la sort des campagnes suivantes. C'est irréversible.",
+    "definitiveWarning": "Valider définitivement fige le code des {{count}} parcelles et les sort des campagnes suivantes. C'est irréversible.",
     "approve": "Approuver",
     "reject": "Rejeter",
     "requestCorrection": "Renvoyer en correction",
@@ -879,6 +912,8 @@
     "reasonRequired": "Le motif part tel quel à l'agent : dites ce qui doit être corrigé (5 caractères minimum).",
     "openPhoto": "Agrandir la photo",
     "viewMap": "Voir l'écart sur la carte",
+    "viewMapCaptureOnly": "Voir la position relevée sur la carte",
+    "viewMapParcelOnly": "Voir la parcelle sur la carte",
     "mapLayer": "Écart de position",
     "mapParcel": "Parcelle",
     "mapCapture": "Capture GPS",
@@ -887,7 +922,9 @@
     "selectedCount": "{{count}} sélectionné(s)",
     "validateSelection": "Valider la sélection",
     "clearSelection": "Tout désélectionner",
-    "confirmBulk": "Valider {{count}} relevé(s) sans les rouvrir ?"
+    "confirmBulk": "Valider {{count}} relevé(s) sans les rouvrir ?",
+    "noPhotoYet": "Ce relevé ne porte aucune photo.",
+    "photosUnavailable": "Photos indisponibles — les liens de lecture expirent, refermez puis rouvrez."
   },
   "period": {
     "last7": "7 derniers jours",

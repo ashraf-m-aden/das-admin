@@ -4,29 +4,31 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { map } from 'rxjs';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { TranslocoModule } from '@jsverse/transloco';
 import { ReviewFacade } from '../../../core/review/store/review.facade';
+import { DataQualityFacade } from '../../../core/dataquality/store/dataquality.facade';
 import { PageHeaderComponent } from '../../../core/layout/page-header/page-header.component';
+import { SurveyDecisionComponent } from '../../../core/review/ui/survey-decision/survey-decision.component';
+import { SurveyFactsComponent } from '../../../core/review/ui/survey-facts/survey-facts.component';
 import { DasPagerComponent } from '../../../core/ui/pager/das-pager.component';
-import { DasMapComponent } from '../../../core/ui/map/das-map.component';
-import { MapFeature, MapLayerConfig } from '../../../core/ui/map/map.models';
-import { wktPoint } from '../../../core/ui/map/wkt.util';
 import { DasDatePipe } from '../../../core/i18n/das-locale.pipes';
-import { ReviewItem } from '../../../core/review/models/review.models';
-import { RedoSubmissionType, UUID } from '../../../core/models/das.models';
+import { ReviewItem, ValidationType } from '../../../core/review/models/review.models';
+import { RedoSubmissionType } from '../../../core/models/das.models';
 
 @Component({
   selector: 'das-verification-queue',
   standalone: true,
-  imports: [AsyncPipe, ReactiveFormsModule, TranslocoModule, DasDatePipe, PageHeaderComponent, DasPagerComponent, DasMapComponent],
+  imports: [AsyncPipe, ReactiveFormsModule, TranslocoModule, DasDatePipe, PageHeaderComponent, DasPagerComponent, SurveyDecisionComponent, SurveyFactsComponent],
   templateUrl: './verification-queue.component.html',
   styleUrl: './verification-queue.component.scss',
 })
 export class VerificationQueueComponent implements OnInit {
   private fb = inject(FormBuilder);
-  private transloco = inject(TranslocoService);
   private route = inject(ActivatedRoute);
   protected facade = inject(ReviewFacade);
+  /** Uniquement pour le SEUIL d'écart — l'écran ne doit pas en inventer un. */
+  private dataQuality = inject(DataQualityFacade);
+  protected readonly suspiciousDistanceM = this.dataQuality.knownThresholdM;
 
   protected readonly items$ = this.facade.items$;
   protected readonly isLoading$ = this.facade.isListLoading$;
@@ -58,10 +60,6 @@ export class VerificationQueueComponent implements OnInit {
    * Sans ce lien, le bandeau annonçait un problème sans permettre d'aller le traiter.
    */
   protected readonly focusedId = signal<string | null>(null);
-
-  protected readonly mapLayers: MapLayerConfig[] = [
-    { id: 'survey-gap', labelKey: 'verification.mapLayer', type: 'point', visible: true, showLabels: true },
-  ];
 
   protected readonly items = toSignal(this.facade.items$, { initialValue: [] as ReviewItem[] });
   protected readonly page = signal(1);
@@ -133,12 +131,17 @@ export class VerificationQueueComponent implements OnInit {
 
   clearSelection(): void { this.selectedIds.set(new Set()); }
 
-  /** Confirmation obligatoire : valider en lot est irréversible et porte sur plusieurs relevés. */
+  /**
+   * Confirmation obligatoire : valider en lot porte sur plusieurs relevés d'un coup.
+   *
+   * La confirmation demande AUSSI l'issue. Un bouton unique aurait forcément posé un type par
+   * défaut, invisible — c'est exactement ce qui gelait le `addressCode` de toute une page.
+   */
   protected readonly confirmingBulk = signal(false);
   requestBulkValidate(): void { this.confirmingBulk.set(true); }
   cancelBulkValidate(): void { this.confirmingBulk.set(false); }
-  confirmBulkValidate(): void {
-    for (const id of this.selectedIds()) this.facade.validate(id);
+  confirmBulkValidate(validationType: ValidationType): void {
+    for (const id of this.selectedIds()) this.facade.validate(id, validationType);
     this.clearSelection();
     this.confirmingBulk.set(false);
   }
@@ -149,15 +152,6 @@ export class VerificationQueueComponent implements OnInit {
   });
 
   protected readonly stalledItems$ = this.facade.stalledItems$;
-
-  private readonly typeOccupationMap = toSignal(
-    this.facade.typeOccupationOptions$.pipe(map((options) => new Map(options.map((o) => [o.id, o.nom])))),
-    { initialValue: new Map<UUID, string>() },
-  );
-  private readonly etatOccupationMap = toSignal(
-    this.facade.etatOccupationOptions$.pipe(map((options) => new Map(options.map((o) => [o.id, o.nom])))),
-    { initialValue: new Map<UUID, string>() },
-  );
 
   /** Relevé demandé par l'URL, en flux : naviguer d'un relevé à l'autre réutilise le composant. */
   private readonly routeSurveyId = toSignal(
@@ -184,6 +178,7 @@ export class VerificationQueueComponent implements OnInit {
   private dejaFocalise: string | null = null;
 
   ngOnInit(): void {
+    this.dataQuality.ensureThresholdLoaded();
     this.facade.load();
     this.facade.loadStalled();
   }
@@ -208,34 +203,8 @@ export class VerificationQueueComponent implements OnInit {
     this.mapOpenId.set(this.mapOpenId() === item.id ? null : item.id);
   }
 
-  /**
-   * Deux points et rien d'autre : où la parcelle est censée être, et où l'agent a capturé.
-   * C'est ce qui transforme « 22 m d'écart » en fait vérifiable — de l'autre côté de la rue,
-   * ou dans le bâtiment voisin, ce n'est pas la même décision.
-   */
-  mapFeaturesFor(item: ReviewItem): MapFeature[] {
-    if (item.submissionType !== 'property') return [];
-    const features: MapFeature[] = [];
-
-    const parcelle = item.adresseLocationWkt ? wktPoint(item.adresseLocationWkt) : null;
-    if (parcelle) {
-      features.push({ id: `${item.id}-adresse`, layerId: 'survey-gap', geometry: parcelle,
-        color: '#2563eb', label: this.transloco.translate('verification.mapParcel'), selectable: false });
-    }
-
-    const capture = item.gpsCaptureWkt ? wktPoint(item.gpsCaptureWkt) : null;
-    if (capture) {
-      features.push({ id: `${item.id}-capture`, layerId: 'survey-gap', geometry: capture,
-        color: item.isMockLocation ? '#dc2626' : '#d97706',
-        label: this.transloco.translate('verification.mapCapture'), selectable: false });
-    }
-
-    return features;
-  }
-
-  hasGeometry(item: ReviewItem): boolean {
-    return item.submissionType === 'property' && (!!item.gpsCaptureWkt || !!item.adresseLocationWkt);
-  }
+  // `mapFeaturesFor`, `hasGeometry`, `mapLayers` et les libellés d'occupation ont disparu avec
+  // la migration vers `das-survey-facts` : ce composant les portait en double.
 
   /** Relevé en souffrance introuvable dans la file — voir `focusSurvey`. */
   protected readonly notInQueueId = signal<string | null>(null);
@@ -262,8 +231,17 @@ export class VerificationQueueComponent implements OnInit {
     this.showStalled.set(false);
   }
 
-  validate(item: ReviewItem): void {
-    this.facade.validate(item.id);
+  /**
+   * Les trois issues d'un relevé sont rendues par `das-survey-decision`, partagé avec le détail
+   * de campagne : cet écran ne fait plus que router l'intention vers la facade. Le motif de
+   * rejet obligatoire et la confirmation du définitif vivent dans le composant, une seule fois.
+   */
+  onValidate(item: ReviewItem, validationType: ValidationType): void {
+    this.facade.validate(item.id, validationType);
+  }
+
+  onReject(item: ReviewItem, reason: string): void {
+    this.facade.reject(item.id, item.submissionType, reason);
   }
 
   approveSuggestion(item: ReviewItem): void {
@@ -303,15 +281,4 @@ export class VerificationQueueComponent implements OnInit {
     return `verification.type.${t}`;
   }
 
-  notSurveyableReasonKey(reason: string): string {
-    return `verification.notSurveyableReason.${reason.toLowerCase()}`;
-  }
-
-  typeOccupationLabel(id: UUID | null): string | null {
-    return id ? (this.typeOccupationMap().get(id) ?? id) : null;
-  }
-
-  etatOccupationLabel(id: UUID | null): string | null {
-    return id ? (this.etatOccupationMap().get(id) ?? id) : null;
-  }
 }

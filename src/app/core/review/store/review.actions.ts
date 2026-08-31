@@ -1,6 +1,6 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { RedoSubmissionType, UUID } from '../../models/das.models';
-import { CurrentSurveyItem, ReviewItem, ReviewPhoto, StalledSurveyItem } from '../models/review.models';
+import { CampaignSurveyItem, CurrentSurveyItem, ReviewItem, ReviewPhoto, StalledSurveyItem, SurveyStatus, ValidationType } from '../models/review.models';
 import { ReviewFilters } from './review.state';
 import { OccupationCatalogItem } from '../../reference/models/reference.models';
 
@@ -17,7 +17,7 @@ export const ReviewActions = createActionGroup({
 
     'Set Filters': props<{ filters: Partial<ReviewFilters> }>(),
 
-    Validate: props<{ id: UUID }>(),
+    Validate: props<{ id: UUID; validationType: ValidationType }>(),
     'Validate Success': props<{ id: UUID }>(),
     'Validate Failure': props<{ errorMessageKey: string }>(),
 
@@ -40,6 +40,20 @@ export const ReviewActions = createActionGroup({
     'Load Stalled': emptyProps(),
     'Load Stalled Success': props<{ items: StalledSurveyItem[] }>(),
     'Load Stalled Failure': props<{ errorMessageKey: string }>(),
+
+    'Load Campaign Surveys': props<{ campaignId: UUID }>(),
+    'Load Campaign Surveys Success': props<{
+      items: CampaignSurveyItem[];
+      typeOccupationOptions: OccupationCatalogItem[];
+      etatOccupationOptions: OccupationCatalogItem[];
+    }>(),
+    'Load Campaign Surveys Failure': props<{ errorMessageKey: string }>(),
+
+    /** Onglet de statut de l'écran campagne. Pur filtre d'affichage : aucun appel réseau derrière. */
+    'Set Campaign Survey Status': props<{ status: SurveyStatus | null }>(),
+
+    /** L'écran campagne se ferme : plus aucune décision ne doit y déclencher de rechargement. */
+    'Clear Campaign Surveys': emptyProps(),
 
     'Load Current Surveys': props<{ blocId: UUID | null; surveyedOnly: boolean }>(),
     'Load Current Surveys Success': props<{

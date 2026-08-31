@@ -19,6 +19,12 @@ export interface FieldOpsState {
   campaignsErrorMessageKey: string | null;
   campaignFilters: CampaignFilters;
   isCreatingCampaign: boolean;
+  /**
+   * Incrémenté à chaque création RÉUSSIE — l'écran y accroche la remise à zéro de son
+   * formulaire. Un compteur et non un booléen : deux créations d'affilée ne feraient pas changer
+   * un booléen de valeur, donc la seconde ne déclencherait rien.
+   */
+  createTick: number;
   createCampaignErrorMessageKey: string | null;
 
   isUpdatingCampaign: boolean;
@@ -66,6 +72,7 @@ export const initialFieldOpsState: FieldOpsState = {
   campaignsErrorMessageKey: null,
   campaignFilters: { status: null },
   isCreatingCampaign: false,
+  createTick: 0,
   createCampaignErrorMessageKey: null,
 
   isUpdatingCampaign: false,

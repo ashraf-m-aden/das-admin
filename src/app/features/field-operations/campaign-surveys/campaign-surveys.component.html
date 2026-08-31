@@ -1,0 +1,146 @@
+<div class="cs__head">
+  <div class="cs__title">{{ 'fieldops.surveys.title' | transloco }}</div>
+  <p class="cs__hint">{{ 'fieldops.surveys.hint' | transloco }}</p>
+</div>
+
+<!-- Onglets chiffres sur la liste RAPATRIEE, pas sur l'avancement : un compteur et sa liste
+     qui se contredisent, c'est ce qu'on ne peut pas diagnostiquer a l'ecran. -->
+<div class="cs__tabs">
+  <button type="button" class="tab" [class.tab--on]="status() === null" (click)="filterStatus(null)">
+    {{ 'fieldops.all' | transloco }}<span class="tab__n">{{ counts().all }}</span>
+  </button>
+  @for (s of statuses; track s) {
+    <button type="button" class="tab" [class.tab--on]="status() === s" (click)="filterStatus(s)">
+      {{ ('fieldops.survey.' + s.toLowerCase()) | transloco }}<span class="tab__n">{{ counts()[s] }}</span>
+    </button>
+  }
+</div>
+
+@if (facade.decisionErrorMessageKey$ | async; as err) {
+  <!-- Un 403 « on ne valide pas son propre releve » ou une file perimee se disent ici : sans
+       cela, le clic n'aurait tout simplement aucun effet visible. -->
+  <div class="cs__error"><span>{{ err | transloco }}</span></div>
+}
+
+@if (facade.campaignSurveysErrorMessageKey$ | async; as err) {
+  <div class="cs__error">
+    <span>{{ err | transloco }}</span>
+    <button type="button" class="cs__retry" (click)="reload()">{{ 'common.retry' | transloco }}</button>
+  </div>
+}
+
+@for (s of pagedSurveys(); track s.id) {
+  <div class="srow" [class.srow--open]="expandedId() === s.id">
+    <button type="button" class="srow__head" (click)="toggleDetail(s.id)" [attr.aria-expanded]="expandedId() === s.id">
+      <i class="ti srow__chev" [class.ti-chevron-right]="expandedId() !== s.id" [class.ti-chevron-down]="expandedId() === s.id" aria-hidden="true"></i>
+      <span class="srow__adresse">
+        {{ s.adresseLibelle ?? ('fieldops.surveys.unknownAddress' | transloco) }}
+        @if (s.addressCode) { <span class="mono">{{ s.addressCode }}</span> }
+      </span>
+      <span class="srow__agent">{{ s.agentFullName ?? ('fieldops.noAgent' | transloco) }}</span>
+      <span class="srow__date">{{ s.capturedAtUtc | dasDate: 'long' }}</span>
+      <!-- Le nombre de photos EST le signal « y a-t-il de quoi juger » : visible sans deplier. -->
+      <span class="srow__photos" [class.srow__photos--none]="s.photoCount === 0"
+            [attr.title]="'verification.photos' | transloco">
+        <i class="ti ti-photo" aria-hidden="true"></i>{{ s.photoCount }}
+      </span>
+      <!-- Colonne TOUJOURS rendue, meme vide : conditionner la cellule decalait toute la
+           grille sur les lignes signalees, et « Detail » repassait a la ligne. -->
+      <span class="srow__flag">
+        @if (s.isMockLocation) {
+          <i class="ti ti-alert-triangle" [attr.title]="'verification.mockLocationWarning' | transloco" aria-hidden="true"></i>
+        }
+      </span>
+      <!-- Un validé PROVISOIRE attend un recontrôle : le confondre avec un définitif ferait
+           considérer comme close une parcelle qui ne l'est pas. -->
+      <span [class]="badgeClass(s)">
+        {{ (s.validationType === 'Temporary' ? 'fieldops.survey.validatedTemporary'
+                                             : 'fieldops.survey.' + s.status.toLowerCase()) | transloco }}
+      </span>
+      <span class="srow__more">{{ (expandedId() === s.id ? 'fieldops.surveys.hideDetail' : 'fieldops.surveys.showDetail') | transloco }}</span>
+    </button>
+
+    <!-- Le motif de rejet reste visible SANS deplier : c'est ce que l'agent a recu, et la
+         raison pour laquelle la parcelle est retombee en « enregistree ». -->
+    @if (s.status === 'Rejected' && s.rejectionReason) {
+      <div class="srow__reason"><i class="ti ti-message-circle-x" aria-hidden="true"></i>{{ s.rejectionReason }}</div>
+    }
+
+    @if (expandedId() === s.id) {
+      <div class="srow__body">
+        <das-survey-facts
+          [survey]="s"
+          [typeOccupations]="typeOccupations()"
+          [etatOccupations]="etatOccupations()"
+          [suspiciousDistanceM]="suspiciousDistanceM()"
+          [photos]="(facade.photosFor$(s.id) | async) ?? []"
+          [photosLoading]="(facade.isLoadingPhotos$(s.id) | async) ?? false"
+          [photosOpen]="photosOpenId() === s.id"
+          [mapOpen]="mapOpenId() === s.id"
+          (togglePhotos)="togglePhotos($event)"
+          (toggleMap)="toggleMap($event)"
+          (openPhoto)="openPhoto($event)" />
+
+        @switch (s.status) {
+          @case ('Submitted') {
+            <!-- Les MEMES gestes que la file de validation, rendus par le meme composant : on
+                 tranche la ou l'on vient de regarder les photos, sans perdre le contexte de la
+                 campagne. Un second jeu de boutons aurait duplique le motif obligatoire et la
+                 confirmation du definitif. -->
+            <das-survey-decision
+              [surveyId]="s.id"
+              [deciding]="(facade.isDeciding$(s.id) | async) ?? false"
+              (validate)="onValidate(s.id, $event)"
+              (reject)="onReject(s.id, $event)"
+              (requestCorrection)="onRequestCorrection(s.id)" />
+            <a class="cs__link" [routerLink]="['/verification', s.id]">
+              <i class="ti ti-gavel" aria-hidden="true"></i>{{ 'fieldops.surveys.openInQueue' | transloco }}
+            </a>
+          }
+          @case ('Draft') {
+            <!-- C'est la reponse a « pourquoi je ne peux rien faire ici ? ». En gris discret,
+                 la question restait posee : le back refuse toute decision hors `Submitted`. -->
+            <p class="cs__note cs__note--boxed">
+              <i class="ti ti-info-circle" aria-hidden="true"></i>{{ 'fieldops.surveys.draftNote' | transloco }}
+            </p>
+          }
+        }
+      </div>
+    }
+  </div>
+}
+
+<!-- Quatre vides differents, quatre messages : sans cela, « rien » se lit comme un ecran casse. -->
+@switch (emptyReason()) {
+  @case ('loading') { <div class="cs__empty">{{ 'common.loading' | transloco }}</div> }
+  @case ('filtered') {
+    <div class="cs__empty">
+      {{ (counts().all === 1 ? 'fieldops.surveys.emptyFilteredOne' : 'fieldops.surveys.emptyFiltered')
+         | transloco: { status: statusLabelKey() | transloco, count: counts().all } }}
+      <button type="button" class="cs__retry" (click)="filterStatus(null)">{{ 'fieldops.surveys.seeAll' | transloco }}</button>
+    </div>
+  }
+  @case ('mismatch') {
+    <!-- L'avancement annonce des releves que /api/surveys ne renvoie pas : le dire, plutot que
+         d'afficher un cadre vide qu'on prendrait pour un bug d'affichage. -->
+    <div class="cs__empty cs__empty--warn">
+      <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+      {{ (announced() === 1 ? 'fieldops.surveys.emptyMismatchOne' : 'fieldops.surveys.emptyMismatch')
+         | transloco: { count: announced() } }}
+      <button type="button" class="cs__retry" (click)="reload()">{{ 'common.retry' | transloco }}</button>
+    </div>
+  }
+  @case ('none') { <div class="cs__empty">{{ 'fieldops.surveys.emptyNone' | transloco }}</div> }
+}
+
+@if (surveys().length > pageSize()) {
+  <das-pager [page]="page()" [pageSize]="pageSize()" [total]="surveys().length"
+             (pageChange)="goToPage($event)" (pageSizeChange)="setPageSize($event)" />
+}
+
+@if (lightboxUrl(); as url) {
+  <!-- Fermeture au clic n'importe ou : la visionneuse ne sert qu'a regarder la photo. -->
+  <div class="lightbox" (click)="closePhoto()">
+    <img [src]="url" [attr.alt]="'verification.photos' | transloco" />
+  </div>
+}

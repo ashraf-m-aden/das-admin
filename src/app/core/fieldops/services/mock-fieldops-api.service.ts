@@ -87,12 +87,12 @@ export class MockFieldOpsApiService extends FieldOpsApiPort {
   ];
 
   private assignments: Assignment[] = [
-    { id: 'assign-0001', campaignId: 'campaign-0001', adresseId: 'addr-12347', agentId: 'mock-surveyor-0001', agentFullName: AGENTS['mock-surveyor-0001'], status: 'Done', abandonReason: null, abandonedAtUtc: null, lastRejectionReason: null },
-    { id: 'assign-0002', campaignId: 'campaign-0001', adresseId: 'addr-12350', agentId: 'mock-surveyor-0001', agentFullName: AGENTS['mock-surveyor-0001'], status: 'ToDo', abandonReason: null, abandonedAtUtc: null, lastRejectionReason: null },
+    { id: 'assign-0001', campaignId: 'campaign-0001', blocId: 'bloc-0001', numero: 12, addressCode: '77-310-2-12', adresseId: 'addr-12347', agentId: 'mock-surveyor-0001', agentFullName: AGENTS['mock-surveyor-0001'], status: 'Done', abandonReason: null, abandonedAtUtc: null, lastRejectionReason: null },
+    { id: 'assign-0002', campaignId: 'campaign-0001', blocId: 'bloc-0001', numero: 13, addressCode: null, adresseId: 'addr-12350', agentId: 'mock-surveyor-0001', agentFullName: AGENTS['mock-surveyor-0001'], status: 'ToDo', abandonReason: null, abandonedAtUtc: null, lastRejectionReason: null },
     // Relevé rejeté : l'adresse retombe sur `registered` (cf. §5 CLAUDE.md), pas `surveyed`.
-    { id: 'assign-0003', campaignId: 'campaign-0001', adresseId: 'addr-12355', agentId: 'mock-surveyor-0001', agentFullName: AGENTS['mock-surveyor-0001'], status: 'ToDo', abandonReason: null, abandonedAtUtc: null, lastRejectionReason: 'Photo de façade illisible' },
-    { id: 'assign-0004', campaignId: 'campaign-0001', adresseId: 'addr-12360', agentId: 'mock-surveyor-0002', agentFullName: AGENTS['mock-surveyor-0002'], status: 'ToDo', abandonReason: null, abandonedAtUtc: null, lastRejectionReason: null },
-    { id: 'assign-0005', campaignId: 'campaign-0001', adresseId: 'addr-12365', agentId: 'mock-surveyor-0002', agentFullName: AGENTS['mock-surveyor-0002'], status: 'Abandoned', abandonReason: 'Parcelle démolie, inaccessible', abandonedAtUtc: new Date().toISOString(), lastRejectionReason: null },
+    { id: 'assign-0003', campaignId: 'campaign-0001', blocId: 'bloc-0001', numero: 14, addressCode: '77-310-2-14', adresseId: 'addr-12355', agentId: 'mock-surveyor-0001', agentFullName: AGENTS['mock-surveyor-0001'], status: 'ToDo', abandonReason: null, abandonedAtUtc: null, lastRejectionReason: 'Photo de façade illisible' },
+    { id: 'assign-0004', campaignId: 'campaign-0001', blocId: 'bloc-0002', numero: 15, addressCode: null, adresseId: 'addr-12360', agentId: 'mock-surveyor-0002', agentFullName: AGENTS['mock-surveyor-0002'], status: 'ToDo', abandonReason: null, abandonedAtUtc: null, lastRejectionReason: null },
+    { id: 'assign-0005', campaignId: 'campaign-0001', blocId: 'bloc-0002', numero: 16, addressCode: '77-310-2-16', adresseId: 'addr-12365', agentId: 'mock-surveyor-0002', agentFullName: AGENTS['mock-surveyor-0002'], status: 'Abandoned', abandonReason: 'Parcelle démolie, inaccessible', abandonedAtUtc: new Date().toISOString(), lastRejectionReason: null },
   ];
 
   private nextCampaignSeq = 3;
@@ -166,9 +166,13 @@ export class MockFieldOpsApiService extends FieldOpsApiPort {
       toDo: items.filter((a) => a.status === 'ToDo').length,
       done: items.filter((a) => a.status === 'Done').length,
       abandoned: items.filter((a) => a.status === 'Abandoned').length,
-      surveysDraft: 0, surveysSubmitted: 0,
-      surveysValidated: items.filter((a) => a.status === 'Done').length,
-      surveysRejected: 0,
+      // Alignes sur les relevés de `MockReviewApiService` (1 brouillon, 3 soumis, 1 validé,
+      // 1 rejeté). Avant, l'avancement annonçait 0 brouillon pendant que la liste des relevés
+      // en affichait un : en mock, les deux panneaux se contredisaient à l'écran, et on ne
+      // pouvait pas distinguer ce désaccord-là d'un vrai écart back.
+      surveysDraft: 1, surveysSubmitted: 3,
+      surveysValidated: 1,
+      surveysRejected: 1,
       temporaryAwaitingRecheck: 0, stalledSubmissions: 0,
       canBeClosed: true,
       byAgent: [...byAgentMap.entries()].map(([agentId, v]) => ({
@@ -191,7 +195,8 @@ export class MockFieldOpsApiService extends FieldOpsApiPort {
         if (exists) continue;
         newOnes.push({
           id: `assign-${String(this.nextAssignmentSeq++).padStart(4, '0')}`,
-          campaignId, adresseId, agentId: cb.agentId, agentFullName: cb.agentFullName,
+          campaignId, blocId: cb.blocId, numero: this.nextAssignmentSeq, addressCode: null,
+          adresseId, agentId: cb.agentId, agentFullName: cb.agentFullName,
           status: 'ToDo', abandonReason: null, abandonedAtUtc: null, lastRejectionReason: null,
         });
         created++;
@@ -243,7 +248,8 @@ export class MockFieldOpsApiService extends FieldOpsApiPort {
       const cb = this.campaignBlocs.find((c) => c.campaignId === id && c.blocId === blocId)!;
       newOnes.push({
         id: `assign-${String(this.nextAssignmentSeq++).padStart(4, '0')}`,
-        campaignId: id, adresseId, agentId: cb.agentId, agentFullName: cb.agentFullName,
+        campaignId: id, blocId, numero: this.nextAssignmentSeq, addressCode: null,
+        adresseId, agentId: cb.agentId, agentFullName: cb.agentFullName,
         status: 'ToDo', abandonReason: null, abandonedAtUtc: null, lastRejectionReason: null,
       });
       result.added++;

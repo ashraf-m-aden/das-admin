@@ -192,6 +192,20 @@ export interface CampaignProgress {
 /** Une ligne = une parcelle de la feuille de route. `agentId`/`agentFullName` sont déduits du bloc — `null` si le bloc a été retiré de la campagne. */
 export interface Assignment {
   id: UUID; campaignId: UUID; adresseId: UUID;
+  /**
+   * Bloc de la parcelle — c'est LUI qui porte le titulaire, `agentId` en est déduit. Ajouté au
+   * contrat le 2026-08-31 : sans lui, la feuille de route ne pouvait s'afficher qu'à plat, à
+   * côté d'une seconde liste de blocs, sans rattacher l'une à l'autre.
+   */
+  blocId: UUID;
+  /**
+   * Numéro de la parcelle dans sa close — ce qui identifie la ligne. La feuille de route ne
+   * portait que des UUID. Le libellé complet n'est pas renvoyé : lue groupée par bloc, elle y
+   * répéterait bloc, quartier et ville sur chaque ligne d'un même groupe.
+   */
+  numero: number;
+  /** Code d'adresse publiable, `null` tant qu'il n'est pas figé. */
+  addressCode: string | null;
   agentId: UUID | null; agentFullName: string | null;
   status: AssignmentStatus; abandonReason: string | null; abandonedAtUtc: ISODateTime | null;
   /** Motif du dernier relevé rejeté sur cette adresse, toutes campagnes confondues. */

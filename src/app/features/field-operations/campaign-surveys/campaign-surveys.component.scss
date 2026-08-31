@@ -1,0 +1,98 @@
+@use "styles/variables" as v;
+@use "styles/mixins" as m;
+
+/* Le style des faits d'un relevé (photos, écart GPS, comptages) est porté par
+   `das-survey-facts` : ici on n'habille que la liste et son dépliage. */
+
+:host { display: block; padding: v.$space-4; border-left: 4px solid var(--color-status-submitted); }
+
+.cs__head { display: flex; align-items: baseline; gap: v.$space-3; flex-wrap: wrap; margin-bottom: v.$space-3; }
+.cs__title { font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; color: var(--color-text-primary); }
+.cs__hint, .cs__note { margin: 0; font-size: v.$font-size-xs; color: var(--color-text-muted); }
+// Encadree : elle explique une ABSENCE (pas de boutons de decision). En gris discret, on la
+// prend pour une legende et on continue de chercher les boutons.
+.cs__note--boxed { display: flex; align-items: center; gap: v.$space-2; align-self: flex-start;
+  padding: v.$space-2 v.$space-3; border-radius: v.$radius-sm;
+  background: var(--color-surface-sunken); color: var(--color-text-secondary);
+  font-size: v.$font-size-sm; }
+
+.cs__empty { display: flex; align-items: center; justify-content: center; gap: v.$space-2;
+  padding: v.$space-8 v.$space-4; text-align: center; color: var(--color-text-muted);
+  font-size: v.$font-size-sm; flex-wrap: wrap;
+  // L'ecart entre ce que l'avancement annonce et ce que l'API renvoie n'est pas un vide
+  // ordinaire : il se signale, sinon on le prend pour un ecran casse.
+  &--warn { color: var(--color-danger); background: var(--color-danger-bg); border-radius: v.$radius-sm; }
+}
+
+.cs__error { display: flex; align-items: center; gap: v.$space-3; padding: v.$space-2 v.$space-3;
+  margin-bottom: v.$space-3; background: var(--color-danger-bg); color: var(--color-danger);
+  border-radius: v.$radius-sm; font-size: v.$font-size-sm; }
+.cs__retry { border: none; background: none; padding: 0; font: inherit; font-size: v.$font-size-sm;
+  color: inherit; text-decoration: underline; cursor: pointer; }
+
+.cs__tabs { display: inline-flex; padding: 3px; gap: 2px; background: var(--color-surface-alt);
+  border: 1px solid var(--color-border); border-radius: v.$radius-sm; margin-bottom: v.$space-3; flex-wrap: wrap; }
+.tab { height: 30px; padding: 0 v.$space-3; display: inline-flex; align-items: center; gap: v.$space-2;
+  border: none; background: transparent; border-radius: calc(#{v.$radius-sm} - 2px); font: inherit;
+  font-size: v.$font-size-sm; color: var(--color-text-secondary); cursor: pointer;
+  &:hover { color: var(--color-accent); }
+  // Sans etat visible, on ne sait plus sur quoi on filtre.
+  &--on { background: var(--color-surface); color: var(--color-text-primary); font-weight: v.$font-weight-medium; }
+  // Pastille du compte : lisible comme un nombre, pas comme la suite du libelle.
+  &__n { min-width: 20px; padding: 0 6px; border-radius: v.$radius-full; background: var(--color-surface-sunken);
+    font-size: v.$font-size-xs; font-weight: v.$font-weight-semibold; color: var(--color-text-muted); text-align: center; }
+}
+.tab--on .tab__n { background: var(--color-accent); color: var(--color-on-accent); }
+
+.srow { border-bottom: 1px solid var(--color-surface-sunken);
+  &:last-of-type { border-bottom: none; }
+  &--open { background: var(--color-surface-alt); border-radius: v.$radius-sm; }
+
+  // La ligne entiere est le bouton de depliage : viser une petite fleche pour lire un releve
+  // serait une cible inutilement etroite.
+  &__head { display: grid; grid-template-columns: 16px minmax(0, 2fr) minmax(0, 1.1fr) auto 46px 18px 118px 60px;
+    gap: v.$space-3; align-items: center; width: 100%; padding: v.$space-3;
+    border: none; background: none; font: inherit; font-size: v.$font-size-sm;
+    color: var(--color-text-secondary); text-align: left; cursor: pointer;
+    &:hover { background: var(--color-surface-alt); }
+    &:hover .srow__more { color: var(--color-accent); }
+    @include m.respond-below(lg) { grid-template-columns: 16px minmax(0, 1fr) 46px 18px auto; }
+  }
+  &__chev { color: var(--color-text-muted); }
+  &__adresse { color: var(--color-text-primary); @include m.truncate; }
+  &__agent, &__date { @include m.truncate;
+    @include m.respond-below(lg) { display: none; } }
+  &__date { color: var(--color-text-muted); font-size: v.$font-size-xs; }
+
+  // Presence de preuve, lisible sans deplier.
+  &__photos { display: inline-flex; align-items: center; gap: 4px; font-size: v.$font-size-xs;
+    color: var(--color-text-secondary);
+    &--none { color: var(--color-text-muted); opacity: 0.55; } }
+  &__flag { color: var(--color-danger); text-align: center; }
+  // La pastille tient sur UNE ligne : repliee, elle etirerait la hauteur de la ligne entiere.
+  .das-badge { white-space: nowrap; justify-self: start; }
+  &__more { font-size: v.$font-size-xs; color: var(--color-text-muted); text-align: right;
+    @include m.respond-below(lg) { display: none; } }
+
+  // Aligne sous la colonne adresse : le motif appartient a SA ligne, pas au tableau.
+  &__reason { display: flex; align-items: center; gap: v.$space-2;
+    margin: 0 v.$space-3 v.$space-3 calc(16px + #{v.$space-3} * 2);
+    padding: v.$space-2 v.$space-3; background: var(--color-danger-bg); color: var(--color-danger);
+    border-radius: v.$radius-sm; font-size: v.$font-size-xs; }
+
+  // Rattache visuellement au releve qu'on vient d'ouvrir.
+  &__body { margin: 0 v.$space-3 v.$space-3 calc(16px + #{v.$space-3} * 2);
+    padding-left: v.$space-4; border-left: 2px solid var(--color-border);
+    display: flex; flex-direction: column; gap: v.$space-3; }
+}
+
+.mono { font-family: v.$font-family-mono; color: var(--color-text-muted); margin-left: v.$space-2; }
+
+.cs__link { display: inline-flex; align-items: center; gap: v.$space-1; align-self: flex-start;
+  font-size: v.$font-size-sm; color: var(--color-accent); text-decoration: none;
+  &:hover { text-decoration: underline; } }
+
+.lightbox { position: fixed; inset: 0; z-index: 60; background: rgb(0 0 0 / 78%);
+  @include m.flex-center; cursor: zoom-out;
+  img { max-width: 92vw; max-height: 92vh; border-radius: v.$radius-md; }
+}

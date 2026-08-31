@@ -1,0 +1,86 @@
+@if (survey(); as s) {
+  @if (s.outcome === 'Surveyed') {
+    @if (s.name) { <div class="sf__building">{{ s.name }}</div> }
+    <div class="facts">
+      @if (typeLabel(); as t) { <div class="fact"><span class="fact__l">{{ 'verification.typeOccupation' | transloco }}</span><span class="fact__v">{{ t }}</span></div> }
+      @if (etatLabel(); as e) { <div class="fact"><span class="fact__l">{{ 'verification.etatOccupation' | transloco }}</span><span class="fact__v">{{ e }}</span></div> }
+      <div class="fact"><span class="fact__l">{{ 'verification.floors' | transloco }}</span><span class="fact__v">{{ s.floorCount }}</span></div>
+      @if (s.apartmentCount > 0) { <div class="fact"><span class="fact__l">{{ 'verification.apartments' | transloco }}</span><span class="fact__v">{{ s.apartmentCount }}</span></div> }
+      @if (s.shopCount > 0) { <div class="fact"><span class="fact__l">{{ 'verification.shops' | transloco }}</span><span class="fact__v">{{ s.shopCount }}</span></div> }
+      @if (s.wheelchairAccessible) { <div class="fact"><span class="fact__l">{{ 'verification.wheelchairAccessible' | transloco }}</span><span class="fact__v"><i class="ti ti-wheelchair" aria-hidden="true"></i></span></div> }
+    </div>
+  }
+
+  <div class="facts">
+    @if (s.gpsAccuracyM !== null) { <div class="fact"><span class="fact__l">{{ 'verification.gpsAccuracy' | transloco }}</span><span class="fact__v">±{{ s.gpsAccuracyM }} m</span></div> }
+    @if (s.distanceFromAddressM !== null) {
+      <!-- Le seuil est affiche AVEC l'ecart : « 78 m » ne se juge pas sans savoir a partir de
+           quand le serveur signale. Absent tant que le serveur ne l'a pas dit. -->
+      <div class="fact">
+        <span class="fact__l">{{ 'verification.distance' | transloco }}</span>
+        <span class="fact__v" [class.fact__v--far]="distanceIsFar()">
+          {{ s.distanceFromAddressM }} m
+          @if (distanceIsFar()) { <i class="ti ti-alert-triangle" aria-hidden="true"></i> }
+        </span>
+        @if (suspiciousDistanceM(); as seuil) {
+          <span class="fact__hint">{{ (distanceIsFar() ? 'verification.overThreshold' : 'verification.threshold')
+                                      | transloco: { threshold: seuil } }}</span>
+        }
+      </div>
+    }
+    <div class="fact"><span class="fact__l">{{ 'verification.photos' | transloco }}</span><span class="fact__v">{{ s.photoCount }}</span></div>
+  </div>
+
+  @if (s.isMockLocation) {
+    <div class="notes notes--warning"><i class="ti ti-alert-triangle" aria-hidden="true"></i>{{ 'verification.mockLocationWarning' | transloco }}</div>
+  }
+  @if (s.outcome === 'NotSurveyable' && s.notSurveyableReason) {
+    <div class="notes"><i class="ti ti-ban" aria-hidden="true"></i>{{ 'verification.notSurveyable' | transloco }} — {{ notSurveyableReasonKey(s.notSurveyableReason) | transloco }}</div>
+  }
+
+  <!--
+    Un relevé « effectué » sans photo est une anomalie : le back en exige au moins une à la
+    soumission. Sur un brouillon, c'est normal — l'agent n'a pas fini. Le dire évite de chercher
+    un bouton de photos qui n'a rien à ouvrir.
+  -->
+  @if (s.photoCount === 0 && s.outcome === 'Surveyed') {
+    <p class="sf__hint">{{ 'verification.noPhotoYet' | transloco }}</p>
+  }
+
+  @if (s.photoCount > 0) {
+    <button type="button" class="btn btn--ghost" (click)="togglePhotos.emit(s.id)">
+      <i class="ti ti-photo" aria-hidden="true"></i>{{ (s.photoCount === 1 ? 'verification.viewPhotosOne' : 'verification.viewPhotos') | transloco: { count: s.photoCount } }}
+    </button>
+    @if (photosOpen()) {
+      <div class="photos">
+        @if (photosLoading()) {
+          <span class="photos__loading">{{ 'common.loading' | transloco }}</span>
+        } @else {
+          @for (p of photos(); track p.id) {
+            <!-- La VIGNETTE en fond, la photo PLEINE seulement a l'ouverture : une pastille de
+                 60x46 px ne justifie pas de telecharger l'original. Repli sur `readUrl` pour
+                 les photos anterieures au plan de cles, qui n'ont pas de vignette. -->
+            <button type="button" class="photo photo--img"
+                    [style.backgroundImage]="'url(' + (p.thumbnailUrl ?? p.readUrl) + ')'"
+                    [attr.aria-label]="'verification.openPhoto' | transloco" (click)="openPhoto.emit(p.readUrl)"></button>
+          } @empty {
+            <span class="photos__loading">{{ 'verification.photosUnavailable' | transloco }}</span>
+          }
+        }
+      </div>
+    }
+  }
+
+  @if (hasGeometry()) {
+    <button type="button" class="btn btn--ghost" (click)="toggleMap.emit(s.id)">
+      <i class="ti ti-map-pin" aria-hidden="true"></i>{{ mapButtonKey() | transloco }}
+    </button>
+    @if (mapOpen()) {
+      <div class="gapmap">
+        <!-- z19 et non le z16 par defaut : a l'echelle du quartier, un ecart de 2 m se lit
+             comme un seul point. Ici on compare des metres, pas des blocs. -->
+        <das-map [features]="mapFeatures()" [layers]="mapLayers" [showLayerControl]="false" [fitMaxZoom]="19" />
+      </div>
+    }
+  }
+}

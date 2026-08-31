@@ -13,7 +13,10 @@ export const fieldOpsFeature = createFeature({
     on(FieldOpsActions.setCampaignFilters, (state, { filters }) => ({ ...state, campaignFilters: { ...state.campaignFilters, ...filters } })),
 
     on(FieldOpsActions.createCampaign, (state) => ({ ...state, isCreatingCampaign: true, createCampaignErrorMessageKey: null })),
-    on(FieldOpsActions.createCampaignSuccess, (state, { campaign }) => ({ ...state, campaigns: [campaign, ...state.campaigns], isCreatingCampaign: false })),
+    on(FieldOpsActions.createCampaignSuccess, (state, { campaign }) => ({
+      ...state, campaigns: [campaign, ...state.campaigns], isCreatingCampaign: false,
+      createTick: state.createTick + 1,
+    })),
     on(FieldOpsActions.createCampaignFailure, (state, { errorMessageKey }) => ({ ...state, isCreatingCampaign: false, createCampaignErrorMessageKey: errorMessageKey })),
 
     on(FieldOpsActions.updateCampaign, (state) => ({ ...state, isUpdatingCampaign: true, updateCampaignErrorMessageKey: null })),

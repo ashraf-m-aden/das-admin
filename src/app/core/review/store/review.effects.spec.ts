@@ -1,11 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 import { provideMockActions } from '@ngrx/effects/testing';
+import { provideMockStore } from '@ngrx/store/testing';
 import { Observable, of, throwError, firstValueFrom } from 'rxjs';
 import { toArray, take } from 'rxjs/operators';
 import { ReviewEffects } from './review.effects';
 import { ReviewActions } from './review.actions';
 import { ReviewApiPort } from '../services/review-api.port';
+import { reviewFeatureKey } from './review.reducer';
+import { initialReviewState, ReviewState } from './review.state';
 import { AddressingApiPort } from '../../addressing/services/addressing-api.port';
 import { ReferenceApiPort } from '../../reference/services/reference-api.port';
 import { SurveyReviewItem } from '../models/review.models';
@@ -52,6 +55,9 @@ describe('ReviewEffects — loadQueue$', () => {
       providers: [
         ReviewEffects,
         provideMockActions(() => actions$),
+        // `ReviewEffects` relit l'état depuis le 2026-08-31 (rechargement de la campagne
+        // après une décision), il lui faut donc un Store même pour les effets qui l'ignorent.
+        provideMockStore({ initialState: { [reviewFeatureKey]: initialReviewState } }),
         { provide: ReviewApiPort, useValue: reviewApi },
         { provide: AddressingApiPort, useValue: addressingApi },
         { provide: ReferenceApiPort, useValue: referenceApi },
@@ -105,5 +111,55 @@ describe('ReviewEffects — loadQueue$', () => {
     const result = await firstValueFrom(effects.loadQueue$.pipe(take(1), toArray()));
 
     expect(result).toEqual([ReviewActions.loadQueueFailure({ errorMessageKey: 'common.error' })]);
+  });
+});
+
+/**
+ * Verrouille le rechargement de la liste de campagne après une décision.
+ *
+ * Sans lui, un relevé validé depuis le détail de campagne gardait sa pastille « Soumis » :
+ * l'écran affirmait le contraire de ce qui venait d'être fait. Et la condition inverse compte
+ * autant — une décision prise dans la file de vérification ne doit RIEN recharger, sinon chaque
+ * validation déclenche un appel pour un écran que personne ne regarde.
+ */
+describe('ReviewEffects — reloadCampaignSurveysAfterDecision$', () => {
+  let actions$: Observable<unknown>;
+
+  function setup(campaignId: string | null) {
+    const etat: ReviewState = { ...initialReviewState, campaignSurveysCampaignId: campaignId };
+    TestBed.configureTestingModule({
+      providers: [
+        ReviewEffects,
+        provideMockActions(() => actions$),
+        provideMockStore({ initialState: { [reviewFeatureKey]: etat } }),
+        { provide: ReviewApiPort, useValue: stubApi<ReviewApiPort>(['listCampaignSurveys']) },
+        { provide: AddressingApiPort, useValue: stubApi<AddressingApiPort>([]) },
+        { provide: ReferenceApiPort, useValue: stubApi<ReferenceApiPort>([]) },
+      ],
+    });
+    return TestBed.inject(ReviewEffects);
+  }
+
+  afterEach(() => TestBed.resetTestingModule());
+
+  it('recharge la campagne ouverte après une validation', async () => {
+    actions$ = of(ReviewActions.validateSuccess({ id: 's1' }));
+    const emis = await firstValueFrom(setup('camp-1').reloadCampaignSurveysAfterDecision$.pipe(take(1)));
+    expect(emis).toEqual(ReviewActions.loadCampaignSurveys({ campaignId: 'camp-1' }));
+  });
+
+  it('recharge aussi après un rejet et après un renvoi en correction', async () => {
+    actions$ = of(
+      ReviewActions.rejectSuccess({ id: 's1' }),
+      ReviewActions.requestCorrectionSuccess({ id: 's2' }),
+    );
+    const emis = await firstValueFrom(setup('camp-1').reloadCampaignSurveysAfterDecision$.pipe(toArray()));
+    expect(emis).toHaveLength(2);
+  });
+
+  it("ne recharge rien quand l'écran de campagne est fermé", async () => {
+    actions$ = of(ReviewActions.validateSuccess({ id: 's1' }));
+    const emis = await firstValueFrom(setup(null).reloadCampaignSurveysAfterDecision$.pipe(toArray()));
+    expect(emis).toEqual([]);
   });
 });

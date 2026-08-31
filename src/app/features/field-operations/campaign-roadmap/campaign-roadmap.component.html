@@ -1,0 +1,169 @@
+<!--
+UN SEUL tableau, et non deux.
+
+L'ecran en portait deux : « Blocs affectes » (une ligne par bloc) au-dessus de « Feuille
+de route » (une ligne par parcelle). Deux granularites, deux filtres, deux paginations —
+et RIEN a l'ecran pour dire que les parcelles du second appartenaient aux blocs du
+premier, alors que c'est exactement le lien du metier : le bloc porte le titulaire, la
+parcelle en herite.
+
+Ici la parcelle se lit SOUS son bloc, en depliant. C'est aussi le groupement qu'utilise
+deja la feuille de route mobile.
+-->
+<div class="roadmap__head">
+  <div class="panel__title">{{ 'fieldops.assignmentsList' | transloco }}</div>
+  <div class="roadmap__filters">
+    <select class="fselect" (change)="filterAssignmentAgent($any($event.target).value)">
+      <option value="">{{ 'fieldops.allAgents' | transloco }}</option>
+      @for (a of assignmentAgents(); track a.id) {
+        <option [value]="a.id" [selected]="a.id === assignmentAgentId()">{{ a.name }}</option>
+      }
+    </select>
+    @if (campaignStatus() !== 'Closed') {
+      <button type="button" class="btn btn--ghost btn--sm" (click)="toggleTransfer()">
+        <i class="ti ti-arrows-exchange" aria-hidden="true"></i>{{ 'fieldops.transferBlocs' | transloco }}
+      </button>
+    }
+  </div>
+</div>
+
+@if (showTransfer()) {
+  <form class="transfer__form" [formGroup]="transferForm" (ngSubmit)="submitTransfer()">
+    <select formControlName="fromAgentId">
+      <option value="">{{ 'fieldops.transferFrom' | transloco }}</option>
+      @for (a of agents(); track a.id) { <option [value]="a.id">{{ a.fullName }}</option> }
+    </select>
+    <select formControlName="toAgentId">
+      <option value="">{{ 'fieldops.transferTo' | transloco }}</option>
+      @for (a of agents(); track a.id) { <option [value]="a.id">{{ a.fullName }}</option> }
+    </select>
+    <label class="checkbox"><input type="checkbox" formControlName="thisCampaignOnly" />{{ 'fieldops.thisCampaignOnly' | transloco }}</label>
+    <button type="submit" class="btn btn--ghost" [disabled]="(facade.isTransferringBlocs$ | async)">{{ 'fieldops.transfer' | transloco }}</button>
+  </form>
+  @if (facade.lastTransferResult$ | async; as r) { <div class="transfer__result">{{ (r.transferredCount === 1 ? 'fieldops.transferResultOne' : 'fieldops.transferResult') | transloco: { count: r.transferredCount } }}</div> }
+}
+
+<!-- Le filtre de statut porte sur les PARCELLES : un bloc qui n'en a aucune dans ce
+     statut sort de la liste, plutot que d'y rester avec un contenu vide. -->
+<div class="fo__tabs">
+  <button type="button" class="tab" [class.tab--on]="assignmentStatus() === null"
+          (click)="filterAssignmentStatus(null)">{{ 'fieldops.all' | transloco }}</button>
+  @for (s of assignmentStatuses; track s) {
+    <button type="button" class="tab" [class.tab--on]="assignmentStatus() === s"
+            (click)="filterAssignmentStatus(s)">{{ ('fieldops.status.' + s.toLowerCase()) | transloco }}</button>
+  }
+</div>
+
+<!-- Meme grille que `.rrow` : l'en-tete se calait sur ses propres colonnes et « Parcelles »
+     se retrouvait au-dessus des boutons d'action. -->
+<div class="rhead">
+  <span class="rhead__cols">
+    <span></span>
+    <span>{{ 'fieldops.bloc' | transloco }}</span>
+    <span>{{ 'fieldops.agent' | transloco }}</span>
+    <span>{{ 'fieldops.assignedAt' | transloco }}</span>
+    <span>{{ 'fieldops.parcels' | transloco }}</span>
+  </span>
+  <span></span>
+</div>
+
+@for (g of pagedBlocGroups(); track g.key) {
+  <div class="rgroup" [class.rgroup--focused]="focusedBlocId() === g.blocId">
+    <div class="rrow" [class.rrow--open]="expandedBlocKey() === g.key">
+      <button type="button" class="rrow__toggle" (click)="toggleBlocGroup(g.key)"
+              [attr.aria-expanded]="expandedBlocKey() === g.key">
+        <i class="ti" [class.ti-chevron-right]="expandedBlocKey() !== g.key" [class.ti-chevron-down]="expandedBlocKey() === g.key" aria-hidden="true"></i>
+        <span class="rrow__bloc">
+          @if (g.blocCode) { {{ g.blocCode }}@if (g.blocName) { &mdash; {{ g.blocName }} } }
+          @else { <em>{{ 'fieldops.noBlocGroup' | transloco }}</em> }
+        </span>
+        <span class="rrow__agent">
+          @if (g.agentId) { <span class="dot" [style.background]="agentColor()(g.agentId)"></span> }
+          {{ g.agentFullName ?? ('fieldops.noAgent' | transloco) }}
+        </span>
+        <span class="rrow__date">@if (g.assignedAtUtc) { {{ g.assignedAtUtc | dasDate: 'short' }} }</span>
+        <!-- L'avancement du bloc, lisible SANS deplier : c'est ce qu'on vient chercher. -->
+        <span class="rrow__counts">
+          <span class="pill pill--todo" [attr.title]="'fieldops.status.todo' | transloco">{{ g.toDo }}</span>
+          <span class="pill pill--done" [attr.title]="'fieldops.status.done' | transloco">{{ g.done }}</span>
+          <span class="pill pill--abandoned" [attr.title]="'fieldops.status.abandoned' | transloco">{{ g.abandoned }}</span>
+        </span>
+      </button>
+
+      <span class="rrow__actions">
+        @if (g.blocId) {
+          <button type="button" class="btn btn--ghost btn--sm" (click)="focusBloc.emit(g.blocId)">
+            <i class="ti ti-eye" aria-hidden="true"></i>{{ 'fieldops.see' | transloco }}
+          </button>
+          @if (campaignStatus() !== 'Closed' && g.isAssigned) {
+            @if (reassigningBlocId() === g.blocId) {
+              <form class="inline" [formGroup]="reassignBlocForm" (ngSubmit)="confirmReassignBloc(g.blocId)">
+                <select formControlName="agentId">
+                  <option value="">{{ 'fieldops.selectAgent' | transloco }}</option>
+                  @for (a of agents(); track a.id) { <option [value]="a.id">{{ a.fullName }}</option> }
+                </select>
+                <button type="submit" class="btn btn--ghost btn--sm">{{ 'common.save' | transloco }}</button>
+                <button type="button" class="btn btn--ghost btn--sm" (click)="cancelReassignBloc()">{{ 'common.cancel' | transloco }}</button>
+              </form>
+            } @else {
+              <button type="button" class="btn btn--ghost btn--sm" [disabled]="(facade.isDecidingBloc$(g.blocId) | async)" (click)="startReassignBloc(g.blocId)">{{ 'fieldops.reassign' | transloco }}</button>
+              <!--
+                Retirer un bloc n'est PAS exposé : aucune route de l'API ne le permet.
+                Affiché désactivé plutôt qu'absent — sa présence dit que le geste est
+                prévu et où il apparaîtra, son état dit qu'il n'est pas encore livré.
+              -->
+              <button type="button" class="btn btn--ghost btn--sm" disabled
+                      [attr.title]="'fieldops.detachUnavailable' | transloco">
+                {{ 'fieldops.detachBloc' | transloco }}
+              </button>
+            }
+          }
+        }
+      </span>
+    </div>
+
+    @if (expandedBlocKey() === g.key) {
+      <div class="parcels">
+        @for (a of g.assignments; track a.id) {
+          <!-- L'identifiant d'adresse reste en info-bulle : un UUID est illisible a
+               l'ecran mais doit rester citable en support. -->
+          <div class="prow" [attr.title]="a.adresseId">
+            <!-- Le numero DANS le bloc suffit a designer la parcelle : on est deja sous
+                 son bloc, repeter quartier et ville serait du bruit sur chaque ligne. -->
+            <span class="prow__id">
+              {{ 'fieldops.parcelNo' | transloco: { numero: a.numero } }}
+              @if (a.addressCode) { <span class="mono">{{ a.addressCode }}</span> }
+            </span>
+            <span [class]="statusBadgeClass(a.status)">{{ ('fieldops.status.' + a.status.toLowerCase()) | transloco }}</span>
+            <span class="prow__reason">
+              @if (a.abandonReason) { {{ a.abandonReason }} }
+              @if (a.lastRejectionReason) { <span class="prow__rejected">{{ 'fieldops.lastRejection' | transloco }} {{ a.lastRejectionReason }}</span> }
+            </span>
+            <span class="prow__action">
+              @if (a.status === 'ToDo') {
+                @if (abandoningId() === a.id) {
+                  <form class="inline" [formGroup]="abandonForm" (ngSubmit)="confirmAbandon(a.id)">
+                    <input type="text" formControlName="reason" [attr.placeholder]="'fieldops.abandonReasonPlaceholder' | transloco" />
+                    <button type="submit" class="btn btn--reject btn--sm">{{ 'fieldops.abandon' | transloco }}</button>
+                    <button type="button" class="btn btn--ghost btn--sm" (click)="cancelAbandon()">{{ 'common.cancel' | transloco }}</button>
+                  </form>
+                } @else {
+                  <button type="button" class="btn btn--reject btn--sm" [disabled]="(facade.isDecidingAssignment$(a.id) | async)" (click)="startAbandon(a.id)">{{ 'fieldops.abandon' | transloco }}</button>
+                }
+              }
+            </span>
+          </div>
+        } @empty {
+          <div class="parcels__empty">{{ 'fieldops.noParcelForFilter' | transloco }}</div>
+        }
+      </div>
+    }
+  </div>
+} @empty {
+  <div class="list__empty">@if (facade.isAssignmentsLoading$ | async) { {{ 'common.loading' | transloco }} } @else { {{ 'fieldops.empty' | transloco }} }</div>
+}
+
+@if (blocGroups().length > assignmentPageSize()) {
+  <das-pager [page]="assignmentPage()" [pageSize]="assignmentPageSize()" [total]="blocGroups().length"
+             (pageChange)="goToAssignmentPage($event)" (pageSizeChange)="setAssignmentPageSize($event)" />
+}

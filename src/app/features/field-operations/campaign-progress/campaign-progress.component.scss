@@ -12,7 +12,11 @@
 .progress__groups { display: grid; grid-template-columns: 1fr 1fr; gap: v.$space-4; @include m.respond-below(lg) { grid-template-columns: 1fr; } }
 .pgroup__title { font-size: v.$font-size-xs; color: var(--color-text-muted); margin-bottom: v.$space-2; text-transform: uppercase; letter-spacing: 0.04em; }
 .facts { display: flex; gap: v.$space-5; flex-wrap: wrap; }
-.fact { display: flex; flex-direction: column; &__l { font-size: v.$font-size-xs; color: var(--color-text-muted); } &__v { font-size: v.$font-size-lg; font-weight: v.$font-weight-semibold; color: var(--color-text-primary); } }
+.fact { display: flex; flex-direction: column; text-align: left;
+  // Cliquable : le chiffre EST le lien vers la liste des relevés correspondants.
+  &--link { border: none; background: none; padding: 0; font: inherit; cursor: pointer;
+    &:hover .fact__l, &:hover .fact__v { color: var(--color-accent); } }
+  &__l { font-size: v.$font-size-xs; color: var(--color-text-muted); } &__v { font-size: v.$font-size-lg; font-weight: v.$font-weight-semibold; color: var(--color-text-primary); } }
 .segbar { display: flex; height: 8px; border-radius: v.$radius-full; overflow: hidden; margin-top: v.$space-3; background: var(--color-surface-sunken);
   &__seg { display: block; height: 100%; transition: width 0.3s ease;
     &--done { background: var(--color-status-done); }
