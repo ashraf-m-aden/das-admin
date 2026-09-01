@@ -1,0 +1,64 @@
+<div class="pt">
+  <h1 class="pt__title">Test — URL pré-signée S3</h1>
+  <p class="pt__sub">
+    Écran jetable. Déroule les trois temps du contrat : signature par l'API, dépôt direct dans
+    le bucket, puis confirmation.
+  </p>
+
+  <!-- Le televersement n'est possible QUE par l'auteur du releve, et seulement sur un
+       brouillon : charger la liste evite de coller un UUID a la main. -->
+  <div class="pt__row">
+    <button type="button" (click)="chargerBrouillons()">Charger mes brouillons</button>
+    @if (drafts().length) {
+      <select [value]="surveyId()" (change)="surveyId.set($any($event.target).value)">
+        @for (d of drafts(); track d.id) {
+          <option [value]="d.id">{{ d.adresseLibelle ?? d.id }} — {{ d.photoCount }} photo(s)</option>
+        }
+      </select>
+    }
+  </div>
+
+  <label class="pt__field">
+    <span>surveyId</span>
+    <input type="text" [value]="surveyId()" (input)="surveyId.set($any($event.target).value)"
+           placeholder="uuid d'un relevé en brouillon dont je suis l'auteur" />
+  </label>
+
+  <label class="pt__field">
+    <span>Photo (JPEG)</span>
+    <!-- JPEG seul : le Content-Type est epingle dans la signature, un PNG echoue au PUT. -->
+    <input type="file" accept="image/jpeg" (change)="onFile($event)" />
+  </label>
+
+  <button type="button" class="pt__go" [disabled]="!fichier() || !surveyId() || enCours()" (click)="lancer()">
+    {{ enCours() ? 'En cours…' : 'Lancer le test' }}
+  </button>
+
+  @if (etapes().length) {
+    <ol class="pt__log">
+      @for (e of etapes(); track $index) {
+        <li [class]="'pt__step pt__step--' + (e.etat === 'ok' ? 'ok' : e.etat === 'échec' ? 'ko' : 'run')">
+          <strong>{{ e.libelle }}</strong>
+          <span class="pt__state">{{ e.etat }}</span>
+          @if (e.detail) { <div class="pt__detail">{{ e.detail }}</div> }
+        </li>
+      }
+    </ol>
+  }
+
+  @if (apercu(); as url) {
+    <div class="pt__preview">
+      <div>Relu depuis le bucket via une URL de lecture signée :</div>
+      <img [src]="url" alt="photo téléversée" />
+    </div>
+  }
+
+  <div class="pt__note">
+    <strong>Si une étape 2 échoue en « CORS ou serveur injoignable »</strong> : c'est le
+    navigateur, pas le backend. Un PUT direct vers S3 depuis une page web exige une règle CORS
+    sur le bucket ; l'application mobile, elle, n'en a pas besoin. Règle minimale à poser sur
+    <code>das-photos-prod</code> pour ce test :
+    <pre>[{{ '{' }} "AllowedMethods": ["PUT"], "AllowedOrigins": ["http://localhost:4200"],
+  "AllowedHeaders": ["*"], "ExposeHeaders": [] {{ '}' }}]</pre>
+  </div>
+</div>

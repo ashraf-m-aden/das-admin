@@ -1,0 +1,35 @@
+@use "styles/variables" as v;
+
+/* Écran jetable : styles minimaux, aucun token partagé au-delà des variables de base, pour
+   qu'il parte d'un bloc avec son dossier. */
+
+.pt { padding: v.$space-6; display: flex; flex-direction: column; gap: v.$space-3; max-width: 760px; }
+.pt__title { margin: 0; font-size: v.$font-size-lg; color: var(--color-text-primary); }
+.pt__sub { margin: 0; font-size: v.$font-size-sm; color: var(--color-text-muted); }
+.pt__row { display: flex; gap: v.$space-2; align-items: center; flex-wrap: wrap; }
+.pt__field { display: flex; flex-direction: column; gap: 4px; font-size: v.$font-size-sm;
+  color: var(--color-text-secondary); }
+input[type="text"], select { height: 34px; padding: 0 v.$space-2; border: 1px solid var(--color-border);
+  border-radius: v.$radius-sm; font: inherit; font-size: v.$font-size-sm; }
+button { height: 34px; padding: 0 v.$space-3; border: 1px solid var(--color-border);
+  border-radius: v.$radius-sm; background: var(--color-surface); font: inherit;
+  font-size: v.$font-size-sm; cursor: pointer;
+  &:disabled { opacity: 0.5; cursor: not-allowed; } }
+.pt__go { background: var(--color-accent); color: var(--color-on-accent); border-color: transparent;
+  align-self: flex-start; }
+
+.pt__log { list-style: none; margin: v.$space-3 0 0; padding: 0; display: flex;
+  flex-direction: column; gap: v.$space-2; }
+.pt__step { padding: v.$space-2 v.$space-3; border-radius: v.$radius-sm; font-size: v.$font-size-sm;
+  border-left: 3px solid var(--color-border); background: var(--color-surface-alt);
+  &--ok { border-left-color: var(--color-success); }
+  &--ko { border-left-color: var(--color-danger); background: var(--color-danger-bg); }
+  &--run { border-left-color: var(--color-status-in-progress); } }
+.pt__state { margin-left: v.$space-2; color: var(--color-text-muted); font-size: v.$font-size-xs; }
+.pt__detail { margin-top: 4px; font-family: v.$font-family-mono; font-size: v.$font-size-xs;
+  color: var(--color-text-secondary); word-break: break-all; }
+
+.pt__preview img { max-width: 320px; border-radius: v.$radius-sm; margin-top: v.$space-2; display: block; }
+.pt__note { margin-top: v.$space-4; padding: v.$space-3; border-radius: v.$radius-sm;
+  background: var(--color-surface-alt); font-size: v.$font-size-xs; color: var(--color-text-secondary);
+  pre { margin: v.$space-2 0 0; white-space: pre-wrap; font-size: v.$font-size-xs; } }

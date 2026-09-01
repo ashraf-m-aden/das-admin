@@ -21,7 +21,8 @@
     "review": "Revue des données",
     "staff": "Personnel",
     "clients": "Clients",
-    "discoveries": "Signalements"
+    "discoveries": "Signalements",
+    "photoTest": "Test upload S3"
   },
   "common": {
     "search": "Rechercher…",

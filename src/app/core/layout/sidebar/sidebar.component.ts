@@ -61,6 +61,16 @@ export class SidebarComponent {
     },
     { kind: 'link', labelKey: 'nav.users', path: '/staff', icon: 'ti-users', allowedRoles: ['Admin'] },
     { kind: 'link', labelKey: 'nav.integrations', path: '/integrations', icon: 'ti-plug', allowedRoles: ['Admin'] },
+    /**
+     * ÉCRAN JETABLE — test des URLs pré-signées S3. À retirer avec le dossier
+     * `features/photo-upload-test` et sa route.
+     *
+     * Sans `allowedRoles`, donc visible de TOUS les rôles, AgentTerrain compris : c'est
+     * volontaire et c'est même le seul cas utile. Le téléversement n'est possible que par
+     * l'auteur du relevé — un superviseur qui ouvre cet écran ne peut rien y faire d'autre
+     * que lire le refus `Surveys.NotOwner`.
+     */
+    { kind: 'link', labelKey: 'nav.photoTest', path: '/photo-test', icon: 'ti-cloud-upload' },
   ];
 
   isVisible(entry: NavEntry, roles: UserRole[]): boolean {

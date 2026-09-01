@@ -21,7 +21,8 @@
     "review": "Data review",
     "staff": "Staff",
     "clients": "Clients",
-    "discoveries": "Field reports"
+    "discoveries": "Field reports",
+    "photoTest": "S3 upload test"
   },
   "common": {
     "search": "Search…",

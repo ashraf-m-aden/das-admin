@@ -39,6 +39,16 @@ export const routes: Routes = [
         loadChildren: () => import('./features/verification/verification.routes').then((m) => m.verificationRoutes),
       },
       { path: 'review', redirectTo: 'verification', pathMatch: 'full' },
+      /**
+       * ÉCRAN JETABLE — test des URLs pré-signées S3. Aucun guard de rôle : le back tranche
+       * seul (seul l'auteur d'un brouillon peut y déposer une photo), en ajouter un ici
+       * masquerait le vrai refus derrière une redirection.
+       * Pour le supprimer : cette entrée + le dossier `features/photo-upload-test`.
+       */
+      {
+        path: 'photo-test',
+        loadComponent: () => import('./features/photo-upload-test/photo-upload-test.component').then((m) => m.PhotoUploadTestComponent),
+      },
       {
         path: 'closes',
         canActivate: [roleGuard(['Admin', 'Superviseur', 'Gestionnaire'])],
