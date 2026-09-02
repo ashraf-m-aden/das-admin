@@ -25,9 +25,12 @@
   </div>
 } @else {
   <div class="actions">
-    <button type="button" class="btn btn--approve" [disabled]="deciding()" (click)="validateTemporary()">
-      <i class="ti ti-check" aria-hidden="true"></i>{{ 'verification.validateTemporary' | transloco }}
-    </button>
+    <!-- Deja provisoire : revalider en `Temporary` ne changerait rien. -->
+    @if (!provisional()) {
+      <button type="button" class="btn btn--approve" [disabled]="deciding()" (click)="validateTemporary()">
+        <i class="ti ti-check" aria-hidden="true"></i>{{ 'verification.validateTemporary' | transloco }}
+      </button>
+    }
     <button type="button" class="btn btn--definitive" [disabled]="deciding()" (click)="requestDefinitive()"
             [attr.title]="'verification.definitiveHint' | transloco">
       <i class="ti ti-lock" aria-hidden="true"></i>{{ 'verification.validateDefinitive' | transloco }}
@@ -35,8 +38,12 @@
     <button type="button" class="btn btn--reject" [disabled]="deciding()" (click)="startReject()">
       <i class="ti ti-x" aria-hidden="true"></i>{{ 'verification.reject' | transloco }}
     </button>
-    <button type="button" class="btn btn--ghost" [disabled]="deciding()" (click)="requestCorrection.emit()">
-      <i class="ti ti-rotate" aria-hidden="true"></i>{{ 'verification.requestCorrection' | transloco }}
-    </button>
+    <!-- Renvoyer en correction un releve deja accepte le ramenerait en `Draft` alors qu'il
+         sert de reference en production : l'issue n'existe pas sur un provisoire. -->
+    @if (!provisional()) {
+      <button type="button" class="btn btn--ghost" [disabled]="deciding()" (click)="requestCorrection.emit()">
+        <i class="ti ti-rotate" aria-hidden="true"></i>{{ 'verification.requestCorrection' | transloco }}
+      </button>
+    }
   </div>
 }

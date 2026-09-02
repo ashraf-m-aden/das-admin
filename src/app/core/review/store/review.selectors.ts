@@ -1,6 +1,11 @@
 import { createSelector } from '@ngrx/store';
 import { UUID } from '../../models/das.models';
 import { reviewFeature } from './review.reducer';
+import { CampaignSurveyItem } from '../models/review.models';
+
+/** Validé, mais provisoirement : livrable et pourtant en attente d'un recontrôle. */
+const isProvisional = (i: CampaignSurveyItem): boolean =>
+  i.status === 'Validated' && i.validationType === 'Temporary';
 
 export const selectIsReviewListLoading = createSelector(reviewFeature.selectListStatus, (s) => s === 'loading');
 
@@ -27,7 +32,13 @@ export const selectIsLoadingPhotos = (surveyId: UUID) =>
 export const selectFilteredCampaignSurveys = createSelector(
   reviewFeature.selectCampaignSurveys,
   reviewFeature.selectCampaignSurveyStatus,
-  (items, status) => (status ? items.filter((i) => i.status === status) : items),
+  (items, filtre) => {
+    if (!filtre) return items;
+    // Seul onglet qui ne se lit pas sur `status` : le provisoire se distingue par
+    // `validationType`, et c'est justement ce qui le rendait introuvable.
+    if (filtre === 'ValidatedTemporary') return items.filter(isProvisional);
+    return items.filter((i) => i.status === filtre);
+  },
 );
 
 /** Compteurs d'onglets comptés sur la liste rapatriée — jamais sur une autre requête. */
@@ -38,6 +49,10 @@ export const selectCampaignSurveyCounts = createSelector(
     Draft: items.filter((i) => i.status === 'Draft').length,
     Submitted: items.filter((i) => i.status === 'Submitted').length,
     Validated: items.filter((i) => i.status === 'Validated').length,
+    // Compté DANS `Validated`, pas à côté : la somme des onglets dépasse donc `all`. C'est
+    // voulu — l'avancement serveur ne sépare pas les deux, et un onglet « Validé » qui
+    // afficherait moins que son propre compteur serait le vrai problème.
+    ValidatedTemporary: items.filter(isProvisional).length,
     Rejected: items.filter((i) => i.status === 'Rejected').length,
   }),
 );

@@ -31,6 +31,19 @@ export class SurveyDecisionComponent {
   readonly surveyId = input.required<UUID>();
   /** Décision en cours sur CE relevé : les boutons se verrouillent pour éviter le double envoi. */
   readonly deciding = input(false);
+  /**
+   * Relevé DÉJÀ validé provisoirement, qu'on rouvre pour trancher.
+   *
+   * Deux issues seulement ont un sens ici : **figer** en `Definitive`, ou **rejeter**.
+   * Revalider en `Temporary` ne changerait rien (c'est l'état actuel), et le renvoi en
+   * correction ramènerait en `Draft` un relevé déjà accepté et déjà livré — l'agent
+   * corrigerait une saisie qui sert de référence en production.
+   *
+   * Les DEUX issues restantes gardent leurs règles intactes : motif de rejet obligatoire,
+   * confirmation avant le gel du `addressCode`. C'est tout l'intérêt de passer par ce
+   * composant plutôt que par un second jeu de boutons.
+   */
+  readonly provisional = input(false);
 
   readonly validate = output<ValidationType>();
   readonly reject = output<string>();

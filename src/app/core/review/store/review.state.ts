@@ -1,5 +1,5 @@
 import { RedoSubmissionType, UUID } from '../../models/das.models';
-import { CampaignSurveyItem, CurrentSurveyItem, ReviewItem, ReviewPhoto, StalledSurveyItem, SurveyStatus } from '../models/review.models';
+import { CampaignSurveyFilter, CampaignSurveyItem, CurrentSurveyItem, ReviewItem, ReviewPhoto, StalledSurveyItem } from '../models/review.models';
 import { OccupationCatalogItem } from '../../reference/models/reference.models';
 
 export type ReviewListStatus = 'idle' | 'loading' | 'loaded' | 'error';
@@ -39,7 +39,11 @@ export interface ReviewState {
    * dans la file de vérification déclenche un appel pour un écran qu'on ne regarde plus.
    */
   campaignSurveysCampaignId: UUID | null;
-  campaignSurveyStatus: SurveyStatus | null;
+  /**
+   * Onglet courant. Porte un `CampaignSurveyFilter` et non un `SurveyStatus` : « Validé
+   * (provisoire) » est un filtre d'écran, pas un statut serveur.
+   */
+  campaignSurveyStatus: CampaignSurveyFilter | null;
   isCampaignSurveysLoading: boolean;
   campaignSurveysErrorMessageKey: string | null;
 

@@ -13,7 +13,7 @@ import {
 } from './review.selectors';
 import { RedoSubmissionType, UUID } from '../../models/das.models';
 import { ReviewFilters } from './review.state';
-import { SurveyStatus, ValidationType } from '../models/review.models';
+import { CampaignSurveyFilter, ValidationType } from '../models/review.models';
 
 @Injectable({ providedIn: 'root' })
 export class ReviewFacade {
@@ -93,7 +93,7 @@ export class ReviewFacade {
   }
 
   /** Onglet de statut — filtre d'affichage, pas de rechargement. */
-  setCampaignSurveyStatus(status: SurveyStatus | null): void {
+  setCampaignSurveyStatus(status: CampaignSurveyFilter | null): void {
     this.store.dispatch(ReviewActions.setCampaignSurveyStatus({ status }));
   }
 
