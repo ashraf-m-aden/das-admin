@@ -53,22 +53,37 @@
   <das-map-legend [entries]="legendEntries" />
 </section>
   <section class="das-card table-card">
-    @if (selectedCount$ | async; as count) {
-    @if (count > 0) {
-    <div class="bulk">
-      <span class="bulk__count">{{ (count === 1 ? 'adresse.selectedOne' : 'adresse.selected') | transloco: { count } }}</span>
-      <button type="button" class="bulk__btn" (click)="approveSelected()" [disabled]="isMutating$ | async">
+    <!-- Barre TOUJOURS rendue, y compris a zero selection. Cachee derriere un `count > 0`, elle
+         rendait « Approuver » et « Publier » introuvables : rien a l'ecran n'annoncait qu'il
+         fallait cocher une ligne pour les faire apparaitre. Or ce sont les deux SEULES etapes du
+         workflow qu'on puisse ecrire — les trois autres se deduisent du releve. Une action
+         invisible tant qu'on n'a pas devine le geste qui la revele n'est pas une action. -->
+    @let selection = (selectedCount$ | async) ?? 0;
+    <div class="bulk" [class.bulk--vide]="!selection">
+      @if (selection) {
+        <span class="bulk__count">{{ (selection === 1 ? 'adresse.selectedOne' : 'adresse.selected') | transloco: { count: selection } }}</span>
+      } @else {
+        <span class="bulk__hint">
+          <i class="ti ti-square-check" aria-hidden="true"></i>{{ 'adresse.bulkHint' | transloco }}
+        </span>
+      }
+      <button type="button" class="bulk__btn" (click)="approveSelected()"
+              [disabled]="!selection || (isMutating$ | async)"
+              [attr.title]="!selection ? ('adresse.bulkHint' | transloco) : null">
         <i class="ti ti-circle-check" aria-hidden="true"></i>{{ 'adresse.approveSelected' | transloco }}
       </button>
-      <button type="button" class="bulk__btn" (click)="bulkPublish()" [disabled]="isMutating$ | async">
+      <button type="button" class="bulk__btn" (click)="bulkPublish()"
+              [disabled]="!selection || (isMutating$ | async)"
+              [attr.title]="!selection ? ('adresse.bulkHint' | transloco) : null">
         <i class="ti ti-send" aria-hidden="true"></i>{{ 'adresse.publishSelected' | transloco }}
       </button>
-      <button type="button" class="bulk__btn bulk__btn--ghost" (click)="clearSelection()">
-        {{ 'common.cancel' | transloco }}
-      </button>
+      <!-- « Annuler » n'a de sens que s'il y a quelque chose a annuler. -->
+      @if (selection) {
+        <button type="button" class="bulk__btn bulk__btn--ghost" (click)="clearSelection()">
+          {{ 'common.cancel' | transloco }}
+        </button>
+      }
     </div>
-    }
-    }
 
     <div class="tbody-hover" (mouseleave)="hoverRow(null)">
     <div class="thead">

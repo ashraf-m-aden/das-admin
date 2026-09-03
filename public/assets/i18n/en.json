@@ -443,6 +443,7 @@
     "selectedOne": "{{count}} selected",
     "selected": "{{count}} selected",
     "approveSelected": "Approve",
+    "bulkHint": "Tick addresses in the table to approve or publish them",
     "publishSelected": "Publish",
     "colId": "Address ID",
     "colPostcode": "Postcode",

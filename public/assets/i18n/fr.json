@@ -443,6 +443,7 @@
     "selectedOne": "{{count}} sélectionné",
     "selected": "{{count}} sélectionnés",
     "approveSelected": "Approuver",
+    "bulkHint": "Cochez des adresses dans le tableau pour les approuver ou les publier",
     "publishSelected": "Publier",
     "colId": "ID adresse",
     "colPostcode": "Code postal",

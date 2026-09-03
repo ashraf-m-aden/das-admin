@@ -18,7 +18,14 @@
 
 .bulk { display: flex; align-items: center; gap: v.$space-2; padding: v.$space-2 v.$space-4; background: var(--color-info-bg); border-bottom: 1px solid var(--color-border);
   &__count { font-size: v.$font-size-sm; color: var(--color-text-primary); margin-right: auto; }
+  // A zero selection la barre s'efface : elle informe sans reclamer l'attention d'une action
+  // disponible. Le fond neutre la distingue du bandeau bleute qui signale, lui, une selection.
+  &--vide { background: var(--color-surface-alt); }
+  &__hint { display: inline-flex; align-items: center; gap: v.$space-2; font-size: v.$font-size-sm; color: var(--color-text-muted); margin-right: auto; }
+  &__count { font-size: v.$font-size-sm; color: var(--color-text-primary); margin-right: auto; }
   &__btn { display: inline-flex; align-items: center; gap: v.$space-1; height: 30px; padding: 0 v.$space-3; border: 1px solid var(--color-border); background: var(--color-surface); border-radius: v.$radius-sm; font: inherit; font-size: v.$font-size-xs; cursor: pointer; color: var(--color-text-secondary);
+    // Desactive : on montre que l'action EXISTE sans laisser croire qu'elle est disponible.
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
     &--ghost { border: none; background: transparent; } }
 }
 
