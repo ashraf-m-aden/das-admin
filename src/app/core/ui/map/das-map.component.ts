@@ -37,7 +37,11 @@ const BASEMAP_NON_ROAD_LAYER_ID = /rail|ferry|aerialway|pier/i;
  * ids contiennent « street », que la regex ci-dessus laisse passer) — mais dépendre d'une
  * coïncidence de nommage pour ne pas effacer nos propres données serait une bombe à retardement.
  */
-const DAS_TILE_SOURCES = new Set(['streets', 'closes', 'blocs', 'adresses']);
+// `contourNational` en fait partie depuis le 2026-09-02 : sans lui, la couche disparaissait de
+// TOUTE carte qui ne déclare pas le groupe (postcodes, reports — deux cartes volontairement sans
+// panneau de couches), masquée par `hideNonRoadBasemapLayers`. Le contour est un repère de cadre :
+// il n'a pas à dépendre du câblage de chaque écran.
+const DAS_TILE_SOURCES = new Set(['streets', 'closes', 'blocs', 'adresses', 'contourNational']);
 
 /**
  * Groupe de couches issues du STYLE DE BASE (map-style.json) que l'on peut

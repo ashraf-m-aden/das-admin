@@ -15,7 +15,7 @@ import { HierarchyFacade } from '../../core/hierarchy/store/hierarchy.facade';
 import { Close, CloseStreetOption } from '../../core/closes/models/closes.models';
 import { Block, UUID, UserRole } from '../../core/models/das.models';
 import {
-  STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP,
+  STREETS_BASEMAP_GROUP, COUNTRY_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP,
 } from '../../core/ui/map/basemap-groups';
 
 const CAN_EDIT_ROLES: UserRole[] = ['Admin', 'Gestionnaire'];
@@ -121,7 +121,7 @@ export class ClosesComponent implements OnInit {
    * la seule référence de terrain, et il faut pouvoir la masquer pour lire les contours dessous.
    */
   protected readonly basemapLayers: BasemapLayerGroup[] = [
-    STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP,
+    STREETS_BASEMAP_GROUP, COUNTRY_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP,
   ];
   private facade = inject(ClosesFacade);
   private authFacade = inject(AuthFacade);

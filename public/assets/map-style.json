@@ -77,6 +77,15 @@
       "minzoom": 0,
       "maxzoom": 22,
       "promoteId": "Id"
+    },
+    "contourNational": {
+      "type": "vector",
+      "tiles": [
+        "__TILES_BASE_URL__/contour_national/{z}/{x}/{y}"
+      ],
+      "minzoom": 0,
+      "maxzoom": 10,
+      "attribution": "Contour national © les contributeurs OpenStreetMap (ODbL)"
     }
   },
   "glyphs": "https://tiles.basemaps.cartocdn.com/fonts/{fontstack}/{range}.pbf",
@@ -190,7 +199,7 @@
       "type": "line",
       "source": "streets",
       "source-layer": "streets_tiles",
-      "minzoom": 13,
+      "minzoom": 12,
       "filter": [
         "match",
         [
@@ -253,7 +262,7 @@
       "type": "line",
       "source": "streets",
       "source-layer": "streets_tiles",
-      "minzoom": 13,
+      "minzoom": 12,
       "filter": [
         "match",
         [
@@ -299,7 +308,7 @@
       "type": "line",
       "source": "streets",
       "source-layer": "streets_tiles",
-      "minzoom": 13,
+      "minzoom": 12,
       "filter": [
         "match",
         [
@@ -830,6 +839,63 @@
       "paint": {
         "line-color": "#1d4ed8",
         "line-width": 1.2
+      }
+    },
+    {
+      "id": "contour-national-halo",
+      "type": "line",
+      "source": "contourNational",
+      "source-layer": "contour_national",
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "paint": {
+        "line-color": "#f8f9fa",
+        "line-opacity": 0.85,
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          4,
+          2,
+          8,
+          3,
+          12,
+          4
+        ]
+      }
+    },
+    {
+      "id": "contour-national-line",
+      "type": "line",
+      "source": "contourNational",
+      "source-layer": "contour_national",
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "paint": {
+        "line-color": "#0f172a",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          4,
+          0.8,
+          8,
+          1.1,
+          12,
+          1.4
+        ]
       }
     },
     {
