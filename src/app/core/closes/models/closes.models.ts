@@ -169,6 +169,12 @@ export interface QuartierCloseProgress {
   blocsWithClose: number;
   /** `blocsTotal - blocsWithClose`. Renvoyé par le back, pas recalculé ici. */
   blocsRemaining: number;
+  /**
+   * Sous-ensemble de `blocsRemaining` qu'aucun appariement ne pourra traiter : sans emprise, un
+   * bloc ne peut être rapproché d'aucune rue. Distingué pour qu'un quartier bloqué là-dessus ne
+   * se lise pas comme « pas encore commencé ».
+   */
+  blocsWithoutGeometry: number;
   closesCount: number;
 }
 
@@ -183,7 +189,7 @@ export interface QuartierCloseProgress {
 export interface QuartierClosePlanParameters {
   /** Au-delà, le bloc part dans `unassignedBlocs`. 50 m par défaut. */
   maxDistanceMeters: number;
-  /** `TypeVoie` retenus : Rue, Avenue, Boulevard, Route… Vide = tous. */
+  /** `TypeVoie` du back : Rue, Avenue, Boulevard, Piste, Impasse, Route. Vide = tous. */
   streetTypes: string[];
   /** 941 rues sur 1 344 n'ont pas de nom. Les exclure fige 70 % du réseau. */
   includeUnnamedStreets: boolean;
@@ -191,18 +197,21 @@ export interface QuartierClosePlanParameters {
 }
 
 /**
- * `RueAnonyme` — la close nommera mal, le renommage est à portée de clic.
- * `CloseVolumineuse` — au-delà du seuil ; **non scindable**, la contrainte UNIQUE l'interdit.
- * `BlocIsole` — close à un seul bloc, souvent un artefact de proximité.
+ * Valeurs telles que le back les sérialise (`JsonStringEnumConverter`) — à ne pas franciser :
+ * ce sont des codes, on les teste tels quels et on traduit à l'affichage.
+ *
+ * `UnnamedStreet` — la close nommera mal, le renommage est à portée de clic.
+ * `LargeClose` — au-delà du seuil ; **non scindable**, la contrainte UNIQUE l'interdit.
+ * `SingleBloc` — close à un seul bloc, souvent un artefact de proximité.
  */
-export type ProposedCloseWarning = 'RueAnonyme' | 'CloseVolumineuse' | 'BlocIsole';
+export type ProposedCloseWarning = 'UnnamedStreet' | 'LargeClose' | 'SingleBloc';
 
-/** Codes, jamais des phrases : on teste le code et on traduit (règle du contrat sur les erreurs). */
+/** Idem : codes du back, jamais des phrases. */
 export type UnassignedBlocReason =
-  | 'AucuneRueAProximite'
-  | 'BlocSansGeometrie'
-  | 'BlocDejaRattache'
-  | 'RueDejaPorteuseDUneClose';
+  | 'NoStreetNearby'
+  | 'BlocWithoutGeometry'
+  | 'BlocAlreadyAttached'
+  | 'StreetAlreadyHasClose';
 
 export interface ProposedCloseBloc {
   id: UUID;
@@ -271,11 +280,11 @@ export interface QuartierClosePlan {
 }
 
 /**
- * Une close telle que l'opérateur l'a relue. C'est CE plan qui est écrit, jamais un recalcul
- * serveur : ce qui est appliqué doit être exactement ce qui a été vu.
+ * Une close telle que l'opérateur l'a relue. Pas de `key` : le back ne référence aucune
+ * proposition, il prend la close DÉCRITE. Entre l'aperçu et la confirmation, la rue a pu changer
+ * et des blocs bouger — recalculer depuis une clé écrirait autre chose que ce qui a été validé.
  */
 export interface ReviewedClose {
-  key: string;
   streetId: UUID;
   number: number;
   code: string;

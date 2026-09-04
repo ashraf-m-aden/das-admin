@@ -6,7 +6,7 @@ import { UUID } from '../../models/das.models';
 import {
   AdresseNumbering, ApplyQuartierClosesPayload, AppliedQuartierCloses, Close, CloseBloc,
   CloseListQuery, CloseNumberingPlan, CloseStreetOption, CreateClosePayload, PlannedAdresse,
-  ProposedClose, ProposedCloseWarning, QuartierClosePlan, QuartierClosePlanParameters,
+  ProposedClose, ProposedCloseWarning, QuartierClosePlan, QuartierClosePlanParameters, ReviewedClose,
   QuartierCloseProgress, UpdateClosePayload,
 } from '../models/closes.models';
 
@@ -279,12 +279,12 @@ export class MockClosesApiService extends ClosesApiPort {
     {
       quartierId: QUARTIER_7, quartierNom: QUARTIER_NOM, quartierCode: QUARTIER_CODE,
       cityName: 'Djibouti', communeName: 'Boulaos', zoneName: 'Zone 2',
-      blocsTotal: 12, blocsWithClose: 1, blocsRemaining: 11, closesCount: 2,
+      blocsTotal: 12, blocsWithClose: 1, blocsRemaining: 11, blocsWithoutGeometry: 0, closesCount: 2,
     },
     {
       quartierId: this.QUARTIER_6, quartierNom: 'Quartier 6', quartierCode: 'Q6',
       cityName: 'Djibouti', communeName: 'Boulaos', zoneName: 'Zone 2',
-      blocsTotal: 8, blocsWithClose: 0, blocsRemaining: 8, closesCount: 0,
+      blocsTotal: 8, blocsWithClose: 0, blocsRemaining: 8, blocsWithoutGeometry: 1, closesCount: 0,
     },
   ];
 
@@ -349,9 +349,9 @@ export class MockClosesApiService extends ClosesApiPort {
       const street = this.streets.find((s) => s.id === streetId);
       const adresseCount = blocs.reduce((n, b) => n + b.adresseCount, 0);
       const warnings: ProposedCloseWarning[] = [];
-      if (!street?.name) warnings.push('RueAnonyme');
-      if (blocs.length === 1) warnings.push('BlocIsole');
-      if (adresseCount > 200) warnings.push('CloseVolumineuse');
+      if (!street?.name) warnings.push('UnnamedStreet');
+      if (blocs.length === 1) warnings.push('SingleBloc');
+      if (adresseCount > 200) warnings.push('LargeClose');
       const number = nextNumber++;
       return {
         key: `p-${i + 1}`,
@@ -386,7 +386,7 @@ export class MockClosesApiService extends ClosesApiPort {
       proposed,
       unassignedBlocs: tooFar.map((b, i) => ({
         blocId: b.id, blocCode: b.code,
-        reason: 'AucuneRueAProximite' as const,
+        reason: 'NoStreetNearby' as const,
         nearestStreetId: b.streetId,
         distanceMeters: b.distanceMeters,
         boundaryWkt: this.mockPolygon(20 + i),
@@ -395,20 +395,23 @@ export class MockClosesApiService extends ClosesApiPort {
     return of(plan).pipe(delay(LATENCY_MS));
   }
 
-  override previewProposalNumbering(
+  override previewProposedCloseNumbering(
     quartierId: UUID,
-    key: string,
+    close: ReviewedClose,
     reverse: boolean,
   ): Observable<CloseNumberingPlan> {
     const quartier = this.progress.find((p) => p.quartierId === quartierId);
     if (!quartier) return fail('Quartiers.NotFound', 'Quartier introuvable.');
 
-    const index = Number(key.replace('p-', '')) - 1;
-    const streetIds = [...new Set(this.GENERATION_BLOCS.filter((b) => b.distanceMeters <= 50).map((b) => b.streetId))];
-    const streetId = streetIds[index];
-    if (!streetId) return fail('Closes.ProposalNotFound', 'Proposition introuvable — relancer l\'aperçu.');
+    // On numérote les blocs REÇUS, pas ceux de la proposition d'origine : c'est tout l'intérêt
+    // d'envoyer la close décrite plutôt qu'une clé. L'opérateur a pu en retirer un.
+    const blocs = close.blocIds
+      .map((id) => this.GENERATION_BLOCS.find((b) => b.id === id))
+      .filter((b): b is (typeof this.GENERATION_BLOCS)[number] => !!b);
 
-    const blocs = this.GENERATION_BLOCS.filter((b) => b.streetId === streetId && b.distanceMeters <= 50);
+    if (blocs.length === 0) {
+      return fail('Blocs.NotFound', "Aucun des blocs demandés n'existe.");
+    }
     const rows = blocs.flatMap((b, bi) =>
       Array.from({ length: b.adresseCount }, (_, i) => ({
         adresseId: `${b.id}-adr-${i + 1}`,
@@ -438,8 +441,8 @@ export class MockClosesApiService extends ClosesApiPort {
     }));
 
     return of({
-      closeId: key,
-      closeCode: `${quartier.quartierCode}-??`,
+      closeId: close.streetId,   // la close n'existe pas encore : on n'a pas d'id à donner
+      closeCode: close.code,
       // Les tracés de rue existent depuis la reprise du 2026-09-04 : le back peut désormais
       // ordonner sur l'axe réel. Le mock l'annonce pour que l'écran affiche le bon régime.
       orderingSource: 'StreetLine' as const,

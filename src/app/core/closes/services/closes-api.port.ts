@@ -3,7 +3,7 @@ import { UUID } from '../../models/das.models';
 import {
   AdresseNumbering, ApplyQuartierClosesPayload, AppliedQuartierCloses, Close, CloseListQuery,
   CloseNumberingPlan, CloseStreetOption, CreateClosePayload, QuartierClosePlan,
-  QuartierClosePlanParameters, QuartierCloseProgress, UpdateClosePayload,
+  QuartierClosePlanParameters, QuartierCloseProgress, ReviewedClose, UpdateClosePayload,
 } from '../models/closes.models';
 
 export abstract class ClosesApiPort {
@@ -62,15 +62,19 @@ export abstract class ClosesApiPort {
   ): Observable<QuartierClosePlan>;
 
   /**
-   * `POST /api/quartiers/{quartierId}/closes/preview/{key}/numbering` — **n'écrit rien.**
-   * Plan de numérotation d'UNE proposition, à son ouverture. Même forme que
+   * `POST /api/quartiers/{quartierId}/closes/numbering-preview` — **n'écrit rien.**
+   * Plan de numérotation d'une close proposée, à son ouverture. Même forme que
    * `previewAttachBlocs`, donc le composant de numérotation existant le lit tel quel.
+   *
+   * On envoie la close TELLE QU'ELLE EST à l'écran, pas la clé de la proposition d'origine :
+   * l'opérateur a pu retirer un bloc, en déplacer un depuis une autre proposition ou changer de
+   * rue. Numéroter la proposition d'origine numéroterait autre chose que ce qu'il regarde.
    *
    * `reverse` inverse le sens de parcours quand le plan commence par le mauvais bout.
    */
-  abstract previewProposalNumbering(
+  abstract previewProposedCloseNumbering(
     quartierId: UUID,
-    key: string,
+    close: ReviewedClose,
     reverse: boolean,
   ): Observable<CloseNumberingPlan>;
 

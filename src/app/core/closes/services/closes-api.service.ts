@@ -7,7 +7,7 @@ import { UUID } from '../../models/das.models';
 import {
   AdresseNumbering, ApplyQuartierClosesPayload, AppliedQuartierCloses, Close, CloseListQuery,
   CloseNumberingPlan, CloseStreetOption, CreateClosePayload, QuartierClosePlan,
-  QuartierClosePlanParameters, QuartierCloseProgress, UpdateClosePayload,
+  QuartierClosePlanParameters, QuartierCloseProgress, ReviewedClose, UpdateClosePayload,
 } from '../models/closes.models';
 
 /** `closes` arrive sous la même forme brute que partout ailleurs : on repasse par `toClose`. */
@@ -136,15 +136,18 @@ export class ClosesApiService extends ClosesApiPort {
     return this.http.post<QuartierClosePlan>(`${this.quartiersUrl}/${quartierId}/closes/preview`, params);
   }
 
-  override previewProposalNumbering(
+  override previewProposedCloseNumbering(
     quartierId: UUID,
-    key: string,
+    close: ReviewedClose,
     reverse: boolean,
   ): Observable<CloseNumberingPlan> {
+    // `numbering` n'est pas envoyé : c'est ce qu'on demande, pas ce qu'on fournit.
+    const body = {
+      streetId: close.streetId, number: close.number, code: close.code,
+      blocIds: close.blocIds, reverse,
+    };
     return this.http.post<CloseNumberingPlan>(
-      `${this.quartiersUrl}/${quartierId}/closes/preview/${encodeURIComponent(key)}/numbering`,
-      { reverse },
-    );
+      `${this.quartiersUrl}/${quartierId}/closes/numbering-preview`, body);
   }
 
   override applyQuartierCloses(
