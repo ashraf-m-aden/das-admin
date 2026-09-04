@@ -5,9 +5,18 @@ import { ClosesApiPort } from './closes-api.port';
 import { AppConfigService } from '../../config/app-config.service';
 import { UUID } from '../../models/das.models';
 import {
-  AdresseNumbering, Close, CloseListQuery, CloseNumberingPlan, CloseStreetOption,
-  CreateClosePayload, UpdateClosePayload,
+  AdresseNumbering, ApplyQuartierClosesPayload, AppliedQuartierCloses, Close, CloseListQuery,
+  CloseNumberingPlan, CloseStreetOption, CreateClosePayload, QuartierClosePlan,
+  QuartierClosePlanParameters, QuartierCloseProgress, UpdateClosePayload,
 } from '../models/closes.models';
+
+/** `closes` arrive sous la même forme brute que partout ailleurs : on repasse par `toClose`. */
+interface RawAppliedResponse {
+  closesCreated: number;
+  blocsAttached: number;
+  adressesRenumbered: number;
+  closes: RawCloseResponse[];
+}
 
 interface RawCloseBlocResponse {
   id: string;
@@ -103,5 +112,52 @@ export class ClosesApiService extends ClosesApiPort {
 
   override detachBloc(id: UUID, blocId: UUID): Observable<Close> {
     return this.http.delete<RawCloseResponse>(`${this.baseUrl}/${id}/blocs/${blocId}`).pipe(map(toClose));
+  }
+
+  /* ---------------------------------------------------------------------------------------
+   * GÉNÉRATION PAR QUARTIER
+   *
+   * Ces routes vivent sous `/quartiers`, pas sous `/closes` : leur sujet est le quartier, et
+   * c'est lui qui porte l'unicité de `Number` et de `Code`.
+   * ------------------------------------------------------------------------------------ */
+
+  private get quartiersUrl() { return `${this.config.get('apiBaseUrl')}/quartiers`; }
+
+  override listQuartierProgress(): Observable<QuartierCloseProgress[]> {
+    return this.http.get<QuartierCloseProgress[]>(`${this.quartiersUrl}/closes-progress`);
+  }
+
+  override previewQuartierCloses(
+    quartierId: UUID,
+    params: Partial<QuartierClosePlanParameters>,
+  ): Observable<QuartierClosePlan> {
+    // Corps partiel assumé : le back applique ses défauts et renvoie ce qu'il a retenu dans
+    // `plan.parameters`. On n'invente pas de valeurs par défaut ici, elles divergeraient.
+    return this.http.post<QuartierClosePlan>(`${this.quartiersUrl}/${quartierId}/closes/preview`, params);
+  }
+
+  override previewProposalNumbering(
+    quartierId: UUID,
+    key: string,
+    reverse: boolean,
+  ): Observable<CloseNumberingPlan> {
+    return this.http.post<CloseNumberingPlan>(
+      `${this.quartiersUrl}/${quartierId}/closes/preview/${encodeURIComponent(key)}/numbering`,
+      { reverse },
+    );
+  }
+
+  override applyQuartierCloses(
+    quartierId: UUID,
+    payload: ApplyQuartierClosesPayload,
+  ): Observable<AppliedQuartierCloses> {
+    return this.http
+      .post<RawAppliedResponse>(`${this.quartiersUrl}/${quartierId}/closes`, payload)
+      .pipe(map((raw) => ({
+        closesCreated: raw.closesCreated,
+        blocsAttached: raw.blocsAttached,
+        adressesRenumbered: raw.adressesRenumbered,
+        closes: raw.closes.map(toClose),
+      })));
   }
 }

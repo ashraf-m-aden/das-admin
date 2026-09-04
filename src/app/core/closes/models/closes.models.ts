@@ -132,3 +132,170 @@ export interface AdresseNumbering {
   adresseId: UUID;
   numero: number;
 }
+
+/* =============================================================================
+ * GÉNÉRATION DES CLOSES PAR QUARTIER
+ *
+ * Écran de reprise : proposer les closes d'un quartier, les faire relire sur carte, puis les
+ * écrire — closes, rattachement des blocs et RENUMÉROTATION des adresses dans la même
+ * transaction. Rien n'est écrit avant confirmation.
+ *
+ * La règle de génération découle du schéma : `IX_Closes_QuartierId_StreetId` est UNIQUE, donc
+ * une close = les blocs d'un quartier bordant UNE rue, et il ne peut y en avoir qu'une par
+ * couple (quartier, rue). Un groupe trop gros n'est PAS scindable.
+ *
+ * Mesuré sur la base le 2026-09-04, sur 5 121 blocs et 87 quartiers :
+ *   - 2 958 blocs (58 %) ont une rue urbaine à moins de 50 m → 531 closes sur 71 quartiers ;
+ *   - 2 163 blocs (42 %) n'en ont aucune. Ce n'est pas un défaut d'algorithme mais un trou du
+ *     référentiel voirie : ces blocs DOIVENT rester visibles à l'écran, jamais être tus ;
+ *   - 345 closes sur 531 produisent des numéros en double (15 745 adresses), parce que chaque
+ *     bloc numérote ses parcelles à partir de 1. La renumérotation n'est donc pas un cas limite.
+ * ========================================================================== */
+
+/**
+ * Ligne de la liste des quartiers — de quoi décider par où commencer.
+ *
+ * `blocsRemaining` est ce qui compte : c'est le travail restant. Trier dessus met le utile en
+ * haut, alors que trier sur le total met en avant des quartiers déjà faits.
+ */
+export interface QuartierCloseProgress {
+  quartierId: UUID;
+  quartierNom: string;
+  quartierCode: string;
+  cityName: string;
+  communeName: string | null;
+  zoneName: string | null;
+  blocsTotal: number;
+  blocsWithClose: number;
+  /** `blocsTotal - blocsWithClose`. Renvoyé par le back, pas recalculé ici. */
+  blocsRemaining: number;
+  closesCount: number;
+}
+
+/**
+ * Réglages de la proposition. Tous ont un défaut côté back : le front peut poster `{}`.
+ *
+ * `excludeStreetCodePrefixes` n'est pas un détail : les 692 tronçons du réseau NATIONAL importés
+ * le 2026-09-04 (`SIG-RT*`, `SIG-PI*`) sont des routes et des pistes de désert. Sans cette
+ * exclusion, des blocs de Balbala se retrouvent rattachés à une piste à 500 m — l'appariement
+ * brut donnait 240 m de distance moyenne, contre une trentaine sur la seule voirie urbaine.
+ */
+export interface QuartierClosePlanParameters {
+  /** Au-delà, le bloc part dans `unassignedBlocs`. 50 m par défaut. */
+  maxDistanceMeters: number;
+  /** `TypeVoie` retenus : Rue, Avenue, Boulevard, Route… Vide = tous. */
+  streetTypes: string[];
+  /** 941 rues sur 1 344 n'ont pas de nom. Les exclure fige 70 % du réseau. */
+  includeUnnamedStreets: boolean;
+  excludeStreetCodePrefixes: string[];
+}
+
+/**
+ * `RueAnonyme` — la close nommera mal, le renommage est à portée de clic.
+ * `CloseVolumineuse` — au-delà du seuil ; **non scindable**, la contrainte UNIQUE l'interdit.
+ * `BlocIsole` — close à un seul bloc, souvent un artefact de proximité.
+ */
+export type ProposedCloseWarning = 'RueAnonyme' | 'CloseVolumineuse' | 'BlocIsole';
+
+/** Codes, jamais des phrases : on teste le code et on traduit (règle du contrat sur les erreurs). */
+export type UnassignedBlocReason =
+  | 'AucuneRueAProximite'
+  | 'BlocSansGeometrie'
+  | 'BlocDejaRattache'
+  | 'RueDejaPorteuseDUneClose';
+
+export interface ProposedCloseBloc {
+  id: UUID;
+  code: string;
+  name: string | null;
+  number: number | null;
+  /** Distance à la rue retenue. Sert à repérer les rattachements douteux dans la liste. */
+  distanceMeters: number;
+  adresseCount: number;
+}
+
+export interface ProposedClose {
+  /** Identifiant de la PROPOSITION (pas d'une close : elle n'existe pas encore). Corrèle aperçu → numérotation → application. */
+  key: string;
+  streetId: UUID;
+  streetCode: string;
+  streetName: string | null;
+  streetType: string;
+  /** Proposés par le back, qui reprend la numérotation existante du quartier. Modifiables. */
+  number: number;
+  code: string;
+  blocs: ProposedCloseBloc[];
+  /**
+   * Compteur SEUL — le détail des adresses n'est pas ici. Une close porte 45 adresses en moyenne
+   * et jusqu'à 863, chacune avec sa position et sa géométrie : un aperçu de quartier qui
+   * embarquerait tous les plans pèserait plusieurs mégaoctets, pour un écran où l'on n'ouvre
+   * qu'une close à la fois. Le plan détaillé se charge à l'ouverture, cf. `previewProposalNumbering`.
+   */
+  adresseCount: number;
+  /** Vrai pour 345 closes sur 531 : le rattachement sera refusé sans `numbering`. */
+  hasNumeroCollision: boolean;
+  /** Union des blocs, pour l'aperçu carte. GeoJSON/WKT venu de l'API, pas une tuile Martin. */
+  boundaryWkt: string | null;
+  warnings: ProposedCloseWarning[];
+}
+
+export interface UnassignedBloc {
+  blocId: UUID;
+  blocCode: string;
+  reason: UnassignedBlocReason;
+  /** Renseignés sur `AucuneRueAProximite` : la rue existe, elle est juste trop loin. */
+  nearestStreetId: UUID | null;
+  distanceMeters: number | null;
+  boundaryWkt: string | null;
+}
+
+export interface QuartierClosePlanSummary {
+  blocsTotal: number;
+  blocsAssigned: number;
+  blocsUnassigned: number;
+  closesProposed: number;
+  /** Adresses qui seront renumérotées si le plan est appliqué tel quel. */
+  adressesImpacted: number;
+}
+
+/** Ce que renvoie `POST /api/quartiers/{id}/closes/preview`. N'écrit rien. */
+export interface QuartierClosePlan {
+  quartierId: UUID;
+  quartierNom: string;
+  quartierCode: string;
+  /** Paramètres EFFECTIVEMENT appliqués — le back peut avoir borné ce qu'on lui a envoyé. */
+  parameters: QuartierClosePlanParameters;
+  summary: QuartierClosePlanSummary;
+  proposed: ProposedClose[];
+  unassignedBlocs: UnassignedBloc[];
+}
+
+/**
+ * Une close telle que l'opérateur l'a relue. C'est CE plan qui est écrit, jamais un recalcul
+ * serveur : ce qui est appliqué doit être exactement ce qui a été vu.
+ */
+export interface ReviewedClose {
+  key: string;
+  streetId: UUID;
+  number: number;
+  code: string;
+  blocIds: UUID[];
+  /**
+   * OBLIGATOIRE dès que `hasNumeroCollision` : le plan COMPLET de la close, pas seulement les
+   * adresses dont le numéro change. Le back revérifie la couverture et l'unicité, et refuse un
+   * plan partiel plutôt que de le compléter tout seul.
+   */
+  numbering: AdresseNumbering[] | null;
+}
+
+export interface ApplyQuartierClosesPayload {
+  closes: ReviewedClose[];
+}
+
+/** Ce qui a réellement été écrit, à afficher tel quel — on ne rejoue pas le compte côté front. */
+export interface AppliedQuartierCloses {
+  closesCreated: number;
+  blocsAttached: number;
+  adressesRenumbered: number;
+  closes: Close[];
+}
