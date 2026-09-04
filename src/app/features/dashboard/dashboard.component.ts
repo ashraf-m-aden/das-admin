@@ -8,7 +8,7 @@ import { PageHeaderComponent } from '../../core/layout/page-header/page-header.c
 import { BasemapLayerGroup, DasMapComponent } from '../../core/ui/map/das-map.component';
 import { TileLayerBinding } from '../../core/ui/map/map.models';
 import {
-  BLOCS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, STREETS_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP,
+  BLOCS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, STREETS_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP, CITIES_BASEMAP_GROUP,
 } from '../../core/ui/map/basemap-groups';
 import { AddressWorkflowStage } from '../../core/models/das.models';
 import { WORKFLOW_STAGES } from '../../core/adresse/models/adresse.models';
@@ -59,7 +59,7 @@ export class DashboardComponent implements OnInit {
    * éteintes en permanence sans que la case « Parcelles » n'y puisse rien.
    */
   protected readonly basemapLayers: BasemapLayerGroup[] = [
-    STREETS_BASEMAP_GROUP, BLOCS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP,
+    STREETS_BASEMAP_GROUP, BLOCS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP, CITIES_BASEMAP_GROUP,
   ];
 
   protected readonly summary = toSignal(this.facade.summary$);

@@ -15,7 +15,7 @@ import { wktBounds } from '../../../core/ui/map/wkt.util';
 import { UUID } from '../../../core/models/das.models';
 import { NotSurveyableReason } from '../../../core/review/models/review.models';
 import {
-  STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP,
+  STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP, CITIES_BASEMAP_GROUP,
 } from '../../../core/ui/map/basemap-groups';
 
 const BLOC_TILE: TileLayerBinding = {
@@ -38,7 +38,7 @@ export class BlockDetailComponent implements OnInit, OnDestroy {
    * la seule référence de terrain, et il faut pouvoir la masquer pour lire les contours dessous.
    */
   protected readonly basemapLayers: BasemapLayerGroup[] = [
-    STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP,
+    STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP, CITIES_BASEMAP_GROUP,
   ];
   private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);

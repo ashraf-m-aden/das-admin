@@ -77,6 +77,20 @@
       "minzoom": 0,
       "maxzoom": 22,
       "promoteId": "Id"
+    },
+    "cities": {
+      "type": "vector",
+      "tiles": [
+        "__TILES_BASE_URL__/cities_tiles/{z}/{x}/{y}"
+      ],
+      "promoteId": "Fid"
+    },
+    "citiesLabels": {
+      "type": "vector",
+      "tiles": [
+        "__TILES_BASE_URL__/cities_labels_tiles/{z}/{x}/{y}"
+      ],
+      "promoteId": "Fid"
     }
   },
   "glyphs": "https://tiles.basemaps.cartocdn.com/fonts/{fontstack}/{range}.pbf",
@@ -360,7 +374,6 @@
       "type": "line",
       "source": "streets",
       "source-layer": "streets_tiles",
-      "minzoom": 9,
       "filter": [
         "match",
         [
@@ -379,7 +392,19 @@
         "line-join": "round"
       },
       "paint": {
-        "line-color": "#c8ced6",
+        "line-color": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          8,
+          "#8592a3",
+          11,
+          "#c8ced6"
+        ],
         "line-width": [
           "interpolate",
           [
@@ -389,6 +414,10 @@
           [
             "zoom"
           ],
+          4,
+          0.9,
+          8,
+          1.2,
           9,
           1.4,
           12,
@@ -407,7 +436,6 @@
       "type": "line",
       "source": "streets",
       "source-layer": "streets_tiles",
-      "minzoom": 9,
       "filter": [
         "match",
         [
@@ -451,6 +479,8 @@
           [
             "zoom"
           ],
+          8,
+          0,
           9,
           0.6,
           12,
@@ -833,6 +863,46 @@
       }
     },
     {
+      "id": "cities-line",
+      "type": "line",
+      "source": "cities",
+      "source-layer": "cities_tiles",
+      "layout": {
+        "visibility": "none"
+      },
+      "paint": {
+        "line-color": [
+          "case",
+          [
+            "has",
+            "Code"
+          ],
+          "#0f766e",
+          "#94a3b8"
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          4,
+          0.7,
+          9,
+          1.0,
+          14,
+          1.4
+        ],
+        "line-dasharray": [
+          6,
+          3
+        ],
+        "line-opacity": 0.9
+      }
+    },
+    {
       "id": "close-adresses-numero",
       "type": "symbol",
       "source": "adresses",
@@ -1039,6 +1109,45 @@
         "text-color": "#0f172a",
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.8
+      }
+    },
+    {
+      "id": "cities-label",
+      "type": "symbol",
+      "source": "citiesLabels",
+      "source-layer": "cities_labels_tiles",
+      "maxzoom": 13,
+      "layout": {
+        "visibility": "none",
+        "text-field": [
+          "get",
+          "Name"
+        ],
+        "text-font": [
+          "Montserrat Regular",
+          "Open Sans Regular",
+          "Noto Sans Regular"
+        ],
+        "text-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          5,
+          11,
+          12,
+          16
+        ],
+        "text-transform": "uppercase",
+        "text-letter-spacing": 0.08
+      },
+      "paint": {
+        "text-color": "#0f766e",
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 2
       }
     }
   ]
