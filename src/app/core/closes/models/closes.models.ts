@@ -201,10 +201,18 @@ export interface QuartierClosePlanParameters {
  * ce sont des codes, on les teste tels quels et on traduit à l'affichage.
  *
  * `UnnamedStreet` — la close nommera mal, le renommage est à portée de clic.
- * `LargeClose` — au-delà du seuil ; **non scindable**, la contrainte UNIQUE l'interdit.
+ * `LargeClose` — beaucoup de blocs ; relecture difficile, mais la close reste créable.
+ * `ExceedsAddressCap` — **plus de 99 parcelles**. Pas un conseil mais un dépassement de la règle
+ *   métier du 2026-09-04, et il n'est PAS corrigeable depuis l'écran : l'index unique
+ *   (quartier, rue) interdit de scinder une rue en plusieurs closes. 56 des 531 closes proposées
+ *   sont dans ce cas, pour 12 808 parcelles.
  * `SingleBloc` — close à un seul bloc, souvent un artefact de proximité.
  */
-export type ProposedCloseWarning = 'UnnamedStreet' | 'LargeClose' | 'SingleBloc';
+export type ProposedCloseWarning =
+  | 'UnnamedStreet'
+  | 'LargeClose'
+  | 'ExceedsAddressCap'
+  | 'SingleBloc';
 
 /** Idem : codes du back, jamais des phrases. */
 export type UnassignedBlocReason =

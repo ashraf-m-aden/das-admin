@@ -351,7 +351,7 @@ export class MockClosesApiService extends ClosesApiPort {
       const warnings: ProposedCloseWarning[] = [];
       if (!street?.name) warnings.push('UnnamedStreet');
       if (blocs.length === 1) warnings.push('SingleBloc');
-      if (adresseCount > 200) warnings.push('LargeClose');
+      if (adresseCount > 99) warnings.push('ExceedsAddressCap');
       const number = nextNumber++;
       return {
         key: `p-${i + 1}`,
