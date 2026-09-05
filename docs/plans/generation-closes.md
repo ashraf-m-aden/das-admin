@@ -81,6 +81,22 @@ numérotations. Une close porte 45 parcelles en moyenne et jusqu'à 863, chacune
 sa géométrie : c'est pour ça que le plan détaillé se charge à l'ouverture d'une close, sur sa propre
 route, et pas dans l'aperçu.
 
+### Les blocs d'une close se touchent (corrigé le 2026-09-05)
+
+Le regroupement se faisait par la seule rue la plus proche, sans aucun contrôle de contiguïté :
+une avenue traversant le quartier ramassait tous les blocs de son parcours. Mesuré avant
+correction, sur les 375 closes à plus d'un bloc — étendue moyenne 305 m mais **maximum 1 803 m**,
+54 closes au-delà de 500 m, 56 blocs à plus de 100 m de tout autre bloc de leur propre close.
+
+Chaque groupe est maintenant découpé en composantes connexes (seuil `maxBlocGapMeters`, 100 m par
+défaut) et seule la plus grosse est proposée. Les autres sortent en `NotContiguous` — un motif de
+plus dans le panneau des non-rattachés, et le chiffrage du coût de la règle « une rue, une close
+par quartier ».
+
+Ce qui reste long l'est légitimement : « Avenue 37 », 27 blocs contigus sur 952 m, est une vraie
+chaîne d'adjacence. La couper suppose de scinder la rue — donc de lever la même règle que le
+plafond de 99.
+
 ---
 
 ## 4. Points de contrat à ne pas redécouvrir

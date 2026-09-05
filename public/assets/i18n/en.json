@@ -288,7 +288,8 @@
         "NoStreetNearby": "No street nearby",
         "BlocWithoutGeometry": "Block without outline",
         "BlocAlreadyAttached": "Already in a close",
-        "StreetAlreadyHasClose": "Street already taken"
+        "StreetAlreadyHasClose": "Street already taken",
+        "NotContiguous": "Detached from the group"
       },
       "ordering": {
         "StreetLine": "Order following the street line",
