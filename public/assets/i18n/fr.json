@@ -288,7 +288,8 @@
         "NoStreetNearby": "Aucune rue à proximité",
         "BlocWithoutGeometry": "Bloc sans emprise",
         "BlocAlreadyAttached": "Déjà dans une close",
-        "StreetAlreadyHasClose": "Rue déjà prise"
+        "StreetAlreadyHasClose": "Rue déjà prise",
+        "NotContiguous": "Détaché du groupe"
       },
       "ordering": {
         "StreetLine": "Ordre suivant le tracé de la rue",

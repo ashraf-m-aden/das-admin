@@ -194,6 +194,15 @@ export interface QuartierClosePlanParameters {
   /** 941 rues sur 1 344 n'ont pas de nom. Les exclure fige 70 % du réseau. */
   includeUnnamedStreets: boolean;
   excludeStreetCodePrefixes: string[];
+  /**
+   * Écart maximal entre deux blocs VOISINS d'une même close. Au-delà, le groupe est coupé.
+   *
+   * Sans ce seuil, l'appariement « bloc → rue la plus proche » réunit tous les blocs bordant une
+   * avenue, aussi loin soient-ils : mesuré le 2026-09-05, jusqu'à 1 803 m entre deux blocs d'une
+   * même close proposée. Défaut 100 m — 2 614 blocs sur 2 755 ont déjà un voisin à moins de 30 m,
+   * le seuil ne coupe donc pas l'adjacence normale.
+   */
+  maxBlocGapMeters: number;
 }
 
 /**
@@ -219,7 +228,14 @@ export type UnassignedBlocReason =
   | 'NoStreetNearby'
   | 'BlocWithoutGeometry'
   | 'BlocAlreadyAttached'
-  | 'StreetAlreadyHasClose';
+  | 'StreetAlreadyHasClose'
+  /**
+   * Le bloc borde la bonne rue mais est DÉTACHÉ du groupe : plus de `maxBlocGapMeters` le
+   * séparent du bloc le plus proche de la close. Les blocs d'une close doivent se toucher — une
+   * close est une portion de rue, pas la rue entière. Il formerait une seconde close sur la même
+   * rue, ce que l'index unique (quartier, rue) interdit.
+   */
+  | 'NotContiguous';
 
 export interface ProposedCloseBloc {
   id: UUID;

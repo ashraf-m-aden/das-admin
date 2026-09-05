@@ -308,6 +308,16 @@ export class MockClosesApiService extends ClosesApiPort {
     { id: 'bloc-0019', code: 'Q7-B19', streetId: 'street-0001', distanceMeters: 502.7, adresseCount: 4 },
   ];
 
+  /**
+   * Blocs qui bordent bien leur rue mais sont DÉTACHÉS du groupe : le back les sort en
+   * `NotContiguous`. Sans eux, ce motif ne serait jamais visible en mode mock, alors que c'est
+   * lui qui chiffre le coût de la règle « une rue, une close par quartier ».
+   */
+  private readonly BLOCS_DETACHES = [
+    { id: 'bloc-0020', code: 'Q7-B20', streetId: 'street-0001', distanceMeters: 14.2 },
+    { id: 'bloc-0021', code: 'Q7-B21', streetId: 'street-0002', distanceMeters: 21.8 },
+  ];
+
   /** Carré grossier autour d'un point, suffisant pour que la carte ait quelque chose à dessiner. */
   private mockPolygon(seed: number): string {
     const lng = 43.138 + seed * 0.004;
@@ -329,6 +339,7 @@ export class MockClosesApiService extends ClosesApiPort {
       streetTypes: params.streetTypes ?? ['Rue', 'Avenue', 'Boulevard', 'Route'],
       includeUnnamedStreets: params.includeUnnamedStreets ?? true,
       excludeStreetCodePrefixes: params.excludeStreetCodePrefixes ?? ['SIG-RT', 'SIG-PI'],
+      maxBlocGapMeters: params.maxBlocGapMeters ?? 100,
     };
 
     const assignable = this.GENERATION_BLOCS.filter((b) => b.distanceMeters <= applied.maxDistanceMeters);
@@ -384,13 +395,22 @@ export class MockClosesApiService extends ClosesApiPort {
         adressesImpacted: proposed.reduce((n, p) => n + p.adresseCount, 0),
       },
       proposed,
-      unassignedBlocs: tooFar.map((b, i) => ({
-        blocId: b.id, blocCode: b.code,
-        reason: 'NoStreetNearby' as const,
-        nearestStreetId: b.streetId,
-        distanceMeters: b.distanceMeters,
-        boundaryWkt: this.mockPolygon(20 + i),
-      })),
+      unassignedBlocs: [
+        ...tooFar.map((b, i) => ({
+          blocId: b.id, blocCode: b.code,
+          reason: 'NoStreetNearby' as const,
+          nearestStreetId: b.streetId,
+          distanceMeters: b.distanceMeters,
+          boundaryWkt: this.mockPolygon(20 + i),
+        })),
+        ...this.BLOCS_DETACHES.map((b, i) => ({
+          blocId: b.id, blocCode: b.code,
+          reason: 'NotContiguous' as const,
+          nearestStreetId: b.streetId,
+          distanceMeters: b.distanceMeters,
+          boundaryWkt: this.mockPolygon(30 + i),
+        })),
+      ],
     };
     return of(plan).pipe(delay(LATENCY_MS));
   }
