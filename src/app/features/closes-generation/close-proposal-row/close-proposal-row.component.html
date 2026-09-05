@@ -1,0 +1,140 @@
+<article
+  class="row"
+  [class.row--selected]="selected()"
+  [class.row--reviewed]="reviewed()"
+  (click)="select.emit()">
+
+  <header class="row__head">
+    <span class="row__code mono">{{ proposal().code }}</span>
+
+    <span class="row__street">
+      @if (proposal().streetName) {
+        {{ proposal().streetName }}
+      } @else {
+        <span class="mono muted">{{ proposal().streetCode }}</span>
+      }
+      <span class="chip chip--type">{{ proposal().streetType }}</span>
+    </span>
+
+    <span class="row__counts">
+      <span [class.over-cap]="proposal().warnings.includes('ExceedsAddressCap')">
+        {{ proposal().adresseCount | number }}
+      </span>
+      <span class="muted">{{ 'closes.generation.adresses' | transloco }}</span>
+      <span class="muted">· {{ proposal().blocs.length }} {{ 'closes.generation.blocs' | transloco }}</span>
+    </span>
+
+    @if (reviewed()) {
+      <span class="chip chip--ok"><i class="ti ti-check"></i> {{ 'closes.generation.reviewed' | transloco }}</span>
+    }
+  </header>
+
+  <!--
+    Les avertissements sont sur la ligne, pas dans un repli : `ExceedsAddressCap` n'est pas un
+    conseil mais un dépassement, et il n'est pas corrigeable depuis cet écran.
+  -->
+  @if (proposal().warnings.length > 0) {
+    <ul class="row__warnings">
+      @for (warning of proposal().warnings; track warning) {
+        <li class="chip" [class.chip--warn]="warning === 'ExceedsAddressCap'">
+          {{ 'closes.generation.warning.' + warning | transloco }}
+        </li>
+      }
+    </ul>
+  }
+
+  @if (proposal().hasNumeroCollision) {
+    <p class="collision">
+      <i class="ti ti-numbers"></i>
+      {{ 'closes.generation.collisionHint' | transloco }}
+    </p>
+  }
+
+  <div class="row__actions">
+    <button type="button" class="btn btn--ghost" (click)="expanded.set(!expanded()); $event.stopPropagation()">
+      <i class="ti" [class.ti-chevron-down]="!expanded()" [class.ti-chevron-up]="expanded()"></i>
+      {{ 'closes.generation.edit' | transloco }}
+    </button>
+
+    <button type="button" class="btn btn--ghost" (click)="openNumbering(); $event.stopPropagation()">
+      <i class="ti ti-list-numbers"></i>
+      {{ 'closes.generation.openNumbering' | transloco }}
+    </button>
+
+    @if (numberingOpen()) {
+      <button type="button" class="btn btn--ghost" (click)="closeNumbering(); $event.stopPropagation()">
+        {{ 'closes.generation.closeNumbering' | transloco }}
+      </button>
+    }
+
+    <button type="button" class="btn btn--ghost btn--danger" (click)="discard(); $event.stopPropagation()">
+      <i class="ti ti-trash"></i>
+      {{ 'closes.generation.discard' | transloco }}
+    </button>
+  </div>
+
+  @if (expanded()) {
+    <div class="editor" (click)="$event.stopPropagation()">
+
+      <label class="editor__field">
+        <span>{{ 'closes.generation.street' | transloco }}</span>
+        <select [ngModel]="proposal().streetId" (ngModelChange)="onStreetChange($event)">
+          @for (street of streets(); track street.id) {
+            <option [value]="street.id">
+              {{ street.name ?? street.code }} — {{ street.type }}
+            </option>
+          }
+        </select>
+      </label>
+
+      @if (!proposal().streetName) {
+        <div class="editor__rename">
+          @if (!renaming()) {
+            <button type="button" class="btn btn--ghost" (click)="startRename()">
+              <i class="ti ti-pencil"></i>
+              {{ 'closes.generation.nameStreet' | transloco }}
+            </button>
+          } @else {
+            <input
+              type="text"
+              [ngModel]="newStreetName()"
+              (ngModelChange)="newStreetName.set($event)"
+              [placeholder]="'closes.generation.streetNamePlaceholder' | transloco" />
+            <button type="button" class="btn" (click)="confirmRename()">{{ 'common.save' | transloco }}</button>
+            <button type="button" class="btn btn--ghost" (click)="cancelRename()">{{ 'common.cancel' | transloco }}</button>
+          }
+          <p class="muted">{{ 'closes.generation.renameStreetHint' | transloco }}</p>
+        </div>
+      }
+
+      <div class="editor__pair">
+        <label class="editor__field">
+          <span>{{ 'closes.generation.number' | transloco }}</span>
+          <input type="number" min="1" max="999"
+                 [ngModel]="proposal().number"
+                 (ngModelChange)="onNumberChange($event)" />
+        </label>
+
+        <label class="editor__field">
+          <span>{{ 'closes.generation.code' | transloco }}</span>
+          <input type="text" [ngModel]="proposal().code" (ngModelChange)="onCodeChange($event)" />
+        </label>
+      </div>
+
+      <h5>{{ 'closes.generation.blocsTitle' | transloco }}</h5>
+      <ul class="blocs">
+        @for (bloc of proposal().blocs; track bloc.id) {
+          <li>
+            <span class="mono">{{ bloc.code }}</span>
+            <span class="muted">{{ bloc.adresseCount }} {{ 'closes.generation.adresses' | transloco }}</span>
+            <!-- La distance signale un rattachement douteux : 40 m, ce n'est plus une desserte. -->
+            <span class="muted">{{ bloc.distanceMeters | number: '1.0-1' }} m</span>
+            <button type="button" class="link-danger" (click)="removeBloc(bloc.id)">
+              {{ 'closes.generation.removeBloc' | transloco }}
+            </button>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+</article>

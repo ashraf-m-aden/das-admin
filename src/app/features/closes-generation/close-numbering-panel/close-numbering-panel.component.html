@@ -1,0 +1,82 @@
+<section class="panel">
+  @if (isLoading()) {
+    <p class="muted">{{ 'closes.generation.numberingLoading' | transloco }}</p>
+  } @else if (plan(); as numbering) {
+
+    <header class="panel__head">
+      <div>
+        <strong>{{ 'closes.generation.numberingTitle' | transloco }}</strong>
+        <span class="muted">
+          {{ numbering.parcelCount | number }} {{ 'closes.generation.adresses' | transloco }}
+          · {{ numbering.changedCount | number }} {{ 'closes.generation.renumbered' | transloco }}
+        </span>
+      </div>
+
+      <!--
+        Le régime d'ordonnancement est affiché, pas caché : StreetLine suit le tracé réel de la
+        rue, ParcelCloud l'estime sur le nuage des parcelles. La confiance n'est pas la même.
+      -->
+      <span class="chip" [class.chip--estimated]="numbering.orderingSource === 'ParcelCloud'">
+        {{ 'closes.generation.ordering.' + numbering.orderingSource | transloco }}
+      </span>
+
+      <button type="button" class="btn btn--ghost" (click)="toggleDirection()">
+        <i class="ti ti-arrows-left-right"></i>
+        {{ 'closes.generation.reverseDirection' | transloco }}
+      </button>
+    </header>
+
+    @if (issues().length > 0) {
+      <p class="issues">
+        <i class="ti ti-alert-triangle"></i>
+        {{ 'closes.generation.numberingDuplicates' | transloco: { numbers: issues().join(', ') } }}
+      </p>
+    }
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ 'closes.generation.bloc' | transloco }}</th>
+            <th class="num">{{ 'closes.generation.currentNumero' | transloco }}</th>
+            <th class="num">{{ 'closes.generation.proposedNumero' | transloco }}</th>
+            <th class="num">{{ 'closes.generation.distance' | transloco }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (adresse of plan()!.adresses; track adresse.adresseId) {
+            <tr [class.row--frozen]="adresse.addressCode !== null">
+              <td class="mono">{{ adresse.blocCode }}</td>
+              <td class="num muted">{{ adresse.currentNumero }}</td>
+              <td class="num">
+                @if (adresse.addressCode !== null) {
+                  <!-- Code figé : le numéro n'est plus modifiable, l'écriture serait refusée. -->
+                  <span class="frozen" [title]="'closes.generation.frozenHint' | transloco">
+                    {{ adresse.proposedNumero }} <i class="ti ti-lock"></i>
+                  </span>
+                } @else {
+                  <input type="number" min="1"
+                         [ngModel]="adresse.proposedNumero"
+                         (ngModelChange)="onNumeroChange(adresse.adresseId, $event)" />
+                }
+              </td>
+              <td class="num muted">{{ adresse.distanceMeters | number: '1.0-0' }} m</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <footer class="panel__foot">
+      @if (isReviewed()) {
+        <span class="chip chip--ok"><i class="ti ti-check"></i> {{ 'closes.generation.reviewed' | transloco }}</span>
+      } @else {
+        <button type="button" class="btn" [disabled]="!canMarkReviewed()" (click)="markReviewed()">
+          <i class="ti ti-check"></i>
+          {{ 'closes.generation.markReviewed' | transloco }}
+        </button>
+      }
+      <p class="muted">{{ 'closes.generation.markReviewedHint' | transloco }}</p>
+    </footer>
+  }
+</section>
