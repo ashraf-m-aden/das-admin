@@ -7,7 +7,7 @@ import { ReviewFacade } from '../../../core/review/store/review.facade';
 import { DataQualityFacade } from '../../../core/dataquality/store/dataquality.facade';
 import { SurveyFactsComponent } from '../../../core/review/ui/survey-facts/survey-facts.component';
 import { SurveyDecisionComponent } from '../../../core/review/ui/survey-decision/survey-decision.component';
-import { CampaignSurveyItem, SurveyStatus, ValidationType } from '../../../core/review/models/review.models';
+import { CampaignSurveyFilter, CampaignSurveyItem, ValidationType } from '../../../core/review/models/review.models';
 import { OccupationCatalogItem } from '../../../core/reference/models/reference.models';
 import { DasDatePipe } from '../../../core/i18n/das-locale.pipes';
 import { DasPagerComponent } from '../../../core/ui/pager/das-pager.component';
@@ -19,6 +19,8 @@ interface SurveyCounts {
   Draft: number;
   Submitted: number;
   Validated: number;
+  /** Sous-ensemble de `Validated`, pas une case à côté : la somme des onglets dépasse `all`. */
+  ValidatedTemporary: number;
   Rejected: number;
 }
 
@@ -37,10 +39,11 @@ interface SurveyCounts {
  * trancher entre « l'API ne renvoie rien » et « il n'y a rien ». Ici les deux chiffres sont le
  * même jeu de données.
  *
- * **Lecture seule, volontairement.** Valider ou rejeter reste dans la file de validation
- * (`/verification/:surveyId`, vers laquelle chaque relevé soumis renvoie) : y dupliquer les
- * boutons de décision dupliquerait aussi le motif de rejet obligatoire, la confirmation et les
- * codes d'erreur métier, pour deux implémentations qui divergeraient.
+ * **Décisions prises ici, mais jamais réécrites ici.** Un relevé soumis se tranche sans quitter
+ * l'écran, et un validé PROVISOIRE aussi — c'est le seul état validé qui attend encore une
+ * décision, et il n'était soldable nulle part. Les deux passent par `das-survey-decision` : le
+ * motif de rejet obligatoire, la confirmation du gel du `addressCode` et les codes d'erreur
+ * métier n'existent qu'en un seul exemplaire, ici comme dans la file de validation.
  */
 @Component({
   selector: 'das-campaign-surveys',
@@ -65,17 +68,21 @@ export class CampaignSurveysComponent implements OnInit, OnDestroy {
    */
   readonly progress = input<CampaignProgress | null>(null);
 
-  protected readonly statuses: SurveyStatus[] = ['Draft', 'Submitted', 'Validated', 'Rejected'];
+  /**
+   * Ordre des onglets. « Validé (provisoire) » suit immédiatement « Validé » parce qu'il en est
+   * un sous-ensemble : ailleurs dans la liste, il se lirait comme un statut concurrent.
+   */
+  protected readonly filters: CampaignSurveyFilter[] = ['Draft', 'Submitted', 'Validated', 'ValidatedTemporary', 'Rejected'];
 
   protected readonly surveys = toSignal(this.facade.campaignSurveys$, { initialValue: [] as CampaignSurveyItem[] });
   protected readonly counts = toSignal(this.facade.campaignSurveyCounts$, {
-    initialValue: { all: 0, Draft: 0, Submitted: 0, Validated: 0, Rejected: 0 } as SurveyCounts,
+    initialValue: { all: 0, Draft: 0, Submitted: 0, Validated: 0, ValidatedTemporary: 0, Rejected: 0 } as SurveyCounts,
   });
   /**
    * L'onglet actif est lu DANS LE STORE, pas dans un signal local : l'écran hôte le change
    * aussi (clic sur un compteur de l'avancement). Deux sources se seraient désynchronisées.
    */
-  protected readonly status = toSignal(this.facade.campaignSurveyStatus$, { initialValue: null as SurveyStatus | null });
+  protected readonly status = toSignal(this.facade.campaignSurveyStatus$, { initialValue: null as CampaignSurveyFilter | null });
   protected readonly isLoading = toSignal(this.facade.isCampaignSurveysLoading$, { initialValue: false });
 
   protected readonly typeOccupations = toSignal(this.facade.typeOccupationOptions$, { initialValue: [] as OccupationCatalogItem[] });
@@ -162,7 +169,7 @@ export class CampaignSurveysComponent implements OnInit, OnDestroy {
   }
 
   /** Purement local : la liste est déjà là, changer d'onglet ne rappelle pas l'API. */
-  filterStatus(status: SurveyStatus | null): void {
+  filterStatus(status: CampaignSurveyFilter | null): void {
     this.facade.setCampaignSurveyStatus(status);
   }
 
@@ -200,10 +207,20 @@ export class CampaignSurveysComponent implements OnInit, OnDestroy {
   goToPage(page: number): void { this.page.set(page); this.collapse(); }
   setPageSize(size: number): void { this.pageSize.set(size); this.page.set(1); this.collapse(); }
 
+  /**
+   * Clé de libellé d'un onglet. Le provisoire ne suit PAS la règle « statut en minuscules » :
+   * ce n'est pas un statut serveur, et `fieldops.survey.validatedtemporary` n'existe pas.
+   */
+  filterLabelKey(filter: CampaignSurveyFilter): string {
+    return filter === 'ValidatedTemporary'
+      ? 'fieldops.survey.validatedTemporary'
+      : `fieldops.survey.${filter.toLowerCase()}`;
+  }
+
   /** Libellé de l'onglet courant, pour le dire dans le message de liste vide. */
   statusLabelKey(): string {
-    const s = this.status();
-    return s ? `fieldops.survey.${s.toLowerCase()}` : 'fieldops.all';
+    const f = this.status();
+    return f ? this.filterLabelKey(f) : 'fieldops.all';
   }
 
   /**

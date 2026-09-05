@@ -93,6 +93,30 @@ export const ZONES_BASEMAP_GROUP: BasemapLayerGroup = {
 };
 
 /**
+ * Le contour national de Djibouti — le cadre du référentiel, tous écrans confondus.
+ *
+ * ⚠️ **La donnée n'existe pas encore en base au 2026-09-02.** Aucune table ni vue ne porte la
+ * frontière du pays : le référentiel s'arrête aux `Cities` (dont l'emprise est celle de la
+ * ville de Djibouti), et la livraison SIG ne couvre que Djibouti-ville et Balbala. La couche
+ * est déclarée ici pour que le front soit prêt, mais elle restera MUETTE tant que la source
+ * Martin `contour_national` n'est pas publiée — et, comme toute source Martin absente, elle
+ * échoue en SILENCE (même piège que `closes_tiles`, cf. CLOSES_BASEMAP_GROUP).
+ *
+ * Le script d'import et de publication est versionné : `scripts/sig/contour-national.sql`.
+ * Il reste à exécuter contre la base — l'import géo ne se fait JAMAIS depuis le front
+ * (CLAUDE.md §9).
+ *
+ * Visible par défaut : c'est un repère de cadre, pas une couche de travail. Le trait est
+ * tireté et halo-blanc pour ne jamais se confondre avec une limite de quartier ou de bloc.
+ */
+export const COUNTRY_BASEMAP_GROUP: BasemapLayerGroup = {
+  id: 'contour-national',
+  labelKey: 'map.basemap.country',
+  styleLayerIds: ['contour-national-halo', 'contour-national-line'],
+  visible: true,
+};
+
+/**
  * Les codes postaux, en contour et étiquette sur l'emprise du quartier.
  *
  * `Postcode` est calculé DANS la vue (`scripts/sig/vue-quartiers-tiles.sql`), pas ici : le

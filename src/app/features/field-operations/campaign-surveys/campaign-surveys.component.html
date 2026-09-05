@@ -9,9 +9,11 @@
   <button type="button" class="tab" [class.tab--on]="status() === null" (click)="filterStatus(null)">
     {{ 'fieldops.all' | transloco }}<span class="tab__n">{{ counts().all }}</span>
   </button>
-  @for (s of statuses; track s) {
-    <button type="button" class="tab" [class.tab--on]="status() === s" (click)="filterStatus(s)">
-      {{ ('fieldops.survey.' + s.toLowerCase()) | transloco }}<span class="tab__n">{{ counts()[s] }}</span>
+  @for (f of filters; track f) {
+    <!-- « Valide (provisoire) » est un SOUS-ENSEMBLE de « Valide », place juste apres lui :
+         c'est le seul etat qui attend encore une decision, il ne doit pas se noyer. -->
+    <button type="button" class="tab" [class.tab--on]="status() === f" (click)="filterStatus(f)">
+      {{ filterLabelKey(f) | transloco }}<span class="tab__n">{{ counts()[f] }}</span>
     </button>
   }
 </div>
@@ -102,6 +104,34 @@
                  la question restait posee : le back refuse toute decision hors `Submitted`. -->
             <p class="cs__note cs__note--boxed">
               <i class="ti ti-info-circle" aria-hidden="true"></i>{{ 'fieldops.surveys.draftNote' | transloco }}
+            </p>
+          }
+          @case ('Validated') {
+            @if (s.validationType === 'Temporary') {
+              <!-- Un provisoire est le SEUL etat valide qui attend encore une decision : le
+                   laisser sans boutons, c'etait ne jamais pouvoir le solder. Deux issues
+                   seulement (figer / rejeter), portees par le meme composant que la file de
+                   validation — donc les memes garde-fous. Si le serveur refuse la decision
+                   hors `Submitted`, le refus s'affiche dans le bandeau d'erreur en tete de
+                   liste, pas dans un clic sans effet. -->
+              <p class="cs__note cs__note--boxed">
+                <i class="ti ti-info-circle" aria-hidden="true"></i>{{ 'fieldops.surveys.temporaryNote' | transloco }}
+              </p>
+              <das-survey-decision
+                [surveyId]="s.id"
+                [provisional]="true"
+                [deciding]="(facade.isDeciding$(s.id) | async) ?? false"
+                (validate)="onValidate(s.id, $event)"
+                (reject)="onReject(s.id, $event)" />
+            } @else {
+              <p class="cs__note cs__note--boxed">
+                <i class="ti ti-info-circle" aria-hidden="true"></i>{{ 'fieldops.surveys.definitiveNote' | transloco }}
+              </p>
+            }
+          }
+          @case ('Rejected') {
+            <p class="cs__note cs__note--boxed">
+              <i class="ti ti-info-circle" aria-hidden="true"></i>{{ 'fieldops.surveys.rejectedNote' | transloco }}
             </p>
           }
         }

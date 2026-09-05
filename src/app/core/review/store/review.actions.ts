@@ -1,6 +1,6 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { RedoSubmissionType, UUID } from '../../models/das.models';
-import { CampaignSurveyItem, CurrentSurveyItem, ReviewItem, ReviewPhoto, StalledSurveyItem, SurveyStatus, ValidationType } from '../models/review.models';
+import { CampaignSurveyFilter, CampaignSurveyItem, CurrentSurveyItem, ReviewItem, ReviewPhoto, StalledSurveyItem, ValidationType } from '../models/review.models';
 import { ReviewFilters } from './review.state';
 import { OccupationCatalogItem } from '../../reference/models/reference.models';
 
@@ -50,7 +50,7 @@ export const ReviewActions = createActionGroup({
     'Load Campaign Surveys Failure': props<{ errorMessageKey: string }>(),
 
     /** Onglet de statut de l'écran campagne. Pur filtre d'affichage : aucun appel réseau derrière. */
-    'Set Campaign Survey Status': props<{ status: SurveyStatus | null }>(),
+    'Set Campaign Survey Status': props<{ status: CampaignSurveyFilter | null }>(),
 
     /** L'écran campagne se ferme : plus aucune décision ne doit y déclencher de rechargement. */
     'Clear Campaign Surveys': emptyProps(),

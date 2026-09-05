@@ -91,6 +91,21 @@ export type ValidationType = 'Definitive' | 'Temporary';
 export type SurveyStatus = 'Draft' | 'Submitted' | 'Validated' | 'Rejected';
 
 /**
+ * Onglet de la liste des relevés d'une campagne.
+ *
+ * `ValidatedTemporary` n'est PAS un statut serveur : c'est un `Validated` raffiné par
+ * `validationType`. Il existe parce qu'un provisoire attend un recontrôle et se perdait au
+ * milieu des définitifs — le seul état du workflow qui demande une action ultérieure était
+ * aussi le seul qu'aucun filtre ne savait isoler.
+ *
+ * **Sous-ensemble assumé de l'onglet `Validated`**, qui continue de tout compter : le compteur
+ * d'avancement du serveur (`surveysValidated`) ne distingue pas les deux, et un onglet ouvert
+ * depuis ce compteur qui afficherait moins de lignes que le chiffre cliqué serait exactement
+ * le genre d'écart qu'on ne diagnostique pas à l'écran.
+ */
+export type CampaignSurveyFilter = SurveyStatus | 'ValidatedTemporary';
+
+/**
  * Relevé d'une adresse donnée, avec ses photos — c'est la trace du passage de l'agent terrain.
  *
  * Distinct de `SurveyReviewItem` : celui-là est une FILE DE DÉCISION (`?status=Submitted`), ici

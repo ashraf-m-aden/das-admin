@@ -23,7 +23,7 @@ import { Assignment, AssignmentStatus, Block, CampaignBloc, UUID } from '../../.
 import { SurveyStatus } from '../../../core/review/models/review.models';
 import { StaffMember } from '../../../core/staff/models/staff.models';
 import {
-  STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP, CITIES_BASEMAP_GROUP,
+  STREETS_BASEMAP_GROUP, COUNTRY_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP, CITIES_BASEMAP_GROUP,
 } from '../../../core/ui/map/basemap-groups';
 
 /** Palette distincte et stable par agent — même génération de couleur que dans le template (agentColor). */
@@ -67,7 +67,7 @@ export class CampaignDetailComponent implements OnInit, OnDestroy {
    * la seule référence de terrain, et il faut pouvoir la masquer pour lire les contours dessous.
    */
   protected readonly basemapLayers: BasemapLayerGroup[] = [
-    STREETS_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP, CITIES_BASEMAP_GROUP,
+    STREETS_BASEMAP_GROUP, COUNTRY_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP, CITIES_BASEMAP_GROUP,
   ];
   private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);

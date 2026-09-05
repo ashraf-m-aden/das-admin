@@ -1,0 +1,206 @@
+-- Contour national de Djibouti — table + publication Martin (source `contour_national`).
+--
+-- ⚠️ CE SCRIPT NE CRÉE PAS LA GÉOMÉTRIE : il crée la table qui l'accueille et la prépare pour
+-- Martin. La frontière du pays n'existe dans AUCUNE table du référentiel — `Cities."Boundary"`
+-- porte l'emprise de la VILLE de Djibouti, et la livraison SIG du 2026-08-27 s'arrête à
+-- Djibouti-ville + Balbala. Il faut donc l'importer depuis une source externe (§2), ce qui ne
+-- se fait jamais depuis le front (CLAUDE.md §9).
+--
+-- Tant que la table est vide, la couche `contour-national-line` de `map-style.json` reste
+-- MUETTE — sans erreur, comme toute source Martin qui ne résout pas (même piège que
+-- `closes_tiles`, cf. `basemap-groups.ts`). Vérifier avec §4 avant de conclure à un bug du front.
+--
+-- ⚠️ `--platform linux/amd64` : l'image `postgis/postgis` n'a PAS de manifeste arm64. Sans ce
+-- drapeau, un Mac Apple Silicon répond « no matching manifest for linux/arm64/v8 » — ce n'est
+-- ni le tag ni le réseau. Vérifié le 2026-09-02.
+--
+--   docker run --rm -i --platform linux/amd64 --add-host=host.docker.internal:host-gateway \
+--     postgis/postgis:17-3.5 psql "$DB" -v ON_ERROR_STOP=1 -f - < scripts/sig/contour-national.sql
+--
+-- Un contour PRÊT À L'EMPLOI est versionné à côté : `scripts/sig/contour-national-insert.sql`
+-- (OpenStreetMap découpé par le trait de côte, 5 947 points, 21 672 km²). Les deux fichiers
+-- appliqués à la suite suffisent. Pour le RECALCULER — parce que la donnée a grandi hors de
+-- l'emprise, ou parce qu'un tracé officiel arrive : `contour-national-etendre.sql`, qui porte
+-- le pourquoi de chaque choix.
+--
+-- Les deux scripts ont été exécutés contre PostGIS 3.5 le 2026-09-02 : table, index, GRANT,
+-- INSERT, géométrie valide, et rejeu sans doublon.
+
+-- =============================================================================================
+-- 1. La table
+-- =============================================================================================
+-- Nommage en minuscules, comme les autres couches d'origine SIG (`ilots_extension`,
+-- `voierie_extension`) et contrairement aux tables du référentiel en PascalCase quoté : cette
+-- géométrie n'est pas du référentiel, c'est un fond de contexte.
+--
+-- MultiPolygon obligatoire : Djibouti a des îles (archipel des Sept-Frères, Moucha, Maskali).
+-- Un `Polygon` ne les stockerait pas et l'import échouerait — ou pire, les perdrait en silence.
+CREATE TABLE IF NOT EXISTS public.contour_national (
+  ogc_fid   serial PRIMARY KEY,
+  nom       text NOT NULL DEFAULT 'Djibouti',
+  -- Provenance et date : sans elles, personne ne saura dans six mois d'où sort ce tracé ni
+  -- s'il fait autorité. Une frontière est un objet politique, pas une donnée neutre.
+  source    text NOT NULL,
+  importe_le timestamptz NOT NULL DEFAULT now(),
+  geom      geometry(MultiPolygon, 4326) NOT NULL
+);
+
+-- Index spatial : Martin filtre chaque tuile par l'emprise demandée. Sans lui, chaque requête
+-- de tuile fait un seek séquentiel — invisible sur une ligne, pas sur un pan/zoom continu.
+CREATE INDEX IF NOT EXISTS contour_national_geom_idx
+  ON public.contour_national USING GIST (geom);
+
+-- Martin se connecte en lecture seule avec ce rôle (cf. `docker-compose.yml`).
+GRANT SELECT ON public.contour_national TO martin_ro;
+
+-- =============================================================================================
+-- 2. L'import de la géométrie — DÉJÀ FAIT une fois, à refaire pour changer de source
+-- =============================================================================================
+-- Le tracé en place vient d'OpenStreetMap : la relation 192801 DÉCOUPÉE par le trait de côte
+-- OSM, puis rattrapée de 30 m là où quelques bordures mordaient encore sur l'eau. Le détail du
+-- raisonnement — et les trois tracés écartés — sont dans `contour-national-etendre.sql`.
+--
+-- ⚠️ **CRITÈRE D'ACCEPTATION : le contour doit CONTENIR ce que la carte affiche.** C'est ce qui
+-- a fait écarter Natural Earth (58 blocs, 375 adresses dehors : sa côte généralisée passait à
+-- travers Djibouti-ville) puis geoBoundaries humanitaire (28 blocs, 241 adresses). Un cadre qui
+-- exclut une partie de ce qu'il encadre ne cadre rien. Contrôle à rejouer après tout changement
+-- de source OU tout ajout de données :
+--
+--   WITH c AS (SELECT geom FROM public.contour_national LIMIT 1)
+--   SELECT 'Blocs', count(*) FILTER (WHERE NOT ST_Within(b."Boundary", c.geom))
+--   FROM public."Blocs" b, c WHERE b."Boundary" IS NOT NULL;   -- doit valoir 0
+--
+-- Vérifié le 2026-09-02 : 0 dehors sur Blocs, Adresses (polygone ET point), Quartiers, Streets,
+-- `ilots_extension`, `parcelles_codifiees` et les `voierie_*`. Les tables SIG brutes
+-- `delimitations_quartiers` (30/130) et `ilots_codifies` (2/3 700) débordent en mer : elles ne
+-- sont servies par aucune source du style, donc jamais affichées — voir `contour-national-etendre.sql`.
+--
+-- ⚠️ **ODbL : l'attribution est OBLIGATOIRE dès que le contour est affiché.** Elle est portée
+-- par la source du style (`attribution` sur `contourNational` dans `map-style.json`), que le
+-- contrôle d'attribution de MapLibre rend automatiquement. Ne pas retirer ce champ.
+--
+-- QUELLE SOURCE — à trancher par le métier, pas par commodité technique :
+--
+--   a) SOURCE OFFICIELLE DJIBOUTIENNE. À privilégier : c'est le seul tracé opposable pour un
+--      référentiel national d'adresses. À demander au producteur SIG qui a livré les îlots.
+--
+--   b) Source ouverte en attendant — geoBoundaries ADM0 (`DJI`) ou Natural Earth 10m admin_0.
+--
+--      ⚠️ Natural Earth 10m est généralisé (~1:10 000 000) : le tracé est juste à quelques
+--      centaines de mètres près. Acceptable pour un repère de cadre affiché au zoom 6-10,
+--      PAS pour décider qu'une parcelle est dans le pays ou hors du pays. Le champ `source`
+--      existe pour que cette limite reste lisible après coup.
+--
+-- Deux chemins pour la faire entrer. Le 2.B ne demande aucun outil et se colle directement
+-- dans pgAdmin ; le 2.A est plus propre si GDAL est déjà installé.
+
+-- ---------------------------------------------------------------------------------------------
+-- 2.A — avec GDAL   ⚠️ CES TROIS LIGNES SONT DU SHELL, PAS DU SQL.
+-- ---------------------------------------------------------------------------------------------
+-- À taper dans un TERMINAL. Collées dans pgAdmin ou psql, elles répondent
+-- `ERROR: syntax error at or near "ogr2ogr"` (SQLSTATE 42601) : le serveur reçoit du texte
+-- qui n'est pas une requête. C'est attendu, ce n'est pas un problème de droits ni de version.
+--
+--   # Sans GDAL local, la même chose via Docker (monter le dossier du shapefile) :
+--   #   docker run --rm -v "$PWD:/data" ghcr.io/osgeo/gdal:alpine-small-latest \
+--   #     ogr2ogr ...  (mêmes arguments, chemins préfixés par /data/)
+--
+--   ogr2ogr -f PostgreSQL "PG:$DB" ne_10m_admin_0_countries.shp \
+--     -nln public.contour_national_import -nlt MULTIPOLYGON -t_srs EPSG:4326 \
+--     -where "ADM0_A3 = 'DJI'" -overwrite
+--
+-- Puis, CETTE FOIS dans pgAdmin — c'est du SQL :
+--
+--   INSERT INTO public.contour_national (nom, source, geom)
+--   SELECT 'Djibouti', 'Natural Earth 10m admin_0', ST_Multi(ST_MakeValid(wkb_geometry))
+--   FROM public.contour_national_import;
+--
+--   DROP TABLE public.contour_national_import;
+
+-- ---------------------------------------------------------------------------------------------
+-- 2.B — sans GDAL : GeoJSON → SQL par le convertisseur maison   ← CHEMIN RECOMMANDÉ
+-- ---------------------------------------------------------------------------------------------
+-- GDAL n'est pas installé sur le poste de dev, et l'installer (>1 Go de dépendances) pour UN
+-- polygone est disproportionné. `scripts/sig/contour-national-depuis-geojson.py` fait le même
+-- travail avec la seule bibliothèque standard de Python : il lit un GeoJSON, en extrait la
+-- géométrie et écrit l'INSERT ci-dessous, complet.
+--
+--   # 1. récupérer le contour en GeoJSON (geoBoundaries gbOpen ADM0 DJI, ou un export SIG)
+--   # 2. produire le SQL — SHELL, pas pgAdmin :
+--   python3 scripts/sig/contour-national-depuis-geojson.py dji.geojson \
+--     --filtre DJI --remplacer \
+--     --source 'geoBoundaries gbOpen ADM0 DJI, telechargé le 2026-09-02' > contour-insert.sql
+--   # 3. appliquer :
+--   psql "$DB" -v ON_ERROR_STOP=1 -f contour-insert.sql
+--
+-- L'outil refuse un fichier multi-pays sans `--filtre`, et AVERTIT si l'emprise obtenue déborde
+-- de Djibouti — c'est le garde-fou contre le fichier mondial importé en entier, qui donnerait
+-- une carte muette au bon zoom et un contour aberrant au mauvais.
+--
+-- ---------------------------------------------------------------------------------------------
+-- 2.C — repli manuel, si le GeoJSON est déjà réduit à la seule géométrie
+-- ---------------------------------------------------------------------------------------------
+-- Coller l'objet `geometry` — celui qui commence par {"type":"MultiPolygon","coordinates":[[[[
+-- — à la place du gabarit ci-dessous, décommenter, exécuter dans pgAdmin. Le corps est un
+-- littéral texte entre `$json$ … $json$` (dollar-quoting) : les guillemets du JSON ne gênent
+-- pas, rien à échapper.
+--
+-- ⚠️ À réserver aux petits contours : un tracé détaillé fait des dizaines de milliers de
+-- coordonnées, et un collage tronqué produit une géométrie PLAUSIBLE — donc un contour faux,
+-- qui se croit. Le §2.B lit le fichier en entier ou s'arrête.
+--
+--   INSERT INTO public.contour_national (nom, source, geom)
+--   SELECT
+--     'Djibouti',
+--     'geoBoundaries ADM0 DJI',                       -- ← à remplacer par la vraie provenance
+--     -- ST_Multi : accepte un Polygon comme un MultiPolygon sans se poser la question.
+--     -- ST_MakeValid : une frontière exportée s'auto-intersecte souvent d'un poil, et une
+--     -- géométrie invalide fait échouer le découpage en tuiles de Martin, pas l'INSERT.
+--     ST_Multi(ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON($json$
+--       {"type":"MultiPolygon","coordinates":[[[[42.0,11.0],[43.0,11.0],[43.0,12.0],[42.0,11.0]]]]}
+--     $json$), 4326)));
+--
+-- ⚠️ Le gabarit ci-dessus est un TRIANGLE de démonstration, pas Djibouti. Le laisser tel quel
+-- afficherait un contour faux — et un contour faux se croit, contrairement à un contour absent.
+-- Le contrôle §4 le détecte : `points` sera à 4.
+
+-- =============================================================================================
+-- 3. Publication Martin
+-- =============================================================================================
+-- Rien à faire si `auto_publish` est actif sur la connexion PostGIS : Martin publie toute table
+-- géométrique visible par son rôle, sous le nom de la table — d'où la source `contour_national`
+-- attendue par `map-style.json`.
+--
+-- Si la configuration déployée liste ses sources explicitement (cf. `docker/martin/config.yaml`,
+-- `auto_publish: false`), ajouter l'entrée puis redémarrer le conteneur :
+--
+--   tables:
+--     contour_national:
+--       schema: public
+--       table: contour_national
+--       srid: 4326
+--       geometry_column: geom
+--       minzoom: 0
+--       maxzoom: 10
+--       bounds: [41.5, 10.9, 43.5, 12.8]
+--
+-- `maxzoom: 10` est volontaire : un contour de pays n'a rien à raffiner au-delà, et MapLibre
+-- sur-zoome la tuile z10 pour les niveaux supérieurs. Autant de requêtes en moins.
+
+-- =============================================================================================
+-- 4. Contrôles après import
+-- =============================================================================================
+-- Une ligne, une géométrie valide, une emprise qui ressemble à Djibouti (≈ 41.7-43.5 E,
+-- 10.9-12.8 N). Une emprise mondiale = le filtre `-where` n'a pas mordu et tous les pays sont
+-- entrés ; un `false` en validité = géométrie auto-intersectante, à repasser par ST_MakeValid.
+--
+--   SELECT nom, source, importe_le,
+--          ST_IsValid(geom)  AS valide,
+--          ST_NPoints(geom)  AS points,   -- 4 = le gabarit de démonstration du §2.B est resté
+--          Box2D(geom)       AS emprise   -- par ligne : ST_Extent est un agrégat, inutile ici
+--   FROM public.contour_national;
+--
+-- Puis le TileJSON, en direct — une erreur de casse ou de nom échoue SILENCIEUSEMENT côté
+-- carte (CLAUDE.md §4). ⚠️ SHELL, pas SQL, comme le §2.A :
+--
+--   curl -s "$MAP_TILE_URL/contour_national" | head
