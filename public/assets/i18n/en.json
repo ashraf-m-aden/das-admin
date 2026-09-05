@@ -747,7 +747,8 @@
       "sigIlots": "GIS blocks (raw delivery)",
       "sigVoirie": "GIS roads (to import)",
       "zones": "Zones",
-      "postcodes": "Postcodes"
+      "postcodes": "Postcodes",
+      "cities": "Cities"
     }
   },
   "reports": {

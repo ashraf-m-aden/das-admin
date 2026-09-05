@@ -111,6 +111,47 @@ export const POSTCODES_BASEMAP_GROUP: BasemapLayerGroup = {
   visible: false,
 };
 
+/**
+ * Les villes, en contour et étiquette — la seule couche de contexte NATIONAL du panneau.
+ *
+ * Servie par la vue `cities_tiles` (`scripts/sig/vue-cities-tiles.sql`), qui écarte les villes
+ * sans emprise : `Cities."Boundary"` est nullable et l'API crée les villes avec
+ * `boundaryWkt: null`.
+ *
+ * ⚠️ Les emprises sont PROVISOIRES. `Cities` n'avait aucune géométrie jusqu'au 2026-09-04 ;
+ * les 6 villes portent depuis le polygone de RÉGION de la livraison SIG, faute d'emprise
+ * urbaine (`scripts/sig/nour/95_` et `96_`). Dikhil « fait » 6 633 km², Ali Sabieh 2 040 pour
+ * un bourg. Bon pour situer, faux pour mesurer.
+ *
+ * C'est ce qui dicte le dessin : **contour pointillé, pas d'aplat**. Un fill sur un polygone de
+ * région couvrirait tout l'écran dès le zoom 10, sur des écrans qui sont tous cadrés sur
+ * Djibouti-ville. L'étiquette s'arrête à `maxzoom: 13` — au-delà, le nom de la ville n'apprend
+ * plus rien à quelqu'un qui regarde un bloc.
+ *
+ * ⚠️ `cities-line` doit rester AU-DESSUS des aplats dans `map-style.json` (juste avant le premier
+ * calque `symbol`). Placée après `bg` comme au premier jet, elle passait sous `zones-fill`,
+ * `blocs-fill` et `adresses-fill` : le contour était bien chargé, la case cochée, et on ne
+ * voyait rien. Une couche de contour peinte sous des aplats ne lève aucune erreur.
+ *
+ * Le `minzoom: 9` de `streets-major-case` / `streets-major-fill` a été retiré en même temps
+ * (2026-09-04) : on dézoome précisément pour voir une emprise de ville, et les grandes artères
+ * disparaissaient à ce moment-là. Elles suivent désormais la même plage que ce groupe. Sous le
+ * zoom 9 le remplissage blanc est annulé et le casing s'assombrit — blanc sur `#f8f9fa` ne se
+ * lit pas.
+ *
+ * Le contour distingue les villes SANS `Code` (gris clair) de celles qui en ont un (sarcelle) :
+ * 4 des 6 villes n'ont pas encore de code postal, et le vide est une information — même parti
+ * pris que `postcodes-line`.
+ *
+ * Masquée par défaut : sur une carte cadrée sur un quartier, un contour de région est du bruit.
+ */
+export const CITIES_BASEMAP_GROUP: BasemapLayerGroup = {
+  id: 'cities',
+  labelKey: 'map.basemap.cities',
+  styleLayerIds: ['cities-line', 'cities-label'],
+  visible: false,
+};
+
 /* -------------------------------------------------------------------------------------------
  * RETIRÉS DES ÉCRANS le 2026-08-28 — les deux groupes qui suivent ne sont plus proposés dans
  * aucun panneau de couches (tableau de bord, carte des blocs, liste des adresses).
