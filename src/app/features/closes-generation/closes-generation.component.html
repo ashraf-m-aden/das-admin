@@ -95,10 +95,25 @@
               [ngModel]="maxDistanceMeters()"
               (ngModelChange)="maxDistanceMeters.set($event)" />
           </label>
+          <!-- L'ecart entre blocs VOISINS, distinct de la distance a la rue : c'est lui qui
+               coupe un groupe etale. Il partait jusqu'ici a la valeur du back, invisible ici. -->
+          <label>
+            {{ 'closes.generation.maxBlocGap' | transloco }}
+            <input
+              type="number" min="10" max="1000"
+              [ngModel]="maxBlocGapMeters()"
+              (ngModelChange)="maxBlocGapMeters.set($event)" />
+          </label>
           <button type="button" class="btn" (click)="applyParameters()">
             {{ 'closes.generation.recompute' | transloco }}
           </button>
           <p class="muted">{{ 'closes.generation.parametersHint' | transloco }}</p>
+          <!-- Exclusion CONSTANTE, pas un reglage : rattacher une adresse a une piste de desert
+               n'est jamais le resultat voulu. Affichee pour qu'elle ne soit pas invisible. -->
+          <p class="muted">
+            {{ 'closes.generation.excludedPrefixes' | transloco }}
+            <code>{{ prefixesExclus.join(', ') }}</code>
+          </p>
         </div>
       }
 

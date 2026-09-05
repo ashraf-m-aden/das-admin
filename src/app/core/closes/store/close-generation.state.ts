@@ -62,11 +62,30 @@ export interface CloseGenerationState {
   errorMessageKey: string | null;
 }
 
+/**
+ * Réglages envoyés par défaut. **Explicites, et non `{}`.**
+ *
+ * L'écran ne postait que `maxDistanceMeters` : le back appliquait ses propres valeurs pour le
+ * reste, sans que rien à l'écran ne dise lesquelles. C'est la même leçon que `validationType`
+ * sur les relevés — un champ absent laisse le serveur choisir, et le choix ne se voit pas.
+ *
+ * `excludeStreetCodePrefixes` est le correctif des propositions « dispersées » constatées sur
+ * Quartier 7 le 2026-09-05 : `SIG-RT*` sont les routes nationales et `SIG-PI*` les pistes de
+ * désert versées le 2026-09-04. Sans exclusion, **693 blocs sur 5 121** s'y rattachaient, et une
+ * piste traversant un quartier ramassait des blocs sur des kilomètres. Mesuré : les groupes
+ * s'étalant sur plus d'un kilomètre passent de 18 à 8, le pire cas de 2 345 m à 1 803 m.
+ */
+export const PARAMETRES_PAR_DEFAUT: Partial<QuartierClosePlanParameters> = {
+  maxDistanceMeters: 50,
+  maxBlocGapMeters: 100,
+  excludeStreetCodePrefixes: ['SIG-RT1-', 'SIG-RT2-', 'SIG-PI1-', 'SIG-PI2-'],
+};
+
 export const initialCloseGenerationState: CloseGenerationState = {
   progress: [],
   progressStatus: 'idle',
   quartierId: null,
-  parameters: {},
+  parameters: PARAMETRES_PAR_DEFAUT,
   plan: null,
   isPreviewing: false,
   edits: {},

@@ -228,6 +228,8 @@
       "parameters": "Réglages",
       "parametersHint": "Changer un réglage relance la proposition : les corrections en cours sont perdues.",
       "maxDistance": "Distance max. bloc → rue (m)",
+      "maxBlocGap": "Écart max entre blocs voisins (m)",
+      "excludedPrefixes": "Réseau national exclu de l'appariement :",
       "recompute": "Recalculer",
       "statCloses": "Closes proposées",
       "statBlocs": "Blocs rattachés",

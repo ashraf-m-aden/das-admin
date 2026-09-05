@@ -228,6 +228,8 @@
       "parameters": "Settings",
       "parametersHint": "Changing a setting recomputes the proposal: pending edits are lost.",
       "maxDistance": "Max. block to street distance (m)",
+      "maxBlocGap": "Max gap between neighbouring blocks (m)",
+      "excludedPrefixes": "National network excluded from matching:",
       "recompute": "Recompute",
       "statCloses": "Proposed closes",
       "statBlocs": "Attached blocks",

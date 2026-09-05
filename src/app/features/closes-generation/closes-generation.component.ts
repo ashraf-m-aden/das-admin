@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslocoModule } from '@jsverse/transloco';
 import { CloseGenerationFacade } from '../../core/closes/store/close-generation.facade';
+import { PARAMETRES_PAR_DEFAUT } from '../../core/closes/store/close-generation.state';
 import { PageHeaderComponent } from '../../core/layout/page-header/page-header.component';
 import { DasMapComponent } from '../../core/ui/map/das-map.component';
 import { MapFeature, MapLayerConfig } from '../../core/ui/map/map.models';
@@ -78,7 +79,28 @@ export class ClosesGenerationComponent implements OnInit {
   protected readonly search = signal('');
   /** Repli du panneau des réglages : ils ont des défauts sensés, on ne les ouvre que pour les changer. */
   protected readonly showParameters = signal(false);
-  protected readonly maxDistanceMeters = signal(50);
+  protected readonly maxDistanceMeters = signal(PARAMETRES_PAR_DEFAUT.maxDistanceMeters ?? 50);
+  /**
+   * Écart maximal entre deux blocs voisins d'une même close. Le back a son propre défaut, mais
+   * il n'était JAMAIS envoyé : l'écran ne postait que `maxDistanceMeters`, donc personne ne
+   * savait ce qui s'appliquait. Même leçon que `validationType` sur les relevés — un champ
+   * absent laisse le serveur choisir, et le choix ne se voit nulle part.
+   */
+  protected readonly maxBlocGapMeters = signal(PARAMETRES_PAR_DEFAUT.maxBlocGapMeters ?? 100);
+
+  /**
+   * Le réseau NATIONAL n'est pas une voirie de close : `SIG-RT*` sont des routes nationales et
+   * `SIG-PI*` des pistes de désert, 692 tronçons versés le 2026-09-04.
+   *
+   * Sans cette exclusion, l'appariement « bloc → rue la plus proche » les retient : mesuré le
+   * 2026-09-05, **693 blocs sur 5 121** étaient rattachés à une piste ou une nationale, et une
+   * seule piste traversant un quartier ramassait des blocs sur des kilomètres. C'est la cause
+   * des propositions « dispersées » signalées sur Quartier 7.
+   *
+   * Constante et non réglage : rattacher une adresse à une piste de désert n'est jamais le
+   * résultat voulu, il n'y a rien à arbitrer.
+   */
+  protected readonly prefixesExclus = PARAMETRES_PAR_DEFAUT.excludeStreetCodePrefixes ?? [];
   protected readonly selectedProposalKey = signal<string | null>(null);
 
   protected readonly filteredProgress = computed<QuartierCloseProgress[]>(() => {
@@ -139,8 +161,16 @@ export class ClosesGenerationComponent implements OnInit {
     this.facade.selectQuartier(row.quartierId);
   }
 
+  /**
+   * Les trois réglages partent ENSEMBLE et explicitement. L'écran n'envoyait que la distance,
+   * laissant le back décider du reste sans que rien ne le montre à l'écran.
+   */
   protected applyParameters(): void {
-    this.facade.setParameters({ maxDistanceMeters: this.maxDistanceMeters() });
+    this.facade.setParameters({
+      maxDistanceMeters: this.maxDistanceMeters(),
+      maxBlocGapMeters: this.maxBlocGapMeters(),
+      excludeStreetCodePrefixes: this.prefixesExclus,
+    });
   }
 
   protected onFeatureSelect(id: string): void {
