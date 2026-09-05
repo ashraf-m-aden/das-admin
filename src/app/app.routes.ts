@@ -55,6 +55,14 @@ export const routes: Routes = [
         loadChildren: () => import('./features/closes/closes.routes').then((m) => m.closesRoutes),
       },
       {
+        // Écran de reprise : proposer les closes d'un quartier. Sans confirmation tant que la
+        // règle du plafond de 99 adresses n'est pas tranchée — cf. docs/plans/generation-closes.md.
+        path: 'closes-generation',
+        canActivate: [roleGuard(['Admin', 'Superviseur'])],
+        loadChildren: () => import('./features/closes-generation/closes-generation.routes')
+          .then((m) => m.closesGenerationRoutes),
+      },
+      {
         path: 'postcodes',
         canActivate: [roleGuard(['Admin', 'Gestionnaire'])],
         loadChildren: () => import('./features/postcodes/postcodes.routes').then((m) => m.postcodesRoutes),

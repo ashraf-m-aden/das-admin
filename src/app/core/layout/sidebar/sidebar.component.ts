@@ -46,6 +46,9 @@ export class SidebarComponent {
       ],
     },
     { kind: 'link', labelKey: 'nav.closes', path: '/closes', icon: 'ti-vector-triangle', allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
+    // Ecran de reprise, juste apres les closes : meme sujet, vu depuis le travail qui reste
+    // a faire plutot que depuis l'existant.
+    { kind: 'link', labelKey: 'nav.closesGeneration', path: '/closes-generation', icon: 'ti-wand', allowedRoles: ['Admin', 'Superviseur'] },
     { kind: 'link', labelKey: 'nav.verification', path: '/verification', icon: 'ti-checkup-list', allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
     { kind: 'link', labelKey: 'nav.fieldOps', path: '/field-operations', icon: 'ti-users-group', allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
     { kind: 'link', labelKey: 'nav.postcodes', path: '/postcodes', icon: 'ti-mail-code', allowedRoles: ['Admin', 'Gestionnaire'] },

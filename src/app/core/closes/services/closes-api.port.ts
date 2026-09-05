@@ -1,8 +1,9 @@
 import { Observable } from 'rxjs';
 import { UUID } from '../../models/das.models';
 import {
-  AdresseNumbering, Close, CloseListQuery, CloseNumberingPlan, CloseStreetOption,
-  CreateClosePayload, UpdateClosePayload,
+  AdresseNumbering, ApplyQuartierClosesPayload, AppliedQuartierCloses, Close, CloseListQuery,
+  CloseNumberingPlan, CloseStreetOption, CreateClosePayload, QuartierClosePlan,
+  QuartierClosePlanParameters, QuartierCloseProgress, ReviewedClose, UpdateClosePayload,
 } from '../models/closes.models';
 
 export abstract class ClosesApiPort {
@@ -35,4 +36,58 @@ export abstract class ClosesApiPort {
   abstract attachBlocs(id: UUID, blocIds: UUID[], numbering?: AdresseNumbering[]): Observable<Close>;
   /** `DELETE /api/closes/{id}/blocs/{blocId}` — un bloc à la fois. */
   abstract detachBloc(id: UUID, blocId: UUID): Observable<Close>;
+
+  /* ---------------------------------------------------------------------------------------
+   * GÉNÉRATION PAR QUARTIER — écran de reprise.
+   * Trois routes, dans l'ordre d'usage : où en est-on, que propose-t-on, qu'écrit-on.
+   * ------------------------------------------------------------------------------------ */
+
+  /**
+   * `GET /api/quartiers/closes-progress` — avancement de chaque quartier.
+   * Sert la liste d'entrée de l'écran ; ne charge aucune géométrie.
+   */
+  abstract listQuartierProgress(): Observable<QuartierCloseProgress[]>;
+
+  /**
+   * `POST /api/quartiers/{quartierId}/closes/preview` — **n'écrit rien.**
+   * `params` partiel : le back applique ses défauts et renvoie ce qu'il a retenu dans
+   * `plan.parameters`, qui peut donc différer de ce qui a été demandé.
+   *
+   * Le plan renvoyé est VOLONTAIREMENT léger : par close, un compteur d'adresses et un drapeau
+   * de collision, pas le détail des numéros — cf. `previewProposalNumbering`.
+   */
+  abstract previewQuartierCloses(
+    quartierId: UUID,
+    params: Partial<QuartierClosePlanParameters>,
+  ): Observable<QuartierClosePlan>;
+
+  /**
+   * `POST /api/quartiers/{quartierId}/closes/numbering-preview` — **n'écrit rien.**
+   * Plan de numérotation d'une close proposée, à son ouverture. Même forme que
+   * `previewAttachBlocs`, donc le composant de numérotation existant le lit tel quel.
+   *
+   * On envoie la close TELLE QU'ELLE EST à l'écran, pas la clé de la proposition d'origine :
+   * l'opérateur a pu retirer un bloc, en déplacer un depuis une autre proposition ou changer de
+   * rue. Numéroter la proposition d'origine numéroterait autre chose que ce qu'il regarde.
+   *
+   * `reverse` inverse le sens de parcours quand le plan commence par le mauvais bout.
+   */
+  abstract previewProposedCloseNumbering(
+    quartierId: UUID,
+    close: ReviewedClose,
+    reverse: boolean,
+  ): Observable<CloseNumberingPlan>;
+
+  /**
+   * `POST /api/quartiers/{quartierId}/closes` — écrit closes, rattachements et numéros dans UNE
+   * transaction. Prend le plan RELU, jamais un identifiant de plan que le serveur recalculerait.
+   *
+   * Échecs métier à tester par `code` : `Closes.DuplicateAdresseNumero` (plan de numérotation
+   * absent ou incomplet), `Closes.PlanStale` (un bloc a été rattaché entre l'aperçu et la
+   * confirmation) — dans ce dernier cas, relancer l'aperçu et montrer l'écart, pas réessayer.
+   */
+  abstract applyQuartierCloses(
+    quartierId: UUID,
+    payload: ApplyQuartierClosesPayload,
+  ): Observable<AppliedQuartierCloses>;
 }

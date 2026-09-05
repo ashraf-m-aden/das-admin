@@ -1,0 +1,225 @@
+<das-page-header
+  [eyebrow]="'closes.generation.subtitle' | transloco"
+  [title]="'closes.generation.title' | transloco" />
+
+<!--
+  Bandeau permanent, pas un encart qu'on peut manquer : l'écran ne sait pas encore écrire, et
+  quelqu'un qui relit un plan pendant vingt minutes doit le savoir avant de commencer.
+-->
+<div class="banner banner--info">
+  <i class="ti ti-info-circle"></i>
+  <span>{{ 'closes.generation.readOnlyNotice' | transloco }}</span>
+</div>
+
+@if (errorMessageKey(); as errorKey) {
+  <div class="banner banner--error">
+    <i class="ti ti-alert-triangle"></i>
+    <span>{{ errorKey | transloco }}</span>
+  </div>
+}
+
+<div class="layout">
+
+  <!-- ---------- Colonne gauche : par où commencer ---------- -->
+  <aside class="quartiers">
+    <div class="quartiers__search">
+      <i class="ti ti-search"></i>
+      <input
+        type="search"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+        [attr.aria-label]="'closes.generation.searchQuartier' | transloco"
+        [placeholder]="'closes.generation.searchQuartier' | transloco" />
+    </div>
+
+    @if (isProgressLoading()) {
+      <p class="muted">{{ 'common.loading' | transloco }}</p>
+    } @else {
+      <ul class="quartiers__list">
+        @for (row of filteredProgress(); track trackByQuartier($index, row)) {
+          <li>
+            <button
+              type="button"
+              class="quartier"
+              [class.quartier--active]="row.quartierId === quartierId()"
+              (click)="selectQuartier(row)">
+              <span class="quartier__name">{{ row.quartierNom }}</span>
+              <span class="quartier__city">{{ row.cityName }}</span>
+
+              <span class="quartier__counts">
+                <!-- « Reste » d'abord : c'est le seul chiffre qui dit s'il y a du travail. -->
+                <strong>{{ row.blocsRemaining | number }}</strong>
+                <span class="muted">/ {{ row.blocsTotal | number }} {{ 'closes.generation.blocs' | transloco }}</span>
+              </span>
+
+              @if (row.blocsWithoutGeometry > 0) {
+                <span class="chip chip--warn" [title]="'closes.generation.withoutGeometryHint' | transloco">
+                  {{ row.blocsWithoutGeometry }} {{ 'closes.generation.withoutGeometry' | transloco }}
+                </span>
+              }
+              @if (row.closesCount > 0) {
+                <span class="chip">{{ row.closesCount }} {{ 'closes.generation.existingCloses' | transloco }}</span>
+              }
+            </button>
+          </li>
+        } @empty {
+          <li class="muted">{{ 'common.noResults' | transloco }}</li>
+        }
+      </ul>
+    }
+  </aside>
+
+  <!-- ---------- Colonne droite : l'aperçu ---------- -->
+  <section class="preview">
+    @if (!quartierId()) {
+      <p class="placeholder">{{ 'closes.generation.pickQuartier' | transloco }}</p>
+    } @else if (isPreviewing()) {
+      <p class="placeholder">{{ 'closes.generation.computing' | transloco }}</p>
+    } @else if (plan(); as currentPlan) {
+
+      <header class="preview__head">
+        <h2>{{ currentPlan.quartierNom }}</h2>
+
+        <button type="button" class="btn btn--ghost" (click)="showParameters.set(!showParameters())">
+          <i class="ti ti-adjustments"></i>
+          {{ 'closes.generation.parameters' | transloco }}
+        </button>
+      </header>
+
+      @if (showParameters()) {
+        <div class="parameters">
+          <label>
+            {{ 'closes.generation.maxDistance' | transloco }}
+            <input
+              type="number" min="1" max="500"
+              [ngModel]="maxDistanceMeters()"
+              (ngModelChange)="maxDistanceMeters.set($event)" />
+          </label>
+          <button type="button" class="btn" (click)="applyParameters()">
+            {{ 'closes.generation.recompute' | transloco }}
+          </button>
+          <p class="muted">{{ 'closes.generation.parametersHint' | transloco }}</p>
+        </div>
+      }
+
+      @if (summary(); as s) {
+        <div class="summary">
+          <div class="stat">
+            <span class="stat__value">{{ s.closes | number }}</span>
+            <span class="stat__label">{{ 'closes.generation.statCloses' | transloco }}</span>
+          </div>
+          <div class="stat">
+            <span class="stat__value">{{ s.blocs | number }}</span>
+            <span class="stat__label">{{ 'closes.generation.statBlocs' | transloco }}</span>
+          </div>
+          <div class="stat">
+            <span class="stat__value">{{ s.adresses | number }}</span>
+            <span class="stat__label">{{ 'closes.generation.statAdresses' | transloco }}</span>
+          </div>
+          <div class="stat" [class.stat--warn]="s.unassignedBlocs > 0">
+            <span class="stat__value">{{ s.unassignedBlocs | number }}</span>
+            <span class="stat__label">{{ 'closes.generation.statUnassigned' | transloco }}</span>
+          </div>
+          <div class="stat" [class.stat--warn]="s.pendingReview > 0">
+            <span class="stat__value">{{ s.pendingReview | number }}</span>
+            <span class="stat__label">{{ 'closes.generation.statPendingReview' | transloco }}</span>
+          </div>
+        </div>
+      }
+
+      <das-map
+        class="preview__map"
+        [features]="features()"
+        [layers]="mapLayers"
+        [basemapLayers]="basemapLayers"
+        [fitBbox]="fitBbox()"
+        [selectedId]="selectedProposalKey()"
+        (featureSelect)="onFeatureSelect($event)">
+      </das-map>
+
+      <!--
+        Le panneau des non-rattachés vient AVANT la liste des propositions, et il est ouvert.
+        C'est la moitié du résultat : 42 % des blocs n'ont aucune voirie urbaine à proximité.
+      -->
+      @if (currentPlan.unassignedBlocs.length > 0) {
+        <details class="unassigned" open>
+          <summary>
+            <i class="ti ti-alert-triangle"></i>
+            {{ 'closes.generation.unassignedTitle' | transloco: { count: currentPlan.unassignedBlocs.length } }}
+          </summary>
+          <p class="muted">{{ 'closes.generation.unassignedHint' | transloco }}</p>
+          <ul class="unassigned__list">
+            @for (bloc of currentPlan.unassignedBlocs; track bloc.blocId) {
+              <li>
+                <span class="mono">{{ bloc.blocCode }}</span>
+                <span class="chip chip--muted">
+                  {{ 'closes.generation.reason.' + bloc.reason | transloco }}
+                </span>
+                @if (bloc.distanceMeters !== null) {
+                  <span class="muted">{{ bloc.distanceMeters | number: '1.0-0' }} m</span>
+                }
+              </li>
+            }
+          </ul>
+        </details>
+      }
+
+      <h3 class="section-title">{{ 'closes.generation.proposalsTitle' | transloco }}</h3>
+
+      <ul class="proposals">
+        @for (proposal of proposals(); track trackByKey($index, proposal)) {
+          <li>
+            <das-close-proposal-row
+              [proposal]="proposal"
+              [streets]="streets()"
+              [reviewed]="isReviewed(proposal.key)"
+              [selected]="proposal.key === selectedProposalKey()"
+              [numberingOpen]="proposal.key === numberingKey()"
+              (select)="selectedProposalKey.set(proposal.key)">
+            </das-close-proposal-row>
+
+            @if (proposal.key === numberingKey()) {
+              <das-close-numbering-panel [proposalKey]="proposal.key"></das-close-numbering-panel>
+            }
+          </li>
+        } @empty {
+          <li class="muted">{{ 'closes.generation.noProposal' | transloco }}</li>
+        }
+      </ul>
+
+      @if (discarded().length > 0) {
+        <details class="discarded">
+          <summary>{{ 'closes.generation.discardedTitle' | transloco: { count: discarded().length } }}</summary>
+          <ul>
+            @for (proposal of discarded(); track trackByKey($index, proposal)) {
+              <li>
+                <span class="mono">{{ proposal.code }}</span>
+                <span>{{ proposal.streetName ?? proposal.streetCode }}</span>
+              </li>
+            }
+          </ul>
+        </details>
+      }
+
+      <!--
+        Ce qui empêcherait de confirmer est affiché MAINTENANT, même si le bouton n'existe pas :
+        découvrir au moment d'écrire qu'il fallait relire douze plans est le pire moment.
+      -->
+      @if (blockers().length > 0) {
+        <div class="blockers">
+          <h4>{{ 'closes.generation.blockersTitle' | transloco }}</h4>
+          <ul>
+            @for (blocker of blockers(); track blocker) {
+              <li>{{ blocker | transloco }}</li>
+            }
+          </ul>
+        </div>
+      }
+
+      <p class="confirm-placeholder">
+        <i class="ti ti-lock"></i>
+        {{ 'closes.generation.confirmDisabled' | transloco }}
+      </p>
+    }
+  </section>
+</div>
