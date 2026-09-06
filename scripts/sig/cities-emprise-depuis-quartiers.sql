@@ -5,6 +5,10 @@
 --
 -- SQL pur, aucune commande psql : pgAdmin rejette `\set` / `\echo` / `\copy`.
 --
+-- ⚠️ **ORDRE : `contour-national-insert.sql` D'ABORD.** L'emprise est découpée sur le contour
+-- national — sans lui en base, le découpage est simplement sauté (l'emprise reste alors à
+-- cheval sur la mer, cf. § DÉCOUPAGE).
+--
 -- ⚠️ **ESSAI À BLANC : remplacer le `COMMIT;` final par `ROLLBACK;`.** Le rapport s'affiche
 -- quand même, rien n'est écrit. Sauvegarde préalable :
 -- `scripts/sig/nour/backup-cities-avant-2026-09-04.csv`.
@@ -113,6 +117,30 @@ FROM (
         FROM tissu t) a
 ) b;
 
+-- ---------------------------------------------------------------------------------------------
+-- DÉCOUPAGE SUR LE CONTOUR NATIONAL
+-- ---------------------------------------------------------------------------------------------
+-- Une ville ne sort pas de son pays : là où elle atteint la mer, sa limite EST le trait de côte.
+-- Sans ce découpage l'emprise dérivée flottait — mesuré le 2026-09-06 :
+--
+--     0,15 km² de la ville tombaient en MER (hors du contour national) ;
+--     775 m seulement de ses 41,9 km de périmètre suivaient la côte.
+--
+-- La cause est mécanique : la fermeture à 500 m puis la dilatation de 10 m poussent le bord
+-- au-delà des quartiers, donc par-dessus l'eau sur le front de mer. Après découpage : 0 km² en
+-- mer, et **5 013 m** de limite commune avec la côte — la ville s'appuie enfin dessus.
+--
+-- ⚠️ Si `contour_national` est vide — script `contour-national-insert.sql` jamais appliqué —
+-- le `FROM` ne rend aucune ligne, l'`UPDATE` ne touche rien, et l'emprise reste simplement non
+-- découpée. C'est voulu : une intersection avec du NULL aurait EFFACÉ l'emprise de la ville.
+-- `ST_CollectionExtract(…, 3)` : l'intersection d'un polygone et d'un polygone peut rendre une
+-- collection contenant des lignes ou des points là où les bords se frôlent. On ne garde que les
+-- surfaces, sinon `Boundary` refuse la géométrie.
+UPDATE emprise e
+SET g = ST_Multi(ST_CollectionExtract(ST_Intersection(e.g, n.geom), 3))
+FROM (SELECT geom FROM public.contour_national LIMIT 1) n
+WHERE NOT ST_IsEmpty(COALESCE(ST_Intersection(e.g, n.geom), 'POLYGON EMPTY'::geometry));
+
 CREATE TEMP TABLE rapport(ordre int, section text, detail text, valeur text);
 
 INSERT INTO rapport
@@ -128,11 +156,40 @@ FROM emprise e;
 
 -- Garde-fou : une emprise qui exclut un quartier de sa propre ville est un échec, pas un
 -- arrondi. Le rapport le dit avant l'écriture.
+-- Le contrôle porte sur la partie TERRESTRE du quartier. Depuis le découpage, un quartier
+-- dessiné par-dessus l'eau — cela existe sur le front de mer — ne peut plus être entièrement
+-- dans une emprise qui, elle, s'arrête au rivage. Le compter comme « hors emprise » signalerait
+-- un faux défaut du calcul là où le défaut est dans le tracé du quartier.
 INSERT INTO rapport
 SELECT 3, 'controle', e.ville,
+-- Seuil de 100 m² et non égalité stricte : l'emprise et la part terrestre du quartier sont
+-- découpées sur le même contour par deux chemins de calcul différents, et leurs bords ne
+-- coïncident pas au micromètre. Sans tolérance, le contrôle signalerait des échardes de
+-- quelques centimètres carrés — du bruit qui masquerait un vrai quartier oublié.
        (SELECT count(*) FROM public."Quartiers" q
          WHERE q."CityId" = e.city_id AND q."Boundary" IS NOT NULL
-           AND NOT ST_Within(q."Boundary", e.g))::text || ' quartier(s) hors emprise (doit valoir 0)'
+           AND ST_Area(ST_Difference(
+                 COALESCE(ST_CollectionExtract(ST_Intersection(q."Boundary",
+                   (SELECT geom FROM public.contour_national LIMIT 1)), 3), q."Boundary"),
+                 e.g)::geography) > 100)::text || ' quartier(s) hors emprise, part terrestre (doit valoir 0)'
+FROM emprise e;
+
+-- Et le constat séparé : les quartiers qui débordent en mer. C'est une anomalie de tracé, pas
+-- un défaut de l'emprise — mais elle ne doit pas rester invisible.
+INSERT INTO rapport
+SELECT 3, 'quartiers debordant en mer', q."Nom",
+       round((ST_Area(ST_Difference(q."Boundary",
+         (SELECT geom FROM public.contour_national LIMIT 1))::geography))::numeric) || ' m2 sur l eau'
+FROM public."Quartiers" q
+WHERE q."Boundary" IS NOT NULL
+  AND NOT ST_Within(q."Boundary", (SELECT geom FROM public.contour_national LIMIT 1))
+  AND ST_Area(ST_Difference(q."Boundary",
+        (SELECT geom FROM public.contour_national LIMIT 1))::geography) > 100;
+
+INSERT INTO rapport
+SELECT 3, 'controle', e.ville,
+       round((ST_Area(ST_Difference(e.g, (SELECT geom FROM public.contour_national LIMIT 1))::geography)/1e6)::numeric, 3)::text
+       || ' km2 hors du contour national (doit valoir 0)'
 FROM emprise e;
 
 INSERT INTO rapport
