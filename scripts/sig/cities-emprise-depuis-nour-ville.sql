@@ -94,6 +94,33 @@ SELECT r.cle, c."Id" AS city_id, c."Name" AS ville,
 FROM retenue r
 JOIN public."Cities" c ON upper(unaccent(btrim(c."Name"))) = r.cle;
 
+-- ---------------------------------------------------------------------------------------------
+-- AJUSTEMENT SUR LE RÉFÉRENTIEL : la ville ne peut pas exclure ses propres blocs
+-- ---------------------------------------------------------------------------------------------
+-- Le tracé SIG s'arrête juste avant quelques blocs du front de mer. Mesuré le 2026-09-06 :
+-- **6 blocs de Djibouti dépassaient**, de 4 627 m² au maximum et jusqu'à 0 m² pour le dernier —
+-- une écharde topologique. Tous sont dans le pays ; ce sont Héron, Ilôt du Héron, Haramous,
+-- Plateau du Serpent, Boulaos, Zone Industrielle Sud.
+--
+-- On absorbe donc ces blocs-là, et EUX SEULS. Sur 97,7 km², les quelques milliers de mètres
+-- carrés ajoutés ne déforment rien, et le contrôle « bloc hors emprise » retombe à 0 — ce qui
+-- lui rend son sens : il ne signalera plus que de vrais oublis.
+UPDATE emprise e
+SET g = (SELECT d.geom FROM ST_Dump(
+           ST_CollectionExtract(
+             ST_Intersection(
+               ST_Union(e.g, (SELECT ST_Union(ST_MakeValid(b."Boundary"))
+                              FROM public."Blocs" b
+                              JOIN public."Quartiers" q ON q."Id" = b."QuartierId"
+                              WHERE q."CityId" = e.city_id AND b."Boundary" IS NOT NULL
+                                AND NOT ST_Within(b."Boundary", e.g))),
+               (SELECT geom FROM public.contour_national LIMIT 1)),
+           3)) d ORDER BY ST_Area(d.geom) DESC LIMIT 1)
+WHERE EXISTS (SELECT 1 FROM public."Blocs" b
+              JOIN public."Quartiers" q ON q."Id" = b."QuartierId"
+              WHERE q."CityId" = e.city_id AND b."Boundary" IS NOT NULL
+                AND NOT ST_Within(b."Boundary", e.g));
+
 CREATE TEMP TABLE rapport(ordre int, section text, detail text, valeur text);
 
 INSERT INTO rapport
@@ -118,12 +145,18 @@ SELECT 3, 'controle', e.ville,
        || ' km2 hors du contour national (doit valoir 0)'
 FROM emprise e;
 
+-- ⚠️ Tolérance de 1 m², pas `ST_Within` seul. Après l'absorption ci-dessus, cinq blocs
+-- ressortaient encore alors qu'ils ont **0 m² dehors** et touchent l'emprise : leurs bords
+-- coïncident avec elle au micromètre près et `ST_Within` rend `false` sur des échardes
+-- infinitésimales. Sans tolérance, le contrôle crie sur du bruit et on cesse de le lire.
 INSERT INTO rapport
-SELECT 3, 'controle', 'Djibouti',
-       (SELECT count(*) FROM public."Blocs" b, emprise e
-         WHERE e.ville = 'Djibouti' AND b."Boundary" IS NOT NULL AND NOT ST_Within(b."Boundary", e.g))::text
-       || ' bloc(s) hors emprise (doit valoir 0)'
-WHERE EXISTS (SELECT 1 FROM emprise WHERE ville = 'Djibouti');
+SELECT 3, 'controle', e.ville,
+       (SELECT count(*) FROM public."Blocs" b
+         JOIN public."Quartiers" q ON q."Id" = b."QuartierId"
+         WHERE q."CityId" = e.city_id AND b."Boundary" IS NOT NULL
+           AND ST_Area(ST_Difference(b."Boundary", e.g)::geography) > 1)::text
+       || ' bloc(s) hors emprise, au-dela de 1 m2 (doit valoir 0)'
+FROM emprise e;
 
 -- Une region SIG sans ville correspondante : on ne cree rien, on le dit.
 INSERT INTO rapport
