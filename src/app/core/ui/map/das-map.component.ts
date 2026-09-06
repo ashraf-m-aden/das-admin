@@ -10,6 +10,7 @@ import { MapStyleService } from '../../map/map-style.service';
 import {
   MapFeature, MapLayerConfig, TileFeatureStateMap, TileFillColor, TileFilter, TileLayerBinding,
 } from './map.models';
+import { enregistrerIconesPoi } from './poi-icones';
 
 const HIGHLIGHT = '#2563eb';
 const NONE = '___none___';
@@ -238,6 +239,12 @@ export class DasMapComponent implements OnInit, OnDestroy {
     this.resizeObserver.observe(this.mapContainer().nativeElement);
 
     map.on('load', () => {
+      // Les icones des batiments remarquables sont dessinees depuis la police Tabler et
+      // enregistrees ici : sans elles, la couche `poi-icone` du style ne rend RIEN et MapLibre
+      // ne signale rien non plus. Volontairement non attendu — le reste de la carte n'a pas a
+      // patienter apres une police.
+      void enregistrerIconesPoi(map);
+
       // AVANT buildLayers : à ce stade le style ne contient que le fond de carte,
       // aucune de nos couches overlay ne peut être masquée par erreur.
       if (this.basemapRoadsOnly()) this.hideNonRoadBasemapLayers();

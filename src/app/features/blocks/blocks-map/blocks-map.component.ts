@@ -10,7 +10,7 @@ import { HierarchySelection } from '../../../core/hierarchy/models/hierarchy.mod
 import { HierarchyFacade } from '../../../core/hierarchy/store/hierarchy.facade';
 import { HierarchyCascadeComponent } from '../../../core/hierarchy/ui/hierarchy-cascade/hierarchy-cascade.component';
 import {
-  STREETS_BASEMAP_GROUP, COUNTRY_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP, CITIES_BASEMAP_GROUP,
+  STREETS_BASEMAP_GROUP, COUNTRY_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP, POI_BASEMAP_GROUP, CITIES_BASEMAP_GROUP,
 } from '../../../core/ui/map/basemap-groups';
 
 /**
@@ -83,7 +83,7 @@ export class BlocksMapComponent implements OnInit {
 
   /** Voirie + parcelles : couches du style de base, togglables (no-op silencieux en mock). */
   protected readonly basemapLayers: BasemapLayerGroup[] = [
-    STREETS_BASEMAP_GROUP, COUNTRY_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP, CITIES_BASEMAP_GROUP,
+    STREETS_BASEMAP_GROUP, COUNTRY_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP, POI_BASEMAP_GROUP, CITIES_BASEMAP_GROUP,
   ];
 
   onHierarchy(sel: HierarchySelection): void { this.facade.setFilters(sel); }

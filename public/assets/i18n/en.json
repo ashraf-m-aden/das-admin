@@ -832,6 +832,7 @@
       "adresses": "Address points",
       "streets": "Streets",
       "country": "National boundary",
+      "poi": "Notable buildings",
       "closes": "Closes",
       "closeNumbers": "Close house numbers",
       "closeParcels": "Close parcels",

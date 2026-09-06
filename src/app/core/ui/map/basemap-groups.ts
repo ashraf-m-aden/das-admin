@@ -117,6 +117,26 @@ export const COUNTRY_BASEMAP_GROUP: BasemapLayerGroup = {
 };
 
 /**
+ * Bâtiments remarquables d'OpenStreetMap — hôpitaux, écoles, lieux de culte, administrations,
+ * hôtels… 961 relevés le 2026-09-06, servis par la vue `public.poi_tiles`.
+ *
+ * ⚠️ Cette couche ne rend rien sans les images enregistrées par `poi-icones.ts` : MapLibre
+ * cherche un `icon-image` nommé `poi-<categorie>` et, s'il ne le trouve pas, n'affiche RIEN
+ * sans lever d'erreur. Les deux fichiers se tiennent — ajouter une catégorie côté SQL sans
+ * ajouter son icône la rend invisible.
+ *
+ * Masquée par défaut : 961 pastilles par-dessus le bâti chargent la carte, et l'écran des
+ * adresses sert d'abord à travailler les parcelles. Elle n'apparaît qu'à partir du zoom 12,
+ * en dessous les pastilles se recouvrent.
+ */
+export const POI_BASEMAP_GROUP: BasemapLayerGroup = {
+  id: 'poi',
+  labelKey: 'map.basemap.poi',
+  styleLayerIds: ['poi-icone'],
+  visible: false,
+};
+
+/**
  * Les codes postaux, en contour et étiquette sur l'emprise du quartier.
  *
  * `Postcode` est calculé DANS la vue (`scripts/sig/vue-quartiers-tiles.sql`), pas ici : le

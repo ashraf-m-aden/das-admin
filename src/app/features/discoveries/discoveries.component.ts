@@ -13,7 +13,7 @@ import { DasDatePipe } from '../../core/i18n/das-locale.pipes';
 import { DiscoveryReport, DiscoveryStatus } from '../../core/discoveries/models/discoveries.models';
 import { UUID, UserRole } from '../../core/models/das.models';
 import {
-  STREETS_BASEMAP_GROUP, COUNTRY_BASEMAP_GROUP, BLOCS_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP, CITIES_BASEMAP_GROUP,
+  STREETS_BASEMAP_GROUP, COUNTRY_BASEMAP_GROUP, BLOCS_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP, POI_BASEMAP_GROUP, CITIES_BASEMAP_GROUP,
 } from '../../core/ui/map/basemap-groups';
 
 /**
@@ -49,7 +49,7 @@ export class DiscoveriesComponent implements OnInit {
    * la seule référence de terrain, et il faut pouvoir la masquer pour lire les contours dessous.
    */
   protected readonly basemapLayers: BasemapLayerGroup[] = [
-    STREETS_BASEMAP_GROUP, COUNTRY_BASEMAP_GROUP, BLOCS_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP, CITIES_BASEMAP_GROUP,
+    STREETS_BASEMAP_GROUP, COUNTRY_BASEMAP_GROUP, BLOCS_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP, POI_BASEMAP_GROUP, CITIES_BASEMAP_GROUP,
   ];
   private facade = inject(DiscoveriesFacade);
   private authFacade = inject(AuthFacade);

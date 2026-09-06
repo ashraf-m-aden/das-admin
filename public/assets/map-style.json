@@ -100,6 +100,16 @@
       "minzoom": 0,
       "maxzoom": 10,
       "attribution": "Contour national © les contributeurs OpenStreetMap (ODbL)"
+    },
+    "poi": {
+      "type": "vector",
+      "tiles": [
+        "__TILES_BASE_URL__/poi_tiles/{z}/{x}/{y}"
+      ],
+      "minzoom": 0,
+      "maxzoom": 16,
+      "promoteId": "Fid",
+      "attribution": "Bâtiments remarquables © les contributeurs OpenStreetMap (ODbL)"
     }
   },
   "glyphs": "https://tiles.basemaps.cartocdn.com/fonts/{fontstack}/{range}.pbf",
@@ -1214,6 +1224,50 @@
         "text-color": "#0f766e",
         "text-halo-color": "#ffffff",
         "text-halo-width": 2
+      }
+    },
+    {
+      "id": "poi-icone",
+      "type": "symbol",
+      "source": "poi",
+      "source-layer": "poi_tiles",
+      "minzoom": 12,
+      "layout": {
+        "visibility": "none",
+        "icon-image": [
+          "concat",
+          "poi-",
+          [
+            "get",
+            "Categorie"
+          ]
+        ],
+        "icon-size": 1,
+        "icon-allow-overlap": false,
+        "icon-anchor": "bottom",
+        "text-field": [
+          "coalesce",
+          [
+            "get",
+            "Nom"
+          ],
+          ""
+        ],
+        "text-font": [
+          "Noto Sans Regular"
+        ],
+        "text-size": 11,
+        "text-offset": [
+          0,
+          0.4
+        ],
+        "text-anchor": "top",
+        "text-optional": true
+      },
+      "paint": {
+        "text-color": "#0f172a",
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.5
       }
     }
   ]

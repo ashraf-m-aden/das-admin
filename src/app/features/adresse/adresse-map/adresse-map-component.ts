@@ -11,7 +11,7 @@ import { AddressDetailDrawerComponent } from '../address-detail-drawer/address-d
 import { AddressListItem, WORKFLOW_STAGES } from '../../../core/adresse/models/adresse.models';
 import { AddressWorkflowStage } from '../../../core/models/das.models';
 import {
-  STREETS_BASEMAP_GROUP, COUNTRY_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP, CITIES_BASEMAP_GROUP,
+  STREETS_BASEMAP_GROUP, COUNTRY_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP, POI_BASEMAP_GROUP, CITIES_BASEMAP_GROUP,
 } from '../../../core/ui/map/basemap-groups';
 
 const STAGE_COLORS: Record<AddressWorkflowStage, string> = {
@@ -48,7 +48,7 @@ export class AdresseMapComponent implements OnInit {
 
   /** Voirie et contours cadastraux du style de base, pilotables via le panneau des couches. */
   protected readonly basemapLayers: BasemapLayerGroup[] = [
-    STREETS_BASEMAP_GROUP, COUNTRY_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP, CITIES_BASEMAP_GROUP,
+    STREETS_BASEMAP_GROUP, COUNTRY_BASEMAP_GROUP, CLOSES_BASEMAP_GROUP, ADRESSES_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP, POI_BASEMAP_GROUP, CITIES_BASEMAP_GROUP,
   ];
   ngOnInit(): void { this.facade.init(); }
 
