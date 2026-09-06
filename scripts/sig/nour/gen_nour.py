@@ -24,6 +24,32 @@ MAP = [
     ("VILLE (1).sql",      "ville",          "quartiers_ville_pg",    30),
     ("ILOTS.sql",          "ilots",          "ilots_src",             31),
     ("Parcels.sql",        "parcels",        "parcelles_src",         32),
+
+    # --- Livraison du 2026-09-06 : trois villes secondaires ---------------------------------
+    # Six familles x trois villes. Le suffixe du fichier ne dit PAS la ville : l'appariement
+    # ci-dessous a ete etabli en mesurant l'emprise de chaque table apres chargement.
+    #   a = Ali Sabieh    b = Tadjourah    c = Dikhil
+    # Trois fichiers creent tous "public"."batiment_dur", trois autres "public"."piste" et deux
+    # "public"."route" : charges tels quels dans le meme schema, chacun DETRUIT le precedent.
+    # C'est la meme collision que les deux VILLE.sql d'aout.
+    ("Batiment_Dur.sql",             "batiment_dur",               "bat_dur_a",    40),
+    ("Batiment_Dur (1).sql",         "batiment_dur",               "bat_dur_b",    41),
+    ("Batiment_Dur (2).sql",         "batiment_dur",               "bat_dur_c",    42),
+    ("Batiment_Legers.sql",          "batiment_legers",            "bat_legers_a", 43),
+    ("Batiment_Legers (1).sql",      "batiment_legers",            "bat_legers_b", 44),
+    ("Batiment_Legers (2).sql",      "batiment_legers",            "bat_legers_c", 45),
+    ("Batiment_equip_socio.sql",     "batiment_equip_socio",       "bat_socio_a",  46),
+    ("batiment_equip_socio (1).sql", "batiment_equip_socio",       "bat_socio_b",  47),
+    ("Batiment_socio_collec.sql",    "batiment_socio_collec",      "bat_socio_c",  48),
+    ("Batiment_indust_tourism.sql",  "batiment_indust_tourism",    "bat_indus_a",  49),
+    ("batiment_industrie_tourism.sql","batiment_industrie_tourism","bat_indus_b",  50),
+    ("Batiment_indus_tourism.sql",   "batiment_indus_tourism",     "bat_indus_c",  51),
+    ("Route.sql",                    "route",                      "route_a",      52),
+    ("Route (1).sql",                "route",                      "route_b",      53),
+    ("ROUTE_TAJ.sql",                "route_taj",                  "route_taj",    54),
+    ("Piste.sql",                    "piste",                      "piste_a",      55),
+    ("Piste (1).sql",                "piste",                      "piste_b",      56),
+    ("Piste (2).sql",                "piste",                      "piste_c",      57),
 ]
 
 def rewrite(path, old, new):
