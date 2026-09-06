@@ -1,3 +1,8 @@
+-- ⚠️ **REMPLACÉ le 2026-09-06 par `cities-emprise-depuis-nour-ville.sql`**, qui part de la
+-- couche SIG (`nour.quartiers_ville_pg`, colonne `region`) au lieu des quartiers du référentiel.
+-- Décision d'Ashraf : se baser sur la table ville. Ce fichier est conservé parce que sa méthode
+-- reste la bonne le jour où une ville n'aura que des quartiers et aucun polygone SIG.
+--
 -- Emprise des villes recalculée depuis leur tissu réel (quartiers + blocs).
 --
 --   Dans pgAdmin : ouvrir ce fichier et l'exécuter tel quel.
