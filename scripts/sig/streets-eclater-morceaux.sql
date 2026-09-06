@@ -6,6 +6,19 @@
 -- SQL pur, aucune commande psql.
 -- ⚠️ **ESSAI À BLANC : remplacer le `COMMIT;` final par `ROLLBACK;`.**
 --
+-- ═══════════════════════════════════════════════════════════════════════════════════════════
+-- ⛔ REMPLACÉ LE 2026-09-06 PAR `streets-decouper-troncons.sql` — NE PAS JOUER LES DEUX.
+-- ═══════════════════════════════════════════════════════════════════════════════════════════
+-- Ce script ne traite QUE les rues faites de morceaux disjoints. Or le cas signalé par Ashraf
+-- le 2026-09-06 — close `PK-04`, rue `OSM-W101529382`, 39 blocs étalés sur 2 956 m — porte sur
+-- une rue d'UN SEUL morceau, longue de 2 907 m. Le défaut n'est donc pas la disjonction mais
+-- la LONGUEUR, et le multi-morceaux n'en est qu'un cas particulier.
+--
+-- `streets-decouper-troncons.sql` découpe le réseau urbain aux intersections avec un plafond de
+-- 250 m ; il éclate au passage les morceaux disjoints, et couvre donc tout ce que fait celui-ci.
+-- Conservé pour la trace du raisonnement, à ne pas exécuter.
+-- ═══════════════════════════════════════════════════════════════════════════════════════════
+--
 -- ---------------------------------------------------------------------------------------------
 -- LE DÉFAUT, ET D'OÙ IL VIENT
 -- ---------------------------------------------------------------------------------------------
