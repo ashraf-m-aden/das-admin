@@ -1231,9 +1231,9 @@
       "type": "symbol",
       "source": "poi",
       "source-layer": "poi_tiles",
-      "minzoom": 12,
+      "minzoom": 11,
       "layout": {
-        "visibility": "none",
+        "visibility": "visible",
         "icon-image": [
           "concat",
           "poi-",

@@ -125,15 +125,19 @@ export const COUNTRY_BASEMAP_GROUP: BasemapLayerGroup = {
  * sans lever d'erreur. Les deux fichiers se tiennent — ajouter une catégorie côté SQL sans
  * ajouter son icône la rend invisible.
  *
- * Masquée par défaut : 961 pastilles par-dessus le bâti chargent la carte, et l'écran des
- * adresses sert d'abord à travailler les parcelles. Elle n'apparaît qu'à partir du zoom 12,
- * en dessous les pastilles se recouvrent.
+ * VISIBLE par défaut : ces bâtiments sont des repères, pas une couche d'analyse — un hôpital ou
+ * un ministère aide à se situer avant même qu'on cherche quoi que ce soit. Masquée derrière une
+ * case, la couche restait introuvable, comme les boutons « Approuver » avant leur correction.
+ *
+ * Le seuil de zoom fait le travail que le masquage faisait : en dessous du zoom 12, les 961
+ * pastilles se recouvrent et brouillent le bâti. La case du panneau sert à l'ÉTEINDRE quand
+ * elle gêne, pas à la découvrir.
  */
 export const POI_BASEMAP_GROUP: BasemapLayerGroup = {
   id: 'poi',
   labelKey: 'map.basemap.poi',
   styleLayerIds: ['poi-icone'],
-  visible: false,
+  visible: true,
 };
 
 /**
