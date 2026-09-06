@@ -74,11 +74,45 @@ export interface CloseGenerationState {
  * désert versées le 2026-09-04. Sans exclusion, **693 blocs sur 5 121** s'y rattachaient, et une
  * piste traversant un quartier ramassait des blocs sur des kilomètres. Mesuré : les groupes
  * s'étalant sur plus d'un kilomètre passent de 18 à 8, le pire cas de 2 345 m à 1 803 m.
+ *
+ * ---------------------------------------------------------------------------------------------
+ * 2026-09-06 — LA LISTE ÉTAIT INCOMPLÈTE, ET C'ÉTAIT LA CAUSE PRINCIPALE
+ * ---------------------------------------------------------------------------------------------
+ * Elle ne couvrait que les préfixes `SIG-`. Or l'import OSM du réseau national porte des codes
+ * `OSM-ROUTE-*` / `OSM-PISTE-*`, et la voirie SIG un `SIG-VE-*`. Trois axes passaient donc au
+ * travers, dont **`OSM-ROUTE-NATIONALE-1`, longue de 214 km**, et `SIG-VE-00001` de 98 km.
+ *
+ * Sous l'index unique `(quartier, rue)`, une close est TOUTE la façade d'une rue dans un
+ * quartier : **une close hérite de la longueur de sa rue.** Un axe de 214 km ramasse tout ce
+ * qu'il croise à moins de 50 m, sur des kilomètres. C'est là qu'était la close « dispersée ».
+ *
+ * ⚠️ **Ce que le préfixe ne peut pas exprimer.** 13 rues nommées `OSM-<NOM>` sont aussi des axes
+ * interurbains (`OSM-ASSAMO-ALI-ADDE`, 28 km), mais ce préfixe couvre également les rues urbaines
+ * — `OSM-148704475` porte la close `Q7-02`. Les exclure demanderait un plafond de LONGUEUR, que
+ * `QuartierClosePlanParameters` n'expose pas : c'est une évolution à demander au back.
+ *
+ * `maxBlocGapMeters` passe de 100 à **25 m**. Mesuré le 2026-09-06 sur les 7 115 blocs : l'écart
+ * au bloc voisin le plus proche vaut **4,2 m en médiane et 16,6 m au 9ᵉ décile**. Le seuil de
+ * 100 m enjambait donc six fois l'écart courant — il laissait une close franchir une rue entière
+ * et se souder au tissu d'en face. À 25 m il coupe les vraies discontinuités sans casser
+ * l'adjacence normale.
+ *
+ * Effet mesuré des deux corrections réunies, sur Djibouti :
+ *
+ *   solidité médiane (aire / enveloppe convexe)   0,842  →  0,936
+ *   blocs de la plus grosse close                 1 068  →  21
+ *   groupes s'étalant sur plus de 300 m             178  →  100
+ *   closes sans aucune interpénétration       507 / 1 741  →  1 466 / 2 783   (29 % → 53 %)
  */
 export const PARAMETRES_PAR_DEFAUT: Partial<QuartierClosePlanParameters> = {
   maxDistanceMeters: 50,
-  maxBlocGapMeters: 100,
-  excludeStreetCodePrefixes: ['SIG-RT1-', 'SIG-RT2-', 'SIG-PI1-', 'SIG-PI2-'],
+  maxBlocGapMeters: 25,
+  excludeStreetCodePrefixes: [
+    'SIG-RT1-', 'SIG-RT2-', 'SIG-PI1-', 'SIG-PI2-',
+    'SIG-VE-',        // 6 voies, jusqu'à 98 km — voirie SIG hors agglomération
+    'OSM-ROUTE-',     // routes nationales OSM, jusqu'à 214 km
+    'OSM-PISTE-',     // pistes de désert OSM, jusqu'à 62 km
+  ],
 };
 
 export const initialCloseGenerationState: CloseGenerationState = {
