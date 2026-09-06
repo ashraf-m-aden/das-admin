@@ -10,6 +10,24 @@
 -- quand même, rien n'est écrit.
 --
 -- ---------------------------------------------------------------------------------------------
+-- ✅ APPLIQUÉ EN PRODUCTION LE 2026-09-06 — 2 940 voies insérées
+-- ---------------------------------------------------------------------------------------------
+-- Les chiffres cités plus bas datent d'une base à 652 rues (2026-09-02). À l'exécution réelle,
+-- `Streets` en comptait 1 344 — la reprise SIG et les routes nommées étaient passées entre-temps.
+-- Le script recalcule tout ; c'est le commentaire qui était périmé, pas le résultat.
+--
+--   voies OSM du périmètre  5 263      déjà couvertes  1 581      insérées  2 940
+--   Streets                 1 344  →  4 284
+--   blocs de Djibouti ayant une rue à moins de 50 m :  2 958 / 5 121  →  5 101 / 5 121
+--
+-- Le script est IDEMPOTENT (`ON CONFLICT` sur le code) : le rejouer ne duplique rien.
+--
+-- ⚠️ **Ce qu'il ne règle PAS.** 2 885 des 2 940 voies sont anonymes, d'où `Streets` à
+-- 403 nommées sur 4 284. La géométrie ne bloque plus la génération de closes, mais 1 340 des
+-- 1 631 propositions portent désormais un code machine en guise de nom. Le nommage devient le
+-- goulot suivant, et il se traite par saisie humaine — aucun import ne le fournira.
+--
+-- ---------------------------------------------------------------------------------------------
 -- POURQUOI CE SECOND PASSAGE OSM
 -- ---------------------------------------------------------------------------------------------
 -- `routes-osm-vers-streets.sql` filtrait sur `["name"]` et a ramené 190 rues. Constat d'Ashraf
