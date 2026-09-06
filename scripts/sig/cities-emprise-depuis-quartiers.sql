@@ -192,6 +192,13 @@ SELECT 3, 'controle', e.ville,
        || ' km2 hors du contour national (doit valoir 0)'
 FROM emprise e;
 
+-- La colonne ne peut porter qu'un polygone : si l'emprise en compte plusieurs, les suivantes
+-- seront écartées à l'écriture. Le dire AVANT, pas après.
+INSERT INTO rapport
+SELECT 3, 'controle', e.ville,
+       (ST_NumGeometries(e.g) - 1) || ' partie(s) ecartee(s) — la colonne Boundary est un Polygon simple'
+FROM emprise e WHERE ST_NumGeometries(e.g) > 1;
+
 INSERT INTO rapport
 SELECT 4, 'inchangee', c."Name", 'aucun quartier avec emprise — polygone de region conserve'
 FROM public."Cities" c
@@ -210,7 +217,17 @@ GROUP BY q."Nom";
 -- Seule l'écriture qui suit est dans la transaction.
 BEGIN;
 
-UPDATE public."Cities" c SET "Boundary" = e.g FROM emprise e WHERE e.city_id = c."Id";
+-- ⚠️ `Cities."Boundary"` est un **POLYGON simple**, pas un MultiPolygon — comme `Quartiers` et
+-- `Blocs` ; seul `contour_national` est multi. Écrire un `ST_Multi(...)` ici échoue net :
+-- « Geometry type (MultiPolygon) does not match column type (Polygon) ». Rencontré le
+-- 2026-09-06, et le test en conteneur ne l'avait PAS vu parce qu'il recréait la table de
+-- mémoire, avec le mauvais type. Une reconstitution de schéma n'est pas une vérification.
+--
+-- On écrit donc la plus grande partie. Les autres seraient perdues en silence : le rapport les
+-- compte juste au-dessus, et c'est le seul endroit où l'on peut s'en apercevoir.
+UPDATE public."Cities" c
+SET "Boundary" = (SELECT d.geom FROM ST_Dump(e.g) d ORDER BY ST_Area(d.geom) DESC LIMIT 1)
+FROM emprise e WHERE e.city_id = c."Id";
 
 -- Remplacer par ROLLBACK pour un essai à blanc.
 COMMIT;
