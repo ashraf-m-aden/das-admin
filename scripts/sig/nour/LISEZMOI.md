@@ -229,6 +229,49 @@ Confronté à `public."Blocs"` (7 115) :
 La livraison **ne réécrit donc pas le référentiel, elle l'étend** : mêmes géométries pour ce qui
 existe, +1 877 îlots là où Balbala est sous-couvert.
 
+#### ✅ Versé dans `Blocs` le 2026-09-08 — `99_blocs_depuis_ilots_complet.sql`
+
+**`Blocs` : 7 115 → 8 963.** Djibouti-ville passe de 5 121 à 6 969 blocs. Aucun `UPDATE` : que
+des lignes nouvelles. Contrôles après écriture : 0 code dupliqué, 0 géométrie invalide, 0 bloc
+sans géométrie.
+
+Sur les 1 877 candidats, **1 848 insérés** et 29 écartés :
+
+| Écarté | Nombre | Pourquoi |
+|---|---:|---|
+| `SANS NOM`, `SANS NOM (ID9/ID15/ID112)` | 27 | Pas de quartier correspondant ; le nom livré n'en désigne aucun |
+| `BALBALA-Q11-DM`, `BALBALA-CITE C OUSMAN-Z` | 2 | Trop morcelés — voir ci-dessous |
+
+**⚠️ `Blocs."Boundary"` est un POLYGON simple**, la livraison des MULTIPOLYGON : même piège que
+`Cities."Boundary"` le 2026-09-06. 1 839 des 1 877 îlots n'ont qu'un morceau ; 38 en ont 2 ou 3.
+Pour ces 38, ne garder que le plus grand coûte 5 900 m² au total, 1,9 % en médiane — accepté, et
+compté au rapport. Mais deux cas perdraient **47,7 %** et **23,7 %** : ils sont écartés plutôt que
+mutilés en silence. À arbitrer — les scinder en deux blocs, ou passer la colonne en MultiPolygon.
+
+**Le rattachement au quartier se fait par le NOM, pas par la géométrie.** C'est délibéré :
+`code_ilot` contient le nom du quartier (`BOULAOS-Ambouli-A`), donc un rattachement géométrique
+produirait des lignes dont le `Code` contredit le `QuartierId`. Six alias d'écriture sont
+appliqués, chacun confirmé par la géométrie :
+
+| Livré | Référentiel | Îlots |
+|---|---|---:|
+| `BALBALA Q5` | `BALBALA Q 5` | 157 |
+| `CHEICK MOUSSA` | `Cheik Moussa` | 92 |
+| `WAHLADABA S.` | `Wahladaba Sud` | 83 |
+| `CITE C OUSMAN` | `Cité Cheikh Osman` | 31 |
+| `LOT. HAYABLEH` | `HAYABLEH` | 23 |
+| `Einguela 2` | `Einguela` | 1 |
+
+**Le contrôle géométrique laisse un écart connu** : sur les 1 194 îlots dont le quartier cible a
+une emprise, 1 050 y tombent bien, 144 non. Deux causes distinctes, mesurées avant l'écriture :
+528 îlots ne tombent dans **aucun** polygone de quartier (les emprises de `Quartiers` ne couvrent
+pas tout Balbala), et sur les 1 349 couverts, 656 désignent un quartier différent du nom livré —
+`T3` tombe dans `BALBALA Q11`, `QUARAWIL` dans `Pompage`, `LOT. HAYABLEH` dans `Cheik Moussa`.
+
+> **À arbitrer avec l'expert SIG** : lequel fait foi, l'attribut `quartier_ville` de la livraison
+> ou le découpage de `delimitations_quartiers` ? Les deux viennent de la même maison et se
+> contredisent sur un tiers des cas.
+
 Onze `quartier_ville` sont inconnus du référentiel, mais **sept ne sont que des variantes
 d'écriture** — `CHEICK MOUSSA`/`Cheik Moussa`, `WAHLADABA S.`/`Wahladaba Sud`, `LOT. HAYABLEH`/
 `HAYABLEH`, `Einguela 1` et `2`/`Einguela`, `CITE C OUSMAN`/`Cité Cheikh Osman`, `BALBALA Q5`.
