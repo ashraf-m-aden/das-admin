@@ -176,3 +176,100 @@ Les 692 tronçons sont **anonymes**, et le resteront tant que personne ne les no
 champ texte de la source, `id_`, porte la couleur du crayon du cartographe (`magenta0`,
 `noir282`). `Streets` passe donc de 249 à 941 lignes sans nom sur 1 344. Utilisables comme
 géométrie de voirie ; **inutilisables pour adresser** tant qu'ils n'ont pas d'identité.
+
+---
+
+## Livraison du 2026-09-08 — équipements de Djibouti-ville + îlots codifiés
+
+Cinq fichiers, chargés dans `nour` le 2026-09-08. Ajouts seuls, aucune écriture dans `public`.
+
+| Fichier source | Table `nour` | Lignes | Verdict |
+|---|---|---:|---|
+| `ilots_complete.sql` | `ilots_complet` | 6 932 | **Exploitable** — codifié, aligné sur le référentiel |
+| `Mosquėe.sql` | `mosquees` | 165 | ⛔ Mal géoréférencé |
+| `Hôtel.sql` | `hotels` | 29 | ⛔ Mal géoréférencé |
+| `Banque.sql` | `banques` | 20 | ⛔ Mal géoréférencé |
+| `Bureau_poste_(PTT).sql` | `bureaux_poste` | 5 | ⛔ Mal géoréférencé |
+
+### ⚠️ Trois pièges de ce lot
+
+**1. Noms de table en octets invalides.** `Mosquée` et `Hôtel` arrivent comme
+`mosqu\xe4\x97e` et `h\xe3\xb4tel` : le producteur a appliqué une mise en minuscules **octet par
+octet** sur de l'UTF-8, ce qui a détruit l'octet de tête (`\xc3`→`\xe3`, `\xc4`→`\xe4`). Aucun
+encodage ne les décode. `gen_nour.py` les déclare donc en `bytes` littéraux et les renomme en
+ASCII. `bureau_poste_(ptt)` porte en plus des parenthèses dans l'identifiant.
+
+**2. SRID déclaré à 0.** Les quatre fichiers d'équipements appellent
+`AddGeometryColumn(...,0,...)`. `90_post.sql` reprojette d'après `geometry_columns` et
+`ST_Transform` échoue sur un SRID inconnu. Le générateur corrige la déclaration dans le dump.
+`ilots_complete` déclare correctement 32638.
+
+**3. ⛔ `90_post.sql` était cassé depuis le 2026-09-06.** Les dumps GDAL déclarent la colonne en
+2D mais y écrivent des géométries **3D** — toute la livraison du 6 septembre, à 100 % des lignes.
+L'`ALTER` échouait sur « Geometry has Z dimension but column does not », et comme le `DO`
+s'arrête à la première erreur, **aucune table du lot n'avait été reprojetée**. La panne est restée
+invisible parce que les scripts de reprise transformaient eux-mêmes leurs géométries. Corrigé par
+`ST_Force2D`, et les 23 tables concernées sont passées en 4326.
+
+### `ilots_complet` — la pièce utile
+
+6 932 îlots **codifiés** (`code_ilot`, `quartier_ville`, `commune_ville`, `lettre_ilot`), là où
+`ilots_src` (3 701) n'avait aucun code. Répartition : BALBALA 4 010, BOULAOS 2 692, RAS DIKA 230.
+
+Confronté à `public."Blocs"` (7 115) :
+
+| | |
+|---|---:|
+| Codes communs | **5 055** |
+| dont géométrie **identique** au bit près | **4 972** |
+| dont géométrie différente (écart d'aire moyen : 0,0 m²) | 83 |
+| Codes **nouveaux** | **1 877** — dont 1 786 à Balbala |
+| Blocs absents de la livraison | 2 060 — soit les 1 994 des trois villes secondaires, hors périmètre, + 66 |
+
+La livraison **ne réécrit donc pas le référentiel, elle l'étend** : mêmes géométries pour ce qui
+existe, +1 877 îlots là où Balbala est sous-couvert.
+
+Onze `quartier_ville` sont inconnus du référentiel, mais **sept ne sont que des variantes
+d'écriture** — `CHEICK MOUSSA`/`Cheik Moussa`, `WAHLADABA S.`/`Wahladaba Sud`, `LOT. HAYABLEH`/
+`HAYABLEH`, `Einguela 1` et `2`/`Einguela`, `CITE C OUSMAN`/`Cité Cheikh Osman`, `BALBALA Q5`.
+Les quatre autres sont des `SANS NOM (IDnn)`, 27 îlots au total. **Aucun quartier réellement
+nouveau.**
+
+### ⛔ Les quatre couches d'équipements sont inutilisables en l'état
+
+Deux défauts rédhibitoires, indépendants l'un de l'autre.
+
+**Aucun attribut.** `name` et `classify` sont **vides sur les 219 lignes**. Ces couches ne portent
+que des empreintes de bâtiment ; leur seule sémantique est le nom du fichier. Impossible de
+nommer une mosquée ou un hôtel à partir de là.
+
+**Géoréférencement faux d'environ 97,5 km.** Interprétées en UTM 38N — la projection de toutes
+les autres couches du lot — elles tombent à **lon 42,17–42,27**, en plein désert, alors que
+Djibouti-ville est à **43,07–43,19**. Zéro des 219 empreintes n'intersecte une parcelle ou un bloc.
+
+Ce n'est pas une erreur de projection : l'étendue a la bonne taille (0,097° × 0,087° contre
+0,100° × 0,074° pour la ville) et la latitude est juste. C'est une **translation en longitude**,
+et aucune projection standard ne l'explique — ni UTM 37N, ni un décalage de false easting rond.
+
+Un calage empirique par balayage donne un optimum à **dx = +97 500 m, dy = +250 m**, qui place
+110 des 165 mosquées dans un bloc. Le signal est réel (les blocs ne couvrent que 16,9 km² sur les
+97,8 km² de la ville, donc le hasard donnerait ~17 %), mais **67 % n'est pas un recalage
+certifiable**. Ce décalage n'a pas été appliqué : corriger une géométrie par une constante devinée
+introduirait une erreur silencieuse dans le référentiel.
+
+> **À demander à l'expert SIG** : le système de coordonnées source des quatre fichiers
+> d'équipements, et une réexport avec `name`/`classify` renseignés.
+
+### Comparaison avec les POI OpenStreetMap du 2026-09-06
+
+`nour.poi_osm` couvre les mêmes thèmes, avec des noms, et correctement géoréférencé :
+
+| Thème | SIG 2026-09-08 | OSM 2026-09-06 |
+|---|---:|---:|
+| Lieux de culte | 165 (sans nom) | 176 |
+| Hébergement | 29 (sans nom) | 63 |
+| Finance / banques | 20 (sans nom) | 24 |
+| Administration / poste | 5 (sans nom) | 94 |
+
+Tant que la livraison SIG n'est pas corrigée, **OSM reste la seule source exploitable** pour ces
+équipements.

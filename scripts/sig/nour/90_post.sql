@@ -19,8 +19,15 @@ BEGIN
     WHERE  f_table_schema = 'nour' AND srid <> 4326
   LOOP
     RAISE NOTICE 'reprojection nour.% (% -> 4326)', r.t, r.srid;
+    -- ⚠️ ST_Force2D est OBLIGATOIRE. Les dumps GDAL declarent la colonne en 2D
+    -- (`AddGeometryColumn(...,2)`) mais y ecrivent des geometries 3D : toute la
+    -- livraison du 2026-09-06 est dans ce cas, a 100 % des lignes. L'ALTER echoue
+    -- alors sur « Geometry has Z dimension but column does not », et comme le DO
+    -- s'arrete a la premiere erreur, AUCUNE table du lot n'est reprojetee — panne
+    -- restee invisible jusqu'au 2026-09-08, les scripts de reprise transformant
+    -- eux-memes leurs geometries.
     EXECUTE format(
-      'ALTER TABLE nour.%I ALTER COLUMN %I TYPE geometry(%s,4326) USING ST_Transform(%I,4326)',
+      'ALTER TABLE nour.%I ALTER COLUMN %I TYPE geometry(%s,4326) USING ST_Transform(ST_Force2D(%I),4326)',
       r.t, r.g, r.gtype, r.g);
   END LOOP;
 END $$;
