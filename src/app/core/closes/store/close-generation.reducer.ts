@@ -129,6 +129,29 @@ export const closeGenerationFeature = createFeature({
       ...s, reviewedKeys: s.reviewedKeys.includes(key) ? s.reviewedKeys : [...s.reviewedKeys, key],
     })),
 
+    /* -- confirmation ----------------------------------------------------------------------- */
+
+    on(CloseGenerationActions.apply, (s) => ({ ...s, isApplying: true, errorMessageKey: null })),
+
+    // Le plan est VIDÉ après écriture : les propositions viennent d'être créées, les réafficher
+    // inviterait à les recréer. L'écran retombe sur la liste des quartiers, avec le bilan.
+    on(CloseGenerationActions.applySuccess, (s, { closesCreated, blocsAttached, adressesRenumbered }) => ({
+      ...s,
+      isApplying: false,
+      applied: { closesCreated, blocsAttached, adressesRenumbered },
+      plan: null,
+      edits: {},
+      discardedKeys: [],
+      reviewedKeys: [],
+      numberingKey: null,
+      numbering: null,
+      numberingEdits: {},
+    })),
+
+    on(CloseGenerationActions.applyFailure, (s, { errorMessageKey }) => ({
+      ...s, isApplying: false, errorMessageKey,
+    })),
+
     on(CloseGenerationActions.clearError, (s) => ({ ...s, errorMessageKey: null })),
   ),
 });

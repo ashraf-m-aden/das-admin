@@ -3,8 +3,6 @@
     "dashboard": "Tableau de bord",
     "adresse": "Registre des adresses",
     "gis": "SIG & Cartographie",
-    "gisMap": "Carte",
-    "gisBoundaries": "Limites",
     "fieldOps": "Opérations terrain",
     "verification": "File de vérification",
     "postcodes": "Codes postaux",
@@ -272,11 +270,9 @@
       "blockersTitle": "Ce qui empêcherait d'enregistrer",
       "blockerNoProposal": "Aucune close à créer.",
       "blockerPendingReview": "Des plans de numérotation n'ont pas été relus.",
-      "blockerOverCap": "Des closes dépassent 99 adresses.",
       "blockerDuplicateCode": "Deux closes portent le même code.",
       "blockerDuplicateNumber": "Deux closes portent le même numéro.",
       "blockerDuplicateStreet": "Deux closes portent la même rue.",
-      "confirmDisabled": "L'enregistrement est désactivé tant que la règle du plafond de 99 adresses n'est pas tranchée.",
       "errorQuartierNotFound": "Quartier introuvable. Rechargez la page.",
       "errorBlocNotFound": "Un bloc du plan a disparu. Relancez la proposition.",
       "errorProposalGone": "Cette proposition n'existe plus. Relancez la proposition.",
@@ -296,7 +292,13 @@
       "ordering": {
         "StreetLine": "Ordre suivant le tracé de la rue",
         "ParcelCloud": "Ordre estimé sur les parcelles"
-      }
+      },
+      "apply": "Confirmer et créer les closes",
+      "applying": "Création en cours…",
+      "applyHint": "{{count}} close(s) seront créées, avec le rattachement des blocs et la renumérotation des parcelles.",
+      "applyConfirm": "Créer {{count}} close(s) ? Les blocs seront rattachés et les parcelles renumérotées. Cette action ne s'annule pas depuis cet écran.",
+      "appliedSummary": "{{closes}} close(s) créée(s), {{blocs}} bloc(s) rattaché(s), {{adresses}} parcelle(s) renumérotée(s).",
+      "errorNothingToApply": "Aucune proposition à confirmer."
     }
   },
   "discoveries": {

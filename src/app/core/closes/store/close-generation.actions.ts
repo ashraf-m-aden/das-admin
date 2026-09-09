@@ -54,6 +54,20 @@ export const CloseGenerationActions = createActionGroup({
     /** Marque la proposition comme relue — condition de la confirmation. */
     'Mark Reviewed': props<{ key: string }>(),
 
+    /* -- confirmation ---------------------------------------------------------------------- */
+
+    /**
+     * Écrit le plan RELU : closes, rattachement des blocs et renumérotation, dans une seule
+     * transaction côté back. C'est la seule action de cet écran qui écrit quoi que ce soit.
+     *
+     * On envoie les closes TELLES QU'ELLES SONT à l'écran, corrections comprises — jamais une clé
+     * de proposition que le serveur recalculerait : entre l'aperçu et la confirmation, une rue a
+     * pu changer et des blocs bouger.
+     */
+    'Apply': emptyProps(),
+    'Apply Success': props<{ closesCreated: number; blocsAttached: number; adressesRenumbered: number }>(),
+    'Apply Failure': props<{ errorMessageKey: string }>(),
+
     'Clear Error': emptyProps(),
   },
 });

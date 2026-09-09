@@ -7,6 +7,7 @@ import { CloseGenerationActions } from './close-generation.actions';
 import { closeGenerationFeature } from './close-generation.reducer';
 import { selectProposals } from './close-generation.selectors';
 import { ClosesApiPort } from '../services/closes-api.port';
+import { ReviewedClose } from '../models/closes.models';
 import { ErrorKeyMap, toErrorKey } from '../../http/error-code';
 
 /**
@@ -113,5 +114,55 @@ export class CloseGenerationEffects {
       map((updated) => CloseGenerationActions.renameStreetSuccess({ street: updated })),
       catchError((err) => of(CloseGenerationActions.renameStreetFailure({ errorMessageKey: toKey(err) }))),
     )),
+  ));
+
+  /**
+   * La confirmation. Relit l'état plutôt que de le recevoir en payload (CLAUDE.md §4) : les
+   * propositions corrigées et les plans de numérotation relus sont déjà dans le store, et les
+   * embarquer dans l'action risquerait d'écrire autre chose que ce qui est affiché.
+   *
+   * ⚠️ `numbering` est OBLIGATOIRE dès que la close porte des numéros en double, et le back refuse
+   * un plan partiel plutôt que de le compléter. On envoie donc le plan COMPLET de chaque close
+   * relue ; pour les autres, `null` — le back n'en a pas besoin.
+   */
+  apply$ = createEffect(() => this.actions$.pipe(
+    ofType(CloseGenerationActions.apply),
+    concatLatestFrom(() => [
+      this.store.select(closeGenerationFeature.selectQuartierId),
+      this.store.select(selectProposals),
+      this.store.select(closeGenerationFeature.selectNumbering),
+    ]),
+    switchMap(([, quartierId, proposals, numbering]) => {
+      if (!quartierId || proposals.length === 0) {
+        return of(CloseGenerationActions.applyFailure({
+          errorMessageKey: 'closes.generation.errorNothingToApply',
+        }));
+      }
+
+      const closes: ReviewedClose[] = proposals.map((p) => ({
+        streetId: p.streetId,
+        number: p.number,
+        code: p.code,
+        blocIds: p.blocs.map((b) => b.id),
+        numbering: numbering && numbering.closeCode === p.code
+          ? numbering.adresses.map((a) => ({ adresseId: a.adresseId, numero: a.proposedNumero }))
+          : null,
+      }));
+
+      return this.api.applyQuartierCloses(quartierId, { closes }).pipe(
+        map((applied) => CloseGenerationActions.applySuccess({
+          closesCreated: applied.closesCreated,
+          blocsAttached: applied.blocsAttached,
+          adressesRenumbered: applied.adressesRenumbered,
+        })),
+        catchError((err) => of(CloseGenerationActions.applyFailure({ errorMessageKey: toKey(err) }))),
+      );
+    }),
+  ));
+
+  /** Après écriture, on recharge : l'avancement des quartiers et le plan ont changé. */
+  reloadAfterApply$ = createEffect(() => this.actions$.pipe(
+    ofType(CloseGenerationActions.applySuccess),
+    map(() => CloseGenerationActions.loadProgress()),
   ));
 }

@@ -12,14 +12,12 @@ import { CloseStreetOption, QuartierClosePlanParameters } from '../models/closes
 /**
  * Façade de l'écran de génération des closes.
  *
- * ⚠️ **Pas de confirmation ici.** L'écriture (`applyQuartierCloses`) n'est volontairement pas
- * exposée tant que la règle du plafond de 99 adresses par close n'est pas tranchée : elle entre
- * en conflit avec l'index unique (quartier, rue), qui interdit de découper une rue desservant
- * plus de 99 adresses. 56 closes sur 531 sont concernées. Voir `docs/plans/generation-closes.md`.
+ * ⚠️ **`apply()` est la SEULE méthode qui écrit.** Tout le reste n'appelle que des routes
+ * d'aperçu. Elle a été ouverte le 2026-09-09, la règle du plafond de 99 adresses ayant été
+ * tranchée le 2026-09-06 : le plafond peut être dépassé, il n'est donc plus un verrou.
  *
- * Tout le reste de l'écran fonctionne, et n'appelle que des routes qui n'écrivent rien.
- * `selectBlockers` calcule déjà ce qui empêcherait de confirmer, pour que l'écran le dise
- * maintenant plutôt qu'au moment d'écrire.
+ * `selectBlockers` calcule ce qui empêcherait de confirmer, pour que l'écran le dise avant, pas
+ * au moment d'écrire.
  */
 @Injectable({ providedIn: 'root' })
 export class CloseGenerationFacade {
@@ -38,6 +36,8 @@ export class CloseGenerationFacade {
   discardedProposals$ = this.store.select(selectDiscardedProposals);
   summary$ = this.store.select(selectReviewSummary);
   blockers$ = this.store.select(selectBlockers);
+  isApplying$ = this.store.select(closeGenerationFeature.selectIsApplying);
+  applied$ = this.store.select(closeGenerationFeature.selectApplied);
   reviewedKeys$ = this.store.select(closeGenerationFeature.selectReviewedKeys);
 
   numberingKey$ = this.store.select(closeGenerationFeature.selectNumberingKey);
@@ -102,4 +102,12 @@ export class CloseGenerationFacade {
   closeNumbering(): void { this.store.dispatch(CloseGenerationActions.closeNumbering()); }
   markReviewed(key: string): void { this.store.dispatch(CloseGenerationActions.markReviewed({ key })); }
   clearError(): void { this.store.dispatch(CloseGenerationActions.clearError()); }
+
+  /**
+   * Écrit le plan relu. Sans argument : l'effet relit l'état — corrections et numérotation
+   * comprises — plutôt que de recevoir un payload qui pourrait diverger de l'affichage.
+   */
+  apply(): void {
+    this.store.dispatch(CloseGenerationActions.apply());
+  }
 }

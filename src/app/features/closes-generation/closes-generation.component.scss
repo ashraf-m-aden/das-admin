@@ -257,16 +257,49 @@
   ul { margin: 0; padding-left: v.$space-5; font-size: v.$font-size-sm; }
 }
 
-.confirm-placeholder {
+/* La confirmation — seule action ecrivante de l'ecran, d'ou le bouton plein et l'intitule
+   explicite plutot qu'un simple « Valider ». */
+.confirm {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: v.$space-2 v.$space-3;
+  padding: v.$space-3 v.$space-4;
+  border: 1px solid var(--color-border);
+  border-radius: v.$radius-md;
+  background: var(--color-surface);
+
+  &__hint {
+    color: var(--color-text-muted);
+    font-size: v.$font-size-sm;
+  }
+
+  /* Le chargeur tourne sur le bouton lui-meme : l'ecriture peut durer, et rien d'autre ne bouge
+     pendant ce temps. */
+  .ti-loader-2 {
+    animation: confirm-spin 900ms linear infinite;
+  }
+}
+
+@keyframes confirm-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confirm .ti-loader-2 { animation: none; }
+}
+
+.applied {
   display: flex;
   align-items: center;
   gap: v.$space-2;
+  margin-top: v.$space-3;
   padding: v.$space-3 v.$space-4;
-  border: 1px dashed var(--color-border-strong);
-  border-radius: v.$radius-md;
-  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-success);
+  border-radius: 0 v.$radius-md v.$radius-md 0;
+  background: var(--color-surface);
   font-size: v.$font-size-sm;
-  margin: 0;
 }
 
 /* ---------- communs ---------- */

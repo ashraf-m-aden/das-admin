@@ -58,6 +58,15 @@ export interface CloseGenerationState {
    */
   reviewedKeys: string[];
 
+  /** Vrai pendant l'écriture. C'est la SEULE opération de l'écran qui écrit. */
+  isApplying: boolean;
+
+  /**
+   * Bilan de la dernière confirmation, tel que le back l'a renvoyé — on ne rejoue pas le compte
+   * côté front. `null` tant que rien n'a été écrit.
+   */
+  applied: { closesCreated: number; blocsAttached: number; adressesRenumbered: number } | null;
+
   /** Erreur métier, mappée depuis le `code` (jamais depuis le `message`). */
   errorMessageKey: string | null;
 }
@@ -152,6 +161,8 @@ export const initialCloseGenerationState: CloseGenerationState = {
   numberingReverse: false,
   isNumbering: false,
   reviewedKeys: [],
+  isApplying: false,
+  applied: null,
   errorMessageKey: null,
 };
 

@@ -3,8 +3,6 @@
     "dashboard": "Dashboard",
     "adresse": "Address Registry",
     "gis": "GIS & Mapping",
-    "gisMap": "Map",
-    "gisBoundaries": "Boundaries",
     "fieldOps": "Field Operations",
     "verification": "Verification Queue",
     "postcodes": "Postcodes",
@@ -272,11 +270,9 @@
       "blockersTitle": "What would prevent saving",
       "blockerNoProposal": "No close to create.",
       "blockerPendingReview": "Some numbering plans have not been reviewed.",
-      "blockerOverCap": "Some closes exceed 99 addresses.",
       "blockerDuplicateCode": "Two closes share the same code.",
       "blockerDuplicateNumber": "Two closes share the same number.",
       "blockerDuplicateStreet": "Two closes share the same street.",
-      "confirmDisabled": "Saving is disabled until the 99-address cap rule is settled.",
       "errorQuartierNotFound": "Neighbourhood not found. Reload the page.",
       "errorBlocNotFound": "A block in the plan is gone. Recompute the proposal.",
       "errorProposalGone": "This proposal no longer exists. Recompute the proposal.",
@@ -296,7 +292,13 @@
       "ordering": {
         "StreetLine": "Order following the street line",
         "ParcelCloud": "Order estimated from parcels"
-      }
+      },
+      "apply": "Confirm and create closes",
+      "applying": "Creating…",
+      "applyHint": "{{count}} close(s) will be created, with bloc attachment and parcel renumbering.",
+      "applyConfirm": "Create {{count}} close(s)? Blocs will be attached and parcels renumbered. This cannot be undone from this screen.",
+      "appliedSummary": "{{closes}} close(s) created, {{blocs}} bloc(s) attached, {{adresses}} parcel(s) renumbered.",
+      "errorNothingToApply": "Nothing to confirm."
     }
   },
   "discoveries": {

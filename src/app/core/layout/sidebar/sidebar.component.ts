@@ -38,13 +38,11 @@ export class SidebarComponent {
   protected readonly entries: NavEntry[] = [
      { kind: 'link', labelKey: 'nav.dashboard', path: '/dashboard', icon: 'ti-layout-dashboard' },
     { kind: 'link', labelKey: 'nav.adresse', path: '/adresse', icon: 'ti-address-book' },
-    {
-      kind: 'group', key: 'gis', labelKey: 'nav.gis', icon: 'ti-map-2',
-      allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'],
-      children: [
-        { labelKey: 'nav.gisMap', path: '/blocks/map' },
-      ],
-    },
+    // Promu en lien direct le 2026-09-09 : le groupe n'avait qu'UN enfant, « Carte ». Un groupe
+    // qui se déplie sur une seule ligne coûte un clic pour rien et laisse croire qu'il en cache
+    // d'autres. Le libellé du groupe est conservé, c'est le nom de l'écran.
+    { kind: 'link', labelKey: 'nav.gis', path: '/blocks/map', icon: 'ti-map-2',
+      allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
     { kind: 'link', labelKey: 'nav.closes', path: '/closes', icon: 'ti-vector-triangle', allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
     // Ecran de reprise, juste apres les closes : meme sujet, vu depuis le travail qui reste
     // a faire plutot que depuis l'existant.

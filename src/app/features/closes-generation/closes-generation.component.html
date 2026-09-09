@@ -231,10 +231,35 @@
         </div>
       }
 
-      <p class="confirm-placeholder">
-        <i class="ti ti-lock"></i>
-        {{ 'closes.generation.confirmDisabled' | transloco }}
-      </p>
+      <!--
+        La confirmation. Ouverte le 2026-09-09 — elle etait volontairement absente tant que la
+        regle du plafond de 99 adresses n'etait pas tranchee. C'est la SEULE action de l'ecran qui
+        ecrit : closes, rattachement des blocs et renumerotation, en une transaction.
+      -->
+      <div class="confirm">
+        <button
+          type="button"
+          class="btn btn--primary"
+          [disabled]="blockers().length > 0 || isApplying()"
+          (click)="confirm()">
+          <i class="ti" [class.ti-check]="!isApplying()" [class.ti-loader-2]="isApplying()"></i>
+          {{ (isApplying() ? 'closes.generation.applying' : 'closes.generation.apply') | transloco }}
+        </button>
+        <span class="confirm__hint">
+          {{ 'closes.generation.applyHint' | transloco: { count: proposals().length } }}
+        </span>
+      </div>
+    }
+
+    @if (applied(); as bilan) {
+      <div class="applied">
+        <i class="ti ti-circle-check"></i>
+        {{ 'closes.generation.appliedSummary' | transloco: {
+             closes: bilan.closesCreated,
+             blocs: bilan.blocsAttached,
+             adresses: bilan.adressesRenumbered
+           } }}
+      </div>
     }
   </section>
 </div>

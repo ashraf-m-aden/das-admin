@@ -2,7 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { AsyncPipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { CloseGenerationFacade } from '../../core/closes/store/close-generation.facade';
 import { PARAMETRES_PAR_DEFAUT } from '../../core/closes/store/close-generation.state';
 import { PageHeaderComponent } from '../../core/layout/page-header/page-header.component';
@@ -70,6 +70,10 @@ export class ClosesGenerationComponent implements OnInit {
   protected readonly discarded = toSignal(this.facade.discardedProposals$, { initialValue: [] as ProposedClose[] });
   protected readonly summary = toSignal(this.facade.summary$, { initialValue: null });
   protected readonly blockers = toSignal(this.facade.blockers$, { initialValue: [] as string[] });
+  private readonly transloco = inject(TranslocoService);
+
+  protected readonly isApplying = toSignal(this.facade.isApplying$, { initialValue: false });
+  protected readonly applied = toSignal(this.facade.applied$, { initialValue: null });
   protected readonly reviewedKeys = toSignal(this.facade.reviewedKeys$, { initialValue: [] as string[] });
   protected readonly streets = toSignal(this.facade.streets$, { initialValue: [] });
   protected readonly numberingKey = toSignal(this.facade.numberingKey$, { initialValue: null });
@@ -165,6 +169,20 @@ export class ClosesGenerationComponent implements OnInit {
    * Les trois réglages partent ENSEMBLE et explicitement. L'écran n'envoyait que la distance,
    * laissant le back décider du reste sans que rien ne le montre à l'écran.
    */
+  /**
+   * Confirme le plan relu. Une confirmation navigateur avant d'écrire : c'est la seule action
+   * irréversible de l'écran — les closes créées ne se défont pas depuis ici, et les numéros
+   * d'adresse peuvent se figer dans un code.
+   */
+  protected confirm(): void {
+    const count = this.proposals().length;
+    if (!window.confirm(this.transloco.translate('closes.generation.applyConfirm', { count }))) {
+      return;
+    }
+
+    this.facade.apply();
+  }
+
   protected applyParameters(): void {
     this.facade.setParameters({
       maxDistanceMeters: this.maxDistanceMeters(),

@@ -64,7 +64,10 @@ export const selectBlockers = createSelector(
     const blockers: string[] = [];
     if (proposals.length === 0) blockers.push('closes.generation.blockerNoProposal');
     if (summary.pendingReview > 0) blockers.push('closes.generation.blockerPendingReview');
-    if (summary.overCap > 0) blockers.push('closes.generation.blockerOverCap');
+    // Le plafond de 99 adresses n'est PLUS un bloqueur : tranché le 2026-09-06, il peut être
+    // dépassé au besoin. Il reste signalé par proposition (`ExceedsAddressCap`), ce qui suffit —
+    // en faire un verrou empêchait de confirmer 56 closes sur 531 sans recours.
+
     const codes = proposals.map((p) => p.code);
     if (new Set(codes).size !== codes.length) blockers.push('closes.generation.blockerDuplicateCode');
     const numbers = proposals.map((p) => p.number);
