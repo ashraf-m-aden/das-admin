@@ -225,6 +225,15 @@ Ceci posé, le symptôme observé reste le même : `Street`, aujourd'hui, est un
 entière (pas encore scindé en tronçons), donc en pratique une close héritait mécaniquement de la
 géométrie de sa rue : une rue de 2,9 km produisait une close de 2,9 km.
 
+> **Une nuance au rectificatif.** Il n'est pas exact qu'il n'y ait *aucune* étape de regroupement :
+> `maxBlocGapMeters` coupe bien un groupe dès que deux blocs voisins s'écartent au-delà du seuil.
+> Ce qui manque est plus précis — cette coupure intervient **après** l'appariement et ne borne que
+> l'écart entre voisins, jamais le **diamètre** du groupe. Vérifié sur `PK-04` : à 25 m d'écart
+> maximal, le plus gros sous-groupe garde encore 26 blocs étalés sur 1 436 m. Une file de blocs
+> distants de 20 m chacun est contiguë et court sur des kilomètres (cf. §8, encadré). La
+> correction reste donc entière : c'est l'ordre des étapes et l'absence de contrainte de diamètre
+> qui sont en cause, pas l'index.
+
 Deux défauts du référentiel voirie amplifiaient l'effet. Tous deux sont des séquelles de nos
 propres imports, pas de la donnée source.
 
@@ -307,6 +316,16 @@ laissées distinctes.
 ## 11. Le pipeline retenu
 
 ### Étape 1 — la voie large est une frontière infranchissable
+
+> **Validé sur PK12 le 2026-09-09.** Cette étape seule, sans subdivision, découpe le quartier en
+> **5 îles : 197, 162, 91, 89 et 1 bloc** — les voies larges en cause étant la Route Nationale 1,
+> la Route Nationale 3/3 et trois tronçons de boulevard. C'est le découpage qu'Ashraf a produit à
+> la main sur ce quartier : quatre zones, plus un bloc isolé que l'étape 3 absorbe.
+>
+> ⚠️ **Cela recalibre l'étape 2.** Un `k` visant 6 blocs par close découperait PK12 en 90 closes,
+> là où la lecture métier en attend 4 à 7 — soit **80 à 135 blocs chacune**. La cible de 6 blocs
+> vient d'une mesure de compacité, pas d'un besoin d'adressage : elle est à retrancher.
+
 
 Deux blocs dont le segment de liaison traverse un **boulevard, une avenue ou une route urbaine**
 ne peuvent pas appartenir à la même close.

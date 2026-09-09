@@ -82,9 +82,13 @@ export interface CloseGenerationState {
  * `OSM-ROUTE-*` / `OSM-PISTE-*`, et la voirie SIG un `SIG-VE-*`. Trois axes passaient donc au
  * travers, dont **`OSM-ROUTE-NATIONALE-1`, longue de 214 km**, et `SIG-VE-00001` de 98 km.
  *
- * Sous l'index unique `(quartier, rue)`, une close est TOUTE la façade d'une rue dans un
- * quartier : **une close hérite de la longueur de sa rue.** Un axe de 214 km ramasse tout ce
- * qu'il croise à moins de 50 m, sur des kilomètres. C'est là qu'était la close « dispersée ».
+ * ⚠️ **Rectificatif du 2026-09-09** : ce n'est pas l'index unique qui l'impose. `(QuartierId,
+ * StreetId)` interdit seulement à deux closes de partager la même ENTITÉ `Street` ; scinder la
+ * voie en tronçons distincts donne des `StreetId` différents, donc plusieurs closes courtes le
+ * long d'une même voie physique. La cause réelle est que l'appariement fusionne les blocs
+ * pointant vers une même rue **sans borner leur diamètre**, et que `Street` est aujourd'hui une
+ * entité par voie entière. Un axe de 214 km ramasse alors tout ce qu'il croise à moins de 50 m,
+ * sur des kilomètres. Cf. `docs/plans/generation-closes.md` §8.
  *
  * ⚠️ **Ce que le préfixe ne peut pas exprimer.** 13 rues nommées `OSM-<NOM>` sont aussi des axes
  * interurbains (`OSM-ASSAMO-ALI-ADDE`, 28 km), mais ce préfixe couvre également les rues urbaines

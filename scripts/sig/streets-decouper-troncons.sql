@@ -24,9 +24,13 @@
 -- Une file de blocs distants de 20 m chacun est « contiguë » et court pourtant sur des
 -- kilomètres. La contiguïté n'est pas la compacité — aucun seuil d'écart n'exprime un diamètre.
 --
--- CAUSE. `IX_Closes_QuartierId_StreetId` est UNIQUE : une close est toute la façade d'UNE rue
--- dans un quartier. **Une close hérite donc de la longueur de sa rue.** Une rue de 2,9 km fait
--- une close de 2,9 km. Le seul levier est la rue elle-même.
+-- CAUSE. ⚠️ **Rectifié le 2026-09-09** : ce n'est pas l'index unique qui l'impose.
+-- `IX_Closes_QuartierId_StreetId` interdit seulement à deux closes de partager la même ENTITÉ
+-- `Street` ; scinder la voie en tronçons distincts donne des `StreetId` différents, donc plusieurs
+-- closes courtes le long d'une même voie physique — c'est précisément ce que ce script rend
+-- possible. La cause réelle est que l'appariement fusionne les blocs d'une même rue sans borner
+-- leur diamètre, et que `Street` est aujourd'hui une entité par voie entière : une rue de 2,9 km
+-- fait donc une close de 2,9 km. Cf. `docs/plans/generation-closes.md` §8.
 --
 -- ---------------------------------------------------------------------------------------------
 -- LA COUPE, ET POURQUOI AUX INTERSECTIONS

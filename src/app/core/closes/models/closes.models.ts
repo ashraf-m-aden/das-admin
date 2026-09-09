@@ -140,9 +140,12 @@ export interface AdresseNumbering {
  * écrire — closes, rattachement des blocs et RENUMÉROTATION des adresses dans la même
  * transaction. Rien n'est écrit avant confirmation.
  *
- * La règle de génération découle du schéma : `IX_Closes_QuartierId_StreetId` est UNIQUE, donc
- * une close = les blocs d'un quartier bordant UNE rue, et il ne peut y en avoir qu'une par
- * couple (quartier, rue). Un groupe trop gros n'est PAS scindable.
+ * `IX_Closes_QuartierId_StreetId` est UNIQUE : deux closes ne peuvent pas partager la même paire
+ * (quartier, entité `Street`). ⚠️ **Cela n'impose PAS « une rue = une close »** — scinder la voie
+ * physique en plusieurs entités `Street` donne autant de `StreetId` distincts, et plusieurs closes
+ * courtes respectent alors l'unicité. Ce que l'implémentation actuelle fait — fusionner tous les
+ * blocs pointant vers une même rue, sans borner leur diamètre — est un choix, pas une contrainte
+ * de schéma. Rectificatif du 2026-09-09, `docs/plans/generation-closes.md` §8.
  *
  * Mesuré sur la base le 2026-09-04, sur 5 121 blocs et 87 quartiers :
  *   - 2 958 blocs (58 %) ont une rue urbaine à moins de 50 m → 531 closes sur 71 quartiers ;
@@ -213,8 +216,12 @@ export interface QuartierClosePlanParameters {
  * `LargeClose` — beaucoup de blocs ; relecture difficile, mais la close reste créable.
  * `ExceedsAddressCap` — **plus de 99 parcelles**. Pas un conseil mais un dépassement de la règle
  *   métier du 2026-09-04, et il n'est PAS corrigeable depuis l'écran : l'index unique
- *   (quartier, rue) interdit de scinder une rue en plusieurs closes. 56 des 531 closes proposées
- *   sont dans ce cas, pour 12 808 parcelles.
+ *   (quartier, rue) interdit à deux closes de partager la MÊME entité `Street`. ⚠️ Il n'interdit
+ *   PAS de scinder la voie physique en plusieurs `Street` : chaque tronçon a son propre
+ *   `StreetId`, et plusieurs closes courtes respectent alors l'unicité (rectificatif du
+ *   2026-09-09, `docs/plans/generation-closes.md` §8). Le blocage tient à ce que `Street` est
+ *   aujourd'hui une entité par voie entière. 56 des 531 closes proposées sont dans ce cas, pour
+ *   12 808 parcelles.
  * `SingleBloc` — close à un seul bloc, souvent un artefact de proximité.
  */
 export type ProposedCloseWarning =

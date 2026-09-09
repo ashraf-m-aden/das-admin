@@ -31,7 +31,9 @@
 -- homonymes situées dans deux quartiers différents — cas courant — deviennent une seule entité.
 --
 -- ⚠️ POURQUOI CELA CASSE LES CLOSES. `IX_Closes_QuartierId_StreetId` est UNIQUE : une close est
--- toute la façade d'UNE rue dans un quartier. Elle **hérite donc de la géométrie de sa rue**. Une
+-- toute la façade d'UNE rue dans un quartier (⚠️ affirmation RECTIFIÉE le 2026-09-09 : l'index
+-- n'impose pas cela, cf. `docs/plans/generation-closes.md` §8 — c'est `Street`, entité unique par
+-- voie entière, qui le produit en pratique). Elle **hérite donc de la géométrie de sa rue**. Une
 -- rue en 240 morceaux éparpillés produit une close éparpillée, qui traverse et « perce » les
 -- closes voisines par le flanc. Aucun réglage de `maxDistanceMeters` ou `maxBlocGapMeters` ne
 -- corrige cela : le défaut est dans l'entité rue, pas dans l'appariement.
