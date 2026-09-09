@@ -839,6 +839,7 @@
       "sigIlots": "Îlots SIG (livraison brute)",
       "sigVoirie": "Voirie SIG (à reprendre)",
       "zones": "Zones",
+      "quartierNames": "Noms des quartiers",
       "postcodes": "Codes postaux",
       "cities": "Villes"
     }

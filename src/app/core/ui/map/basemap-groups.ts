@@ -141,6 +141,27 @@ export const POI_BASEMAP_GROUP: BasemapLayerGroup = {
 };
 
 /**
+ * Le NOM des quartiers, en étiquette seule.
+ *
+ * Servie par la même vue `quartiers_tiles` que les zones et les codes postaux, qui expose déjà
+ * `Nom` — aucune vue à créer. La couche ne dessine ni fond ni contour : le tracé du quartier
+ * existe déjà sous trois formes (`zones-*` en aplat, `postcodes-line` en tireté), et en ajouter
+ * un quatrième brouillerait la lecture. On coche le nom, on garde le contour qu'on veut.
+ *
+ * `minzoom: 11` — en dessous, les 84 étiquettes se chevauchent et rendent la carte illisible.
+ * `text-allow-overlap: false` laisse MapLibre écarter celles qui ne tiennent pas plutôt que de
+ * les empiler ; sur un quartier étroit, l'étiquette disparaît au lieu de déborder sur le voisin.
+ *
+ * Masquée par défaut : c'est un repère qu'on allume pour se situer, pas une couche de travail.
+ */
+export const QUARTIERS_BASEMAP_GROUP: BasemapLayerGroup = {
+  id: 'quartiers-noms',
+  labelKey: 'map.basemap.quartierNames',
+  styleLayerIds: ['quartiers-label'],
+  visible: false,
+};
+
+/**
  * Les codes postaux, en contour et étiquette sur l'emprise du quartier.
  *
  * `Postcode` est calculé DANS la vue (`scripts/sig/vue-quartiers-tiles.sql`), pas ici : le

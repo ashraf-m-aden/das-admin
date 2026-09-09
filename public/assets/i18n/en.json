@@ -839,6 +839,7 @@
       "sigIlots": "GIS blocks (raw delivery)",
       "sigVoirie": "GIS roads (to import)",
       "zones": "Zones",
+      "quartierNames": "Quartier names",
       "postcodes": "Postcodes",
       "cities": "Cities"
     }

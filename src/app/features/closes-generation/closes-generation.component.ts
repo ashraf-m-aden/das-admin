@@ -10,7 +10,7 @@ import { DasMapComponent } from '../../core/ui/map/das-map.component';
 import { MapFeature, MapLayerConfig } from '../../core/ui/map/map.models';
 import { unionBounds, wktBounds, wktPolygon } from '../../core/ui/map/wkt.util';
 import {
-  STREETS_BASEMAP_GROUP, BLOCS_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP,
+  STREETS_BASEMAP_GROUP, BLOCS_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, QUARTIERS_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP,
 } from '../../core/ui/map/basemap-groups';
 import { ProposedClose, QuartierCloseProgress } from '../../core/closes/models/closes.models';
 import { UUID } from '../../core/models/das.models';
@@ -57,7 +57,7 @@ export class ClosesGenerationComponent implements OnInit {
   private facade = inject(CloseGenerationFacade);
 
   protected readonly basemapLayers = [
-    STREETS_BASEMAP_GROUP, BLOCS_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP,
+    STREETS_BASEMAP_GROUP, BLOCS_BASEMAP_GROUP, ZONES_BASEMAP_GROUP, QUARTIERS_BASEMAP_GROUP, POSTCODES_BASEMAP_GROUP,
   ];
   protected readonly mapLayers = LAYERS;
 
