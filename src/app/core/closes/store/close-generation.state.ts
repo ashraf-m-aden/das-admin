@@ -95,13 +95,30 @@ export interface CloseGenerationState {
  * — `OSM-148704475` porte la close `Q7-02`. Les exclure demanderait un plafond de LONGUEUR, que
  * `QuartierClosePlanParameters` n'expose pas : c'est une évolution à demander au back.
  *
- * `maxBlocGapMeters` passe de 100 à **25 m**. Mesuré le 2026-09-06 sur les 7 115 blocs : l'écart
- * au bloc voisin le plus proche vaut **4,2 m en médiane et 16,6 m au 9ᵉ décile**. Le seuil de
- * 100 m enjambait donc six fois l'écart courant — il laissait une close franchir une rue entière
- * et se souder au tissu d'en face. À 25 m il coupe les vraies discontinuités sans casser
- * l'adjacence normale.
+ * ⚠️ **`maxBlocGapMeters` : 25 m essayé le 2026-09-06, REVENU à 100 m le 2026-09-09.**
  *
- * Effet mesuré des deux corrections réunies, sur Djibouti :
+ * La valeur de 25 m s'appuyait sur l'écart au bloc voisin le plus proche — 4,2 m en médiane,
+ * 16,6 m au 9ᵉ décile. La mesure était juste, la conclusion fausse : ce n'est pas la bonne
+ * distance. Deux blocs consécutifs le long d'une avenue sont séparés par une rue TRANSVERSALE,
+ * soit 20 à 40 m, alors que l'écart au plus proche voisin est LATÉRAL, entre blocs mitoyens. À
+ * 25 m le groupe est donc coupé à chaque croisement.
+ *
+ * Mesuré le 2026-09-09 sur les six quartiers du centre — 811 blocs, 6 303 adresses, les seuls
+ * traitables aujourd'hui faute de nommage ailleurs :
+ *
+ *   maxBlocGapMeters   closes   dont a 1 bloc   adresses medianes
+ *                 25      252             118          13
+ *                 60      196              81          16
+ *                100      180              74          18
+ *                150      168              61          18
+ *
+ * Sur une trame régulière, 100 m est nettement meilleur. Sur le tissu spontané de Balbala,
+ * l'inverse : 25 m y donnait 1 466 closes sans interpénétration contre 1 069 à 100 m. **Le bon
+ * réglage dépend du quartier** — l'écran expose le champ, l'opérateur l'ajuste. Le défaut suit
+ * les quartiers effectivement traitables aujourd'hui.
+ *
+ * Effet mesuré de l'exclusion complétée, sur Djibouti (chiffres obtenus AVEC l'écart à 25 m,
+ * donc représentatifs de Balbala et non du centre) :
  *
  *   solidité médiane (aire / enveloppe convexe)   0,842  →  0,936
  *   blocs de la plus grosse close                 1 068  →  21
@@ -110,7 +127,7 @@ export interface CloseGenerationState {
  */
 export const PARAMETRES_PAR_DEFAUT: Partial<QuartierClosePlanParameters> = {
   maxDistanceMeters: 50,
-  maxBlocGapMeters: 25,
+  maxBlocGapMeters: 100,
   excludeStreetCodePrefixes: [
     'SIG-RT1-', 'SIG-RT2-', 'SIG-PI1-', 'SIG-PI2-',
     'SIG-VE-',        // 6 voies, jusqu'à 98 km — voirie SIG hors agglomération
