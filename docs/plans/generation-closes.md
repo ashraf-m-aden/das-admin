@@ -11,10 +11,14 @@
 > 723 perçages, parce qu'une close hérite de la longueur de sa rue. Voir la **partie II**,
 > plus bas — diagnostic, stratégies comparées et pipeline retenu.
 >
-> ⚠️ **Les règles de découpage sont figées (2026-09-09), voir §11.** Une close est un CÔTÉ de rue ;
-> les rues sont filtrées seulement là où elles sont trop denses ; un bloc seul ne fait close que
-> s'il est vraiment grand ; les blocs mal découpés se regroupent entre eux à 10 m. Résultat :
-> **605 closes** sur Djibouti, dont **4 sur PK12** — la cible donnée à la main.
+> ⚠️ **Les règles de découpage sont implémentées et mesurées sur l'API (2026-09-09), voir §11.**
+> Une close est un CÔTÉ de rue ; les rues sont filtrées seulement là où elles sont trop denses ; un
+> bloc seul ne fait close que s'il est vraiment grand ; les blocs mal découpés se regroupent entre
+> eux à 10 m. Résultat relevé : **706 closes** sur Djibouti, 252 blocs non rattachés, **18 sur
+> PK12** — au-dessus des 4 à 8 visés, cf. la réserve en fin de §11.
+>
+> La confirmation est ouverte sur l'écran depuis le 2026-09-09 : le plafond de 99 adresses ayant
+> été tranché le 2026-09-06, il n'est plus un verrou.
 >
 > ⚠️ **Rectificatif du 2026-09-09 : l'index unique n'oblige pas « une rue = une close ».** §8
 > reformulé — c'est l'absence de clustering avant l'appariement qui est en cause, pas l'unicité
@@ -323,109 +327,103 @@ laissées distinctes.
 
 ---
 
-## 11. Les règles de découpage — figées le 2026-09-09
+## 11. Les règles de découpage — implémentées et mesurées
 
-> Établies avec Ashraf à partir de six découpages faits à la main (Quartier 7 Bis, Quartier 7,
-> PK12, Balbala Ancien, Wahladaba/Bache-à-eau, Cheik Moussa/Cité Luxembourg), puis mesurées sur
-> les 6 969 blocs de Djibouti. Elles remplacent le pipeline en cinq étapes ET l'étape de fusion
-> seule, tous deux abandonnés.
+> Établies avec Ashraf à partir de six découpages faits à la main, **implémentées dans le back le
+> 2026-09-09** (`dasApi`, `QuartierCloseGrouping` + `PreviewQuartierClosesHandler`) et mesurées en
+> appelant l'API réelle sur les 75 quartiers de Djibouti.
+>
+> ⚠️ Les versions précédentes de cette section donnaient des chiffres issus de **simulations SQL**,
+> dont « PK12 → 4 closes ». Ils étaient faux sur deux points : la simulation autorisait les deux
+> côtés d'une même rue, et elle ne vérifiait jamais qu'une rue restait libre pour nommer un groupe.
+> Les chiffres ci-dessous viennent de l'API.
 
-### R1 — Une close est un côté de rue
+### R1 — une close est un côté de rue
 
-Les blocs d'un quartier bordant **un seul côté** d'une rue. `(quartier, rue, côté)`, le côté étant
-le signe du produit vectoriel entre la direction locale de la voie et le vecteur voie→bloc.
-`CloseSide` existe déjà dans les modèles, il servait à la numérotation.
+Les blocs d'en face relèvent de la close de la rue voisine. Une rue n'en porte donc toujours qu'une
+par quartier : `IX_Closes_QuartierId_StreetId` et la décision D-2 **restent intacts**, seule une
+colonne `Closes.Side` a été ajoutée (migration `AddCloseSide`, nullable, dans aucun index).
 
-Cette forme satisfait les trois observations d'Ashraf d'un coup : *une rue sépare toujours deux
-closes* (elle sépare sa propre gauche de sa droite), *les closes ne se chevauchent pas* (un bloc
-n'a qu'une rue et qu'un côté), et *une close ne franchit jamais son quartier* — ce que le schéma
-imposait déjà, `Closes.QuartierId` étant unique.
+⚠️ **Le côté est FIXE pour tout le quartier**, jamais choisi par majorité rue par rue. Un choix
+local faisait garder des flancs opposés à deux rues parallèles voisines, et le découpage partait
+« dans tous les sens, une fois de haut en bas, une fois de droite à gauche ». Le sens de
+numérisation étant arbitraire d'un producteur à l'autre, il est normalisé avant le calcul.
 
-### R2 — ⚠️ Filtrer les rues, mais seulement là où elles sont trop nombreuses
+### R2 — filtrer les rues, seulement là où elles sont trop nombreuses
 
-C'est la règle la moins évidente, et sans elle rien ne marche à Balbala.
-
-L'import OSM du 2026-09-06 a versé 2 940 voies sans filtrer : OSM y cartographie chaque sente
-entre deux maisons comme un `way`. Résultat, la densité de voirie n'a rien à voir d'un quartier
-à l'autre :
+Si la desserte médiane du quartier vaut 2 ou moins, ne garder que les rues desservant au moins
+8 blocs. Sinon, garder tout.
 
 | Quartier | Blocs | Rues | Rues par bloc | Desserte médiane |
 |---|---:|---:|---:|---:|
 | PK12 | 540 | 262 | 0,49 | **2** |
 | HAYABLEH | 1 324 | 485 | 0,37 | **2** |
-| Quartier 7 Bis | 81 | 20 | 0,25 | 4 |
 | Quartier 2 | 140 | 16 | 0,11 | 4 |
 | Quartier 4 | 213 | 16 | 0,08 | 12 |
 
-> **Si la desserte médiane du quartier vaut 2 ou moins, ne garder que les rues desservant au moins
-> 8 blocs. Sinon, garder toutes les rues.**
+⚠️ Un seuil en **pourcentage** ne marche pas : à Balbala aucune rue n'atteint 5 % des blocs du
+quartier, le filtre ne garde rien et ne produit aucune close.
 
-Le conditionnement est essentiel : appliqué partout, le filtre à 8 blocs ferait tomber Quartier 2
-de 16 à 10 closes et Quartier 7 Bis de 16 à 4. Conditionné, il ne mord que là où la voirie est
-sur-dense, et laisse le centre intact.
+⚠️ **`MaxDistanceMeters` ne s'applique plus quand ce filtre a mordu.** Après une réduction
+volontaire du réseau, la distance aux axes restants devient mécaniquement grande et la borne
+rejetait précisément ce qu'on cherchait à rattacher : HAYABLEH perdait 899 de ses 1 324 blocs.
 
-⚠️ **Le seuil en POURCENTAGE ne marche pas.** Essayé à 3, 5 et 8 % des blocs du quartier : à
-Balbala aucune rue n'atteint 5 % de 540 blocs — le filtre ne garde rien et ne produit aucune
-close. Le seuil doit être un nombre absolu de blocs desservis.
+### R3 — un bloc seul ne fait close que s'il est vraiment grand
 
-### R3 — Un bloc seul ne fait close que s'il est vraiment grand
+Au-delà de **10 000 m² et 8 parcelles**. La distribution est extrêmement étirée — médiane 970 m²,
+99ᵉ centile 36 702 m², maximum 838 725 m² — ce n'est pas une queue mais une autre population : les
+blocs que l'expert SIG n'a pas découpés.
 
-Une close d'un seul bloc n'est admise que si ce bloc dépasse **10 000 m² et 8 parcelles** : le cas
-du découpage que l'expert SIG n'a pas fait. Un petit bloc de 2 à 8 parcelles n'est jamais une
-close à lui seul.
+### R4 — les blocs mal découpés se regroupent entre eux, à 10 m
 
-Le seuil se lit dans la distribution, qui est extrêmement étirée — le 99ᵉ centile vaut 38 fois la
-médiane. Ce n'est pas une queue, c'est une autre population :
+Ils ne sont pas absorbés par une close bien formée. Une ruelle étroite ne sépare pas deux closes,
+seule une vraie rue le fait.
 
-```
-p10  253 m2     mediane  970 m2     p90  3 461 m2     p99  36 702 m2     max  838 725 m2
-```
+⚠️ **La contiguïté stricte est inapplicable** : seuls 1 429 blocs sur 6 969 (20 %) touchent
+géométriquement un voisin ; 5 292 en sont séparés de moins de 10 m, par la trame de ruelles et
+l'imprécision du tracé SIG.
 
-À 10 000 m² on retient 230 blocs, 3,3 % du total, portant 18 parcelles en moyenne.
+⚠️ **Le rattrapage nomme ses grappes avec n'importe quelle rue éligible**, pas seulement celles
+retenues par R2. R2 écarte les sentes parce qu'elles ne doivent pas *structurer* une close ; un
+groupe déjà formé par proximité n'attend qu'un nom, qu'une sente porte très bien. Sans cela, un
+quartier sur-dense n'a que quelques rues retenues, toutes prises par R1, et le rattrapage échoue
+faute d'hôte : PK12 laissait 271 blocs sur 540.
 
-### R4 — Les blocs mal découpés se regroupent entre eux, à 10 m
-
-Ceux que R1 laisse orphelins ne sont pas absorbés par une close bien formée : ils se regroupent
-**entre eux**, par proximité, tolérance **10 m**. Décision d'Ashraf : une ruelle étroite ne sépare
-pas deux closes, seule une vraie rue le fait.
-
-⚠️ **La contiguïté stricte est inapplicable.** Mesuré : seuls **1 429 blocs sur 6 969 (20 %)**
-touchent géométriquement un voisin ; 5 292 en sont séparés de moins de 10 m, par la trame de
-ruelles et l'imprécision du tracé SIG. Avec `ST_Intersects`, la règle ne s'appliquerait presque
-jamais.
-
-Ce qui reste isolé au-delà de 10 m **n'est pas rattaché de force** : il s'affiche comme non
-rattaché.
-
-### Résultat mesuré sur Djibouti
+### Résultat mesuré sur l'API, 75 quartiers
 
 ```
-557 closes par la regle de rue
- 48 closes formees en regroupant les orphelins
-605 closes au total
-101 blocs non rattaches sur 6 969
+706 closes proposees
+564 par la regle de rue      142 par le rattrapage
+252 blocs non rattaches sur 6 964
 ```
 
-| Quartier | Blocs | Closes | Cible donnée à la main |
-|---|---:|---:|---|
-| **PK12** | 540 | **4** | 4 à 8 ✔ |
-| Quartier 2 | 140 | 18 | ~une par avenue ✔ |
-| Quartier 7 Bis | 81 | 19 | ~une par rue ✔ |
-| Quartier 4 | 213 | 26 | — |
-| HAYABLEH | 1 324 | **38** | ⚠️ hors échelle |
+| Quartier | Blocs | Closes | dont R1 | dont R4 |
+|---|---:|---:|---:|---:|
+| HAYABLEH | 1 324 | 22 | 22 | 0 |
+| **PK12** | 540 | **18** | 2 | 16 |
+| Quartier 7 | 304 | 55 | 53 | 2 |
+| WAHLADABA N. | 300 | 6 | 5 | 1 |
+| BALBALA ANCIEN | 266 | 43 | 37 | 6 |
+| Quartier 4 | 213 | 31 | 31 | 0 |
+| Quartier 2 | 140 | 17 | 15 | 2 |
+| Quartier 7 Bis | 81 | 19 | 18 | 1 |
 
-### ⚠️ Ce que les règles ne règlent pas
+Le partage entre les deux règles suit le terrain : le centre est traité presque entièrement par la
+règle de rue, PK12 presque entièrement par le rattrapage.
 
-**HAYABLEH reste à 38 closes** pour 1 324 blocs, loin des 4 à 8 de l'échelle d'Ashraf. Le quartier
-est trois fois plus grand que PK12 et sa voirie OSM aussi dense : le seuil fixe de 8 blocs y
-laisse passer plus de rues. Un seuil croissant avec la taille du quartier corrigerait cela, mais
-il n'a pas été calibré — l'ajuster sur deux exemples reviendrait à surajuster.
+### ⚠️ Ce que les règles ne donnent pas
+
+**PK12 rend 18 closes, pas les 4 à 8 visées.** Le rattrapage regroupe à 10 m et le tissu s'y
+fragmente en 16 grappes. Élargir le rayon les fusionnerait — mais le régler jusqu'à retomber sur
+le chiffre attendu serait ajuster sur un seul exemple.
+
+**252 blocs restent non rattachés**, soit 3,6 %. Ils s'affichent comme tels, ils ne sont pas collés
+de force à une close lointaine.
 
 ### Référence de test
 
-`scripts/sig/reference/closes-attendues-2026-09-09.csv` — 75 quartiers, le nombre de closes
-attendu, la part venant de chaque règle, et les blocs non rattachés.
-`scripts/sig/reference/closes-regles.sql` — l'implémentation mesurée, transposable telle quelle.
+`scripts/sig/reference/closes-attendues-2026-09-09.csv` — les 75 quartiers, **relevés sur l'API**
+et non simulés : closes attendues, part de chaque règle, blocs, non rattachés.
 
 ---
 
@@ -488,7 +486,7 @@ rues ? »* Non. Le pipeline de génération écrit **trois choses**, et rien d'a
 
 | Table | Colonne | Ce qui change |
 |---|---|---|
-| `Closes` | lignes créées | ~1 324 closes |
+| `Closes` | lignes créées, plus `Side` | 706 closes mesurées sur l'API |
 | `Blocs` | **`CloseId` seule** | le rattachement |
 | `Adresses` | `CloseId`, `Numero` | rattachement + renumérotation |
 
@@ -527,8 +525,15 @@ lot séparé, une fois le regroupement validé.
   (2026-09-06). Ajout seul, aucune ligne existante modifiée. `Streets` : 1 344 → 4 284. Les blocs
   de Djibouti ayant une rue à moins de 50 m passent de 2 958 à 5 101 sur 5 121.
 - `core/closes/store/close-generation.state.ts` — liste d'exclusion complétée (`SIG-VE-`,
-  `OSM-ROUTE-`, `OSM-PISTE-`). ⚠️ `maxBlocGapMeters` était passé à 25 m le 2026-09-06 puis
-  **revenu à 100 m le 2026-09-09** : 25 coupait le groupe à chaque rue transversale.
+  `OSM-ROUTE-`, `OSM-PISTE-`).
+- ⛔ **`maxBlocGapMeters` n'a JAMAIS existé côté back.** Ajouté au front le 2026-09-06, documenté,
+  réglé à 25 puis remis à 100 — et la désérialisation JSON le jetait à chaque fois, en silence.
+  Aucun de ces réglages n'a eu le moindre effet. Constaté le 2026-09-09 en lisant le code du back.
+  Il n'est pas réintroduit : les règles de §11 n'enchaînent plus les blocs de proche en proche.
+  Même famille de dérive pour `NotContiguous`, déclaré côté front sans exister côté back, depuis
+  ajouté.
+- `features/closes-generation` — **la confirmation est ouverte** (2026-09-09) : le plafond de
+  99 adresses ayant été tranché, il n'est plus un verrou et `blockerOverCap` a été retiré.
 - `scripts/sig/reference/closes-attendues-2026-09-09.csv` — table de contrôle, 75 quartiers.
 
 **Écrit, testé à blanc, non appliqué**
@@ -539,17 +544,17 @@ lot séparé, une fois le regroupement validé.
 
 **À décider — côté back**
 
-- **UNE étape de fusion** dans `POST /api/quartiers/{id}/closes/preview` : toute close de moins
-  de deux blocs rejoint la plus proche de son quartier, la cible devant être strictement plus
-  grosse (§11). C'est la seule évolution nécessaire. Hors du dépôt front ; validée en SQL sur la
-  base de production, la requête est transposable telle quelle. Table de contrôle :
-  `scripts/sig/reference/closes-attendues-2026-09-09.csv`.
-- ~~Le changement d'unité de regroupement en cinq étapes.~~ **Abandonné le 2026-09-09**, cf. §11.
+- ~~Le changement d'unité de regroupement.~~ **FAIT le 2026-09-09** dans `dasApi` : les quatre
+  règles de §11 sont implémentées (`QuartierCloseGrouping`, `PreviewQuartierClosesHandler`),
+  `Closes.Side` ajouté par la migration `AddCloseSide`. Mesuré sur l'API, 75 quartiers.
+- **Le rayon de rattrapage, à recalibrer.** À 10 m, PK12 rend 18 closes là où l'échelle métier en
+  attend 4 à 8. L'élargir les fusionnerait, mais pas sur ce seul exemple — il faut d'autres
+  découpages faits à la main pour trancher.
 - `QuartierClosePlanParameters` gagnerait un **plafond de longueur de rue** : 13 axes interurbains
   nommés `OSM-<NOM>` ne sont pas excluables par préfixe sans emporter des rues urbaines légitimes
   — `OSM-148704475` porte la close `Q7-02`.
-- ~~Une **contrainte d'acceptation sur le perçage**.~~ Reportée : la mesure du 2026-09-09 ne la
-  fait plus ressortir comme prioritaire face à la fusion.
+- ~~Une **contrainte d'acceptation sur le perçage**.~~ Reportée : la règle du côté unique la rend
+  largement sans objet, deux closes voisines ne partageant plus de rangée.
 - La règle des **99 adresses** concerne 55 closes pour 15 935 adresses. Elle reste inapplicable
   tant que `Street` n'est pas scindable en tronçons (l'unicité `(quartier, rue)` elle-même ne
   l'interdit pas, rectificatif §8). Décision du 2026-09-06 : le plafond peut être dépassé si
