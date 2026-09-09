@@ -1,4 +1,4 @@
-# Génération des closes — état au 2026-09-06
+# Génération des closes — état au 2026-09-09
 
 > Écran de reprise : proposer les closes d'un quartier, les faire relire sur carte, puis les créer
 > — closes, rattachement des blocs et **renumérotation des adresses** dans une seule transaction.
@@ -10,6 +10,12 @@
 > 2026-09-06 : « bloc → rue la plus proche » produit 53 % de closes à un seul bloc et
 > 723 perçages, parce qu'une close hérite de la longueur de sa rue. Voir la **partie II**,
 > plus bas — diagnostic, stratégies comparées et pipeline retenu.
+>
+> ⚠️ **Rectificatif du 2026-09-09 : l'index unique n'oblige pas « une rue = une close ».** §8
+> reformulé — c'est l'absence de clustering avant l'appariement qui est en cause, pas l'unicité
+> `(QuartierId, StreetId)` elle-même. Une rue longue peut être servie par plusieurs closes courtes
+> dès lors que chacune référence un tronçon `Street` distinct. Les trois endroits qui affirmaient
+> le contraire (§2, §6 point 1, §14 dernier point) sont corrigés dans la foulée.
 
 ---
 
@@ -45,8 +51,12 @@ POST /api/quartiers/{id}/closes                     écrit tout, une transaction
 ## 2. La question à trancher avant d'écrire l'écran
 
 **Une close doit porter au plus 99 adresses** (règle du 2026-09-04). Elle entre en conflit frontal
-avec l'index unique `IX_Closes_QuartierId_StreetId`, qui interdit deux closes sur une même rue dans
-un même quartier : une rue desservant plus de 99 adresses ne peut donc pas être découpée.
+avec l'index unique `IX_Closes_QuartierId_StreetId`, qui interdit deux closes sur une même **entité**
+`Street` dans un même quartier — mais pas deux closes sur la même **voie physique** scindée en
+plusieurs entités `Street`. Tant que `Street` reste un objet unique par rue entière, une rue
+desservant plus de 99 adresses ne peut pas être découpée ; voir le rectificatif du 2026-09-09 (§8)
+et le réservoir de tronçons du pipeline retenu (§11), qui lèvent cette limite sans toucher à
+l'index.
 
 | | |
 |---|---|
@@ -151,7 +161,8 @@ renumérotation.
 
 1. ~~Trancher le plafond de 99 (`D-5`).~~ **Tranché le 2026-09-06** : le plafond peut être
    dépassé au besoin. Il concerne 55 closes pour 15 935 adresses et reste inapplicable tant que
-   l'unicité `(quartier, rue)` interdit de scinder une rue.
+   `Street` n'est pas scindable en tronçons — l'unicité `(quartier, rue)` elle-même ne l'interdit
+   pas (rectificatif du 2026-09-09, §8).
 2. ~~Store NgRx, puis les composants.~~ **Faits** — `close-generation.{actions,reducer,effects,
    selectors,facade}.ts`, `closes-generation.component`, `close-proposal-row`,
    `close-numbering-panel`, clés i18n `closes.generation.*`, route.
@@ -190,11 +201,29 @@ neuvième décile est à 3 864 m, le maximum à 214 km.
 
 ---
 
-## 8. La cause : la close hérite de sa rue
+## 8. La cause : aucun clustering avant l'appariement
 
-`IX_Closes_QuartierId_StreetId` est **unique**. Une close est donc, par construction, *toute* la
-façade d'une rue à l'intérieur d'un quartier. Elle hérite mécaniquement de la géométrie de cette
-rue : une rue de 2,9 km produit une close de 2,9 km.
+> ⚠️ **Rectificatif du 2026-09-09.** La version précédente de cette section attribuait le défaut à
+> l'index unique `IX_Closes_QuartierId_StreetId` lui-même — « par construction, une close est toute
+> la façade d'une rue ». C'est inexact : l'index interdit seulement à deux closes de partager la
+> **même paire** `(QuartierId, StreetId)`. Il n'interdit pas de scinder une rue en plusieurs entités
+> `Street` distinctes (des tronçons), chacune avec son propre `StreetId` — l'unicité est alors
+> respectée par plusieurs closes courtes, une par tronçon, pas par une seule longue.
+>
+> **La vraie cause est l'absence de toute étape de clustering avant l'appariement.** L'algorithme
+> actuel apparie chaque bloc à l'objet `Street` le plus proche, puis fusionne aveuglément *tous*
+> les blocs qui pointent vers cette même rue — contigus ou non, à 20 m ou à 2,9 km d'écart. Rien
+> dans l'index n'exige ce comportement : c'est un choix d'implémentation, pas une contrainte de
+> schéma. C'est exactement ce que corrige le pipeline retenu (§11) : le clustering géométrique
+> (étapes 1-3) est indépendant de toute notion de rue, et l'appariement à un tronçon (étapes 4-5)
+> vient *après* — chaque groupe compact reçoit un `StreetId` distinct, y compris plusieurs groupes
+> le long de la même voie physique. C'est pour ça que le pipeline peut annoncer « l'unicité
+> `(quartier, rue)` est respectée sans être modifiée » (§11) : il ne lève pas la contrainte, il
+> arrête de la subir en changeant l'ordre des étapes.
+
+Ceci posé, le symptôme observé reste le même : `Street`, aujourd'hui, est un objet unique par rue
+entière (pas encore scindé en tronçons), donc en pratique une close héritait mécaniquement de la
+géométrie de sa rue : une rue de 2,9 km produisait une close de 2,9 km.
 
 Deux défauts du référentiel voirie amplifiaient l'effet. Tous deux sont des séquelles de nos
 propres imports, pas de la donnée source.
@@ -440,5 +469,6 @@ lot séparé, une fois le regroupement validé.
 - Une **contrainte d'acceptation sur le perçage** : refuser une proposition dont l'enveloppe
   convexe recouvre plus de 10 % des blocs d'une autre, et rendre le bloc contesté.
 - La règle des **99 adresses** concerne 55 closes pour 15 935 adresses. Elle reste inapplicable
-  tant que l'unicité `(quartier, rue)` interdit de scinder une rue. Décision du 2026-09-06 :
-  le plafond peut être dépassé si nécessaire.
+  tant que `Street` n'est pas scindable en tronçons (l'unicité `(quartier, rue)` elle-même ne
+  l'interdit pas, rectificatif §8). Décision du 2026-09-06 : le plafond peut être dépassé si
+  nécessaire.
