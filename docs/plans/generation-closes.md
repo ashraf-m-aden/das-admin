@@ -11,6 +11,10 @@
 > 723 perçages, parce qu'une close hérite de la longueur de sa rue. Voir la **partie II**,
 > plus bas — diagnostic, stratégies comparées et pipeline retenu.
 >
+> ⚠️ **Le pipeline en cinq étapes est abandonné (2026-09-09).** Il ne reste qu'**une étape de
+> fusion** des closes de moins de deux blocs : 2 311 closes deviennent 1 336, à 5,2 blocs de
+> moyenne, et il n'en reste que 5 à un seul bloc. Voir §11, réécrit.
+>
 > ⚠️ **Rectificatif du 2026-09-09 : l'index unique n'oblige pas « une rue = une close ».** §8
 > reformulé — c'est l'absence de clustering avant l'appariement qui est en cause, pas l'unicité
 > `(QuartierId, StreetId)` elle-même. Une rue longue peut être servie par plusieurs closes courtes
@@ -291,6 +295,11 @@ topologiques et cesse d'être lu.
 
 ## 10. Les trois stratégies mesurées
 
+> ⚠️ **Section conservée pour la trace, dépassée depuis le 2026-09-09.** La troisième colonne
+> décrit le pipeline « voie large + K-means + fusion », abandonné : la décision d'accepter une rue
+> sans nom et la correction des exclusions ont rendu inutile tout ce qui n'est pas l'étape de
+> fusion. Voir §11. Les mesures elles-mêmes restent exactes.
+
 | | Rue la plus proche (actuel) | K-means seul | **Voie large + K-means + fusion** |
 |---|---:|---:|---:|
 | Closes proposées | 2 048 | 1 221 | **1 324** |
@@ -313,61 +322,85 @@ laissées distinctes.
 
 ---
 
-## 11. Le pipeline retenu
+## 11. Ce qu'il reste à faire : UNE étape de fusion
 
-### Étape 1 — la voie large est une frontière infranchissable
-
-> **Validé sur PK12 le 2026-09-09.** Cette étape seule, sans subdivision, découpe le quartier en
-> **5 îles : 197, 162, 91, 89 et 1 bloc** — les voies larges en cause étant la Route Nationale 1,
-> la Route Nationale 3/3 et trois tronçons de boulevard. C'est le découpage qu'Ashraf a produit à
-> la main sur ce quartier : quatre zones, plus un bloc isolé que l'étape 3 absorbe.
+> ⚠️ **Réécrit le 2026-09-09.** Les versions précédentes de cette section décrivaient un pipeline
+> en cinq étapes — coupe par voies larges, K-means, fusion, découpage en tronçons, attribution
+> gloutonne. **Cet échafaudage n'est plus nécessaire.** Deux décisions l'ont vidé de sa substance :
 >
-> ⚠️ **Cela recalibre l'étape 2.** Un `k` visant 6 blocs par close découperait PK12 en 90 closes,
-> là où la lecture métier en attend 4 à 7 — soit **80 à 135 blocs chacune**. La cible de 6 blocs
-> vient d'une mesure de compacité, pas d'un besoin d'adressage : elle est à retrancher.
+> - **Une rue sans nom n'est pas un problème** (décision du 2026-09-09) : la close reste
+>   « unknown ». Les étapes 4 et 5, qui existaient pour fournir des noms distincts, tombent.
+> - **La correction de `excludeStreetCodePrefixes`** (§8) a déjà réglé la dispersion kilométrique.
+>   L'étalement médian d'une close est retombé à **113 m**, le 95ᵉ centile à 395 m.
+>
+> Ce qui reste est un seul défaut, et c'est celui qu'Ashraf avait nommé le premier.
 
+### L'état mesuré de Djibouti, avec l'algorithme actuel
 
-Deux blocs dont le segment de liaison traverse un **boulevard, une avenue ou une route urbaine**
-ne peuvent pas appartenir à la même close.
+Réseau du back, `maxDistanceMeters` 50, `maxBlocGapMeters` 100, exclusions à jour :
 
-Le réseau large urbain compte **225 voies** : 123 boulevards (208 km), 68 avenues (45 km),
-34 routes urbaines. Sur **28 045** liens de voisinage (blocs du même quartier à moins de 40 m),
-**6 376 sont coupés**. Les composantes connexes restantes sont les îles du tissu.
+```
+2 311 closes proposees
+6 907 blocs, 24 557 adresses
+1 011 closes a UN SEUL BLOC       (44 %)
+   62 blocs non rattaches
+etalement median 113 m, p95 395 m
+```
 
-C'est ce qui encode la séparation par voies claires **sans exiger que le réseau referme des
-boucles** — condition que cette donnée ne remplit pas, cf. §6.
+### ⚠️ Le défaut est uniforme, pas localisé
 
-### Étape 2 — partitionner chaque île
+C'est le point qui a fait tomber toute une priorisation. Tant que le nommage servait de critère,
+le centre semblait sain et Balbala bloqué. Le nommage écarté, la mesure dit l'inverse :
 
-`ST_ClusterKMeans` avec `k = ⌈blocs ⁄ 6⌉`, appliqué **à l'intérieur** de chaque île. Les frontières
-internes ne sont pas des voies, mais aucune close ne franchit une voie large.
+| Quartier | Blocs | Closes | À 1 bloc | % |
+|---|---:|---:|---:|---:|
+| PK12 | 540 | 276 | 143 | 52 % |
+| **Quartier 1** | 127 | 28 | 14 | **50 %** |
+| CITE HODAN | 153 | 85 | 39 | 46 % |
+| **Quartier 2** | 140 | 28 | 12 | **43 %** |
+| HAYABLEH | 1 323 | 528 | 206 | 39 % |
+| BALBALA Q 5 | 217 | 74 | 22 | 30 % |
+| Quartier 7 | 309 | 80 | 15 | 19 % |
 
-C'est l'étape qui supprime les monstres : la plus grosse close passe de **653 à 18 blocs**.
+Quartier 1, en plein centre planifié, est à 50 % — pire que BALBALA Q 5 à 30 %. **Le centre n'est
+pas mieux structuré, il a seulement des rues nommées.** Aucun découpage par type de tissu n'est
+donc justifié : une seule règle, partout.
 
-### Étape 3 — fusionner ce qui reste sous deux blocs
+### La règle
 
-D'abord par lien de voisinage, **sans jamais refranchir une voie large**. Puis, pour les blocs sans
-aucun voisin à 40 m, vers la close la plus proche du même quartier.
+> Après le regroupement actuel, **toute close de moins de deux blocs fusionne avec la close la
+> plus proche du même quartier.**
+>
+> La cible doit être **strictement plus grosse** — ou, à taille égale, de clé inférieure. Sans
+> cette précaution, deux closes d'un bloc voisines se désignent mutuellement et s'échangent
+> indéfiniment : la boucle sort sur son garde-fou et laisse le défaut en place. Vérifié.
+>
+> La fusion se répète jusqu'à point fixe, atteint en moins de 30 tours sur Djibouti.
 
-> ⚠️ **La cible doit être strictement plus grosse** (ou de clé inférieure à taille égale). Sans
-> cette règle, deux orphelins voisins se désignent mutuellement et s'échangent indéfiniment : la
-> boucle sort sur son garde-fou de tours et laisse 151 closes à un bloc.
+### Effet mesuré
 
-Les closes à un bloc passent de 1 760 à **7** — et ces 7 sont exactement les 7 quartiers qui ne
-contiennent qu'un seul bloc. Cas irréductible : une close ne peut pas déborder de son quartier.
+```
+                          avant      apres
+closes                    2 311      1 336
+blocs par close (moyenne)   3,0        5,2
+closes a un seul bloc     1 011          5
+```
 
-### Étapes 4 et 5 — nommer
+Les 5 restantes sont les quartiers qui ne contiennent qu'**un seul bloc** : irréductible, une
+close ne peut pas déborder de son quartier.
 
-Découper le réseau urbain en tronçons (coupe à chaque intersection, plafond 250 m), puis attribuer
-gloutonnement une rue à chaque cellule, du plus gros groupe au plus petit, chacun prenant la rue
-libre la plus proche. L'unicité `(quartier, rue)` est ainsi respectée **sans être modifiée**.
+### Ce que la règle ne touche pas
 
-| Réservoir de rues | Cellules nommées | Ont leur rue la plus proche | Distance méd. / p95 |
-|---|---:|---:|---:|
-| Rues actuelles (4 283) | 875 · 72 % | 65 % | 0 m / 36 m |
-| Rues découpées (14 864) | **932 · 76 %** | **93 %** | 0 m / 21 m |
+- **62 blocs non rattachés** — aucune rue à moins de 50 m. Ils doivent rester visibles à l'écran.
+- **L'étalement au 95ᵉ centile, 395 m.** Acceptable en l'état ; à revoir seulement si la relecture
+  sur carte fait ressortir des closes trop étirées.
+- **Les closes de plus de 99 adresses.** Le plafond peut être dépassé (décision du 2026-09-06).
 
-Le gain du découpage est **modeste** : 4 points de nommage. C'est ce qui le rend optionnel, cf. §7.
+### Référence de test
+
+`scripts/sig/reference/closes-attendues-2026-09-09.csv` donne, pour chacun des **75 quartiers**,
+le nombre de closes attendu après application de la règle, avec blocs, adresses et moyenne. C'est
+la table de contrôle : une implémentation correcte côté back doit la reproduire.
 
 ---
 
@@ -469,7 +502,9 @@ lot séparé, une fois le regroupement validé.
   (2026-09-06). Ajout seul, aucune ligne existante modifiée. `Streets` : 1 344 → 4 284. Les blocs
   de Djibouti ayant une rue à moins de 50 m passent de 2 958 à 5 101 sur 5 121.
 - `core/closes/store/close-generation.state.ts` — liste d'exclusion complétée (`SIG-VE-`,
-  `OSM-ROUTE-`, `OSM-PISTE-`), `maxBlocGapMeters` ramené de 100 à 25 m.
+  `OSM-ROUTE-`, `OSM-PISTE-`). ⚠️ `maxBlocGapMeters` était passé à 25 m le 2026-09-06 puis
+  **revenu à 100 m le 2026-09-09** : 25 coupait le groupe à chaque rue transversale.
+- `scripts/sig/reference/closes-attendues-2026-09-09.csv` — table de contrôle, 75 quartiers.
 
 **Écrit, testé à blanc, non appliqué**
 
@@ -479,14 +514,17 @@ lot séparé, une fois le regroupement validé.
 
 **À décider — côté back**
 
-- Le changement d'unité de regroupement (§5) touche `POST /api/quartiers/{id}/closes/preview`.
-  Hors du dépôt front. Le pipeline a été validé en SQL sur la base de production ; les requêtes
-  sont transposables telles quelles.
+- **UNE étape de fusion** dans `POST /api/quartiers/{id}/closes/preview` : toute close de moins
+  de deux blocs rejoint la plus proche de son quartier, la cible devant être strictement plus
+  grosse (§11). C'est la seule évolution nécessaire. Hors du dépôt front ; validée en SQL sur la
+  base de production, la requête est transposable telle quelle. Table de contrôle :
+  `scripts/sig/reference/closes-attendues-2026-09-09.csv`.
+- ~~Le changement d'unité de regroupement en cinq étapes.~~ **Abandonné le 2026-09-09**, cf. §11.
 - `QuartierClosePlanParameters` gagnerait un **plafond de longueur de rue** : 13 axes interurbains
   nommés `OSM-<NOM>` ne sont pas excluables par préfixe sans emporter des rues urbaines légitimes
   — `OSM-148704475` porte la close `Q7-02`.
-- Une **contrainte d'acceptation sur le perçage** : refuser une proposition dont l'enveloppe
-  convexe recouvre plus de 10 % des blocs d'une autre, et rendre le bloc contesté.
+- ~~Une **contrainte d'acceptation sur le perçage**.~~ Reportée : la mesure du 2026-09-09 ne la
+  fait plus ressortir comme prioritaire face à la fusion.
 - La règle des **99 adresses** concerne 55 closes pour 15 935 adresses. Elle reste inapplicable
   tant que `Street` n'est pas scindable en tronçons (l'unicité `(quartier, rue)` elle-même ne
   l'interdit pas, rectificatif §8). Décision du 2026-09-06 : le plafond peut être dépassé si
