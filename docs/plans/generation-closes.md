@@ -11,9 +11,10 @@
 > 723 perçages, parce qu'une close hérite de la longueur de sa rue. Voir la **partie II**,
 > plus bas — diagnostic, stratégies comparées et pipeline retenu.
 >
-> ⚠️ **Le pipeline en cinq étapes est abandonné (2026-09-09).** Il ne reste qu'**une étape de
-> fusion** des closes de moins de deux blocs : 2 311 closes deviennent 1 336, à 5,2 blocs de
-> moyenne, et il n'en reste que 5 à un seul bloc. Voir §11, réécrit.
+> ⚠️ **Les règles de découpage sont figées (2026-09-09), voir §11.** Une close est un CÔTÉ de rue ;
+> les rues sont filtrées seulement là où elles sont trop denses ; un bloc seul ne fait close que
+> s'il est vraiment grand ; les blocs mal découpés se regroupent entre eux à 10 m. Résultat :
+> **605 closes** sur Djibouti, dont **4 sur PK12** — la cible donnée à la main.
 >
 > ⚠️ **Rectificatif du 2026-09-09 : l'index unique n'oblige pas « une rue = une close ».** §8
 > reformulé — c'est l'absence de clustering avant l'appariement qui est en cause, pas l'unicité
@@ -322,85 +323,109 @@ laissées distinctes.
 
 ---
 
-## 11. Ce qu'il reste à faire : UNE étape de fusion
+## 11. Les règles de découpage — figées le 2026-09-09
 
-> ⚠️ **Réécrit le 2026-09-09.** Les versions précédentes de cette section décrivaient un pipeline
-> en cinq étapes — coupe par voies larges, K-means, fusion, découpage en tronçons, attribution
-> gloutonne. **Cet échafaudage n'est plus nécessaire.** Deux décisions l'ont vidé de sa substance :
->
-> - **Une rue sans nom n'est pas un problème** (décision du 2026-09-09) : la close reste
->   « unknown ». Les étapes 4 et 5, qui existaient pour fournir des noms distincts, tombent.
-> - **La correction de `excludeStreetCodePrefixes`** (§8) a déjà réglé la dispersion kilométrique.
->   L'étalement médian d'une close est retombé à **113 m**, le 95ᵉ centile à 395 m.
->
-> Ce qui reste est un seul défaut, et c'est celui qu'Ashraf avait nommé le premier.
+> Établies avec Ashraf à partir de six découpages faits à la main (Quartier 7 Bis, Quartier 7,
+> PK12, Balbala Ancien, Wahladaba/Bache-à-eau, Cheik Moussa/Cité Luxembourg), puis mesurées sur
+> les 6 969 blocs de Djibouti. Elles remplacent le pipeline en cinq étapes ET l'étape de fusion
+> seule, tous deux abandonnés.
 
-### L'état mesuré de Djibouti, avec l'algorithme actuel
+### R1 — Une close est un côté de rue
 
-Réseau du back, `maxDistanceMeters` 50, `maxBlocGapMeters` 100, exclusions à jour :
+Les blocs d'un quartier bordant **un seul côté** d'une rue. `(quartier, rue, côté)`, le côté étant
+le signe du produit vectoriel entre la direction locale de la voie et le vecteur voie→bloc.
+`CloseSide` existe déjà dans les modèles, il servait à la numérotation.
 
-```
-2 311 closes proposees
-6 907 blocs, 24 557 adresses
-1 011 closes a UN SEUL BLOC       (44 %)
-   62 blocs non rattaches
-etalement median 113 m, p95 395 m
-```
+Cette forme satisfait les trois observations d'Ashraf d'un coup : *une rue sépare toujours deux
+closes* (elle sépare sa propre gauche de sa droite), *les closes ne se chevauchent pas* (un bloc
+n'a qu'une rue et qu'un côté), et *une close ne franchit jamais son quartier* — ce que le schéma
+imposait déjà, `Closes.QuartierId` étant unique.
 
-### ⚠️ Le défaut est uniforme, pas localisé
+### R2 — ⚠️ Filtrer les rues, mais seulement là où elles sont trop nombreuses
 
-C'est le point qui a fait tomber toute une priorisation. Tant que le nommage servait de critère,
-le centre semblait sain et Balbala bloqué. Le nommage écarté, la mesure dit l'inverse :
+C'est la règle la moins évidente, et sans elle rien ne marche à Balbala.
 
-| Quartier | Blocs | Closes | À 1 bloc | % |
+L'import OSM du 2026-09-06 a versé 2 940 voies sans filtrer : OSM y cartographie chaque sente
+entre deux maisons comme un `way`. Résultat, la densité de voirie n'a rien à voir d'un quartier
+à l'autre :
+
+| Quartier | Blocs | Rues | Rues par bloc | Desserte médiane |
 |---|---:|---:|---:|---:|
-| PK12 | 540 | 276 | 143 | 52 % |
-| **Quartier 1** | 127 | 28 | 14 | **50 %** |
-| CITE HODAN | 153 | 85 | 39 | 46 % |
-| **Quartier 2** | 140 | 28 | 12 | **43 %** |
-| HAYABLEH | 1 323 | 528 | 206 | 39 % |
-| BALBALA Q 5 | 217 | 74 | 22 | 30 % |
-| Quartier 7 | 309 | 80 | 15 | 19 % |
+| PK12 | 540 | 262 | 0,49 | **2** |
+| HAYABLEH | 1 324 | 485 | 0,37 | **2** |
+| Quartier 7 Bis | 81 | 20 | 0,25 | 4 |
+| Quartier 2 | 140 | 16 | 0,11 | 4 |
+| Quartier 4 | 213 | 16 | 0,08 | 12 |
 
-Quartier 1, en plein centre planifié, est à 50 % — pire que BALBALA Q 5 à 30 %. **Le centre n'est
-pas mieux structuré, il a seulement des rues nommées.** Aucun découpage par type de tissu n'est
-donc justifié : une seule règle, partout.
+> **Si la desserte médiane du quartier vaut 2 ou moins, ne garder que les rues desservant au moins
+> 8 blocs. Sinon, garder toutes les rues.**
 
-### La règle
+Le conditionnement est essentiel : appliqué partout, le filtre à 8 blocs ferait tomber Quartier 2
+de 16 à 10 closes et Quartier 7 Bis de 16 à 4. Conditionné, il ne mord que là où la voirie est
+sur-dense, et laisse le centre intact.
 
-> Après le regroupement actuel, **toute close de moins de deux blocs fusionne avec la close la
-> plus proche du même quartier.**
->
-> La cible doit être **strictement plus grosse** — ou, à taille égale, de clé inférieure. Sans
-> cette précaution, deux closes d'un bloc voisines se désignent mutuellement et s'échangent
-> indéfiniment : la boucle sort sur son garde-fou et laisse le défaut en place. Vérifié.
->
-> La fusion se répète jusqu'à point fixe, atteint en moins de 30 tours sur Djibouti.
+⚠️ **Le seuil en POURCENTAGE ne marche pas.** Essayé à 3, 5 et 8 % des blocs du quartier : à
+Balbala aucune rue n'atteint 5 % de 540 blocs — le filtre ne garde rien et ne produit aucune
+close. Le seuil doit être un nombre absolu de blocs desservis.
 
-### Effet mesuré
+### R3 — Un bloc seul ne fait close que s'il est vraiment grand
+
+Une close d'un seul bloc n'est admise que si ce bloc dépasse **10 000 m² et 8 parcelles** : le cas
+du découpage que l'expert SIG n'a pas fait. Un petit bloc de 2 à 8 parcelles n'est jamais une
+close à lui seul.
+
+Le seuil se lit dans la distribution, qui est extrêmement étirée — le 99ᵉ centile vaut 38 fois la
+médiane. Ce n'est pas une queue, c'est une autre population :
 
 ```
-                          avant      apres
-closes                    2 311      1 336
-blocs par close (moyenne)   3,0        5,2
-closes a un seul bloc     1 011          5
+p10  253 m2     mediane  970 m2     p90  3 461 m2     p99  36 702 m2     max  838 725 m2
 ```
 
-Les 5 restantes sont les quartiers qui ne contiennent qu'**un seul bloc** : irréductible, une
-close ne peut pas déborder de son quartier.
+À 10 000 m² on retient 230 blocs, 3,3 % du total, portant 18 parcelles en moyenne.
 
-### Ce que la règle ne touche pas
+### R4 — Les blocs mal découpés se regroupent entre eux, à 10 m
 
-- **62 blocs non rattachés** — aucune rue à moins de 50 m. Ils doivent rester visibles à l'écran.
-- **L'étalement au 95ᵉ centile, 395 m.** Acceptable en l'état ; à revoir seulement si la relecture
-  sur carte fait ressortir des closes trop étirées.
-- **Les closes de plus de 99 adresses.** Le plafond peut être dépassé (décision du 2026-09-06).
+Ceux que R1 laisse orphelins ne sont pas absorbés par une close bien formée : ils se regroupent
+**entre eux**, par proximité, tolérance **10 m**. Décision d'Ashraf : une ruelle étroite ne sépare
+pas deux closes, seule une vraie rue le fait.
+
+⚠️ **La contiguïté stricte est inapplicable.** Mesuré : seuls **1 429 blocs sur 6 969 (20 %)**
+touchent géométriquement un voisin ; 5 292 en sont séparés de moins de 10 m, par la trame de
+ruelles et l'imprécision du tracé SIG. Avec `ST_Intersects`, la règle ne s'appliquerait presque
+jamais.
+
+Ce qui reste isolé au-delà de 10 m **n'est pas rattaché de force** : il s'affiche comme non
+rattaché.
+
+### Résultat mesuré sur Djibouti
+
+```
+557 closes par la regle de rue
+ 48 closes formees en regroupant les orphelins
+605 closes au total
+101 blocs non rattaches sur 6 969
+```
+
+| Quartier | Blocs | Closes | Cible donnée à la main |
+|---|---:|---:|---|
+| **PK12** | 540 | **4** | 4 à 8 ✔ |
+| Quartier 2 | 140 | 18 | ~une par avenue ✔ |
+| Quartier 7 Bis | 81 | 19 | ~une par rue ✔ |
+| Quartier 4 | 213 | 26 | — |
+| HAYABLEH | 1 324 | **38** | ⚠️ hors échelle |
+
+### ⚠️ Ce que les règles ne règlent pas
+
+**HAYABLEH reste à 38 closes** pour 1 324 blocs, loin des 4 à 8 de l'échelle d'Ashraf. Le quartier
+est trois fois plus grand que PK12 et sa voirie OSM aussi dense : le seuil fixe de 8 blocs y
+laisse passer plus de rues. Un seuil croissant avec la taille du quartier corrigerait cela, mais
+il n'a pas été calibré — l'ajuster sur deux exemples reviendrait à surajuster.
 
 ### Référence de test
 
-`scripts/sig/reference/closes-attendues-2026-09-09.csv` donne, pour chacun des **75 quartiers**,
-le nombre de closes attendu après application de la règle, avec blocs, adresses et moyenne. C'est
-la table de contrôle : une implémentation correcte côté back doit la reproduire.
+`scripts/sig/reference/closes-attendues-2026-09-09.csv` — 75 quartiers, le nombre de closes
+attendu, la part venant de chaque règle, et les blocs non rattachés.
+`scripts/sig/reference/closes-regles.sql` — l'implémentation mesurée, transposable telle quelle.
 
 ---
 
