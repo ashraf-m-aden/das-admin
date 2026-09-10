@@ -404,12 +404,52 @@ révoquée :
 La dernière ligne de recherche est la démonstration la plus nette : le filtre porte sur **où se
 trouve** l'objet, jamais sur ce que son nom contient.
 
-### Les 46 entrées sans ville
+### Les 46 entrées sans ville — diagnostiquées le 2026-09-10
 
-34 lieux et 12 rues tombent hors de toute emprise communale enregistrée. **Une clé restreinte ne
-les voit pas** — c'est la règle : ce qu'on ne sait pas rattacher n'est pas servi à qui n'a payé
-qu'une ville. Pour les rendre visibles, il faut élargir les emprises de villes, pas assouplir la
-règle.
+34 lieux et 12 rues tombent hors de toute emprise enregistrée. **Une clé restreinte ne les voit
+pas** : ce qu'on ne sait pas rattacher n'est pas servi à qui n'a payé qu'une ville.
+
+Le compte a servi à ce pour quoi il avait été mis en place — il a fait apparaître une anomalie.
+
+> ⛔ **L'emprise d'Arta est au mauvais endroit.** `cities-emprise-depuis-nour-ville.sql` a
+> remplacé, le 2026-09-06, le polygone de région (1 825 km²) par une « emprise réelle » de
+> **10,9 km²** tirée de la livraison SIG. Mais `nour.quartiers_ville_pg` ne contient, pour la
+> région ARTA, que **2 polygones, aucun nommé** — et ils sont en lisière sud de Djibouti-ville, à
+> une trentaine de kilomètres d'Arta.
+>
+> | | longitude | latitude |
+> |---|---|---|
+> | emprise Arta actuelle | 43,112 … 43,194 | 11,516 … 11,533 |
+> | ville d'Arta | ~42,85 | ~11,53 |
+>
+> Le tableau est en outre incohérent : quatre villes portent leur polygone de **région**
+> (2 000 à 6 600 km²), Djibouti celui de la **ville** (97,7 km²), Arta un fragment.
+
+**Ce que ça coûte** : 31 des 46 entrées sont des lieux bien réels de la région d'Arta —
+l'Hôpital régional, le Lycée Hôtelier, le Terrain de Football, tout le groupe de Ouéa, Damêrdjôg,
+et six routes nationales. Un partenaire ayant acheté la région d'Arta ne verrait **rien**.
+
+**Le correctif est écrit et mesuré, pas appliqué** : `scripts/sig/cities-emprise-arta.sql`.
+Arta se dérive par soustraction — le pays moins les quatre autres régions — faute de source
+directe : aucune couche `nour` ne porte les régions, et le polygone d'origine a été écrasé.
+
+| en essai à blanc | |
+|---|---|
+| plus grand morceau retenu | **2 033 km²** (~1 780 officiels + Djibouti-ville qu'elle enserre) |
+| échardes écartées | 142 morceaux, 7,65 km² |
+| ancienne emprise perdue | **0,00 km²** |
+| entrées récupérées | **31** — 19 lieux, 12 rues |
+| resteraient sans ville | 15 |
+
+Les 15 restantes sont, à quatre près, **hors du pays** : Zeila (Somaliland) ×6, Yémen ×2,
+Érythrée ×3 — débordement de la boîte d'extraction OSM, à traiter séparément. Les quatre autres
+sont des ratés de précision : l'Hôtel Corto Maltese est à **14 m** de Tadjourah, le lieu
+« Obock » à **265 m** d'Obock.
+
+> ⚠️ Arta enserrera Djibouti-ville, et c'est correct — la région entoure la capitale. Aucune
+> ambiguïté : l'index rattache un point à la **plus petite** emprise qui le contient, donc
+> Djibouti-ville l'emporte à l'intérieur de ses limites. C'est exactement le cas que cette règle
+> sert à trancher.
 
 ### Historique : ce qui avait été annoncé comme non déployé
 
