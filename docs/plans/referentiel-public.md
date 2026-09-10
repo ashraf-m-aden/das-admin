@@ -236,29 +236,39 @@ de son environnement — exactement la mécanique de `MapStyleService`.
 directement à D.A.S.** Son back-end relaie. Notre relais de tuiles applique le même principe un
 cran plus bas — D.A.S relaie Martin.
 
-### ⚠️ Deux pièces manquent encore côté D.A.S
+### Les deux raccords, faits le 2026-09-10
 
-`commercial-style.json` **est publié** depuis le 2026-09-10 à `/assets/commercial-style.json` — pas
-à `/carto/`. Le chemin est à accorder entre les deux dépôts.
+**Le style est servi sous les deux chemins** — `/assets/commercial-style.json` et
+`/carto/commercial-style.json`, le même fichier par un `alias` nginx. Plutôt que d'imposer à
+l'autre dépôt de changer son environnement, ou de dupliquer le style, on répond aux deux.
 
-La **carte vitrine** `viewerUrl` pointe sur `/carte`, qui existe désormais — mais elle ne lit pas
-encore les paramètres `?lat=&lng=&marker=&label=` que La Poste lui passe pour centrer sur une
-agence.
+> ⚠️ `alias` et non `root` : avec `root`, nginx concaténerait le chemin de la requête au dossier
+> et chercherait `/usr/share/nginx/html/assets/carto/…`, qui n'existe pas.
+
+**`/carte` lit les paramètres d'ouverture** : `?lat=&lng=&z=&marker=&label=`. C'est le contrat
+d'ouverture depuis un consommateur externe — La Poste les construit exactement ainsi dans
+`openInDasViewer()`.
+
+> ⚠️ `marker` vaut « **longitude,latitude** » — l'ordre de MapLibre, pas celui de `lat`/`lng` qui
+> l'accompagnent dans la même URL. Ces noms et cette forme viennent du dépôt La Poste et ne
+> doivent pas changer sans prévenir l'autre côté.
+
+Tout est facultatif et validé : un paramètre absent ou illisible rend le cadrage par défaut,
+jamais une carte vide. Le zoom est borné à 19 — au-delà les tuiles n'existent plus et la carte se
+vide, ce qui se lit comme une panne.
 
 ---
 
 ## 7. État et suites
 
 **Fait** — clés (délivrance, révocation, écran), deux relais de tuiles, fermeture de `/tiles/`,
-carte publique avec recherche, panneau de détail, survol des codes postaux, regroupement des lieux.
+carte publique avec recherche, panneau de détail, survol des codes postaux, regroupement des lieux,
+et les deux raccords avec La Poste (chemin du style, paramètres d'ouverture).
 
 **À faire, par ordre d'utilité**
 
-1. **Accorder le chemin du style** avec `laposteDas` (`/carto/` contre `/assets/`).
-2. **Lire `?lat=&lng=&marker=&label=`** sur `/carte`, pour que le bouton « Ouvrir dans la carte
-   D.A.S » de La Poste centre sur l'agence.
-3. **Restriction par zone sur la clé** — la seule pièce de `clients` qui manque à `cles-api`.
-4. **Sortir `.env` du dépôt** : il est versionné et porte `RDS_PASSWORD` et `DB_CONNECTION` en
+1. **Restriction par zone sur la clé** — la seule pièce de `clients` qui manque à `cles-api`.
+2. **Sortir `.env` du dépôt** : il est versionné et porte `RDS_PASSWORD` et `DB_CONNECTION` en
    clair. Le back lit déjà AWS Secrets Manager.
-5. **Automatiser `REFRESH MATERIALIZED VIEW`** dans les scripts d'import, plutôt que de le confier
+3. **Automatiser `REFRESH MATERIALIZED VIEW`** dans les scripts d'import, plutôt que de le confier
    à la mémoire.

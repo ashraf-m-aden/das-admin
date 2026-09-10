@@ -6,6 +6,7 @@ import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpClient } from '@angular/common/http';
+import { ActivatedRoute } from '@angular/router';
 import { Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import { TranslocoModule } from '@jsverse/transloco';
 import * as maplibregl from 'maplibre-gl';
@@ -59,6 +60,7 @@ export class CartePubliqueComponent implements OnInit, OnDestroy {
   private readonly http = inject(HttpClient);
   private readonly config = inject(AppConfigService);
   private readonly frappe = new Subject<string>();
+  private readonly route = inject(ActivatedRoute);
   private readonly zone = inject(NgZone);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -99,11 +101,13 @@ export class CartePubliqueComponent implements OnInit, OnDestroy {
     // Hors de la zone Angular : MapLibre émet des dizaines d'événements par seconde au survol et
     // au déplacement, chacun déclencherait un cycle de détection pour rien.
     this.zone.runOutsideAngular(() => {
+      const vue = this.vueDemandee();
+
       const carte = new maplibregl.Map({
         container: this.conteneur().nativeElement,
         style,
-        center: [43.145, 11.588],
-        zoom: 12,
+        center: vue.centre ?? [43.145, 11.588],
+        zoom: vue.zoom ?? 12,
         attributionControl: false,
         maxBounds: [[41.0, 10.4], [44.2, 13.3]],
       });
@@ -119,8 +123,70 @@ export class CartePubliqueComponent implements OnInit, OnDestroy {
       carte.once('load', () => {
         void enregistrerIconesPoi(carte);
         this.brancherInteractions(carte);
+        if (vue.repere) {
+          this.zone.run(() => this.selectionner(vue.repere!));
+        }
       });
     });
+  }
+
+  /**
+   * Cadrage demandé par l'URL — `?lat=&lng=&z=&marker=&label=`.
+   *
+   * <b>C'est le contrat d'ouverture depuis un consommateur externe.</b> La Plateforme 1 de La
+   * Poste construit exactement ces paramètres dans `openInDasViewer()` pour ouvrir la carte
+   * centrée sur une agence. Les noms et la forme de `marker` — « longitude,latitude » — viennent
+   * de là et ne doivent pas changer sans prévenir l'autre dépôt.
+   *
+   * Tout est facultatif et validé : un paramètre absent ou illisible rend simplement le cadrage
+   * par défaut, jamais une carte vide. Une URL bricolée à la main ne doit pas casser l'écran.
+   */
+  private vueDemandee(): {
+    centre: [number, number] | null;
+    zoom: number | null;
+    repere: LieuSelectionne | null;
+  } {
+    const p = this.route.snapshot.queryParamMap;
+
+    const nombre = (v: string | null): number | null => {
+      if (v === null) return null;
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    };
+
+    const lat = nombre(p.get('lat'));
+    const lng = nombre(p.get('lng'));
+    const centre: [number, number] | null =
+      lat !== null && lng !== null ? [lng, lat] : null;
+
+    // `marker` vaut « longitude,latitude » — l'ordre de MapLibre, pas celui de lat/lng.
+    let repereCoord: [number, number] | null = null;
+    const marker = p.get('marker');
+    if (marker) {
+      const [mx, my] = marker.split(',').map((v) => Number(v));
+      if (Number.isFinite(mx) && Number.isFinite(my)) {
+        repereCoord = [mx, my];
+      }
+    }
+    repereCoord ??= centre;
+
+    const label = p.get('label');
+    const repere: LieuSelectionne | null = repereCoord
+      ? {
+          genre: 'lieu',
+          titre: label?.trim() || 'carte.lieuSansNom',
+          sousTitre: undefined,
+          lignes: [],
+          lngLat: repereCoord,
+        }
+      : null;
+
+    // Le zoom est borné à ce que le style couvre : au-delà de 19 les tuiles n'existent plus et
+    // la carte se vide, ce qui se lit comme une panne.
+    const z = nombre(p.get('z'));
+    const zoom = z === null ? null : Math.min(Math.max(z, 5), 19);
+
+    return { centre, zoom, repere };
   }
 
   private brancherInteractions(carte: maplibregl.Map): void {
