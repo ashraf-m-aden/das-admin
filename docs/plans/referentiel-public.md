@@ -458,10 +458,40 @@ La première ligne est celle qui était cassée : avant le correctif, une clé A
 la tuile d'Arta. Et la recherche « arta » sous clé Arta rend désormais l'Hôpital régional, le
 Lycée Hôtelier, l'École Primaire — elle ne rendait rien.
 
-Les 15 restantes sont, à quatre près, **hors du pays** : Zeila (Somaliland) ×6, Yémen ×2,
-Érythrée ×3 — débordement de la boîte d'extraction OSM, à traiter séparément. Les quatre autres
-sont des ratés de précision : l'Hôtel Corto Maltese est à **14 m** de Tadjourah, le lieu
-« Obock » à **265 m** d'Obock.
+### Le nettoyage des lieux hors frontière — 2026-09-10
+
+Les 15 restantes étaient, à quatre près, **hors du pays** : débordement de la boîte d'extraction
+OSM. `scripts/sig/nour/poi-hors-frontiere.sql` en a retiré 20 lignes de `nour.poi_osm`
+(sauvegardées avec leur WKT dans `poi-hors-frontiere-supprimes-2026-09-10.csv`).
+
+| | avant | après |
+|---|---|---|
+| `nour.poi_osm` | 961 | **941** |
+| entrées d'index | 999 | **989** |
+| sans ville | 15 | **5** (0,5 %) |
+
+> ⛔ **Le critère n'est PAS « hors du contour national ».** Il détruirait de la donnée
+> djiboutienne : sur les 43 lieux hors contour, **seize sont des hébergements groupés au large
+> dans le golfe de Tadjoura** — très vraisemblablement les **îles Moucha et Maskali**, que le
+> contour ne contient pas. Et l'Hôtel Corto Maltese est à **2 m** du trait, le point « Obock »
+> — la ville — à **443 m**.
+>
+> **Le contour national est incomplet et approximatif sur le littoral.** Le corriger est le vrai
+> remède ; tant que ce n'est pas fait, « hors du contour » ne peut pas servir de critère de
+> suppression.
+
+Le critère retenu est **plus de 15 km au-delà du trait**, lu dans la donnée et non choisi au
+jugé : le groupe à conserver s'arrête à 11 521 m, celui à retirer commence à 21 758 m. Dix
+kilomètres de vide entre les deux. Le script contrôle ce vide à chaque passage et le rapporte.
+
+⚠️ **Le biais est délibérément conservateur.** Cinq entrées restent sans ville, dont trois
+probablement étrangères — Rahayta (3,7 km, Érythrée), Dewele (5,3 km, frontière éthiopienne) et
+un lieu de culte sans nom à l'ouest. Les retirer imposerait un seuil bas, qui emporterait les
+îles. Garder trois points douteux coûte moins que d'effacer seize lieux djiboutiens.
+
+Vérifié après coup : « mandab » et « wahdah » ne rendent plus rien ; « zeila » rend encore deux
+résultats, mais ce sont la **rue de Zeila** et l'**Autoroute Loyada-Zeila**, deux voies bien
+djiboutiennes.
 
 ### ⚠️ Le contrôle des tuiles porte sur l'ENVELOPPE, pas sur le polygone
 
