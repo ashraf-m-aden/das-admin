@@ -126,3 +126,13 @@ FROM (SELECT coalesce("PoiCategorie", '(sans POI)') AS cat, count(*) AS n
       FROM public."Adresses" GROUP BY 1) x;
 
 SELECT section, detail, valeur FROM rapport ORDER BY ordre, detail;
+
+-- ---------------------------------------------------------------------------------------------
+-- L'index de recherche ne se met pas a jour tout seul.
+-- ---------------------------------------------------------------------------------------------
+-- Ce script vient d'ecrire une table qui alimente `public.recherche_index`. Sans ce
+-- rafraichissement, la carte montrerait une donnee que la recherche ne trouve pas — et une cle
+-- d'API restreinte a une ville ne verrait pas du tout les entrees manquantes.
+--
+-- Hors transaction, apres le COMMIT : Postgres refuse CONCURRENTLY dans un bloc transactionnel.
+\ir ../rafraichir-recherche.sql

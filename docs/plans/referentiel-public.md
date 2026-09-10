@@ -266,16 +266,31 @@ ne doit pas recevoir ce qu'on ne sait pas rattacher : une restriction qui laisse
 ne sait pas classer n'est pas une restriction. Le script d'index compte ce reliquat à chaque
 rafraîchissement, pour qu'il ne reste jamais inconnu.
 
-### ⚠️ La vue ne se rafraîchit pas toute seule
+### Le rafraîchissement est branché sur les neuf scripts d'import
 
-Après un import ou une campagne de nommage :
+`recherche_index` est matérialisée : elle ne se met pas à jour toute seule. Les neuf scripts qui
+écrivent ses tables sources se terminent désormais par :
 
 ```sql
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.recherche_index;
+\ir rafraichir-recherche.sql
 ```
 
-`CONCURRENTLY` exige l'index unique sur `cle` : sans lui, la vue est verrouillée pendant tout le
-rafraîchissement et la recherche tombe.
+**Un fichier inclus, et non la commande recopiée neuf fois.** Le jour où le rafraîchissement
+change, une copie oubliée ne se signalerait pas : elle continuerait de tourner en produisant
+autre chose que les huit autres.
+
+> ⚠️ `\ir` et non `\i` : `\ir` résout le chemin relativement au **script incluant**, `\i`
+> relativement au répertoire courant de psql. Avec `\i`, l'inclusion ne marcherait que si l'on
+> lance psql depuis le bon dossier — c'est-à-dire par hasard. Vérifié depuis la racine du dépôt,
+> depuis `scripts/sig/nour/` et depuis `/tmp` : les trois résolvent.
+
+> ⚠️ L'inclusion se place **après le `COMMIT`**, jamais entre `BEGIN` et `COMMIT` : Postgres
+> refuse `REFRESH ... CONCURRENTLY` dans un bloc de transaction. Et `CONCURRENTLY` exige l'index
+> unique sur `cle` — sans lui la vue serait verrouillée pendant tout le rafraîchissement et la
+> recherche publique tomberait, en pleine journée.
+
+L'enjeu a grandi avec `ville_id` : une entrée absente de l'index n'est plus seulement
+introuvable, elle est **invisible au partenaire restreint qui a payé pour la voir**.
 
 ### ⚠️ `unaccent()` n'est pas indexable
 
@@ -414,8 +429,14 @@ psql "$DB" -v ON_ERROR_STOP=1 -f das-admin/scripts/sig/recherche-index.sql
 Les deux ont été passées le 2026-09-10 — la section précédente en donne le résultat. L'ordre
 comptait : déployer avant elles fait lire au code des colonnes qui n'existent pas.
 
-**À faire, par ordre d'utilité**
-1. **Sortir `.env` du dépôt** : il est versionné et porte `RDS_PASSWORD` et `DB_CONNECTION` en
-   clair. Le back lit déjà AWS Secrets Manager.
-2. **Automatiser `REFRESH MATERIALIZED VIEW`** dans les scripts d'import, plutôt que de le confier
-   à la mémoire.
+**À faire**
+
+**Sortir `.env` du dépôt.** Il est versionné et porte `RDS_PASSWORD` et `DB_CONNECTION` en clair ;
+`docker-compose.yml` porte en plus le mot de passe `martin_ro` en dur. Le back lit déjà AWS
+Secrets Manager, la mécanique existe.
+
+> ⚠️ **Ne pas faire `git rm --cached .env` seul.** Le fichier est suivi : un `git pull` sur l'EC2
+> l'effacerait du disque, et la pile perdrait `MAP_PUBLIC_KEY`, `RDS_HOST` et le reste. Il faut
+> d'abord poser le fichier hors de Git sur chaque machine, puis le retirer du suivi. Et comme les
+> secrets restent dans l'historique, **le mot de passe doit être tourné** — le retrait du fichier
+> ne le protège pas rétroactivement.
