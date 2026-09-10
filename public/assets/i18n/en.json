@@ -22,7 +22,8 @@
     "discoveries": "Field reports",
     "photoTest": "S3 upload test",
     "closesGeneration": "Close generation",
-    "cartePublique": "Public map"
+    "cartePublique": "Public map",
+    "clesApi": "Public API keys"
   },
   "common": {
     "search": "Search…",
@@ -1051,5 +1052,34 @@
       "lieu": "Place",
       "quartier": "Quartier"
     }
+  },
+  "clesApi": {
+    "titre": "Public API keys",
+    "sousTitre": "Each key opens the referential's map, tiles and search to an external consumer. Use it in the X-DAS-Key header or the « cle » parameter.",
+    "actives": "{{n}} active key(s)",
+    "consommateur": "Issue the key to",
+    "consommateurPlaceholder": "La Poste de Djibouti",
+    "delivrer": "Issue a key",
+    "chargement": "Loading…",
+    "aucune": "No key issued yet.",
+    "colConsommateur": "Consumer",
+    "colPrefixe": "Prefix",
+    "colCreee": "Issued on",
+    "colUsage": "Last used",
+    "colEtat": "Status",
+    "jamaisUtilisee": "never used",
+    "active": "Active",
+    "revoquee": "Revoked",
+    "revoquer": "Revoke",
+    "revoquerConfirm": "Revoke {{nom}}'s key? The consumer loses access immediately, and the key cannot be restored — a new one must be issued.",
+    "secretTitre": "{{nom}}'s key — copy it now",
+    "secretAvertissement": "This is the only time this key is shown. Only its fingerprint is stored: it cannot be retrieved. A lost key is revoked and replaced.",
+    "copier": "Copy",
+    "copie": "Copied",
+    "secretCompris": "I have copied the key",
+    "noteUsage": "Last use is recorded at most once per hour: a map requests hundreds of tiles per minute, and writing on every request would collapse throughput.",
+    "erreurChargement": "Keys could not be loaded.",
+    "erreurCreation": "The key could not be issued.",
+    "erreurRevocation": "The key could not be revoked."
   }
 }

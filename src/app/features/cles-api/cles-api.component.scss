@@ -1,0 +1,141 @@
+@use "styles/variables" as v;
+
+.cles {
+  display: flex;
+  flex-direction: column;
+  gap: v.$space-5;
+  padding: v.$space-6;
+
+  &__tete {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: v.$space-4;
+    flex-wrap: wrap;
+
+    h1 { margin: 0; font-size: v.$font-size-xl; }
+  }
+
+  &__sous { margin: v.$space-1 0 0; color: var(--color-text-muted); font-size: v.$font-size-sm; max-width: 64ch; }
+
+  &__compteur {
+    padding: v.$space-1 v.$space-3;
+    border-radius: v.$radius-full;
+    background: var(--color-surface-alt);
+    color: var(--color-text-muted);
+    font-size: v.$font-size-sm;
+    white-space: nowrap;
+  }
+
+  &__erreur {
+    display: flex; align-items: center; gap: v.$space-2;
+    margin: 0; color: var(--color-danger); font-size: v.$font-size-sm;
+  }
+
+  &__vide { margin: 0; color: var(--color-text-muted); font-size: v.$font-size-sm; }
+
+  &__table { overflow-x: auto; border: 1px solid var(--color-border); border-radius: v.$radius-md; }
+
+  table { border-collapse: collapse; width: 100%; font-size: v.$font-size-sm; }
+  th, td { padding: v.$space-3 v.$space-4; text-align: left; border-bottom: 1px solid var(--color-border); }
+  th { font-weight: v.$font-weight-semibold; color: var(--color-text-muted); font-size: v.$font-size-xs; }
+  tbody tr:last-child td { border-bottom: none; }
+
+  &__nom { font-weight: v.$font-weight-medium; }
+  &__jamais { color: var(--color-text-muted); font-style: italic; }
+  &__action { text-align: right; }
+
+  /* Une clé révoquée reste visible — c'est une trace de ce qui a été délivré — mais elle doit
+     se lire au premier coup d'œil comme inactive. */
+  &__ligne--revoquee { opacity: 0.55; }
+
+  &__note {
+    display: flex; align-items: flex-start; gap: v.$space-2;
+    margin: 0; color: var(--color-text-muted); font-size: v.$font-size-xs; max-width: 80ch;
+  }
+
+  code {
+    font-family: v.$font-family-mono;
+    font-size: v.$font-size-xs;
+    background: var(--color-surface-alt);
+    padding: 2px v.$space-2;
+    border-radius: v.$radius-sm;
+  }
+}
+
+/* ---------- le secret, montre une seule fois ---------- */
+
+.secret {
+  display: flex;
+  flex-direction: column;
+  gap: v.$space-3;
+  padding: v.$space-4 v.$space-5;
+  border: 1px solid var(--color-warning, #b45309);
+  border-left: 4px solid var(--color-warning, #b45309);
+  border-radius: v.$radius-md;
+  background: var(--color-surface);
+
+  &__tete { display: flex; align-items: center; gap: v.$space-2; }
+  &__avert { margin: 0; font-size: v.$font-size-sm; color: var(--color-text-muted); max-width: 70ch; }
+
+  &__valeur {
+    display: flex;
+    align-items: center;
+    gap: v.$space-3;
+    flex-wrap: wrap;
+
+    code {
+      flex: 1;
+      min-width: 260px;
+      /* La clé doit être sélectionnable d'un geste et lisible en entier : elle ne se retrouve
+         pas, la recopier est la seule issue. */
+      user-select: all;
+      word-break: break-all;
+      padding: v.$space-2 v.$space-3;
+      font-size: v.$font-size-sm;
+    }
+  }
+}
+
+/* ---------- etats ---------- */
+
+.etat {
+  display: inline-block;
+  padding: 1px v.$space-2;
+  border-radius: v.$radius-full;
+  font-size: v.$font-size-xs;
+
+  &--active { background: var(--color-success-bg); color: var(--color-success); }
+  &--revoquee { background: var(--color-surface-alt); color: var(--color-text-muted); }
+}
+
+.btn--danger { color: var(--color-danger); }
+
+/* ---------- creation ---------- */
+
+.creer {
+  display: flex;
+  flex-direction: column;
+  gap: v.$space-2;
+  max-width: 560px;
+
+  label { font-size: v.$font-size-sm; color: var(--color-text-muted); }
+
+  &__ligne {
+    display: flex;
+    gap: v.$space-2;
+
+    input {
+      flex: 1;
+      min-width: 0;
+      padding: v.$space-2 v.$space-3;
+      border: 1px solid var(--color-border);
+      border-radius: v.$radius-sm;
+      background: var(--color-surface);
+      color: var(--color-text);
+      font-size: v.$font-size-sm;
+
+      &:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 1px; }
+    }
+  }
+}

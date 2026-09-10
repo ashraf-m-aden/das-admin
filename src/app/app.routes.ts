@@ -104,6 +104,12 @@ export const routes: Routes = [
         loadChildren: () => import('./features/clients/clients.routes').then((m) => m.clientsRoutes),
       },
       {
+        // Delivrer une cle ouvre le referentiel a un tiers : Admin seulement.
+        path: 'cles-api',
+        canActivate: [roleGuard(['Admin'])],
+        loadChildren: () => import('./features/cles-api/cles-api.routes').then((m) => m.clesApiRoutes),
+      },
+      {
         path: 'integrations',
         canActivate: [roleGuard(['Admin'])],
         loadChildren: () => import('./features/integrations/integrations.routes').then((m) => m.integrationsRoutes),

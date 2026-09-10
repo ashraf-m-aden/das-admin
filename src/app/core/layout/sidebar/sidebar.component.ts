@@ -71,6 +71,7 @@ export class SidebarComponent {
       ],
     },
     { kind: 'link', labelKey: 'nav.users', path: '/staff', icon: 'ti-users', allowedRoles: ['Admin'] },
+    { kind: 'link', labelKey: 'nav.clesApi', path: '/cles-api', icon: 'ti-key', allowedRoles: ['Admin'] },
     { kind: 'link', labelKey: 'nav.integrations', path: '/integrations', icon: 'ti-plug', allowedRoles: ['Admin'] },
     /**
      * ÉCRAN JETABLE — test des URLs pré-signées S3. À retirer avec le dossier

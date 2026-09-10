@@ -1,0 +1,112 @@
+<div class="cles">
+  <header class="cles__tete">
+    <div>
+      <h1>{{ 'clesApi.titre' | transloco }}</h1>
+      <p class="cles__sous">{{ 'clesApi.sousTitre' | transloco }}</p>
+    </div>
+    <span class="cles__compteur">
+      {{ 'clesApi.actives' | transloco: { n: actives() } }}
+    </span>
+  </header>
+
+  <!-- Le secret, montré UNE SEULE FOIS. Le bandeau est volontairement large et alarmant : une
+       fois refermé, plus rien ne permet de le retrouver. -->
+  @if (secret(); as nouvelle) {
+    <section class="secret" role="alert">
+      <div class="secret__tete">
+        <i class="ti ti-key" aria-hidden="true"></i>
+        <strong>{{ 'clesApi.secretTitre' | transloco: { nom: nouvelle.consommateur } }}</strong>
+      </div>
+      <p class="secret__avert">{{ 'clesApi.secretAvertissement' | transloco }}</p>
+      <div class="secret__valeur">
+        <code>{{ nouvelle.secret }}</code>
+        <button type="button" class="btn btn--ghost" (click)="copier(nouvelle.secret ?? '')">
+          <i class="ti" [class.ti-copy]="!copie()" [class.ti-check]="copie()" aria-hidden="true"></i>
+          {{ (copie() ? 'clesApi.copie' : 'clesApi.copier') | transloco }}
+        </button>
+      </div>
+      <button type="button" class="btn" (click)="fermerSecret()">
+        {{ 'clesApi.secretCompris' | transloco }}
+      </button>
+    </section>
+  }
+
+  <section class="creer">
+    <label for="consommateur">{{ 'clesApi.consommateur' | transloco }}</label>
+    <div class="creer__ligne">
+      <input
+        id="consommateur"
+        type="text"
+        [attr.placeholder]="'clesApi.consommateurPlaceholder' | transloco"
+        [ngModel]="consommateur()"
+        (ngModelChange)="consommateur.set($event)"
+        (keyup.enter)="creer()" />
+      <button type="button" class="btn btn--primary"
+              [disabled]="consommateur().trim().length < 2" (click)="creer()">
+        <i class="ti ti-plus" aria-hidden="true"></i>
+        {{ 'clesApi.delivrer' | transloco }}
+      </button>
+    </div>
+  </section>
+
+  @if (erreur(); as cle) {
+    <p class="cles__erreur"><i class="ti ti-alert-triangle" aria-hidden="true"></i> {{ cle | transloco }}</p>
+  }
+
+  @if (chargement()) {
+    <p class="cles__vide">{{ 'clesApi.chargement' | transloco }}</p>
+  } @else if (cles().length === 0) {
+    <p class="cles__vide">{{ 'clesApi.aucune' | transloco }}</p>
+  } @else {
+    <div class="cles__table">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ 'clesApi.colConsommateur' | transloco }}</th>
+            <th>{{ 'clesApi.colPrefixe' | transloco }}</th>
+            <th>{{ 'clesApi.colCreee' | transloco }}</th>
+            <th>{{ 'clesApi.colUsage' | transloco }}</th>
+            <th>{{ 'clesApi.colEtat' | transloco }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (cle of cles(); track cle.id) {
+            <tr [class.cles__ligne--revoquee]="!cle.estActive">
+              <td class="cles__nom">{{ cle.consommateur }}</td>
+              <td><code>{{ cle.prefixe }}</code></td>
+              <td>{{ cle.createdAtUtc | date: 'dd/MM/yyyy' }}</td>
+              <td>
+                @if (cle.lastUsedAtUtc) {
+                  {{ cle.lastUsedAtUtc | date: 'dd/MM/yyyy HH:mm' }}
+                } @else {
+                  <span class="cles__jamais">{{ 'clesApi.jamaisUtilisee' | transloco }}</span>
+                }
+              </td>
+              <td>
+                @if (cle.estActive) {
+                  <span class="etat etat--active">{{ 'clesApi.active' | transloco }}</span>
+                } @else {
+                  <span class="etat etat--revoquee">{{ 'clesApi.revoquee' | transloco }}</span>
+                }
+              </td>
+              <td class="cles__action">
+                @if (cle.estActive) {
+                  <button type="button" class="btn btn--ghost btn--danger"
+                          (click)="revoquer(cle.id, cle.consommateur)">
+                    {{ 'clesApi.revoquer' | transloco }}
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <p class="cles__note">
+      <i class="ti ti-info-circle" aria-hidden="true"></i>
+      {{ 'clesApi.noteUsage' | transloco }}
+    </p>
+  }
+</div>

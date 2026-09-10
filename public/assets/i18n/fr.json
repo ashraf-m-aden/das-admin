@@ -22,7 +22,8 @@
     "discoveries": "Signalements",
     "photoTest": "Test upload S3",
     "closesGeneration": "Génération des closes",
-    "cartePublique": "Carte publique"
+    "cartePublique": "Carte publique",
+    "clesApi": "Clés d'accès public"
   },
   "common": {
     "search": "Rechercher…",
@@ -1051,5 +1052,34 @@
       "lieu": "Lieu",
       "quartier": "Quartier"
     }
+  },
+  "clesApi": {
+    "titre": "Clés d'accès public",
+    "sousTitre": "Chaque clé ouvre la carte, les tuiles et la recherche du référentiel à un consommateur externe. Elle s'utilise dans l'en-tête X-DAS-Key ou le paramètre « cle ».",
+    "actives": "{{n}} clé(s) active(s)",
+    "consommateur": "À qui délivrer la clé",
+    "consommateurPlaceholder": "La Poste de Djibouti",
+    "delivrer": "Délivrer une clé",
+    "chargement": "Chargement…",
+    "aucune": "Aucune clé délivrée pour l'instant.",
+    "colConsommateur": "Consommateur",
+    "colPrefixe": "Préfixe",
+    "colCreee": "Délivrée le",
+    "colUsage": "Dernier usage",
+    "colEtat": "État",
+    "jamaisUtilisee": "jamais utilisée",
+    "active": "Active",
+    "revoquee": "Révoquée",
+    "revoquer": "Révoquer",
+    "revoquerConfirm": "Révoquer la clé de {{nom}} ? Le consommateur perdra l'accès immédiatement, et la clé ne peut pas être rétablie — il faudra en délivrer une nouvelle.",
+    "secretTitre": "Clé de {{nom}} — copiez-la maintenant",
+    "secretAvertissement": "C'est la seule fois où cette clé s'affiche. Seule son empreinte est conservée : elle ne pourra pas être retrouvée. Une clé perdue se révoque et se remplace.",
+    "copier": "Copier",
+    "copie": "Copiée",
+    "secretCompris": "J'ai copié la clé",
+    "noteUsage": "Le dernier usage est enregistré au plus une fois par heure : une carte demande des centaines de tuiles par minute, et l'écrire à chaque requête ferait chuter le débit.",
+    "erreurChargement": "Les clés n'ont pas pu être chargées.",
+    "erreurCreation": "La clé n'a pas pu être délivrée.",
+    "erreurRevocation": "La clé n'a pas pu être révoquée."
   }
 }

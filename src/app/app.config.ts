@@ -1,3 +1,5 @@
+import { ClesApiPort } from './core/cles-api/services/cles-api.port';
+import { ClesApiService } from './core/cles-api/services/cles-api.service';
 import { ApplicationConfig, ENVIRONMENT_INITIALIZER, inject } from '@angular/core';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
@@ -72,6 +74,10 @@ import { MockDiscoveriesApiService } from './core/discoveries/services/mock-disc
 import { shouldUseMock } from './core/config/backend-readiness';
 export const appConfig: ApplicationConfig = {
   providers: [
+    // Cles d'acces au referentiel public. Pas de bascule mock : ces routes existent cote back
+    // depuis le 2026-09-10 et sont verifiees de bout en bout.
+    { provide: ClesApiPort, useClass: ClesApiService },
+
     provideHttpClient(withInterceptors([authInterceptor])),
     provideRouter(routes),
     provideTranslocoConfig(),
