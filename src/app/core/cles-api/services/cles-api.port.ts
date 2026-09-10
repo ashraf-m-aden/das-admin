@@ -3,7 +3,13 @@ import { UUID } from '../../models/das.models';
 import { CleApi, CreerCleApiPayload } from '../models/cles-api.models';
 
 /**
- * Accès aux clés du référentiel public. Trois routes, protégées côté back par les permissions
+ * Accès aux clés du référentiel public — **le socle du contrôle d'accès** (décision du
+ * 2026-09-10, `docs/plans/referentiel-public.md` §1).
+ *
+ * ⚠️ `core/clients` porte un `ApiTokenItem` et un onglet « jeton d'API » : c'est un contrat sans
+ * implémentation, servi par un mock. Ne pas y bâtir un second système de jetons — cet onglet doit
+ * un jour déléguer ici.
+ * Trois routes, protégées côté back par les permissions
  * `public_keys.view` et `public_keys.manage` — délivrer une clé, c'est ouvrir le référentiel à
  * un tiers.
  */

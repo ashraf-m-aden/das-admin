@@ -16,3 +16,10 @@ Un fichier `docs/plans/<module>.md` par module, avec :
 - **État actuel** : ce qui est fait, ce qui ne l'est pas encore (TODO explicites).
 
 Mettre à jour le fichier du module concerné à chaque changement de conception significatif — pas besoin d'un nouveau fichier à chaque itération.
+
+## Index
+
+- `referentiel-public.md` — carte publique, tuiles, recherche et clés d'accès. Contient la
+  décision du 2026-09-10 sur le socle du contrôle d'accès (`cles-api` contre `clients`), et le
+  compte rendu du trou de sécurité fermé le même jour.
+- `generation-closes.md` — l'écran de génération et les quatre règles de découpage.

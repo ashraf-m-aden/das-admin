@@ -7,6 +7,21 @@ import { ClientsFacade } from '../../../../core/clients/store/clients.facade';
 
 const AVAILABLE_SCOPES = ['address:lookup', 'address:route', 'address:zone_full'];
 
+/**
+ * Onglet « jeton d'API » d'un client commercial.
+ *
+ * ⚠️ **CONTRAT SANS IMPLÉMENTATION.** Les routes qu'il consomme —
+ * `/clients/{id}/api-token` — n'existent pas dans `dasApi` ; l'écran est servi par le mock
+ * (`BACKEND_READINESS.clients = 'mock'`, badge affiché).
+ *
+ * Le contrôle d'accès RÉEL au référentiel public vit dans `core/cles-api`, routes
+ * `/api/cles-api`, écran `/cles-api`. Décision du 2026-09-10 : c'est lui le socle, cf.
+ * `docs/plans/referentiel-public.md` §1.
+ *
+ * **Quand le back de ce module existera**, cet onglet doit DÉLÉGUER à `/api/cles-api` en passant
+ * le client comme consommateur — pas créer une seconde table de jetons. Deux systèmes de clés,
+ * c'est la garantie qu'on en délivrera un jour une dans le mauvais écran.
+ */
 @Component({
   selector: 'das-api-tokens',
   standalone: true,

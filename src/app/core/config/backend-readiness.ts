@@ -45,6 +45,13 @@ export const BACKEND_READINESS: Record<FeatureKey, FeatureReadiness> = {
 
   reports: { status: 'mock', routes: [], noteKey: 'mockBadge.reports' },
   audit: { status: 'mock', routes: [], noteKey: 'mockBadge.audit' },
+  // ⚠️ L'onglet « jeton d'API » de cet ecran est un CONTRAT SANS IMPLEMENTATION : les routes
+  // /clients/{id}/api-token n'existent pas dans dasApi. Le controle d'acces reel vit dans
+  // `core/cles-api` (routes /api/cles-api, verifiees de bout en bout) — decision du 2026-09-10,
+  // cf. docs/plans/referentiel-public.md §1.
+  //
+  // Quand le back de ce module existera, son onglet doit DELEGUER a /api/cles-api en passant le
+  // client comme consommateur. Ne pas creer une seconde table de jetons.
   clients: { status: 'mock', routes: [], noteKey: 'mockBadge.clients' },
   integrations: { status: 'mock', routes: [], noteKey: 'mockBadge.integrations' },
 };
