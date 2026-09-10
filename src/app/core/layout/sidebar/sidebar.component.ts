@@ -11,6 +11,12 @@ interface NavLink {
   path: string;
   icon: string;
   allowedRoles?: UserRole[];
+  /**
+   * Ouvre dans un ONGLET séparé plutôt que dans le shell. Réservé aux écrans qui vivent hors de
+   * l'administration — aujourd'hui la seule carte publique, qui n'a ni barre latérale ni session
+   * et perdrait tout son sens encadrée par le shell.
+   */
+  externe?: boolean;
 }
 interface NavGroup {
   kind: 'group';
@@ -43,6 +49,10 @@ export class SidebarComponent {
     // d'autres. Le libellé du groupe est conservé, c'est le nom de l'écran.
     { kind: 'link', labelKey: 'nav.gis', path: '/blocks/map', icon: 'ti-map-2',
       allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
+    // La carte publique. `externe` : elle s'ouvre dans un onglet, c'est le même écran que celui
+    // servi aux consommateurs du référentiel — l'encadrer dans le shell donnerait une fausse idée
+    // de ce qu'ils voient.
+    { kind: 'link', labelKey: 'nav.cartePublique', path: '/carte', icon: 'ti-world-search', externe: true },
     { kind: 'link', labelKey: 'nav.closes', path: '/closes', icon: 'ti-vector-triangle', allowedRoles: ['Admin', 'Superviseur', 'Gestionnaire'] },
     // Ecran de reprise, juste apres les closes : meme sujet, vu depuis le travail qui reste
     // a faire plutot que depuis l'existant.

@@ -21,7 +21,8 @@
     "clients": "Clients",
     "discoveries": "Signalements",
     "photoTest": "Test upload S3",
-    "closesGeneration": "Génération des closes"
+    "closesGeneration": "Génération des closes",
+    "cartePublique": "Carte publique"
   },
   "common": {
     "search": "Rechercher…",
@@ -1029,5 +1030,26 @@
     "thisMonth": "Ce mois-ci",
     "last6m": "6 derniers mois",
     "custom": "Personnalisé"
+  },
+  "carte": {
+    "chercher": "Rechercher",
+    "chercherPlaceholder": "Rechercher une adresse, un lieu, un quartier…",
+    "effacer": "Effacer",
+    "fermer": "Fermer",
+    "detail": "Détail du lieu",
+    "erreur": "La carte n'a pas pu être chargée.",
+    "lieuSansNom": "Lieu sans nom",
+    "postcodeAbsent": "pas de code postal",
+    "batiments": "Bâtiments",
+    "numero": "Numéro",
+    "etape": "Étape",
+    "occupe": "Occupé par",
+    "postcode": "Code postal",
+    "ville": "Ville",
+    "genre": {
+      "adresse": "Adresse",
+      "lieu": "Lieu",
+      "quartier": "Quartier"
+    }
   }
 }

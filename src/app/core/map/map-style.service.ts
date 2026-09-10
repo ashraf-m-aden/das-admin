@@ -30,6 +30,35 @@ export class MapStyleService {
     return this.style$;
   }
 
+  private commercial$?: Observable<StyleSpecification>;
+
+  /**
+   * Le style de la CARTE PUBLIQUE — celui que D.A.S publie à ses consommateurs et que
+   * `/carte` affiche. Rendu calqué sur Google Maps : fond clair, voirie blanche à liseré,
+   * artères marquées, nationales ambrées, lieux en pastille.
+   *
+   * ⚠️ **C'est le MÊME fichier que celui servi aux clients** (`assets/commercial-style.json`,
+   * récupéré tel quel par La Poste). On ne maintient pas deux rendus : ce que voit un partenaire
+   * est ce que nous voyons. Le marqueur `__TILES_BASE_URL__` est résolu par chaque client avec
+   * SON service de tuiles — ici le nôtre, chez eux le relais de leur back-end.
+   */
+  getCommercialStyle(): Observable<StyleSpecification> {
+    if (!this.commercial$) {
+      this.commercial$ = this.http
+        .get<string>('assets/commercial-style.json', { responseType: 'text' as 'json' })
+        .pipe(
+          map((raw) => {
+            const tilesBaseUrl = this.config.get('mapTileUrl') || '';
+            return JSON.parse(
+              (raw as unknown as string).replaceAll('__TILES_BASE_URL__', tilesBaseUrl),
+            ) as StyleSpecification;
+          }),
+          shareReplay(1),
+        );
+    }
+    return this.commercial$;
+  }
+
   /**
    * Style dérivé pour un client commercial : chaque source scopable reçoit
    * un `client_id` que le backend/Martin utilise pour restreindre les tuiles.

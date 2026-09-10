@@ -10,7 +10,15 @@
   <nav class="sb__nav" aria-label="Navigation principale">
     @for (entry of entries; track entry.labelKey) {
       @if (isVisible(entry, (roles$ | async) ?? [])) {
-        @if (entry.kind === 'link') {
+        @if (entry.kind === 'link' && entry.externe) {
+          <!-- Onglet separe : `href` et non `routerLink`, sinon Angular navigue dans le shell
+               et l'ecran perd le plein ecran qui fait tout son interet. -->
+          <a class="sb__item" [href]="entry.path" target="_blank" rel="noopener">
+            <i class="ti {{ entry.icon }} sb__icon" aria-hidden="true"></i>
+            <span class="sb__label">{{ entry.labelKey | transloco }}</span>
+            <i class="ti ti-external-link sb__externe" aria-hidden="true"></i>
+          </a>
+        } @else if (entry.kind === 'link') {
           <a class="sb__item" [routerLink]="entry.path" routerLinkActive="sb__item--active">
             <i class="ti {{ entry.icon }} sb__icon" aria-hidden="true"></i>
             <span class="sb__label">{{ entry.labelKey | transloco }}</span>

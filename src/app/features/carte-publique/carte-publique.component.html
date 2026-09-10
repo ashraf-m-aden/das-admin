@@ -1,0 +1,95 @@
+<div class="carte" [class.carte--panneau]="panneauOuvert()">
+  <!-- La barre de recherche flotte SUR la carte, comme chez Google : elle ne pousse rien et
+       laisse la carte occuper tout l'écran. -->
+  <div class="chercher">
+    <div class="chercher__champ">
+      <i class="ti ti-search" aria-hidden="true"></i>
+      <input
+        type="search"
+        [attr.placeholder]="'carte.chercherPlaceholder' | transloco"
+        [attr.aria-label]="'carte.chercher' | transloco"
+        [ngModel]="recherche()"
+        (ngModelChange)="recherche.set($event); chercher()" />
+      @if (recherche()) {
+        <button type="button" class="chercher__vider"
+                [attr.aria-label]="'carte.effacer' | transloco"
+                (click)="recherche.set(''); chercher()">
+          <i class="ti ti-x" aria-hidden="true"></i>
+        </button>
+      }
+    </div>
+
+    @if (resultats().length > 0) {
+      <ul class="chercher__resultats">
+        @for (r of resultats(); track r.titre) {
+          <li>
+            <button type="button" (click)="allerVers(r)">
+              <i class="ti" [class.ti-map-pin]="r.genre !== 'quartier'"
+                            [class.ti-map-2]="r.genre === 'quartier'" aria-hidden="true"></i>
+              <span class="chercher__nom">{{ r.titre }}</span>
+              @if (r.sousTitre) { <span class="chercher__type">{{ r.sousTitre }}</span> }
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+
+  <!-- Médaillon du code postal, au survol d'un quartier. Il ne suit pas le curseur : posé en haut
+       à droite, il reste lisible sans masquer ce qu'on survole. -->
+  @if (quartierSurvole(); as q) {
+    <div class="postcode" role="status">
+      <span class="postcode__nom">{{ q.nom }}</span>
+      @if (q.postcode) {
+        <span class="postcode__code">{{ q.postcode }}</span>
+      } @else {
+        <span class="postcode__absent">{{ 'carte.postcodeAbsent' | transloco }}</span>
+      }
+    </div>
+  }
+
+  <div #conteneur class="carte__toile"></div>
+
+  @if (enErreur()) {
+    <div class="carte__erreur">
+      <i class="ti ti-map-off" aria-hidden="true"></i>
+      <p>{{ 'carte.erreur' | transloco }}</p>
+    </div>
+  }
+
+  <!-- Le panneau de détail. Glisse depuis la gauche, comme le volet de Google Maps. -->
+  @if (selection(); as lieu) {
+    <aside class="panneau" [attr.aria-label]="'carte.detail' | transloco">
+      <button type="button" class="panneau__fermer"
+              [attr.aria-label]="'carte.fermer' | transloco" (click)="fermer()">
+        <i class="ti ti-x" aria-hidden="true"></i>
+      </button>
+
+      <p class="panneau__genre">{{ 'carte.genre.' + lieu.genre | transloco }}</p>
+      <h1 class="panneau__titre">
+        @if (lieu.titre === 'carte.lieuSansNom') {
+          {{ 'carte.lieuSansNom' | transloco }}
+        } @else {
+          {{ lieu.titre }}
+        }
+      </h1>
+      @if (lieu.sousTitre) { <p class="panneau__soustitre">{{ lieu.sousTitre }}</p> }
+
+      @if (lieu.lignes.length > 0) {
+        <dl class="panneau__faits">
+          @for (ligne of lieu.lignes; track ligne.libelle) {
+            <div>
+              <dt>{{ ligne.libelle | transloco }}</dt>
+              <dd>{{ ligne.valeur }}</dd>
+            </div>
+          }
+        </dl>
+      }
+
+      <p class="panneau__coord">
+        <i class="ti ti-current-location" aria-hidden="true"></i>
+        {{ lieu.lngLat[1] | number: '1.5-5' }}, {{ lieu.lngLat[0] | number: '1.5-5' }}
+      </p>
+    </aside>
+  }
+</div>

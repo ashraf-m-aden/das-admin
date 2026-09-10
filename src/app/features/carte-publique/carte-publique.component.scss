@@ -1,0 +1,233 @@
+@use "styles/variables" as v;
+
+/* La carte publique occupe TOUT l'écran : elle vit hors du shell, sans barre latérale ni
+   en-tête. Le reste flotte par-dessus, comme chez Google Maps. */
+.carte {
+  position: fixed;
+  inset: 0;
+  background: #f8f9fa;
+
+  &__toile {
+    position: absolute;
+    inset: 0;
+  }
+
+  &__erreur {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: v.$space-3;
+    color: var(--color-text-muted);
+    background: var(--color-surface);
+
+    i { font-size: 2.5rem; }
+    p { margin: 0; }
+  }
+}
+
+/* ---------- recherche ---------- */
+
+.chercher {
+  position: absolute;
+  top: v.$space-4;
+  left: v.$space-4;
+  z-index: 3;
+  width: min(380px, calc(100vw - #{v.$space-4} * 2));
+
+  &__champ {
+    display: flex;
+    align-items: center;
+    gap: v.$space-2;
+    padding: 0 v.$space-3;
+    height: 48px;
+    background: #fff;
+    border-radius: v.$radius-full;
+    /* Ombre portée franche : c'est elle qui décolle la barre de la carte. Une bordure ne suffit
+       pas sur un fond clair, le champ se fondrait dans le bâti. */
+    box-shadow: 0 1px 3px rgb(60 64 67 / 30%), 0 4px 8px rgb(60 64 67 / 15%);
+
+    i { color: #5f6368; font-size: 1.15rem; }
+
+    input {
+      flex: 1;
+      min-width: 0;
+      border: 0;
+      outline: none;
+      background: transparent;
+      font-size: v.$font-size-base;
+      color: #202124;
+
+      &::placeholder { color: #80868b; }
+    }
+  }
+
+  &__vider {
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    color: #5f6368;
+    display: grid;
+    place-items: center;
+    padding: v.$space-1;
+    border-radius: v.$radius-full;
+
+    &:hover { background: #f1f3f4; }
+    &:focus-visible { outline: 2px solid #1a73e8; outline-offset: 1px; }
+  }
+
+  &__resultats {
+    margin: v.$space-2 0 0;
+    padding: v.$space-2 0;
+    list-style: none;
+    background: #fff;
+    border-radius: v.$radius-md;
+    box-shadow: 0 1px 3px rgb(60 64 67 / 30%), 0 4px 8px rgb(60 64 67 / 15%);
+    max-height: 50vh;
+    overflow-y: auto;
+
+    button {
+      display: flex;
+      align-items: baseline;
+      gap: v.$space-2;
+      width: 100%;
+      padding: v.$space-2 v.$space-4;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      text-align: left;
+      font-size: v.$font-size-sm;
+      color: #202124;
+
+      &:hover { background: #f1f3f4; }
+      &:focus-visible { outline: 2px solid #1a73e8; outline-offset: -2px; }
+
+      i { color: #5f6368; flex: none; }
+    }
+  }
+
+  &__nom { font-weight: 500; }
+  &__type { color: #5f6368; font-size: v.$font-size-xs; }
+}
+
+/* ---------- medaillon du code postal ---------- */
+
+.postcode {
+  position: absolute;
+  top: v.$space-4;
+  right: v.$space-4;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: v.$space-3;
+  padding: v.$space-2 v.$space-4;
+  background: #fff;
+  border-radius: v.$radius-full;
+  box-shadow: 0 1px 3px rgb(60 64 67 / 30%), 0 4px 8px rgb(60 64 67 / 15%);
+  font-size: v.$font-size-sm;
+  /* Le médaillon ne doit jamais intercepter la souris : il flotte au-dessus de la carte que
+     l'usager est précisément en train de survoler. */
+  pointer-events: none;
+
+  &__nom { color: #5f6368; text-transform: uppercase; letter-spacing: 0.05em; font-size: v.$font-size-xs; }
+
+  &__code {
+    font-weight: 700;
+    font-size: v.$font-size-base;
+    color: #1a73e8;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__absent { color: #80868b; font-style: italic; font-size: v.$font-size-xs; }
+}
+
+/* ---------- panneau de detail ---------- */
+
+.panneau {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 4;
+  width: min(380px, 100vw);
+  padding: v.$space-6 v.$space-5 v.$space-5;
+  background: #fff;
+  box-shadow: 0 0 12px rgb(60 64 67 / 25%);
+  overflow-y: auto;
+  animation: panneau-entre 180ms ease-out;
+
+  &__fermer {
+    position: absolute;
+    top: v.$space-3;
+    right: v.$space-3;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    color: #5f6368;
+    padding: v.$space-1;
+    border-radius: v.$radius-full;
+
+    &:hover { background: #f1f3f4; }
+    &:focus-visible { outline: 2px solid #1a73e8; outline-offset: 1px; }
+  }
+
+  &__genre {
+    margin: 0;
+    font-size: v.$font-size-xs;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #1a73e8;
+  }
+
+  &__titre { margin: v.$space-1 0 0; font-size: 1.4rem; color: #202124; text-wrap: balance; }
+  &__soustitre { margin: v.$space-1 0 0; color: #5f6368; font-size: v.$font-size-sm; }
+
+  &__faits {
+    margin: v.$space-5 0 0;
+    display: grid;
+    gap: v.$space-3;
+
+    div {
+      display: grid;
+      gap: 2px;
+      padding-bottom: v.$space-3;
+      border-bottom: 1px solid #e8eaed;
+    }
+
+    dt { font-size: v.$font-size-xs; text-transform: uppercase; letter-spacing: 0.05em; color: #80868b; }
+    dd { margin: 0; color: #202124; font-size: v.$font-size-sm; }
+  }
+
+  &__coord {
+    display: flex;
+    align-items: center;
+    gap: v.$space-2;
+    margin: v.$space-5 0 0;
+    color: #5f6368;
+    font-size: v.$font-size-xs;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Le panneau glisse depuis la gauche. Coupé si l'usager a demandé moins d'animation. */
+@keyframes panneau-entre {
+  from { transform: translateX(-12px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panneau { animation: none; }
+}
+
+@media (max-width: 640px) {
+  /* Sur mobile le panneau devient une feuille basse : occuper toute la largeur masquerait la
+     carte, et c'est elle qui donne le contexte de ce qu'on lit. */
+  .panneau {
+    top: auto;
+    right: 0;
+    width: auto;
+    max-height: 55vh;
+    border-radius: v.$radius-lg v.$radius-lg 0 0;
+  }
+}

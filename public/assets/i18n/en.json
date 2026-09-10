@@ -21,7 +21,8 @@
     "clients": "Clients",
     "discoveries": "Field reports",
     "photoTest": "S3 upload test",
-    "closesGeneration": "Close generation"
+    "closesGeneration": "Close generation",
+    "cartePublique": "Public map"
   },
   "common": {
     "search": "Search…",
@@ -1029,5 +1030,26 @@
     "thisMonth": "This month",
     "last6m": "Last 6 months",
     "custom": "Custom"
+  },
+  "carte": {
+    "chercher": "Search",
+    "chercherPlaceholder": "Search an address, a place, a quartier…",
+    "effacer": "Clear",
+    "fermer": "Close",
+    "detail": "Place details",
+    "erreur": "The map could not be loaded.",
+    "lieuSansNom": "Unnamed place",
+    "postcodeAbsent": "no postcode",
+    "batiments": "Buildings",
+    "numero": "Number",
+    "etape": "Stage",
+    "occupe": "Occupied by",
+    "postcode": "Postcode",
+    "ville": "City",
+    "genre": {
+      "adresse": "Address",
+      "lieu": "Place",
+      "quartier": "Quartier"
+    }
   }
 }

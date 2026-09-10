@@ -6,6 +6,22 @@ export const routes: Routes = [
     path: 'login',
     loadComponent: () => import('./features/auth/login/login.component').then((m) => m.LoginComponent),
   },
+  /**
+   * ⚠️ **Carte publique — HORS du shell et SANS `authGuard`.** C'est le seul écran du dépôt
+   * accessible sans session : il est destiné aux consommateurs du référentiel (La Poste et les
+   * suivants), qui l'ouvrent dans un onglet ou l'intègrent.
+   *
+   * Elle est déclarée AVANT la route racine : Angular retient la première correspondance, et une
+   * route placée dans les enfants du shell hériterait du guard.
+   *
+   * Le style qu'elle consomme, `assets/commercial-style.json`, est le même que celui publié aux
+   * clients — on ne maintient pas deux rendus.
+   */
+  {
+    path: 'carte',
+    loadComponent: () =>
+      import('./features/carte-publique/carte-publique.component').then((m) => m.CartePubliqueComponent),
+  },
   {
     path: '',
     canActivate: [authGuard],
