@@ -355,7 +355,48 @@ fermeture de `/tiles/`, recherche sous clé, carte publique avec recherche, pann
 survol des codes postaux, regroupement des lieux, et les deux raccords avec La Poste (chemin du
 style, paramètres d'ouverture).
 
-### ⛔ La portée n'est PAS encore en service
+### ⚠️ Le piège qui a rendu la carte publique blanche
+
+`CleApiFilter` demande un `IMemoryCache`, et **`AddMemoryCache()` n'était pas enregistré**. Le
+conteneur DI ne résout les dépendances d'un filtre qu'à son activation : les deux projets
+compilaient, l'application démarrait normalement, et la panne n'est apparue qu'à la première
+requête publique — chaque tuile rendant 500, donc une carte vide sans explication.
+
+**Ajouter une dépendance à un filtre d'endpoint impose de vérifier son enregistrement à la main.**
+Aucun compilateur ne le fera.
+
+### ✅ En service depuis le 2026-09-10, vérifié de bout en bout
+
+Les deux opérations de base sont passées :
+
+```
+Applying migration '20260910111905_AddCleApiVillesAutorisees'.  →  Done.
+recherche-index.sql  →  999 entrées, dont 46 sans ville (4,6 %) : 34 lieux, 12 rues
+```
+
+Vérification avec une vraie clé restreinte à Ali-Sabieh, délivrée par `/api/cles-api` puis
+révoquée :
+
+| | clé restreinte | clé nationale |
+|---|---|---|
+| tuile `13/5077/3830` (Djibouti-ville) | **404** | 200 |
+| tuile `13/5067/3841` (Ali-Sabieh) | 200 | 200 |
+| recherche « amb » | 0 résultat | 5 (Ambouli, ambassades…) |
+| recherche « ali » | 5, tous Ali-Sabieh | 5, dont « Alia » ailleurs |
+| recherche « djibouti » | 3 — **des routes d'Ali-Sabieh** dont le nom cite Djibouti | 5, tous à Djibouti-ville |
+| après révocation | **401** | — |
+
+La dernière ligne de recherche est la démonstration la plus nette : le filtre porte sur **où se
+trouve** l'objet, jamais sur ce que son nom contient.
+
+### Les 46 entrées sans ville
+
+34 lieux et 12 rues tombent hors de toute emprise communale enregistrée. **Une clé restreinte ne
+les voit pas** — c'est la règle : ce qu'on ne sait pas rattacher n'est pas servi à qui n'a payé
+qu'une ville. Pour les rendre visibles, il faut élargir les emprises de villes, pas assouplir la
+règle.
+
+### Historique : ce qui avait été annoncé comme non déployé
 
 Le code est écrit et compile ; **rien n'est déployé**, parce que deux opérations sur la base
 manquent et qu'aucune n'est faisable sans les identifiants applicatifs :
@@ -370,18 +411,11 @@ dotnet ef database update --project src/DASApi.Infrastructure --startup-project 
 psql "$DB" -v ON_ERROR_STOP=1 -f das-admin/scripts/sig/recherche-index.sql
 ```
 
-**Déployer avant ces deux commandes casse `/cles-api` et la recherche publique** : le code lira
-des colonnes qui n'existent pas.
-
-Ce qui a pu être vérifié sans la base : les deux projets compilent, l'image du front se construit,
-et le calcul d'emprise de tuile a été exécuté tel quel sur la tuile réelle des journaux
-(`z13/5077/3830` → contient Djibouti-ville, exclut Ali-Sabieh). Ce qui reste à vérifier une fois
-déployé : qu'une clé restreinte rende bien 404 hors zone et une recherche filtrée.
+Les deux ont été passées le 2026-09-10 — la section précédente en donne le résultat. L'ordre
+comptait : déployer avant elles fait lire au code des colonnes qui n'existent pas.
 
 **À faire, par ordre d'utilité**
-
-1. **Appliquer les deux commandes ci-dessus**, puis déployer.
-2. **Sortir `.env` du dépôt** : il est versionné et porte `RDS_PASSWORD` et `DB_CONNECTION` en
+1. **Sortir `.env` du dépôt** : il est versionné et porte `RDS_PASSWORD` et `DB_CONNECTION` en
    clair. Le back lit déjà AWS Secrets Manager.
-3. **Automatiser `REFRESH MATERIALIZED VIEW`** dans les scripts d'import, plutôt que de le confier
+2. **Automatiser `REFRESH MATERIALIZED VIEW`** dans les scripts d'import, plutôt que de le confier
    à la mémoire.
