@@ -1,6 +1,8 @@
 {
   "apiBaseUrl": "http://localhost:5000/api",
-  "mapTileUrl": "http://localhost:3000",
+  "mapTileUrl": "http://localhost:5000/api/tiles",
+  "mapPublicTileUrl": "http://localhost:5000/api/public/tiles",
+  "mapPublicKey": "",
   "cognitoUserPoolId": "",
   "cognitoClientId": "",
   "environment": "development",

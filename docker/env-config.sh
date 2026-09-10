@@ -11,7 +11,9 @@ CONFIG_PATH=/usr/share/nginx/html/config.json
 cat <<EOF > "$CONFIG_PATH"
 {
   "apiBaseUrl": "${API_BASE_URL:-https://api.das.dj}",
-  "mapTileUrl": "${MAP_TILE_URL:-}",
+  "mapTileUrl": "${MAP_TILE_URL:-/api/tiles}",
+  "mapPublicTileUrl": "${MAP_PUBLIC_TILE_URL:-/api/public/tiles}",
+  "mapPublicKey": "${MAP_PUBLIC_KEY:-}",
   "cognitoUserPoolId": "${COGNITO_USER_POOL_ID:-}",
   "cognitoClientId": "${COGNITO_CLIENT_ID:-}",
   "environment": "${APP_ENVIRONMENT:-production}",
