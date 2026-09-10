@@ -5,12 +5,25 @@ import {
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HttpClient } from '@angular/common/http';
+import { Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import { TranslocoModule } from '@jsverse/transloco';
 import * as maplibregl from 'maplibre-gl';
 import { MapStyleService } from '../../core/map/map-style.service';
+import { AppConfigService } from '../../core/config/app-config.service';
 import { enregistrerIconesPoi } from '../../core/ui/map/poi-icones';
 
-/** Ce que le panneau montre. Vient TOUJOURS de la tuile cliquée — aucun appel d'API. */
+/** Ce que renvoie `GET /api/public/search`. */
+interface ResultatApi {
+  cle: string;
+  genre: string;
+  libelle: string;
+  complement: string | null;
+  longitude: number;
+  latitude: number;
+}
+
+/** Ce que le panneau montre : une entité cliquée sur la tuile, ou un résultat de recherche. */
 export interface LieuSelectionne {
   genre: 'adresse' | 'lieu' | 'quartier';
   titre: string;
@@ -43,6 +56,9 @@ export interface LieuSelectionne {
 export class CartePubliqueComponent implements OnInit, OnDestroy {
   private readonly conteneur = viewChild.required<ElementRef<HTMLDivElement>>('conteneur');
   private readonly mapStyle = inject(MapStyleService);
+  private readonly http = inject(HttpClient);
+  private readonly config = inject(AppConfigService);
+  private readonly frappe = new Subject<string>();
   private readonly zone = inject(NgZone);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -66,6 +82,7 @@ export class CartePubliqueComponent implements OnInit, OnDestroy {
   private survolId: string | number | null = null;
 
   ngOnInit(): void {
+    this.brancherRecherche();
     this.mapStyle.getCommercialStyle()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -216,60 +233,54 @@ export class CartePubliqueComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Recherche dans ce qui est RENDU à l'écran, sans appel réseau.
+   * Recherche sur TOUT le référentiel, servie par `GET /api/public/search`.
    *
-   * ⚠️ C'est une limite assumée et il faut la connaître : `querySourceFeatures` ne voit que les
-   * tuiles chargées, donc l'emprise visible et son voisinage immédiat. Chercher « Ambouli » depuis
-   * une vue centrée sur Balbala ne rend rien. Une recherche sur tout le référentiel demanderait un
-   * index côté serveur — c'est le chantier suivant, pas un défaut de celui-ci.
+   * ⚠️ La version précédente cherchait dans les tuiles rendues (`querySourceFeatures`) : elle ne
+   * voyait que l'emprise visible, et chercher « Ambouli » depuis Balbala ne rendait rien. L'index
+   * serveur (`public.recherche_index`) couvre villes, quartiers, rues nommées, lieux remarquables
+   * et parcelles identifiées.
+   *
+   * `debounceTime` : la recherche part à chaque frappe. Sans lui, taper « boulevard » lance neuf
+   * requêtes dont huit sont périmées avant d'arriver. `switchMap` annule la précédente, ce qui
+   * évite aussi qu'une réponse lente écrase une réponse récente.
    */
+  private brancherRecherche(): void {
+    this.frappe
+      .pipe(
+        debounceTime(220),
+        distinctUntilChanged(),
+        switchMap((terme) =>
+          this.http.get<ResultatApi[]>(`${this.config.get('apiBaseUrl')}/public/search`, {
+            params: { q: terme, limite: 8 },
+          }),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (resultats) => this.resultats.set(resultats.map((r) => this.depuisApi(r))),
+        // Une recherche qui échoue vide la liste sans alerter : l'écran reste utilisable à la
+        // souris, et une bannière d'erreur à chaque frappe serait pire que le silence.
+        error: () => this.resultats.set([]),
+      });
+  }
+
   protected chercher(): void {
-    const carte = this.carte;
-    const terme = this.recherche().trim().toLowerCase();
-    if (!carte || terme.length < 2) {
+    const terme = this.recherche().trim();
+    if (terme.length < 2) {
       this.resultats.set([]);
       return;
     }
-
-    const trouves: LieuSelectionne[] = [];
-    const vues = new Set<string>();
-
-    for (const [source, sourceLayer, couche] of [
-      ['poi', 'poi_sites_tiles', 'poi-point'],
-      ['quartiers', 'quartiers_tiles', 'quartier-fond'],
-      ['streets', 'streets_tiles', 'rue'],
-    ] as const) {
-      for (const f of carte.querySourceFeatures(source, { sourceLayer })) {
-        const nom = String(f.properties?.['Nom'] ?? f.properties?.['Name'] ?? '');
-        if (!nom || !nom.toLowerCase().includes(terme) || vues.has(nom)) continue;
-        vues.add(nom);
-
-        const centre = this.centreDe(f);
-        if (!centre) continue;
-        trouves.push(couche === 'rue'
-          ? { genre: 'quartier', titre: nom, sousTitre: String(f.properties?.['Type'] ?? ''), lignes: [], lngLat: centre }
-          : this.decrire({ ...f, layer: { id: couche } } as unknown as maplibregl.MapGeoJSONFeature, centre));
-        if (trouves.length >= 8) break;
-      }
-      if (trouves.length >= 8) break;
-    }
-
-    this.resultats.set(trouves);
+    this.frappe.next(terme);
   }
 
-  /** Un point représentatif de l'entité, quel que soit son type de géométrie. */
-  private centreDe(f: GeoJSON.Feature): [number, number] | null {
-    const g = f.geometry;
-    if (g.type === 'Point') return g.coordinates as [number, number];
-    const plat: number[][] = [];
-    const parcourir = (c: unknown): void => {
-      if (Array.isArray(c) && typeof c[0] === 'number') plat.push(c as number[]);
-      else if (Array.isArray(c)) c.forEach(parcourir);
+  private depuisApi(r: ResultatApi): LieuSelectionne {
+    return {
+      genre: r.genre === 'adresse' ? 'adresse' : r.genre === 'lieu' ? 'lieu' : 'quartier',
+      titre: r.libelle,
+      sousTitre: r.complement ?? undefined,
+      lignes: [],
+      lngLat: [r.longitude, r.latitude],
     };
-    parcourir((g as { coordinates: unknown }).coordinates);
-    if (plat.length === 0) return null;
-    const somme = plat.reduce((a, c) => [a[0] + c[0], a[1] + c[1]], [0, 0]);
-    return [somme[0] / plat.length, somme[1] / plat.length];
   }
 
   protected allerVers(lieu: LieuSelectionne): void {
