@@ -74,6 +74,34 @@ tuiles** et ne permet pas d'y ajouter un en-tête.
 jeton Mapbox. Ce qu'elle apporte n'est pas le secret mais la **révocabilité** et l'**attribution** :
 savoir qui consomme, et pouvoir couper.
 
+### La portée : une clé peut ne voir qu'une partie du pays
+
+Une clé porte une liste de **villes**. **Liste vide = tout le pays**, et c'est le défaut : la
+restriction est l'exception, pour un partenaire dont l'accord ne couvre qu'une partie du
+territoire.
+
+**La ville, et non la `Zone` du modèle géographique.** Une `Zone` raffine une commune, et seule
+Djibouti-ville est découpée en communes : restreindre par zone ne saurait rien dire d'un
+partenaire travaillant à Ali-Sabieh. La ville découpe le pays entier — c'est la seule maille qui
+réponde à la question posée.
+
+> C'était l'item « restriction par zone » de la liste des suites ; le nom a suivi le domaine.
+
+### ⚠️ La portée est figée à la délivrance
+
+Élargir ou réduire ce qu'un partenaire voit sans qu'il change de clé rendrait impossible de dire,
+après coup, ce qui lui a été servi. Changer de portée = révoquer et redélivrer.
+
+### ⚠️ L'emprise est CALCULÉE, jamais stockée sur la clé
+
+Le contrôle des tuiles compare la tuile demandée à l'enveloppe géographique des villes autorisées.
+Cette enveloppe est lue en base et gardée **dix minutes** en mémoire, pas figée à la délivrance.
+
+La raison est mesurable : les emprises de villes ont déjà été recalculées deux fois dans ce projet
+(`cities-emprise-depuis-quartiers.sql`, `cities-emprise-depuis-nour-ville.sql`). Une enveloppe
+copiée sur la clé serait aujourd'hui périmée — et périmée **en silence**, ce qui est le pire défaut
+possible pour un contrôle d'accès.
+
 ### `LastUsedAtUtc` n'est écrit qu'une fois par heure
 
 À chaque requête, une lecture deviendrait une écriture concurrente sur la même ligne, et le verrou
@@ -105,6 +133,37 @@ même tuile est en libre accès un chemin plus loin ?
 **Liste blanche des deux côtés, jamais une liste noire** : une source ajoutée à Martin ne doit pas
 devenir accessible du seul fait qu'on a oublié de l'interdire. Vérifié : `/api/tiles/Surveys` rend
 404 même avec un jeton valide.
+
+### Ce que la portée fait sur une tuile
+
+Une clé restreinte ne reçoit que les tuiles qui **touchent** l'emprise de ses villes. Le test est
+une intersection, pas une inclusion : aux petits zooms une tuile couvre le pays entier, et exiger
+qu'elle tienne dans la ville viderait la carte là où elle est légitime. Aucun seuil de zoom n'est
+nécessaire — l'intersection sert naturellement tout ce qui touche la zone et ne refuse que ce qui
+en est entièrement dehors, ce qui, aux grands zooms où la tuile est petite, est exactement la
+restriction voulue.
+
+Vérifié sur la tuile réellement demandée par le front, `z13/5077/3830` : elle couvre
+`lon [43.1104, 43.1543] · lat [11.5661, 11.6092]` — elle contient Djibouti-ville et exclut
+Ali-Sabieh.
+
+> ⚠️ La latitude n'est pas linéaire en `y` : Mercator étire les hautes latitudes. Interpoler
+> linéairement — l'erreur naturelle — donnerait une emprise fausse partout sauf à l'équateur.
+> D'où `atan(sinh(…))`.
+
+### ⚠️ Le CONTENU d'une tuile n'est pas filtré
+
+Une tuile servie au bord de la zone porte des objets situés au-delà. Les filtrer imposerait de
+rendre **une tuile par clé**, ce qui détruirait le cache partagé pour un gain nul : la donnée
+reste le référentiel public. Ce que la restriction borne, c'est l'**étendue** de ce qu'une clé peut
+moissonner, pas le contenu d'une tuile isolée.
+
+### ⚠️ Une tuile hors portée rend 404, pas 403
+
+La même réponse qu'une source inconnue. Dire « cette tuile existe mais pas pour vous »
+apprendrait à un partenaire restreint où s'arrête sa zone, et l'emprise servie n'est pas une
+information qu'on lui doit. Côté carte, une tuile absente et une tuile refusée se dessinent
+pareil : rien.
 
 ### ⚠️ Le jeton de session voyage dans la query string
 
@@ -184,6 +243,29 @@ identifiées. **999 entrées** dans `public.recherche_index`, vue matérialisée
 Elle remplace une recherche qui fouillait les tuiles rendues : celle-ci ne voyait que l'emprise
 visible, et chercher « Ambouli » depuis Balbala ne rendait rien.
 
+### ⚠️ Elle exige une clé depuis le 2026-09-10
+
+Elle ne demande toujours aucun **compte** D.A.S — mais elle demande une **clé**, comme les tuiles.
+La laisser ouverte pendant que les tuiles étaient fermées rendait la clé contournable : la
+recherche rend le référentiel entrée par entrée, avec ses coordonnées. Une clé restreinte ne voit
+que ses villes.
+
+### Le rattachement à une ville se fait par jointure SPATIALE
+
+`recherche_index` porte une colonne `ville_id`, calculée au rafraîchissement en cherchant quelle
+emprise de ville contient le point de l'entrée. Pas par clé étrangère : les cinq branches de
+l'UNION viennent de cinq tables qui ne portent pas toutes le même lien vers la ville —
+`poi_sites_tiles` vient d'OSM et n'en a aucun. Le point, lui, existe partout.
+
+> ⚠️ `ORDER BY ST_Area` : si deux emprises se chevauchent, on retient la **plus petite** qui
+> contient le point. Sans cet ordre, le résultat dépendrait du plan d'exécution et changerait
+> tout seul d'un rafraîchissement à l'autre.
+
+**Une entrée sans ville n'est servie qu'aux clés non restreintes.** Une clé vendue pour une ville
+ne doit pas recevoir ce qu'on ne sait pas rattacher : une restriction qui laisse passer ce qu'elle
+ne sait pas classer n'est pas une restriction. Le script d'index compte ce reliquat à chaque
+rafraîchissement, pour qu'il ne reste jamais inconnu.
+
 ### ⚠️ La vue ne se rafraîchit pas toute seule
 
 Après un import ou une campagne de nommage :
@@ -236,6 +318,13 @@ de son environnement — exactement la mécanique de `MapStyleService`.
 directement à D.A.S.** Son back-end relaie. Notre relais de tuiles applique le même principe un
 cran plus bas — D.A.S relaie Martin.
 
+### La recherche sous clé ne change rien pour eux
+
+`laposteDas` appelle `/addresses/search` sur **son propre back-end**, pas
+`/api/public/search` chez nous : le fermer derrière une clé ne les touche pas. Le jour où leur
+back relaiera notre recherche, il présentera la clé comme il présente déjà la sienne pour les
+tuiles.
+
 ### Les deux raccords, faits le 2026-09-10
 
 **Le style est servi sous les deux chemins** — `/assets/commercial-style.json` et
@@ -261,13 +350,37 @@ vide, ce qui se lit comme une panne.
 
 ## 7. État et suites
 
-**Fait** — clés (délivrance, révocation, écran), deux relais de tuiles, fermeture de `/tiles/`,
-carte publique avec recherche, panneau de détail, survol des codes postaux, regroupement des lieux,
-et les deux raccords avec La Poste (chemin du style, paramètres d'ouverture).
+**Fait** — clés (délivrance, révocation, écran, **portée par ville**), deux relais de tuiles,
+fermeture de `/tiles/`, recherche sous clé, carte publique avec recherche, panneau de détail,
+survol des codes postaux, regroupement des lieux, et les deux raccords avec La Poste (chemin du
+style, paramètres d'ouverture).
+
+### ⛔ La portée n'est PAS encore en service
+
+Le code est écrit et compile ; **rien n'est déployé**, parce que deux opérations sur la base
+manquent et qu'aucune n'est faisable sans les identifiants applicatifs :
+
+```bash
+# 1. la colonne VillesAutorisees sur ClesApiPubliques
+#    (l'application ne migre PAS au démarrage — c'est une commande à passer)
+dotnet ef database update --project src/DASApi.Infrastructure --startup-project src/DASApi.WebApi
+
+# 2. la colonne ville_id sur l'index de recherche — le script RECRÉE la vue,
+#    un simple REFRESH n'ajouterait pas la colonne
+psql "$DB" -v ON_ERROR_STOP=1 -f das-admin/scripts/sig/recherche-index.sql
+```
+
+**Déployer avant ces deux commandes casse `/cles-api` et la recherche publique** : le code lira
+des colonnes qui n'existent pas.
+
+Ce qui a pu être vérifié sans la base : les deux projets compilent, l'image du front se construit,
+et le calcul d'emprise de tuile a été exécuté tel quel sur la tuile réelle des journaux
+(`z13/5077/3830` → contient Djibouti-ville, exclut Ali-Sabieh). Ce qui reste à vérifier une fois
+déployé : qu'une clé restreinte rende bien 404 hors zone et une recherche filtrée.
 
 **À faire, par ordre d'utilité**
 
-1. **Restriction par zone sur la clé** — la seule pièce de `clients` qui manque à `cles-api`.
+1. **Appliquer les deux commandes ci-dessus**, puis déployer.
 2. **Sortir `.env` du dépôt** : il est versionné et porte `RDS_PASSWORD` et `DB_CONNECTION` en
    clair. Le back lit déjà AWS Secrets Manager.
 3. **Automatiser `REFRESH MATERIALIZED VIEW`** dans les scripts d'import, plutôt que de le confier

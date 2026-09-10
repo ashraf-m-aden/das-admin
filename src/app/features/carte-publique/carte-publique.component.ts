@@ -309,17 +309,24 @@ export class CartePubliqueComponent implements OnInit, OnDestroy {
    * `debounceTime` : la recherche part à chaque frappe. Sans lui, taper « boulevard » lance neuf
    * requêtes dont huit sont périmées avant d'arriver. `switchMap` annule la précédente, ce qui
    * évite aussi qu'une réponse lente écrase une réponse récente.
+   *
+   * ⚠️ **La clé publique voyage en paramètre `cle`, pas en en-tête.** Le back accepte les deux,
+   * et l'en-tête serait plus propre ici — mais la même clé doit servir aux URL de tuiles, que
+   * MapLibre construit lui-même et où aucun en-tête ne peut être posé. Une seule forme pour les
+   * deux usages évite d'avoir à se demander laquelle s'applique où.
    */
   private brancherRecherche(): void {
     this.frappe
       .pipe(
         debounceTime(220),
         distinctUntilChanged(),
-        switchMap((terme) =>
-          this.http.get<ResultatApi[]>(`${this.config.get('apiBaseUrl')}/public/search`, {
-            params: { q: terme, limite: 8 },
-          }),
-        ),
+        switchMap((terme) => {
+          const cle = this.config.get('mapPublicKey');
+          return this.http.get<ResultatApi[]>(
+            `${this.config.get('apiBaseUrl')}/public/search`,
+            { params: cle ? { q: terme, limite: 8, cle } : { q: terme, limite: 8 } },
+          );
+        }),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({

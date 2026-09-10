@@ -35,7 +35,22 @@
 DROP MATERIALIZED VIEW IF EXISTS public.recherche_index CASCADE;
 
 CREATE MATERIALIZED VIEW public.recherche_index AS
-SELECT *, upper(unaccent(libelle)) AS normalise FROM (
+SELECT
+  tout.*,
+  upper(unaccent(tout.libelle)) AS normalise,
+  -- ---------------------------------------------------------------------------------------
+  -- RATTACHEMENT À UNE VILLE — sert à restreindre une clé d'API à une partie du pays.
+  -- ---------------------------------------------------------------------------------------
+  -- Par JOINTURE SPATIALE et non par clé étrangère : les cinq branches de l'UNION viennent de
+  -- cinq tables qui ne portent pas toutes le même lien vers la ville — `poi_sites_tiles` est
+  -- issue d'OSM et n'en a aucun. Le point, lui, existe partout. Six villes contre un millier
+  -- de points : le coût est nul, et il n'est payé qu'au rafraîchissement.
+  --
+  -- ⚠️ `ORDER BY ST_Area` : si deux emprises se chevauchent, on retient la PLUS PETITE qui
+  -- contient le point — la plus précise. Sans cet ordre, le résultat dépendrait du plan
+  -- d'exécution, donc changerait tout seul d'un rafraîchissement à l'autre.
+  ville.id AS ville_id
+FROM (
 SELECT
   'ville:'  || c."Id"::text                       AS cle,
   'ville'                                          AS genre,
@@ -71,7 +86,15 @@ SELECT 'adresse:' || a."Id"::text, 'adresse', a."PoiNom",
        'N° ' || a."Numero"::text, ST_PointOnSurface(a."Boundary"), 5
 FROM public."Adresses" a
 WHERE a."PoiNom" IS NOT NULL AND a."Boundary" IS NOT NULL
-) AS tout;
+) AS tout
+LEFT JOIN LATERAL (
+  SELECT c."Id" AS id
+  FROM public."Cities" c
+  WHERE c."Boundary" IS NOT NULL
+    AND ST_Intersects(c."Boundary", tout.point)
+  ORDER BY ST_Area(c."Boundary")
+  LIMIT 1
+) AS ville ON TRUE;
 
 -- Unique : exigé par REFRESH ... CONCURRENTLY.
 CREATE UNIQUE INDEX recherche_index_cle ON public.recherche_index (cle);
@@ -89,8 +112,31 @@ CREATE INDEX recherche_index_trgm
 
 CREATE INDEX recherche_index_point ON public.recherche_index USING GIST (point);
 
+-- Une clé restreinte filtre sur `ville_id` AVANT le trigramme. Sans cet index, la restriction
+-- imposerait un balayage complet à chaque frappe.
+CREATE INDEX recherche_index_ville ON public.recherche_index (ville_id);
+
 GRANT SELECT ON public.recherche_index TO martin_ro;
 
 ANALYZE public.recherche_index;
 
 SELECT genre, count(*) AS entrees FROM public.recherche_index GROUP BY genre ORDER BY 2 DESC;
+
+-- ---------------------------------------------------------------------------------------------
+-- LE RELIQUAT NON RATTACHÉ — à lire à chaque rafraîchissement
+-- ---------------------------------------------------------------------------------------------
+-- Une entrée dont le point ne tombe dans l'emprise d'aucune ville n'est servie qu'aux clés NON
+-- restreintes : une clé vendue pour une ville ne doit pas recevoir ce qu'on ne sait pas
+-- rattacher. Ce compte doit donc rester petit et connu. S'il enfle, la cause est en amont —
+-- une emprise de ville trop étroite, ou un import hors du pays — et c'est là qu'il faut la
+-- corriger, pas ici.
+SELECT
+  count(*) FILTER (WHERE ville_id IS NULL)                       AS sans_ville,
+  count(*)                                                       AS total,
+  round(100.0 * count(*) FILTER (WHERE ville_id IS NULL) / nullif(count(*), 0), 1) AS pourcent
+FROM public.recherche_index;
+
+SELECT genre, count(*) AS sans_ville
+FROM public.recherche_index
+WHERE ville_id IS NULL
+GROUP BY genre ORDER BY 2 DESC;

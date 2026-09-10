@@ -139,3 +139,74 @@
     }
   }
 }
+
+/* ---------- portee : les villes ouvertes a la cle ---------- */
+
+.portee {
+  display: flex;
+  flex-direction: column;
+  gap: v.$space-2;
+  margin: v.$space-2 0 0;
+  padding: v.$space-3 v.$space-4;
+  border: 1px solid var(--color-border);
+  border-radius: v.$radius-md;
+
+  legend {
+    padding: 0 v.$space-2;
+    font-size: v.$font-size-sm;
+    font-weight: v.$font-weight-semibold;
+    color: var(--color-text);
+  }
+
+  &__aide { margin: 0; font-size: v.$font-size-xs; color: var(--color-text-muted); max-width: 70ch; }
+
+  &__choix { display: flex; flex-wrap: wrap; gap: v.$space-2; }
+
+  &__resume {
+    display: flex; align-items: center; gap: v.$space-2;
+    margin: 0; font-size: v.$font-size-xs; color: var(--color-text-muted);
+  }
+}
+
+/* Une puce, pas une case a cocher : le choix est court, visuel, et se relit d'un coup d'oeil.
+   `aria-pressed` porte l'etat pour ceux qui ne voient pas la couleur. */
+.puce {
+  display: inline-flex;
+  align-items: center;
+  gap: v.$space-1;
+  padding: v.$space-1 v.$space-3;
+  border: 1px solid var(--color-border);
+  border-radius: v.$radius-full;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: v.$font-size-sm;
+  cursor: pointer;
+
+  &:hover { border-color: var(--color-primary); }
+  &:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 1px; }
+
+  &--active {
+    border-color: var(--color-primary);
+    background: var(--color-primary-bg, var(--color-surface-alt));
+    color: var(--color-primary);
+    font-weight: v.$font-weight-medium;
+  }
+}
+
+/* ---------- portee, en lecture dans la liste ---------- */
+
+.etendue {
+  display: inline-flex;
+  align-items: center;
+  gap: v.$space-1;
+  margin: 1px v.$space-1 1px 0;
+  padding: 1px v.$space-2;
+  border-radius: v.$radius-full;
+  font-size: v.$font-size-xs;
+
+  /* Tout le pays est le cas NORMAL : il se lit en gris, pas en alerte. C'est la restriction qui
+     doit attirer l'oeil, parce que c'est elle qui explique une carte incomplete chez un
+     partenaire. */
+  &--tout { background: var(--color-surface-alt); color: var(--color-text-muted); }
+  &--ville { background: var(--color-primary-bg, var(--color-surface-alt)); color: var(--color-primary); }
+}

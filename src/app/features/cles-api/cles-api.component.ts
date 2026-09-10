@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
@@ -31,18 +31,45 @@ export class ClesApiComponent implements OnInit {
   protected readonly secret = this.facade.secret;
   protected readonly actives = this.facade.actives;
 
+  protected readonly villes = this.facade.villes;
+
   protected readonly consommateur = signal('');
   protected readonly copie = signal(false);
 
+  /**
+   * Les villes cochées pour la prochaine clé. **Vide = tout le pays**, et c'est le défaut : on
+   * ne restreint que sur décision explicite.
+   */
+  protected readonly portee = signal<UUID[]>([]);
+
+  protected readonly restreinte = computed(() => this.portee().length > 0);
+
   ngOnInit(): void {
     this.facade.charger();
+    this.facade.chargerVilles();
+  }
+
+  protected basculerVille(id: UUID): void {
+    this.portee.update((choisies) =>
+      choisies.includes(id) ? choisies.filter((v) => v !== id) : [...choisies, id],
+    );
+  }
+
+  protected estChoisie(id: UUID): boolean {
+    return this.portee().includes(id);
+  }
+
+  /** Revient au défaut : tout le pays. */
+  protected toutLePays(): void {
+    this.portee.set([]);
   }
 
   protected creer(): void {
     const nom = this.consommateur().trim();
     if (nom.length < 2) return;
-    this.facade.creer(nom);
+    this.facade.creer(nom, this.portee());
     this.consommateur.set('');
+    this.portee.set([]);
   }
 
   /**

@@ -47,6 +47,52 @@
         {{ 'clesApi.delivrer' | transloco }}
       </button>
     </div>
+
+    <!-- La portée. Aucune ville cochée = tout le pays, et c'est le défaut : la restriction est
+         l'exception. Le bouton « tout le pays » est donc un RETOUR au défaut, pas un choix de
+         plus — le présenter comme une option à côté des villes ferait croire qu'il faut choisir. -->
+    @if (villes().length > 0) {
+      <fieldset class="portee">
+        <legend>{{ 'clesApi.portee' | transloco }}</legend>
+        <p class="portee__aide">{{ 'clesApi.porteeAide' | transloco }}</p>
+
+        <div class="portee__choix">
+          <button
+            type="button"
+            class="puce"
+            [class.puce--active]="!restreinte()"
+            (click)="toutLePays()">
+            <i class="ti ti-world" aria-hidden="true"></i>
+            {{ 'clesApi.toutLePays' | transloco }}
+          </button>
+
+          @for (ville of villes(); track ville.id) {
+            <button
+              type="button"
+              class="puce"
+              [class.puce--active]="estChoisie(ville.id)"
+              [attr.aria-pressed]="estChoisie(ville.id)"
+              (click)="basculerVille(ville.id)">
+              <i class="ti" [class.ti-map-pin]="!estChoisie(ville.id)"
+                 [class.ti-map-pin-filled]="estChoisie(ville.id)" aria-hidden="true"></i>
+              {{ ville.nom }}
+            </button>
+          }
+        </div>
+
+        <!-- Dit à voix haute ce que la clé fera, avant de la délivrer : la portée est FIGÉE à la
+             délivrance, il n'y a pas de rattrapage. -->
+        <p class="portee__resume">
+          @if (restreinte()) {
+            <i class="ti ti-lock" aria-hidden="true"></i>
+            {{ 'clesApi.porteeResumeRestreinte' | transloco: { n: portee().length } }}
+          } @else {
+            <i class="ti ti-world" aria-hidden="true"></i>
+            {{ 'clesApi.porteeResumeTout' | transloco }}
+          }
+        </p>
+      </fieldset>
+    }
   </section>
 
   @if (erreur(); as cle) {
@@ -64,6 +110,7 @@
           <tr>
             <th>{{ 'clesApi.colConsommateur' | transloco }}</th>
             <th>{{ 'clesApi.colPrefixe' | transloco }}</th>
+            <th>{{ 'clesApi.colPortee' | transloco }}</th>
             <th>{{ 'clesApi.colCreee' | transloco }}</th>
             <th>{{ 'clesApi.colUsage' | transloco }}</th>
             <th>{{ 'clesApi.colEtat' | transloco }}</th>
@@ -75,6 +122,18 @@
             <tr [class.cles__ligne--revoquee]="!cle.estActive">
               <td class="cles__nom">{{ cle.consommateur }}</td>
               <td><code>{{ cle.prefixe }}</code></td>
+              <td class="cles__portee">
+                @if (cle.villes.length === 0) {
+                  <span class="etendue etendue--tout">
+                    <i class="ti ti-world" aria-hidden="true"></i>
+                    {{ 'clesApi.toutLePays' | transloco }}
+                  </span>
+                } @else {
+                  @for (ville of cle.villes; track ville.id) {
+                    <span class="etendue etendue--ville">{{ ville.nom }}</span>
+                  }
+                }
+              </td>
               <td>{{ cle.createdAtUtc | date: 'dd/MM/yyyy' }}</td>
               <td>
                 @if (cle.lastUsedAtUtc) {
