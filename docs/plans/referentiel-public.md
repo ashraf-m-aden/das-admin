@@ -429,26 +429,58 @@ Le compte a servi à ce pour quoi il avait été mis en place — il a fait appa
 l'Hôpital régional, le Lycée Hôtelier, le Terrain de Football, tout le groupe de Ouéa, Damêrdjôg,
 et six routes nationales. Un partenaire ayant acheté la région d'Arta ne verrait **rien**.
 
-**Le correctif est écrit et mesuré, pas appliqué** : `scripts/sig/cities-emprise-arta.sql`.
+**Appliqué le 2026-09-10** : `scripts/sig/cities-emprise-arta.sql`. Arta passe de **10,9 à
+2 032,8 km²**, et les entrées sans ville de **46 à 15** (4,6 % → 1,5 %).
 Arta se dérive par soustraction — le pays moins les quatre autres régions — faute de source
 directe : aucune couche `nour` ne porte les régions, et le polygone d'origine a été écrasé.
 
-| en essai à blanc | |
+| mesuré | |
 |---|---|
 | plus grand morceau retenu | **2 033 km²** (~1 780 officiels + Djibouti-ville qu'elle enserre) |
 | échardes écartées | 142 morceaux, 7,65 km² |
 | ancienne emprise perdue | **0,00 km²** |
 | entrées récupérées | **31** — 19 lieux, 12 rues |
-| resteraient sans ville | 15 |
+| restent sans ville | 15 |
+
+Répartition après correction : Djibouti 743, Tadjourah 109, Ali Sabieh 56, **Arta 32**, Dikhil 24,
+Obock 20.
+
+Vérifié de bout en bout avec deux clés opposées, délivrées puis révoquées :
+
+| tuile `z13` | clé Arta | clé Obock |
+|---|---|---|
+| Arta-ville `5071/3831` | **200** | 404 |
+| Djibouti-ville `5077/3830` | 200 | 404 |
+| Tadjourah `5071/3825` | 404 | 404 |
+| Obock `5081/3821` | 404 | **200** |
+
+La première ligne est celle qui était cassée : avant le correctif, une clé Arta ne recevait pas
+la tuile d'Arta. Et la recherche « arta » sous clé Arta rend désormais l'Hôpital régional, le
+Lycée Hôtelier, l'École Primaire — elle ne rendait rien.
 
 Les 15 restantes sont, à quatre près, **hors du pays** : Zeila (Somaliland) ×6, Yémen ×2,
 Érythrée ×3 — débordement de la boîte d'extraction OSM, à traiter séparément. Les quatre autres
 sont des ratés de précision : l'Hôtel Corto Maltese est à **14 m** de Tadjourah, le lieu
 « Obock » à **265 m** d'Obock.
 
-> ⚠️ Arta enserrera Djibouti-ville, et c'est correct — la région entoure la capitale. Aucune
-> ambiguïté : l'index rattache un point à la **plus petite** emprise qui le contient, donc
-> Djibouti-ville l'emporte à l'intérieur de ses limites. C'est exactement le cas que cette règle
+### ⚠️ Le contrôle des tuiles porte sur l'ENVELOPPE, pas sur le polygone
+
+`PorteeCle.Couvre` teste l'intersection avec la **boîte englobante** des villes autorisées, pas
+avec leur contour. C'est ce qui explique la deuxième ligne du tableau — une clé Arta reçoit les
+tuiles de Djibouti-ville.
+
+Ici le résultat est de toute façon juste : la région d'Arta entoure réellement la capitale. Mais
+la boîte est plus lâche que le contour, et ça se voit ailleurs — celle de Tadjourah
+(lon 41,995 … 43,065) recouvre des morceaux d'Obock et d'Arta.
+
+**Le compromis est assumé** : un test sur le polygone coûterait une intersection géométrique par
+tuile, sur le chemin le plus chaud de l'API. Et ce qu'il laisse passer, ce sont des tuiles de
+données publiques — la restriction borne l'étendue moissonnable, pas le secret. À resserrer si un
+accord commercial l'exige, en gardant la boîte comme pré-filtre rapide.
+
+> ⚠️ Arta enserre Djibouti-ville, et c'est correct — la région entoure la capitale. Aucune
+> ambiguïté côté **recherche** : l'index rattache un point à la **plus petite** emprise qui le
+> contient, donc Djibouti-ville l'emporte à l'intérieur de ses limites. C'est exactement le cas que cette règle
 > sert à trancher.
 
 ### Historique : ce qui avait été annoncé comme non déployé
