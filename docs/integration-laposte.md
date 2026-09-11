@@ -1,8 +1,8 @@
 # Brancher la Plateforme 1 sur le référentiel public D.A.S
 
 > Note d'intégration destinée à l'équipe technique de La Poste de Djibouti.
-> Version du 2026-09-10, révisée le 2026-09-11 (styles multilingues — voir « Le style »).
-> Clé `das_SEjertCf`.
+> Version du 2026-09-10, révisée le 2026-09-11 : remise de la clé par lien à usage unique
+> (« La clé »), et styles multilingues (« Le style »). Clé `das_SEjertCf`.
 >
 > Côté D.A.S, la source de vérité reste [`plans/referentiel-public.md`](plans/referentiel-public.md).
 
@@ -18,9 +18,54 @@
 | Délivrée le | 10 septembre 2026 |
 
 Le préfixe identifie la clé **sans la révéler** : c'est lui qui figure dans nos écrans et dans nos
-échanges. Le secret complet vous parvient par un autre canal.
+échanges.
 
 > ⚠️ Le secret ne doit jamais apparaître dans un ticket, un dépôt, ni une capture d'écran.
+
+### Comment le secret vous parvient — à partir du 2026-09-11
+
+Nous vous envoyons désormais un **lien à usage unique**, et non la clé elle-même.
+
+```
+https://carte.das.dj/api/cles-api/remise/<jeton>
+```
+
+Il s'ouvre **une seule fois** et expire au bout de 72 heures, ouvert ou non. La réponse est un
+JSON portant le préfixe, le nom du consommateur et le secret — vérifiez que le préfixe est bien
+celui annoncé ci-dessus.
+
+Pourquoi ce détour : une clé collée dans un courriel y reste indéfiniment, des deux côtés,
+répliquée sur les serveurs de messagerie, les sauvegardes et les téléphones, et retrouvable par
+recherche. Personne ne peut plus la rappeler ni savoir qui l'a lue. Un lien qui meurt à la
+première lecture n'a pas ce défaut — et nous voyons s'il a été ouvert.
+
+**Ce que nous vous demandons :**
+
+1. ouvrez le lien **depuis la machine ou l'outil qui va enregistrer la clé**, pas depuis un poste
+   de passage ;
+2. posez la clé directement dans votre configuration serveur, puis **supprimez le courriel** — le
+   lien qu'il contient est mort, mais l'habitude est bonne ;
+3. si le lien a expiré ou a déjà été ouvert, **redemandez-nous-en un**. C'est une opération de
+   trente secondes, sans conséquence.
+
+> Un lien épuisé, expiré, inconnu ou malformé rend le même `404`. Nous ne distinguons pas les cas,
+> pour la même raison que sur les clés.
+
+### Quand vous aurez votre plateforme d'administration
+
+Vous nous avez dit vouloir y enregistrer le jeton. C'est la bonne direction : la clé passe d'une
+ligne collée dans un fichier à un identifiant stocké, avec un propriétaire. Une seule condition,
+et elle compte :
+
+> ⚠️ **Stockez-la en écriture seule.** Si votre écran permet de relire le jeton après
+> enregistrement — un champ qu'on rouvre, une API qui le renvoie — un dump de votre base devient
+> notre clé. C'est exactement ce que nous avons évité de notre côté : nous n'en conservons qu'une
+> empreinte, et nous ne pouvons pas vous la retrouver. La saisie, la confirmation, puis plus
+> jamais d'affichage ; pour changer la clé, on la ressaisit.
+
+Et **une clé par consommateur** : si votre plateforme distribue la même clé à plusieurs de vos
+applications, notre révocation devient tout-ou-rien — nous ne pourrons plus couper l'une sans
+couper les autres.
 
 ---
 

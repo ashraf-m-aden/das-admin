@@ -34,7 +34,24 @@ export class ClesApiComponent implements OnInit {
   protected readonly villes = this.facade.villes;
 
   protected readonly consommateur = signal('');
-  protected readonly copie = signal(false);
+
+  /** Ce qui vient d'être copié. Deux boutons voisins : un seul drapeau les ferait clignoter ensemble. */
+  protected readonly copie = signal<'secret' | 'lien' | null>(null);
+
+  /**
+   * Le lien de remise à usage unique, composé sur l'origine COURANTE.
+   *
+   * ⚠️ C'est délibérément le front qui le compose. Le back ne connaît pas l'URL publique sous
+   * laquelle on le joint — derrière nginx, en local, ou depuis un tunnel — et la lui faire
+   * deviner produirait des liens morts que seul le destinataire découvrirait.
+   *
+   * `null` quand le back n'a pas de clé de chiffrement configurée : la remise est alors
+   * désactivée et l'écran se rabat sur le seul affichage du secret, comme avant.
+   */
+  protected readonly lienRemise = computed(() => {
+    const jeton = this.secret()?.remiseJeton;
+    return jeton ? `${window.location.origin}/api/cles-api/remise/${jeton}` : null;
+  });
 
   /**
    * Les villes cochées pour la prochaine clé. **Vide = tout le pays**, et c'est le défaut : on
@@ -81,13 +98,13 @@ export class ClesApiComponent implements OnInit {
     this.facade.revoquer(id);
   }
 
-  protected async copier(valeur: string): Promise<void> {
+  protected async copier(valeur: string, quoi: 'secret' | 'lien'): Promise<void> {
     try {
       await navigator.clipboard.writeText(valeur);
-      this.copie.set(true);
-      setTimeout(() => this.copie.set(false), 2000);
+      this.copie.set(quoi);
+      setTimeout(() => this.copie.set(null), 2000);
     } catch {
-      // Le presse-papiers peut être refusé (page non sécurisée, permission). Le secret reste
+      // Le presse-papiers peut être refusé (page non sécurisée, permission). La valeur reste
       // sélectionnable à la main : on ne bloque rien, on n'affiche simplement pas la confirmation.
     }
   }

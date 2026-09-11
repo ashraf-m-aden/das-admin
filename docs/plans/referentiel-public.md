@@ -68,6 +68,53 @@ justes, et permettrait de reconstituer l'empreinte octet par octet.
 `X-DAS-Key` ou `?cle=`. Les deux sont nécessaires : **MapLibre construit lui-même ses URL de
 tuiles** et ne permet pas d'y ajouter un en-tête.
 
+### La remise à usage unique — 2026-09-11
+
+Le secret était montré une fois à l'écran, puis transmis **par courriel**. Il y existe alors
+indéfiniment, dans deux boîtes, répliqué sur les serveurs, les sauvegardes et les téléphones, et
+indexé par la recherche. On ne peut ni le rappeler, ni savoir qui l'a lu. La promesse ci-dessus ne
+décrivait donc plus que **notre** base.
+
+La délivrance prépare désormais un lien qui rend le secret **une fois**, puis l'efface :
+
+```
+POST /api/cles-api             → secret + jeton de remise   (protégé)
+GET  /api/cles-api/remise/{j}  → le secret, une seule fois   (ANONYME)
+```
+
+La route de récupération est anonyme **et doit l'être** : le destinataire n'a pas de compte D.A.S,
+c'est tout l'intérêt. Ce qui la protège est le jeton — 256 bits tirés au hasard, dont seule
+l'empreinte SHA-256 est stockée.
+
+> ⚠️ **Cette table DÉROGE à la règle « le secret n'est jamais stocké ».** Une remise oblige à le
+> conserver, sinon il n'y a rien à remettre. Ne pas lire `CleApiPublique` comme si cette
+> dérogation n'existait pas.
+
+Quatre choses la bornent, et doivent le rester :
+
+| | |
+|---|---|
+| Chiffré **AES-GCM** | avec `ClesApi:CleChiffrement`, 32 octets base64 en variable d'environnement — **jamais en base**. Un dump ne livre que du chiffré. |
+| **GCM et non CBC** | il authentifie. Un octet modifié fait lever, au lieu de rendre un secret silencieusement faux que le destinataire collerait dans sa configuration. |
+| Effacé **à la lecture** | dans la même transaction, et l'enregistrement précède la réponse — sinon deux lectures concurrentes repartiraient toutes deux avec la clé. |
+| **Expire** | 72 h par défaut, lu ou non. |
+
+La ligne, elle, n'est jamais supprimée : savoir **quand** une clé a été récupérée — ou qu'elle ne
+l'a jamais été — fait partie de la trace de ce qui a été délivré. C'est précisément ce qu'un
+courriel ne dit jamais.
+
+**Sans clé de chiffrement configurée, la remise est simplement désactivée** : la délivrance
+continue et le secret s'affiche une fois à l'écran, comme avant. Un déploiement qui oublie la
+configuration perd une commodité, il ne casse rien.
+
+> ⚠️ Tout échec rend le **même 404** — jeton inconnu, déjà consommé, expiré, malformé, ou chiffré
+> devenu illisible après une rotation de la clé de chiffrement. Même discipline que le `401` des
+> clés.
+
+> ⚠️ **Le lien complet est composé par le FRONT**, sur l'origine courante. Le back ne connaît pas
+> l'URL publique sous laquelle on le joint — derrière nginx, en local, depuis un tunnel — et la lui
+> faire deviner produirait des liens morts, découverts par le destinataire et pas par nous.
+
 ### La clé de la carte publique est publique
 
 `mapPublicKey` dans `config.json` voyage dans les URL que le navigateur émet — exactement comme un

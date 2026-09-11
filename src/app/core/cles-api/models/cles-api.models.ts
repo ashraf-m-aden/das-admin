@@ -29,6 +29,21 @@ export interface CleApi {
   villes: VilleAutorisee[];
   /** Uniquement dans la réponse de création. `null` ou absent partout ailleurs. */
   secret?: string | null;
+
+  /**
+   * Jeton d'un lien de **remise à usage unique**, à transmettre au destinataire à la place du
+   * secret. Uniquement dans la réponse de création, et seulement si le back a la remise
+   * configurée — absent, l'écran se rabat sur le seul affichage du secret.
+   *
+   * ⚠️ **Le lien complet se compose ici**, à partir de l'origine courante :
+   * `${location.origin}/api/cles-api/remise/${remiseJeton}`. Le back ne connaît pas l'URL
+   * publique du front, et la lui faire deviner produirait des liens morts — découverts par le
+   * destinataire, pas par nous.
+   */
+  remiseJeton?: string | null;
+
+  /** Fin de validité du lien de remise. Le lien meurt à cette date, lu ou non. */
+  remiseExpiresAtUtc?: string | null;
 }
 
 /** Une ville ouverte à une clé. Le nom vient du back, pour l'affichage. */

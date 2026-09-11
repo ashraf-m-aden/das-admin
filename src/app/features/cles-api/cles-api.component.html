@@ -20,11 +20,36 @@
       <p class="secret__avert">{{ 'clesApi.secretAvertissement' | transloco }}</p>
       <div class="secret__valeur">
         <code>{{ nouvelle.secret }}</code>
-        <button type="button" class="btn btn--ghost" (click)="copier(nouvelle.secret ?? '')">
-          <i class="ti" [class.ti-copy]="!copie()" [class.ti-check]="copie()" aria-hidden="true"></i>
-          {{ (copie() ? 'clesApi.copie' : 'clesApi.copier') | transloco }}
+        <button type="button" class="btn btn--ghost" (click)="copier(nouvelle.secret ?? '', 'secret')">
+          <i class="ti" [class.ti-copy]="copie() !== 'secret'"
+                        [class.ti-check]="copie() === 'secret'" aria-hidden="true"></i>
+          {{ (copie() === 'secret' ? 'clesApi.copie' : 'clesApi.copier') | transloco }}
         </button>
       </div>
+
+      <!-- Le lien de remise. Mis en avant APRÈS le secret et non à sa place : l'opérateur doit
+           voir ce qu'il délivre. Mais c'est LUI qu'on envoie — un secret collé dans un courriel
+           y vit indéfiniment, ce lien meurt à la première lecture. -->
+      @if (lienRemise(); as lien) {
+        <div class="remise">
+          <p class="remise__titre">
+            <i class="ti ti-send" aria-hidden="true"></i>
+            {{ 'clesApi.remiseTitre' | transloco }}
+          </p>
+          <p class="remise__aide">
+            {{ 'clesApi.remiseAide' | transloco: { date: (nouvelle.remiseExpiresAtUtc | date: 'short') ?? '' } }}
+          </p>
+          <div class="secret__valeur">
+            <code>{{ lien }}</code>
+            <button type="button" class="btn btn--ghost" (click)="copier(lien, 'lien')">
+              <i class="ti" [class.ti-copy]="copie() !== 'lien'"
+                            [class.ti-check]="copie() === 'lien'" aria-hidden="true"></i>
+              {{ (copie() === 'lien' ? 'clesApi.copie' : 'clesApi.remiseCopier') | transloco }}
+            </button>
+          </div>
+        </div>
+      }
+
       <button type="button" class="btn" (click)="fermerSecret()">
         {{ 'clesApi.secretCompris' | transloco }}
       </button>
