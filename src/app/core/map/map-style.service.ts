@@ -33,36 +33,49 @@ export class MapStyleService {
     return this.style$;
   }
 
-  private commercial$?: Observable<StyleSpecification>;
+  /** Un cache par langue : changer de langue rejoue le style, pas la requête déjà faite. */
+  private readonly commercial$ = new Map<string, Observable<StyleSpecification>>();
 
   /**
    * Le style de la CARTE PUBLIQUE — celui que D.A.S publie à ses consommateurs et que
    * `/carte` affiche. Rendu calqué sur Google Maps : fond clair, voirie blanche à liseré,
-   * artères marquées, nationales ambrées, lieux en pastille.
+   * lieux en pastille, et le code postal en vedette (filigrane au dézoom, hachure des
+   * quartiers sans code).
    *
    * ⚠️ **C'est le MÊME fichier que celui servi aux clients** (`assets/commercial-style.json`,
    * récupéré tel quel par La Poste). On ne maintient pas deux rendus : ce que voit un partenaire
    * est ce que nous voyons. Le marqueur `__TILES_BASE_URL__` est résolu par chaque client avec
    * SON service de tuiles — ici le nôtre, chez eux le relais de leur back-end.
+   *
+   * ⚠️ **Un fichier PAR LANGUE, et le français garde le nom nu.** Les seuls libellés
+   * traduisibles du fond — sous-catégories de lieux, « code à venir » — sont écrits dans des
+   * expressions `match` imbriquées, générées par `scripts/map/build_styles.py`. Les réécrire à
+   * l'exécution supposerait de connaître leur forme exacte : un couplage silencieux qui casserait
+   * à la première refonte du style. `commercial-style.json` est donc le français, et c'est un
+   * CONTRAT EXTERNE (`docs/carte-vitrine.md`, la règle `/carto/` de `nginx.conf`) — ne pas le
+   * renommer ; les autres langues vivent à côté en `commercial-style.<lang>.json`.
    */
-  getCommercialStyle(): Observable<StyleSpecification> {
-    if (!this.commercial$) {
-      this.commercial$ = this.http
-        .get<string>('assets/commercial-style.json', { responseType: 'text' as 'json' })
-        .pipe(
-          map((raw) => {
-            // Le relais PUBLIC, a liste blanche et protege par cle — pas `mapTileUrl`, qui vise
-            // le relais d'administration et refuserait une requete sans jeton de session.
-            const tilesBaseUrl = String(this.config.get('mapPublicTileUrl') || '');
-            const style = JSON.parse(
-              (raw as unknown as string).replaceAll('__TILES_BASE_URL__', tilesBaseUrl),
-            ) as StyleSpecification;
-            return this.ajouterParametre(style, 'cle', String(this.config.get('mapPublicKey') ?? ''));
-          }),
-          shareReplay(1),
-        );
-    }
-    return this.commercial$;
+  getCommercialStyle(lang = 'fr'): Observable<StyleSpecification> {
+    const enCache = this.commercial$.get(lang);
+    if (enCache) return enCache;
+
+    const fichier = lang === 'fr' ? 'commercial-style.json' : `commercial-style.${lang}.json`;
+    const flux = this.http
+      .get<string>(`assets/${fichier}`, { responseType: 'text' as 'json' })
+      .pipe(
+        map((raw) => {
+          // Le relais PUBLIC, a liste blanche et protege par cle — pas `mapTileUrl`, qui vise
+          // le relais d'administration et refuserait une requete sans jeton de session.
+          const tilesBaseUrl = String(this.config.get('mapPublicTileUrl') || '');
+          const style = JSON.parse(
+            (raw as unknown as string).replaceAll('__TILES_BASE_URL__', tilesBaseUrl),
+          ) as StyleSpecification;
+          return this.ajouterParametre(style, 'cle', String(this.config.get('mapPublicKey') ?? ''));
+        }),
+        shareReplay(1),
+      );
+    this.commercial$.set(lang, flux);
+    return flux;
   }
 
   /**

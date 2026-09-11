@@ -1,54 +1,145 @@
-@use "styles/variables" as v;
-
-/* La carte publique occupe TOUT l'écran : elle vit hors du shell, sans barre latérale ni
-   en-tête. Le reste flotte par-dessus, comme chez Google Maps. */
+/**
+ * Carte publique — feuille de style VOLONTAIREMENT autonome.
+ *
+ * ⚠️ Pas de `@use "styles/variables"` et pas de `var(--color-*)` ici, contrairement au reste du
+ * dépôt. Cet écran vit hors du shell : il est ouvert par un visiteur sans compte, et intégré en
+ * iframe chez un partenaire. Il doit donc rendre EXACTEMENT pareil quel que soit le thème de
+ * l'administration — un basculement en thème sombre côté D.A.S ne doit pas repeindre la carte de
+ * La Poste. Les couleurs sont celles du fond vitrine (`scripts/map/palette.py`), pas celles de
+ * l'application.
+ */
 .carte {
-  position: fixed;
-  inset: 0;
-  background: #f8f9fa;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  width: 100%;
+  background: #f7f6f3;
+  font-family: 'Segoe UI', Arial, sans-serif;
 
-  &__toile {
+  /* Hauteur réservée par l'en-tête. Tout ce qui flotte au-dessus de la carte s'en décale, plutôt
+     que de recouvrir la marque. En intégration, l'en-tête disparaît et la réserve tombe à zéro. */
+  --barre: 58px;
+
+  &__entete {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 18px;
+    background: #ffffff;
+    border-bottom: 1px solid #e3e6ea;
+    box-shadow: 0 1px 4px rgba(7, 31, 77, 0.08);
+    z-index: 4;
+  }
+
+  &__marque {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__logo {
+    display: grid;
+    place-items: center;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: #123c86;
+    color: #fff;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    font-size: 0.82rem;
+  }
+
+  &__titre {
+    margin: 0;
+    font-weight: 700;
+    color: #14213d;
+  }
+
+  &__soustitre {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #78859c;
+  }
+
+  &__zoom {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #78859c;
+  }
+
+  &__hote {
+    flex: 1;
+    min-height: 0;
+  }
+
+  // Invite au clic, tant que rien n'est sélectionné. Discrète : elle disparaît
+  // dès le premier clic et ne revient qu'à la fermeture du panneau.
+  &__aide {
     position: absolute;
-    inset: 0;
+    top: calc(var(--barre) + 16px);
+    inset-inline-end: 16px;
+    z-index: 3;
+    margin: 0;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.94);
+    color: #5f6368;
+    font-size: 0.82rem;
+    box-shadow: 0 2px 10px rgba(7, 31, 77, 0.14);
   }
 
   &__erreur {
     position: absolute;
-    inset: 0;
-    display: grid;
-    place-content: center;
-    justify-items: center;
-    gap: v.$space-3;
-    color: var(--color-text-muted);
-    background: var(--color-surface);
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: #fdeaea;
+    color: #c62828;
+    font-size: 0.86rem;
+    box-shadow: 0 2px 10px rgba(7, 31, 77, 0.18);
+  }
 
-    i { font-size: 2.5rem; }
-    p { margin: 0; }
+  &--embed {
+    height: 100%;
+    --barre: 0px;
   }
 }
 
-/* ---------- recherche ---------- */
-
+/**
+ * Recherche — flotte SUR la carte, comme chez Google : elle ne pousse rien et laisse la carte
+ * occuper tout l'écran. Ancrée du côté « début de ligne », face à la fiche de détail.
+ */
 .chercher {
   position: absolute;
-  top: v.$space-4;
-  left: v.$space-4;
+  top: calc(var(--barre) + 16px);
+  inset-inline-start: 16px;
   z-index: 3;
-  width: min(380px, calc(100vw - #{v.$space-4} * 2));
+  width: min(380px, calc(100% - 32px));
 
   &__champ {
     display: flex;
     align-items: center;
-    gap: v.$space-2;
-    padding: 0 v.$space-3;
+    gap: 8px;
+    padding: 0 14px;
     height: 48px;
     background: #fff;
-    border-radius: v.$radius-full;
+    border-radius: 999px;
     /* Ombre portée franche : c'est elle qui décolle la barre de la carte. Une bordure ne suffit
        pas sur un fond clair, le champ se fondrait dans le bâti. */
     box-shadow: 0 1px 3px rgb(60 64 67 / 30%), 0 4px 8px rgb(60 64 67 / 15%);
 
-    i { color: #5f6368; font-size: 1.15rem; }
+    i {
+      color: #5f6368;
+      font-size: 1.15rem;
+    }
 
     input {
       flex: 1;
@@ -56,33 +147,42 @@
       border: 0;
       outline: none;
       background: transparent;
-      font-size: v.$font-size-base;
+      font: inherit;
+      font-size: 0.94rem;
       color: #202124;
 
-      &::placeholder { color: #80868b; }
+      &::placeholder {
+        color: #80868b;
+      }
     }
   }
 
   &__vider {
-    border: 0;
-    background: transparent;
-    cursor: pointer;
-    color: #5f6368;
     display: grid;
     place-items: center;
-    padding: v.$space-1;
-    border-radius: v.$radius-full;
+    padding: 4px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: #5f6368;
+    cursor: pointer;
 
-    &:hover { background: #f1f3f4; }
-    &:focus-visible { outline: 2px solid #1a73e8; outline-offset: 1px; }
+    &:hover {
+      background: #f1f3f4;
+    }
+
+    &:focus-visible {
+      outline: 2px solid #123c86;
+      outline-offset: 1px;
+    }
   }
 
   &__resultats {
-    margin: v.$space-2 0 0;
-    padding: v.$space-2 0;
+    margin: 8px 0 0;
+    padding: 8px 0;
     list-style: none;
     background: #fff;
-    border-radius: v.$radius-md;
+    border-radius: 10px;
     box-shadow: 0 1px 3px rgb(60 64 67 / 30%), 0 4px 8px rgb(60 64 67 / 15%);
     max-height: 50vh;
     overflow-y: auto;
@@ -90,144 +190,230 @@
     button {
       display: flex;
       align-items: baseline;
-      gap: v.$space-2;
+      gap: 8px;
       width: 100%;
-      padding: v.$space-2 v.$space-4;
+      padding: 8px 16px;
       border: 0;
       background: transparent;
       cursor: pointer;
-      text-align: left;
-      font-size: v.$font-size-sm;
+      text-align: start;
+      font: inherit;
+      font-size: 0.86rem;
       color: #202124;
 
-      &:hover { background: #f1f3f4; }
-      &:focus-visible { outline: 2px solid #1a73e8; outline-offset: -2px; }
+      &:hover {
+        background: #f1f3f4;
+      }
 
-      i { color: #5f6368; flex: none; }
+      &:focus-visible {
+        outline: 2px solid #123c86;
+        outline-offset: -2px;
+      }
+
+      i {
+        color: #5f6368;
+        flex: none;
+      }
     }
   }
 
-  &__nom { font-weight: 500; }
-  &__type { color: #5f6368; font-size: v.$font-size-xs; }
-}
-
-/* ---------- medaillon du code postal ---------- */
-
-.postcode {
-  position: absolute;
-  top: v.$space-4;
-  right: v.$space-4;
-  z-index: 3;
-  display: flex;
-  align-items: center;
-  gap: v.$space-3;
-  padding: v.$space-2 v.$space-4;
-  background: #fff;
-  border-radius: v.$radius-full;
-  box-shadow: 0 1px 3px rgb(60 64 67 / 30%), 0 4px 8px rgb(60 64 67 / 15%);
-  font-size: v.$font-size-sm;
-  /* Le médaillon ne doit jamais intercepter la souris : il flotte au-dessus de la carte que
-     l'usager est précisément en train de survoler. */
-  pointer-events: none;
-
-  &__nom { color: #5f6368; text-transform: uppercase; letter-spacing: 0.05em; font-size: v.$font-size-xs; }
-
-  &__code {
-    font-weight: 700;
-    font-size: v.$font-size-base;
-    color: #1a73e8;
-    font-variant-numeric: tabular-nums;
+  &__nom {
+    font-weight: 500;
   }
 
-  &__absent { color: #80868b; font-style: italic; font-size: v.$font-size-xs; }
+  &__type {
+    color: #5f6368;
+    font-size: 0.78rem;
+  }
 }
 
-/* ---------- panneau de detail ---------- */
-
-.panneau {
+/**
+ * Fiche de détail — le sujet du clic, puis son adresse postale.
+ *
+ * Ancrée en haut du côté « fin de ligne » : les contrôles MapLibre occupent les
+ * deux coins bas (échelle à gauche, navigation/géoloc/attribution à droite), et
+ * le coin haut de début est pris par la recherche.
+ *
+ * Les propriétés logiques (`inset-inline-end`, `margin-inline-start`, `text-align:
+ * start`) plutôt que `right`/`left` : en arabe, `dir="rtl"` bascule le panneau
+ * de l'autre côté sans une seule règle en double.
+ */
+.fiche {
   position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  z-index: 4;
-  width: min(380px, 100vw);
-  padding: v.$space-6 v.$space-5 v.$space-5;
-  background: #fff;
-  box-shadow: 0 0 12px rgb(60 64 67 / 25%);
+  top: calc(var(--barre) + 16px);
+  inset-inline-end: 16px;
+  z-index: 3;
+  width: min(320px, calc(100% - 32px));
+  max-height: calc(100% - var(--barre) - 32px);
   overflow-y: auto;
-  animation: panneau-entre 180ms ease-out;
+  padding: 16px 18px 14px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 6px 24px rgba(7, 31, 77, 0.18);
+  border-inline-start: 4px solid #123c86;
+  text-align: start;
 
   &__fermer {
     position: absolute;
-    top: v.$space-3;
-    right: v.$space-3;
+    top: 8px;
+    inset-inline-end: 8px;
     border: 0;
-    background: transparent;
+    background: none;
+    padding: 4px 6px;
+    font-size: 1.05rem;
+    line-height: 1;
+    color: #b3bccb;
     cursor: pointer;
-    color: #5f6368;
-    padding: v.$space-1;
-    border-radius: v.$radius-full;
 
-    &:hover { background: #f1f3f4; }
-    &:focus-visible { outline: 2px solid #1a73e8; outline-offset: 1px; }
+    &:hover {
+      color: #5f6368;
+    }
   }
 
-  &__genre {
+  &__kicker {
     margin: 0;
-    font-size: v.$font-size-xs;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #1a73e8;
+    color: #a2adbe;
   }
 
-  &__titre { margin: v.$space-1 0 0; font-size: 1.4rem; color: #202124; text-wrap: balance; }
-  &__soustitre { margin: v.$space-1 0 0; color: #5f6368; font-size: v.$font-size-sm; }
+  &__titre {
+    margin: 2px 0 12px;
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: #14213d;
+  }
 
-  &__faits {
-    margin: v.$space-5 0 0;
+  &__champs {
     display: grid;
-    gap: v.$space-3;
+    grid-template-columns: auto 1fr;
+    gap: 4px 14px;
+    margin: 0;
+    font-size: 0.86rem;
 
-    div {
-      display: grid;
-      gap: 2px;
-      padding-bottom: v.$space-3;
-      border-bottom: 1px solid #e8eaed;
+    dt {
+      color: #a2adbe;
     }
 
-    dt { font-size: v.$font-size-xs; text-transform: uppercase; letter-spacing: 0.05em; color: #80868b; }
-    dd { margin: 0; color: #202124; font-size: v.$font-size-sm; }
+    dd {
+      margin: 0;
+      color: #3c4043;
+    }
+  }
+
+  &__postal {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid #eef1f6;
+  }
+
+  &__ligne {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin: 6px 0 0;
+  }
+
+  &__quartier {
+    font-size: 0.94rem;
+    font-weight: 600;
+    color: #14213d;
+  }
+
+  &__ville {
+    font-size: 0.94rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #3c4043;
+  }
+
+  /**
+   * Le code postal est le seul élément de l'écran en chiffres tabulaires : les
+   * cinq glyphes doivent avoir la même chasse, sinon `77003` et `77012` ne
+   * s'alignent pas d'une fiche à l'autre et l'ensemble a l'air bancal.
+   *
+   * `direction: ltr` même en arabe : un code postal est une suite de chiffres,
+   * elle se lit de gauche à droite dans toutes les langues.
+   */
+  &__code {
+    margin-inline-start: auto;
+    direction: ltr;
+    font-family: 'Consolas', 'SF Mono', 'Courier New', monospace;
+    font-feature-settings: 'tnum' 1;
+    font-size: 1.32rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #123c86;
+  }
+
+  &__pays {
+    margin: 4px 0 0;
+    font-size: 0.8rem;
+    color: #78859c;
+  }
+
+  &__attente {
+    margin: 6px 0 0;
+    padding: 5px 10px;
+    display: inline-block;
+    border-radius: 6px;
+    background: #f4eee2;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #a4763a;
+  }
+
+  &__copier {
+    margin-top: 14px;
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #d7deea;
+    border-radius: 8px;
+    background: #f7f9fc;
+    font: inherit;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #123c86;
+    cursor: pointer;
+
+    &:hover {
+      background: #eef3fb;
+      border-color: #b9c8e2;
+    }
   }
 
   &__coord {
     display: flex;
     align-items: center;
-    gap: v.$space-2;
-    margin: v.$space-5 0 0;
-    color: #5f6368;
-    font-size: v.$font-size-xs;
+    gap: 6px;
+    margin: 14px 0 0;
+    direction: ltr;
+    font-size: 0.76rem;
     font-variant-numeric: tabular-nums;
+    color: #a2adbe;
   }
 }
 
-/* Le panneau glisse depuis la gauche. Coupé si l'usager a demandé moins d'animation. */
-@keyframes panneau-entre {
-  from { transform: translateX(-12px); opacity: 0; }
-  to { transform: none; opacity: 1; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .panneau { animation: none; }
-}
-
+/**
+ * Écrans étroits : la recherche et la fiche se partagent mal 320 px. La fiche passe en tiroir
+ * du bas — la carte reste entièrement visible au-dessus, ce qui est ce qu'on vient voir.
+ */
 @media (max-width: 640px) {
-  /* Sur mobile le panneau devient une feuille basse : occuper toute la largeur masquerait la
-     carte, et c'est elle qui donne le contexte de ce qu'on lit. */
-  .panneau {
+  .fiche {
     top: auto;
-    right: 0;
+    bottom: 0;
+    inset-inline: 0;
     width: auto;
-    max-height: 55vh;
-    border-radius: v.$radius-lg v.$radius-lg 0 0;
+    max-height: 55%;
+    border-radius: 12px 12px 0 0;
+    border-inline-start: 0;
+    border-top: 4px solid #123c86;
+  }
+
+  .carte__aide {
+    display: none;
   }
 }

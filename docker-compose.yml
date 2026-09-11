@@ -29,15 +29,31 @@ services:
     container_name: martin
     environment:
       DATABASE_URL: "postgresql://martin_ro:HuVFVEfNfUpOQI1Puc7hfBgszcxO0zCT@host.docker.internal:5433/das?sslmode=require"
-    # --pool-size : la base plafonne à max_connections=79 et un Martin v0.11.0 déployé ailleurs
-    #   en retient déjà ~56. Le défaut de 20 ne peut donc pas être servi : Martin échoue à
-    #   construire son pool, considère l'échec comme FATAL, sort, et `restart: unless-stopped`
-    #   le relance en boucle. 5 suffisent largement pour un front d'administration.
-    # --auto-bounds skip : le calcul d'emprise déclenche des ST_EstimatedExtent qui retombent sur
-    #   une méthode lente, chacune monopolisant une connexion plusieurs secondes au démarrage —
-    #   précisément quand les connexions manquent. Les emprises servent au cadrage automatique,
-    #   dont ce front ne se sert pas : il cadre lui-même sur la hiérarchie sélectionnée.
-    command: ["--pool-size", "5", "--auto-bounds", "skip"]
+    # NOTE tunnel : `host.docker.internal:5433` suppose que le tunnel SSH vers la base écoute sur
+    #   TOUTES les interfaces de l'hôte. Un tunnel ouvert en `-L 5433:...` ne se lie qu'à
+    #   127.0.0.1 : le conteneur reçoit alors « Connection refused » et Martin redémarre en boucle
+    #   (constaté le 2026-09-09). Ouvrir le tunnel avec `-L 0.0.0.0:5433:...` (ou pointer
+    #   DATABASE_URL sur l'hôte RDS directement) règle le problème.
+    #
+    # `--config` : sans lui, Martin part en auto-détection et publie TOUTES les tables
+    #   géométriques de la base — 34 sources au relevé, dont `Surveys`, `Units` et
+    #   `DiscoveryReports`, qui n'ont rien à faire dans un fond de carte. Le fichier monté
+    #   ci-dessous fixe la liste exacte, et porte aussi `pool_size: 5` (la base plafonne à
+    #   max_connections=79 et un autre Martin en retient déjà ~56 : le défaut de 20 ne peut pas
+    #   être servi, Martin considère l'échec comme FATAL, sort, et `restart: unless-stopped` le
+    #   relance en boucle).
+    # `--auto-bounds skip` : les emprises sont déclarées dans le fichier, inutile de payer des
+    #   ST_EstimatedExtent au démarrage — chacun monopolise une connexion plusieurs secondes,
+    #   précisément quand les connexions manquent.
+    command: ["--config", "/config.yaml", "--auto-bounds", "skip"]
+    volumes:
+      - ./docker/martin/config.yaml:/config.yaml:ro
+    # ⚠️ Aucun `ports:` ici, VOLONTAIREMENT. Martin n'est joignable que depuis le réseau Docker,
+    # et c'est l'API qui sert les tuiles en validant l'appelant (`/api/tiles` sous jeton,
+    # `/api/public/tiles` sous clé). Publier 3000 sur l'hôte rouvrirait en clair ce que la
+    # fermeture de `/tiles/` a fermé le 2026-09-10 — et la liste du fichier de config ne suffit
+    # pas : elle restreint ce que Martin publie, pas qui peut le lui demander.
+    # Pour du `ng serve` local, publier 3000 dans un override de développement.
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped

@@ -1,43 +1,279 @@
+# Publication des tuiles DAS.
+#
+# Avant : aucun fichier de configuration n'était monté et Martin tournait en
+# auto-détection. Il publiait donc TOUTES les tables géométriques de la base,
+# y compris `Surveys`, `Units` et `DiscoveryReports` — des données de terrain
+# qui n'ont rien à faire dans un fond de carte, a fortiori public.
+#
+# Ici la liste est explicite : une source = une table, avec sa fenêtre de zoom.
+# Les identifiants de source (clés) sont ceux attendus par les styles
+# (`map-style.json` côté admin, `commercial-style.json` côté vitrine) : les
+# renommer casse les deux fronts.
 postgres:
   connection_string: "${DATABASE_URL}"
-  pool_size: 20
+  default_srid: 4326
+  pool_size: 5
   auto_publish: false
 
-  functions:
-    blocks_tiles:
+  tables:
+    # --- Fond de carte -------------------------------------------------------
+    # Contour du pays : sert à peindre la terre par-dessus la mer (rendu Google).
+    # Servi dès z0 car c'est la première chose visible au dézoom.
+    contour_national:
       schema: public
-      function: blocks_tiles
-      minzoom: 6
-      maxzoom: 18
-      bounds: [41.5, 10.9, 43.5, 12.8]
+      table: contour_national
+      srid: 4326
+      geometry_column: geom
+      geometry_type: MULTIPOLYGON
+      minzoom: 0
+      maxzoom: 12
+      bounds: [41.70, 10.85, 43.50, 12.80]
+      buffer: 128
+      clip_geom: true
+      properties:
+        ogc_fid: int4
+        nom: text
 
-    blocks_tiles_for_client:
+    cities_tiles:
       schema: public
-      function: blocks_tiles_for_client
-      minzoom: 6
-      maxzoom: 18
-      bounds: [41.5, 10.9, 43.5, 12.8]
+      table: cities_tiles
+      srid: 4326
+      geometry_column: Boundary
+      geometry_type: POLYGON
+      minzoom: 4
+      maxzoom: 14
+      bounds: [41.70, 10.85, 43.50, 12.80]
+      properties:
+        Fid: int4
+        Name: varchar
+        Code: int4
 
-    properties_tiles:
+    cities_labels_tiles:
       schema: public
-      function: properties_tiles
-      minzoom: 15
+      table: cities_labels_tiles
+      srid: 4326
+      geometry_column: Boundary
+      geometry_type: POINT
+      minzoom: 4
+      maxzoom: 14
+      bounds: [41.70, 10.85, 43.50, 12.80]
+      properties:
+        Fid: int4
+        Name: varchar
+        Code: int4
+
+    quartiers_tiles:
+      schema: public
+      table: quartiers_tiles
+      srid: 4326
+      geometry_column: Boundary
+      geometry_type: POLYGON
+      minzoom: 9
       maxzoom: 20
-      bounds: [41.5, 10.9, 43.5, 12.8]
+      bounds: [41.70, 10.85, 43.50, 12.80]
+      properties:
+        Id: uuid
+        Nom: varchar
+        Code: varchar
+        AreaNumber: int4
+        Postcode: text
+        ZoneId: uuid
+        ZoneName: varchar
+        ZoneCode: varchar
+        CommuneId: uuid
+        CommuneName: varchar
+        CityId: uuid
+        CityName: varchar
 
+    # Réseau principal SIG (23 tronçons) : c'est LUI qui porte le dézoom, façon
+    # Google où seules les grandes routes subsistent au niveau pays.
+    # Mesuré : une tuile z12 de `streets_tiles` pèse 330 Ko (4 283 rues), une de
+    # `route_principaux` quelques kilo-octets.
+    route_principaux:
+      schema: public
+      table: route_principaux
+      srid: 32638
+      geometry_column: wkb_geometry
+      geometry_type: MULTILINESTRING
+      minzoom: 7
+      maxzoom: 13
+      properties:
+        ogc_fid: int4
+        nom: text
+        type_revet: text
+
+    voierie_secondaire:
+      schema: public
+      table: voierie_secondaire
+      srid: 32638
+      geometry_column: wkb_geometry
+      geometry_type: MULTILINESTRING
+      minzoom: 10
+      maxzoom: 14
+      properties:
+        ogc_fid: int4
+        nom: text
+        type_revet: text
+
+    # Rues détaillées : seulement à partir de z12.
     streets_tiles:
       schema: public
-      function: streets_tiles
+      table: streets_tiles
+      srid: 4326
+      geometry_column: Boundary
+      geometry_type: MULTILINESTRING
+      minzoom: 12
+      maxzoom: 20
+      bounds: [41.70, 10.85, 43.50, 12.80]
+      buffer: 128
+      properties:
+        Id: uuid
+        Code: varchar
+        Name: varchar
+        Type: varchar
+
+    poi_tiles:
+      schema: public
+      table: poi_tiles
+      srid: 4326
+      geometry_column: Location
+      geometry_type: POINT
+      minzoom: 12
+      maxzoom: 20
+      bounds: [41.70, 10.85, 43.50, 12.80]
+      properties:
+        Fid: int8
+        Nom: text
+        Categorie: text
+        SousCategorie: text
+
+    # Les mêmes lieux, REGROUPÉS PAR SITE — c'est cette source-là que la carte vitrine consomme
+    # (`commercial-style.json`), pas `poi_tiles`. OSM cartographie un campus bâtiment par
+    # bâtiment : 961 points deviennent 560 sites, et l'Université de Djibouti passe de 72
+    # pastilles à une seule. Le détail bâtiment par bâtiment reste disponible au-dessus.
+    # Vue définie par `scripts/sig/nour/poi-sites-tiles.sql`.
+    poi_sites_tiles:
+      schema: public
+      table: poi_sites_tiles
+      srid: 4326
+      geometry_column: Location
+      geometry_type: POINT
+      minzoom: 12
+      maxzoom: 20
+      bounds: [41.70, 10.85, 43.50, 12.80]
+      properties:
+        Fid: int8
+        Nom: text
+        Categorie: text
+        SousCategorie: text
+        # `count(*)` rend un int8 : le déclarer int4 ferait échouer la publication de la source.
+        Batiments: int8
+
+    # --- Bâti et parcellaire (texture "immeubles" du rendu Google) -----------
+    blocs_tiles:
+      schema: public
+      table: blocs_tiles
+      srid: 4326
+      geometry_column: Boundary
+      geometry_type: POLYGON
       minzoom: 13
       maxzoom: 20
-      bounds: [41.5, 10.9, 43.5, 12.8]
+      bounds: [41.70, 10.85, 43.50, 12.80]
+      properties:
+        Id: uuid
+        Code: varchar
+        Name: varchar
+        QuartierId: uuid
+        ZoneId: uuid
+        CommuneId: uuid
+        CityId: uuid
+        status: text
 
-    admin_units_tiles:
+    closes_tiles:
       schema: public
-      function: admin_units_tiles
-      minzoom: 6
-      maxzoom: 16
-      bounds: [41.5, 10.9, 43.5, 12.8]
+      table: closes_tiles
+      srid: 4326
+      geometry_column: Boundary
+      geometry_type: MULTIPOLYGON
+      minzoom: 13
+      maxzoom: 20
+      bounds: [41.70, 10.85, 43.50, 12.80]
+      properties:
+        Id: uuid
+        QuartierId: uuid
+        Code: varchar
+        Number: int4
+        Label: text
 
+    # 36 000 parcelles : jamais avant z15, sinon chaque tuile devient énorme.
+    adresses_tiles:
+      schema: public
+      table: adresses_tiles
+      srid: 4326
+      geometry_column: Boundary
+      geometry_type: MULTIPOLYGON
+      minzoom: 15
+      maxzoom: 20
+      bounds: [41.70, 10.85, 43.50, 12.80]
+      properties:
+        Id: uuid
+        Numero: int4
+        BlocId: uuid
+        QuartierId: uuid
+        ZoneId: uuid
+        CommuneId: uuid
+        CityId: uuid
+        workflowStage: text
+        CloseId: uuid
+        PoiCategorie: varchar
+        PoiNom: varchar
+
+    # --- Couches SIG de travail (admin uniquement, masquées par défaut) ------
+    ilots_extension:
+      schema: public
+      table: ilots_extension
+      srid: 32638
+      geometry_column: wkb_geometry
+      geometry_type: MULTIPOLYGON
+      minzoom: 11
+      maxzoom: 20
+      properties:
+        ogc_fid: int4
+
+    voierie_tertiaire_bitumee:
+      schema: public
+      table: voierie_tertiaire_bitumee
+      srid: 32638
+      geometry_column: wkb_geometry
+      geometry_type: MULTILINESTRING
+      minzoom: 12
+      maxzoom: 20
+      properties:
+        ogc_fid: int4
+
+    voierie_tertiaire_non_bitumee:
+      schema: public
+      table: voierie_tertiaire_non_bitumee
+      srid: 32638
+      geometry_column: wkb_geometry
+      geometry_type: MULTILINESTRING
+      minzoom: 12
+      maxzoom: 20
+      properties:
+        ogc_fid: int4
+
+    voierie_extension:
+      schema: public
+      table: voierie_extension
+      srid: 32638
+      geometry_column: wkb_geometry
+      geometry_type: MULTILINESTRING
+      minzoom: 12
+      maxzoom: 20
+      properties:
+        ogc_fid: int4
+
+# 512 Mio de cache tuiles : le fond (contour, villes, quartiers, rues) est
+# quasi statique, autant le servir depuis la mémoire.
 cache_size_mb: 512
 listen_addresses: "0.0.0.0:3000"
