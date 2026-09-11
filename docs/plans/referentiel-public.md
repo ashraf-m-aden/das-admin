@@ -290,12 +290,16 @@ route sous z12, ni texture de bâti.
 
 Trois mécanismes, tous nourris par la seule colonne `Postcode` de `quartiers_tiles` :
 
-1. **Le filigrane** `77` / `78` entre z8,5 et z12,5. C'est la première moitié du code
-   (`77` + `003` = `77003`) : le dézoom montre la même donnée que le zoom, tronquée.
-2. **La hachure** des quartiers sans code — 23 des 79 emprises dessinables au relevé du
-   2026-09-09. Un blanc se lirait comme un bug de rendu chez le partenaire ; une hachure se lit
-   comme une information. Le vide est un état, pas un défaut.
+1. **Le filigrane** `77` … `82` entre z8,5 et z12,5. C'est la première moitié du code
+   (`77` + `101` = `77101`) : le dézoom montre la même donnée que le zoom, tronquée.
+2. **La hachure** des quartiers sans code. Un blanc se lirait comme un bug de rendu chez le
+   partenaire ; une hachure se lit comme une information. Le vide est un état, pas un défaut.
 3. **Le libellé de quartier**, qui passe du code seul au code + nom à z13.
+
+> ✅ **Le 2026-09-11, la hachure ne dessine plus rien.** Les 23 emprises sans code relevées le
+> 2026-09-09 ont toutes été traitées, et **100 % des 36 163 adresses** portent désormais un code
+> postal. La couche reste en place : un quartier neuf arrivera sans numéro, et il vaut mieux
+> qu'il se signale que de se fondre dans le décor. Voir la section « Le plan de numérotation ».
 
 > ⚠️ Le motif de hachure n'est **pas dans un sprite** : le style ne déclare que `glyphs`, et en
 > ajouter un imposerait un asset externe de plus à servir. Il est peint sur un canvas par le
@@ -303,6 +307,46 @@ Trois mécanismes, tous nourris par la seule colonne `Postcode` de `quartiers_ti
 > l'ajout de l'image et MapLibre ne dessine rien, sans erreur. Le nom de l'image
 > (`das-hachure-code-a-venir`) doit rester identique dans le composant et dans
 > `scripts/map/basemap_layers.py`.
+
+### Le plan de numérotation — relevé et complété le 2026-09-11
+
+Le code postal fait **cinq caractères** : `lpad(City.Code, 2)` puis `lpad(Quartier.AreaNumber, 3)`.
+
+⚠️ **La centaine de l'`AreaNumber` n'est pas un rang, c'est la ZONE.** Le code de zone le dit
+littéralement — `Z1` → `1xx`, `Z2` → `2xx`, … `Z9` → les aires spéciales. Attribuer un numéro et
+rattacher à une zone ne sont donc pas deux gestes mais un seul ; les écrire séparément les
+laisserait diverger.
+
+| Zone | Code | Centaine | Commune |
+|---|---|---|---|
+| Ras-Dika | `Z1` | `1xx` | RAS DIKA |
+| Boulaos 1 · 2 · 3 | `Z2` `Z3` `Z4` | `2xx` `3xx` `4xx` | BOULAOS |
+| Balbala 1 · 2 | `Z5` `Z6` | `5xx` `6xx` | BALBALA |
+| Aires spéciales | `Z9` | `9xx` | (les deux) |
+
+⚠️ **C'est une convention, pas une contrainte du schéma**, et elle a un écart connu :
+« Wahladaba Sud » porte `605` en zone `Z5`. Non corrigé — ce serait changer un code postal déjà
+publié, ce qui est une décision et non un nettoyage.
+
+**Les codes de ville** suivent la capitale puis les régions par ordre alphabétique :
+
+```
+77 Djibouti      79 Arta        81 Obock
+78 Ali Sabieh    80 Dikhil      82 Tadjourah
+```
+
+> ⚠️ Les quatre derniers sont une **inférence** à partir des deux seuls codes qui existaient, pas
+> la lecture d'un plan officiel. Le plan national appartient à La Poste : si leur document dit
+> autre chose, c'est `scripts/sig/cities-codes.sql` qu'il faut corriger — avant publication.
+
+**La forme `x000`** désigne une ville entière pas encore découpée en quartiers. Ce n'est pas un
+bricolage : Ali Sabieh portait déjà `78000`, et Dikhil et Tadjourah l'ont hérité mécaniquement en
+recevant leur code de ville — leur quartier « (provisoire) » avait déjà `AreaNumber = 0`.
+
+**Ce qui reste**, et qui n'est pas un problème de code : six quartiers **sans emprise**, donc
+invisibles sur la carte et hors d'atteinte de toute méthode géométrique — dont `WAHLADABA N.` et
+ses 300 blocs. Leur donner un contour (l'union de leurs blocs est un point de départ) les rend
+traitables par `scripts/sig/quartiers-numerotation.sql` sans le modifier.
 
 ### L'arabe demande deux choses de plus
 

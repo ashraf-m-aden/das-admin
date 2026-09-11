@@ -92,12 +92,19 @@ def ground() -> list:
             "minzoom": 9,
             "paint": {"fill-color": C["urban"], "fill-opacity": 0.95},
         },
-        # Quartiers SANS code postal : hachurés, jamais laissés vides. Mesuré le
-        # 2026-09-09 sur `quartiers_tiles` : 23 des 79 emprises dessinables n'ont pas
-        # de code — 21 à Djibouti (`AreaNumber` absent : Gabode 1 à 5, Boulaos, les
-        # Cités Wadagir…), plus Dikhil et Tadjourah dont la ville n'a pas de `Code`.
-        # Un blanc se lirait comme un bug de rendu chez le partenaire ; une hachure
-        # se lit comme une information — le vide est un état, pas un défaut.
+        # Quartiers SANS code postal : hachurés, jamais laissés vides. Un blanc se
+        # lirait comme un bug de rendu chez le partenaire ; une hachure se lit comme
+        # une information — le vide est un état, pas un défaut.
+        #
+        # ⚠️ Cette couche ne dessine PLUS RIEN depuis le 2026-09-11, et c'est voulu :
+        # les 23 emprises sans code relevées le 2026-09-09 ont toutes été traitées
+        # (`scripts/sig/quartiers-numerotation.sql` pour les 21 quartiers de Djibouti,
+        # `cities-codes.sql` pour Dikhil et Tadjourah dont la VILLE n'avait pas de
+        # `Code`). Les 79 emprises dessinables sont codées, 100 % des adresses aussi.
+        #
+        # Elle est gardée parce qu'elle redeviendra vraie : un quartier neuf arrive
+        # sans numéro, et il vaut mieux qu'il se signale que de disparaître dans le
+        # fond. La retirer ferait de la prochaine lacune un trou silencieux.
         {
             "id": "quartiers-sans-code",
             "type": "fill",
@@ -107,9 +114,10 @@ def ground() -> list:
             "filter": ["!", ["has", "Postcode"]],
             "paint": {"fill-pattern": HACHURE, "fill-opacity": 0.75},
         },
-        # Le préfixe ville en filigrane : `77` pour Djibouti, `78` pour Ali Sabieh.
-        # C'est la première moitié du code postal (`77` + `003` = `77003`), donc
-        # le dézoom montre littéralement la même donnée que le zoom, tronquée.
+        # Le préfixe ville en filigrane : `77` Djibouti, `78` Ali Sabieh, puis `79`
+        # Arta, `80` Dikhil, `81` Obock, `82` Tadjourah. C'est la première moitié du
+        # code postal (`77` + `101` = `77101`), donc le dézoom montre littéralement
+        # la même donnée que le zoom, tronquée.
         # Placé AVANT la voirie pour que les rues passent par-dessus : c'est un
         # filigrane du sol, pas une étiquette.
         {
@@ -511,7 +519,7 @@ CODE_A_VENIR = {
 def _postcode_label(lang: str = "fr"):
     """Libellé de quartier piloté par la grammaire du code postal.
 
-    `77003` = `77` (code ville) + `003` (`AreaNumber` du quartier). La hiérarchie
+    `77101` = `77` (code ville) + `101` (`AreaNumber` du quartier). La hiérarchie
     est donc DANS la donnée, pas plaquée dessus : il suffit de la laisser se
     déplier avec le zoom.
 
@@ -614,7 +622,7 @@ def labels(with_poi: bool = True, lang: str = "fr") -> list:
         },
         # Le libellé de quartier EST le code postal. La bascule à z13 suit la
         # grammaire du code : `77` seul au dézoom (filigrane `postcode-watermark`),
-        # puis `77003` seul, puis `77003` + le nom du quartier en sous-titre.
+        # puis `77101` seul, puis `77101` + le nom du quartier en sous-titre.
         # On ne montre jamais deux fois la même information à la même échelle.
         {
             "id": "quartier-label",

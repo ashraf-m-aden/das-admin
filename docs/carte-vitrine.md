@@ -136,16 +136,19 @@ Deux détails appris en route :
 Trois mécanismes, tous nourris par la seule colonne `Postcode` de
 `quartiers_tiles` :
 
-1. **Le filigrane.** `77` pour Djibouti, `78` pour Ali Sabieh, en très grand et
-   très pâle entre z8,5 et z12,5 (`postcode-watermark`). C'est la première moitié
-   du code (`77` + `003` = `77003`) : le dézoom montre littéralement la même
-   donnée que le zoom, tronquée.
+1. **Le filigrane.** `77` pour Djibouti, `78` pour Ali Sabieh, jusqu'à `82` pour
+   Tadjourah, en très grand et très pâle entre z8,5 et z12,5
+   (`postcode-watermark`). C'est la première moitié du code (`77` + `101` =
+   `77101`) : le dézoom montre littéralement la même donnée que le zoom, tronquée.
 2. **La hachure.** Les quartiers **sans** code postal sont hachurés plutôt que
-   laissés vides (`quartiers-sans-code`). Mesuré le 2026-09-09 : 23 des 79
-   emprises dessinables n'ont pas de code — 21 à Djibouti (`AreaNumber` absent),
-   plus Dikhil et Tadjourah dont la ville n'a pas de `Code`. Un blanc se lirait
-   comme un bug de rendu chez le partenaire ; une hachure se lit comme une
-   information — le vide est un état, pas un défaut.
+   laissés vides (`quartiers-sans-code`). Un blanc se lirait comme un bug de rendu
+   chez le partenaire ; une hachure se lit comme une information — le vide est un
+   état, pas un défaut.
+   > ⚠️ **Cette couche ne dessine plus rien depuis le 2026-09-11**, et c'est le
+   > but : les 23 emprises sans code relevées le 2026-09-09 ont toutes été
+   > traitées. Elle est gardée parce qu'elle redeviendra vraie — un quartier neuf
+   > arrive sans numéro, et il vaut mieux qu'il se signale que de se fondre dans
+   > le décor.
    > Le motif n'est pas dans un sprite : il est peint sur un canvas par le
    > composant, en réponse à `styleimagemissing`. Le nom de l'image doit rester
    > identique des deux côtés (`das-hachure-code-a-venir`).
