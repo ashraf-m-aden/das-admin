@@ -18,7 +18,28 @@ COPY package.json package-lock.json ./
 # que Linux, lui, réclame. Le build local continue de passer : seul celui-ci tombe.
 #
 #   Correction :  npm run lock:linux    (régénère le lock ici, dans cette image)
-RUN npm ci
+#
+# ⚠️ Ne pas confondre avec l'AUTRE échec de cette étape, qui n'a rien à voir :
+#
+#   npm error code ECONNRESET
+#   npm error network aborted
+#
+# Celui-là est un abandon de connexion pendant le téléchargement, pas un problème de lock —
+# `npm run lock:linux` n'y changerait rien. L'arbre Angular pèse quelques centaines de paquets
+# et la moindre coupure en plein tirage fait tomber le build entier, après une minute et demie
+# de travail déjà fait. Les réglages ci-dessous laissent npm réessayer au lieu d'abandonner au
+# premier incident.
+#
+# `NPM_CONFIG_*` plutôt qu'un `npm config set` : même effet, sans couche d'image en plus, et
+# visible ici même quand on lit le fichier.
+ENV NPM_CONFIG_FETCH_RETRIES=5 \
+    NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=20000 \
+    NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=120000 \
+    NPM_CONFIG_FETCH_TIMEOUT=600000
+
+# `--no-audit --no-fund` : deux appels réseau de plus, dont la sortie n'est lue par personne
+# dans un build. Sur une liaison instable, c'est autant d'occasions de tomber en moins.
+RUN npm ci --no-audit --no-fund
 
 COPY . .
 
