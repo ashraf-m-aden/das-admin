@@ -1,7 +1,8 @@
 # Brancher la Plateforme 1 sur le référentiel public D.A.S
 
 > Note d'intégration destinée à l'équipe technique de La Poste de Djibouti.
-> Version du 2026-09-10. Clé `das_SEjertCf`.
+> Version du 2026-09-10, révisée le 2026-09-11 (styles multilingues — voir « Le style »).
+> Clé `das_SEjertCf`.
 >
 > Côté D.A.S, la source de vérité reste [`plans/referentiel-public.md`](plans/referentiel-public.md).
 
@@ -105,6 +106,46 @@ GET https://carte.das.dj/assets/commercial-style.json    ← le même fichier
 
 Les deux chemins servent le même octet. **Pas de clé requise** : le style ne contient aucune
 donnée, seulement la façon de la dessiner.
+
+### Depuis le 2026-09-11 : trois langues
+
+Les libellés du fond — sous-catégories de lieux, mention « code à venir » — sont traduits **dans
+le fichier**, pas à l'exécution. Il y a donc un style par langue :
+
+```http
+GET /carto/commercial-style.json       ← français  (nom inchangé)
+GET /carto/commercial-style.en.json    ← anglais
+GET /carto/commercial-style.ar.json    ← arabe
+```
+
+**Rien à faire si vous n'affichez qu'en français** : le fichier que vous chargez déjà n'a pas
+changé de nom et ne changera pas — c'est un contrat. Pour proposer une autre langue, chargez le
+fichier correspondant et passez-le à MapLibre, exactement comme le premier.
+
+> ⚠️ **L'arabe demande le greffon bidirectionnel de MapLibre.** Sans lui, le texte sort en carrés
+> vides ou dans le mauvais sens — la mise en forme se fait dans le worker de MapLibre, pas dans le
+> navigateur. Posez-le **avant** de créer la carte, une seule fois pour toute l'application :
+>
+> ```js
+> maplibregl.setRTLTextPlugin('<votre-hôte>/mapbox-gl-rtl-text.js', false);
+> ```
+>
+> `false` = ne pas différer : le greffon doit être là avant la première tuile arabe, sinon le
+> premier rendu sort en carrés et n'est jamais recalculé. Servez le fichier **depuis chez vous**
+> plutôt que depuis un CDN tiers ; nous en publions une copie sous
+> `/assets/mapbox-gl-rtl-text.js`.
+
+### Ce que le fond ne montre pas encore
+
+Le style se limite aux cinq sources autorisées. Trois choses vous manqueront donc, et ce n'est
+pas un défaut de votre intégration :
+
+* **pas de mer** — le fond est uniformément la terre ;
+* **aucune route sous le zoom 12** ;
+* **pas de texture d'îlots** entre les zooms 13 et 16.
+
+Nous prévoyons d'ouvrir les sources correspondantes. Le style les reprendra sans que vous ayez
+quoi que ce soit à changer.
 
 ---
 

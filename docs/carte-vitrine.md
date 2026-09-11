@@ -196,6 +196,70 @@ http://localhost:4300/carte?lat=11.588&lng=43.145&z=16&marker=43.1425,11.5806&la
 ⚠️ Ces noms sont le **contrat d'ouverture** de la Plateforme 1 de La Poste
 (`openInDasViewer()`). Ils ne changent pas sans prévenir l'autre dépôt.
 
+### ⚠️ La carte publique porte elle-même une clé
+
+Le visiteur n'en présente aucune — mais l'écran, lui, en consomme une. `/carte` n'est public que
+du point de vue de l'utilisateur : les tuiles passent par `/api/public/tiles/`, qui exige une clé
+comme pour n'importe quel partenaire. **D.A.S est le premier client de son propre relais.**
+
+La clé n'est nulle part dans le code. Elle descend par la configuration d'exécution :
+
+```
+.env                MAP_PUBLIC_KEY=das_xxxxxxxx.…
+  ↓  docker-compose.yml    MAP_PUBLIC_KEY: "${MAP_PUBLIC_KEY:-}"
+  ↓  docker/env-config.sh  écrit /config.json au démarrage du conteneur
+  ↓  config.json           "mapPublicKey": "…"
+  ↓  MapStyleService.getCommercialStyle()
+       pose ?cle=… sur chaque URL de tuiles du style
+```
+
+C'est la même image Docker sur dev, staging et prod : seule la variable change, jamais un rebuild.
+
+> **La clé de la carte publique EST publique.** Elle voyage dans les URL que le navigateur émet,
+> exactement comme un jeton Mapbox — l'inspecteur réseau la montre à qui la cherche. Ce qu'elle
+> apporte n'est pas le secret mais la **révocabilité** et l'**attribution** : savoir qui consomme,
+> et pouvoir couper. C'est aussi pourquoi elle est acceptée en query string : MapLibre construit
+> lui-même ses requêtes de tuiles et n'accepte aucun en-tête.
+>
+> Corollaire : cette clé-là est délivrée **à nous**, pas à un partenaire. Un partenaire reçoit la
+> sienne, pour qu'une fuite ou une révocation ne fasse tomber que lui.
+
+#### `MAP_PUBLIC_KEY` vide = carte blanche, sans une ligne d'erreur
+
+C'est le mode de panne à connaître. `MapStyleService.ajouterParametre()` ne pose rien quand la
+valeur est vide : il rend le style **inchangé**. Le style se charge donc normalement, MapLibre
+démarre, et chaque tuile part sans `?cle=` — donc `401`. L'écran affiche un fond nu.
+
+Rien ne le signale : le conteneur démarre, `/config.json` est servi, `nginx` ne voit passer que
+des requêtes légitimes, et le seul indice est dans l'onglet réseau du navigateur.
+
+Contrôle en trois commandes, dans cet ordre — chacune répond à « est-ce que la clé est arrivée
+jusqu'ici ? » :
+
+```bash
+# 1. la variable a-t-elle atteint le conteneur ?
+docker compose exec das-admin printenv MAP_PUBLIC_KEY
+
+# 2. est-elle dans le fichier de config servi au navigateur ?
+curl -s http://localhost/config.json | grep mapPublicKey
+
+# 3. le relais l'accepte-t-il ?  200 = oui, 401 = clé absente/inconnue/révoquée
+curl -s -o /dev/null -w '%{http_code}\n' \
+  "http://localhost/api/public/tiles/quartiers_tiles/13/5077/3830?cle=$MAP_PUBLIC_KEY"
+```
+
+> ⚠️ Une clé **révoquée** rend le même `401` qu'une clé absente. C'est délibéré — distinguer les
+> cas apprendrait à un tiers lesquels de ses essais tombent sur une clé ayant existé. Si l'étape 3
+> échoue alors que les deux premières passent, la clé a probablement été révoquée depuis l'écran
+> `/cles-api` : il faut en délivrer une nouvelle et remettre à jour `.env`.
+
+> ⚠️ Ne pas confondre avec le `204` : une tuile **vide** est une réponse normale et fréquente. La
+> traiter comme un échec ferait clignoter des erreurs sur une carte qui fonctionne.
+
+Pour tout le reste — ce qui est stocké de la clé (une empreinte SHA-256, jamais le secret), la
+portée par ville figée à la délivrance, le contrôle d'emprise — voir
+[`plans/referentiel-public.md`](plans/referentiel-public.md) §2.
+
 ## 4. Consommation par un tiers
 
 `nginx.conf` renvoie `Access-Control-Allow-Origin: *` sur `/assets/` et

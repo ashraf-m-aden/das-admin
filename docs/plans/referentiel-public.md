@@ -209,6 +209,54 @@ fichier que celui publié aux clients** : La Poste le récupère tel quel et ré
 `__TILES_BASE_URL__` avec son propre relais. On ne maintient pas deux rendus — ce que voit un
 partenaire est ce que nous voyons.
 
+**Il est généré, pas écrit à la main** : `python scripts/map/build_styles.py` rend **un fichier
+par langue** à partir de `scripts/map/palette.py` et `basemap_layers.py`. Les seuls libellés
+traduisibles du fond — sous-catégories de lieux, « code à venir » — vivent dans des expressions
+`match` imbriquées ; les réécrire à l'exécution supposerait de connaître leur forme exacte, un
+couplage silencieux qui casserait à la première refonte du style.
+
+> ⚠️ `commercial-style.json` **sans suffixe est le français**, et c'est un contrat externe : c'est
+> ce nom que `nginx.conf` publie sous `/carto/` et que La Poste récupère. Ne jamais le renommer ;
+> les autres langues s'ajoutent à côté en `commercial-style.<lang>.json`.
+
+> ⚠️ **Le style ne peut contenir que les cinq sources de la liste blanche.** Une source ajoutée au
+> style sans l'être au relais public ne se signale PAS : le relais rend 404 — la même réponse
+> qu'une source inconnue — la couche reste vide, et le fond a simplement l'air incomplet. Le
+> générateur documente ce qui a été retiré pour tenir dans la liste (terre et trait de côte, réseau
+> structurant du dézoom, îlots) et ce que ça coûte à l'écran, dans `docs/carte-vitrine.md`.
+
+### Le code postal est le sujet de la carte
+
+Trois mécanismes, tous nourris par la seule colonne `Postcode` de `quartiers_tiles` :
+
+1. **Le filigrane** `77` / `78` entre z8,5 et z12,5. C'est la première moitié du code
+   (`77` + `003` = `77003`) : le dézoom montre la même donnée que le zoom, tronquée.
+2. **La hachure** des quartiers sans code — 23 des 79 emprises dessinables au relevé du
+   2026-09-09. Un blanc se lirait comme un bug de rendu chez le partenaire ; une hachure se lit
+   comme une information. Le vide est un état, pas un défaut.
+3. **Le libellé de quartier**, qui passe du code seul au code + nom à z13.
+
+> ⚠️ Le motif de hachure n'est **pas dans un sprite** : le style ne déclare que `glyphs`, et en
+> ajouter un imposerait un asset externe de plus à servir. Il est peint sur un canvas par le
+> composant, en réponse à `styleimagemissing` — et non au `load`, sinon la couche est rendue avant
+> l'ajout de l'image et MapLibre ne dessine rien, sans erreur. Le nom de l'image
+> (`das-hachure-code-a-venir`) doit rester identique dans le composant et dans
+> `scripts/map/basemap_layers.py`.
+
+### L'arabe demande deux choses de plus
+
+Sans elles, il sort en carrés vides ou à l'envers :
+
+* une **police qui le couvre**. Mesuré sur le CDN de glyphes, plage U+0600–06FF :
+  `Open Sans Regular` rend 52 octets — aucun glyphe arabe — et `Noto Sans Regular` 52 349. D'où
+  les piles composites `["Open Sans Bold", "Noto Sans Regular"]` : gras en latin, romain en arabe,
+  faute de gras arabe sur ce CDN ;
+* le **greffon bidirectionnel**, servi depuis `public/assets/` et non depuis un CDN tiers, posé
+  avec `lazy: false`. La mise en forme contextuelle se fait dans le worker de MapLibre, pas dans
+  le navigateur — et le greffon doit être là AVANT la première tuile arabe, sinon le premier rendu
+  sort en carrés et n'est jamais recalculé. Il est GLOBAL : le reposer lève une erreur, d'où le
+  contrôle de `getRTLTextPluginStatus()`.
+
 ### Le regroupement des lieux
 
 `public.poi_sites_tiles` : **961 bâtiments deviennent 560 sites**. L'Université de Djibouti passe
@@ -226,12 +274,21 @@ que les sources GeoJSON, jamais les tuiles vectorielles.
 > `array_agg` rend une géométrie sans typmod, `geometry_columns` la déclare `GEOMETRY` en SRID 0,
 > et Martin refuse de publier la source — avec pour seule explication « does not exist ».
 
-### Les codes postaux au survol
+### La sélection du quartier
 
-Surbrillance du quartier par `feature-state`, et médaillon flottant portant le code.
+Surbrillance du quartier **cliqué** par `feature-state` — remplissage et contour, tous deux
+déclarés dans le style, la règle du dépôt voulant que `feature-state` serve la sélection et non la
+coloration de base.
 
 > ⚠️ Le `feature-state` précédent doit être **retiré explicitement**. MapLibre ne le fait pas :
-> sans cela, chaque quartier traversé reste allumé et toute la ville finit surlignée.
+> sans cela, chaque quartier sélectionné reste allumé et toute la ville finit surlignée.
+
+> ⚠️ `setStyle()` — au changement de langue — repart d'un style neuf : la sélection posée et les
+> images ajoutées à la volée sont perdues. Il faut les reposer.
+
+> **Historique.** Un médaillon flottant affichait le code au **survol**. Il a été remplacé le
+> 2026-09-11 : le filigrane et le libellé de quartier portent déjà le code, en continu et sans
+> qu'il faille promener la souris. Un médaillon de plus disait la même chose une troisième fois.
 
 ---
 
@@ -367,8 +424,14 @@ vide, ce qui se lit comme une panne.
 
 **Fait** — clés (délivrance, révocation, écran, **portée par ville**), deux relais de tuiles,
 fermeture de `/tiles/`, recherche sous clé, carte publique avec recherche, panneau de détail,
-survol des codes postaux, regroupement des lieux, et les deux raccords avec La Poste (chemin du
-style, paramètres d'ouverture).
+code postal en vedette (filigrane, hachure, adresse postale), style généré en trois langues,
+regroupement des lieux, et les deux raccords avec La Poste (chemin du style, paramètres
+d'ouverture).
+
+**Suites** — ouvrir cinq sources de plus sur le relais public (`contour_national`, `cities_tiles`,
+`route_principaux`, `voierie_secondaire`, `blocs_tiles`) pour rendre à la carte vitrine sa mer, son
+réseau structurant au dézoom et sa texture d'îlots. Les couches existent déjà dans le générateur ;
+seule la liste blanche manque. Voir `docs/carte-vitrine.md`.
 
 ### ⚠️ Le piège qui a rendu la carte publique blanche
 
