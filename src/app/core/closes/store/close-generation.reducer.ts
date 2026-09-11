@@ -1,6 +1,6 @@
 import { createFeature, createReducer, on } from '@ngrx/store';
 import { CloseGenerationActions } from './close-generation.actions';
-import { initialCloseGenerationState, ProposedCloseEdit } from './close-generation.state';
+import { initialBulkState, initialCloseGenerationState, ProposedCloseEdit } from './close-generation.state';
 import { UUID } from '../../models/das.models';
 
 /** Liste des blocs d'une proposition APRÈS corrections — base de tout retrait ou déplacement. */
@@ -28,6 +28,44 @@ export const closeGenerationFeature = createFeature({
     })),
 
     on(CloseGenerationActions.loadStreetsSuccess, (s, { streets }) => ({ ...s, streets })),
+
+    /* -- confirmation générale ---------------------------------------------------------------- */
+
+    on(CloseGenerationActions.bulkSurvey, (s) => ({
+      ...s, bulk: { ...initialBulkState, phase: 'surveying' as const },
+    })),
+    // Chaque quartier recensé s'ajoute au fil de l'eau : la liste se remplit sous les yeux plutôt
+    // que d'apparaître d'un bloc au bout de plusieurs minutes.
+    on(CloseGenerationActions.bulkSurveyQuartier, (s, { outcome, index }) => ({
+      ...s,
+      bulk: { ...s.bulk, outcomes: [...s.bulk.outcomes, outcome], currentIndex: index + 1 },
+    })),
+    on(CloseGenerationActions.bulkSurveyDone, (s) => ({
+      ...s, bulk: { ...s.bulk, phase: 'surveyed' as const, currentIndex: 0 },
+    })),
+
+    on(CloseGenerationActions.bulkApply, (s) => ({
+      ...s, bulk: { ...s.bulk, phase: 'applying' as const, currentIndex: 0, errorMessageKey: null },
+    })),
+    on(CloseGenerationActions.bulkApplyQuartier, (s, a) => ({
+      ...s,
+      bulk: {
+        ...s.bulk,
+        currentIndex: s.bulk.currentIndex + 1,
+        numberingAutoAccepted: s.bulk.numberingAutoAccepted + a.numberingAutoAccepted,
+        outcomes: s.bulk.outcomes.map((o) => o.quartierId !== a.quartierId ? o : {
+          ...o,
+          status: a.errorMessageKey ? 'failed' as const : 'applied' as const,
+          closesCreated: a.closesCreated,
+          adressesRenumbered: a.adressesRenumbered,
+          errorMessageKey: a.errorMessageKey,
+        }),
+      },
+    })),
+    on(CloseGenerationActions.bulkApplyDone, (s) => ({
+      ...s, bulk: { ...s.bulk, phase: 'done' as const },
+    })),
+    on(CloseGenerationActions.bulkReset, (s) => ({ ...s, bulk: initialBulkState })),
 
     // Changer de quartier efface TOUT le travail de relecture : les clés de proposition sont
     // locales à un aperçu, les garder les appliquerait à d'autres closes.

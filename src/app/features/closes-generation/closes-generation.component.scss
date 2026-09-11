@@ -23,6 +23,137 @@
     color: var(--color-danger);
     border: 1px solid var(--color-border);
   }
+
+  /* Avertissement de la confirmation générale : ni une erreur, ni une information neutre — ce
+     qu'on accepte en confirmant. */
+  &--warn {
+    background: var(--color-status-in-progress-bg);
+    color: var(--color-status-in-progress);
+    border: 1px solid var(--color-border);
+  }
+
+  &--ok {
+    background: var(--color-success-bg);
+    color: var(--color-success);
+    border: 1px solid var(--color-border);
+  }
+}
+
+/* ==============================================================================================
+   Confirmation générale
+   ==============================================================================================
+   Posée AVANT la mise en page à deux colonnes, sur toute la largeur : c'est une action qui porte
+   sur tous les quartiers, la ranger dans la colonne d'un quartier la ferait lire comme locale. */
+.bulk {
+  margin-bottom: v.$space-4;
+  padding: v.$space-4;
+  border: 1px solid var(--color-border);
+  border-radius: v.$radius-md;
+  background: var(--color-surface);
+
+  /* Pendant l'enchaînement, le panneau se met en retrait : il travaille, on ne le pilote plus. */
+  &--running { opacity: 0.85; }
+
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: v.$space-4;
+    flex-wrap: wrap;
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: v.$space-2;
+    margin: 0;
+    font-size: v.$font-size-lg;
+  }
+
+  &__lead {
+    margin: v.$space-1 0 0;
+    color: var(--color-text-muted);
+    font-size: v.$font-size-sm;
+    max-width: 78ch;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: v.$space-2;
+    flex-wrap: wrap;
+  }
+
+  &__progress {
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text-muted);
+    font-size: v.$font-size-sm;
+  }
+
+  &__totals {
+    display: flex;
+    flex-wrap: wrap;
+    gap: v.$space-5;
+    margin: v.$space-4 0 v.$space-3;
+
+    dt {
+      color: var(--color-text-muted);
+      font-size: v.$font-size-xs;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    dd {
+      margin: 2px 0 0;
+      font-size: v.$font-size-lg;
+      font-weight: 600;
+      /* Des chiffres qu'on compare d'une ligne à l'autre : même chasse, sinon ils dansent. */
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  &__detail {
+    margin-top: v.$space-3;
+
+    summary {
+      cursor: pointer;
+      color: var(--color-text-muted);
+      font-size: v.$font-size-sm;
+    }
+  }
+
+  &__table {
+    width: 100%;
+    margin-top: v.$space-3;
+    border-collapse: collapse;
+    font-size: v.$font-size-sm;
+
+    th, td {
+      padding: v.$space-2 v.$space-3;
+      border-bottom: 1px solid var(--color-border);
+      text-align: left;
+    }
+
+    th { color: var(--color-text-muted); font-weight: 500; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+    .row--failed { background: var(--color-danger-bg); }
+  }
+}
+
+/* Étiquette d'état dans le tableau. Trois sens, trois couleurs franches : sur une ligne parmi
+   quarante, une nuance ne se lit pas. */
+.tag {
+  display: inline-block;
+  padding: 2px v.$space-2;
+  border-radius: v.$radius-sm;
+  background: var(--color-surface-alt, var(--color-surface));
+  color: var(--color-text-muted);
+  font-size: v.$font-size-xs;
+  white-space: nowrap;
+
+  &--ok { background: var(--color-success-bg); color: var(--color-success); }
+  &--ko { background: var(--color-danger-bg); color: var(--color-danger); white-space: normal; }
 }
 
 .layout {

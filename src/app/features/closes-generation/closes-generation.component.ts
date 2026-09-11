@@ -1,10 +1,10 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { AsyncPipe, DecimalPipe } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { CloseGenerationFacade } from '../../core/closes/store/close-generation.facade';
-import { PARAMETRES_PAR_DEFAUT } from '../../core/closes/store/close-generation.state';
+import { initialBulkState, PARAMETRES_PAR_DEFAUT } from '../../core/closes/store/close-generation.state';
 import { PageHeaderComponent } from '../../core/layout/page-header/page-header.component';
 import { DasMapComponent } from '../../core/ui/map/das-map.component';
 import { MapFeature, MapLayerConfig } from '../../core/ui/map/map.models';
@@ -34,20 +34,28 @@ const LAYERS: MapLayerConfig[] = [
 ];
 
 /**
- * Écran de génération des closes d'un quartier.
+ * Écran de génération des closes.
  *
- * ⚠️ **Sans confirmation.** Aucune écriture n'est possible depuis cet écran tant que la règle du
- * plafond de 99 adresses par close n'est pas tranchée — elle entre en conflit avec l'index unique
- * (quartier, rue), qui interdit de découper une rue desservant plus de 99 adresses. Les trois
- * routes appelées ici n'écrivent rien. `blockers` calcule déjà ce qui empêcherait de confirmer,
- * pour que l'écran le dise maintenant plutôt qu'au moment d'écrire.
- * Voir `docs/plans/generation-closes.md`.
+ * <b>Deux façons d'écrire, et elles n'ont pas le même prix.</b>
+ *
+ * 1. <b>Par quartier</b> — on relit le plan à l'écran, on corrige, on ouvre les plans de
+ *    numérotation, puis on confirme. C'est la voie normale.
+ * 2. <b>Confirmation générale</b> — on recense tous les quartiers restants, puis on écrit d'un
+ *    seul geste. Va vite, et accepte les numéros que le serveur propose sans que personne les
+ *    relise.
+ *
+ * ⚠️ <b>La confirmation générale n'a PAS de transaction globale.</b> Le back n'expose qu'une
+ * route par quartier : un échec au douzième laisse les onze premiers écrits, et les closes ne se
+ * défont pas depuis cet écran.
+ *
+ * `blockers` calcule ce qui empêcherait de confirmer un quartier, pour que l'écran le dise avant
+ * plutôt qu'au moment d'écrire. Voir `docs/plans/generation-closes.md`.
  */
 @Component({
   selector: 'das-closes-generation',
   standalone: true,
   imports: [
-    AsyncPipe, DecimalPipe, FormsModule, TranslocoModule, PageHeaderComponent, DasMapComponent,
+    DecimalPipe, FormsModule, TranslocoModule, PageHeaderComponent, DasMapComponent,
     CloseProposalRowComponent, CloseNumberingPanelComponent,
   ],
   templateUrl: './closes-generation.component.html',
@@ -181,6 +189,53 @@ export class ClosesGenerationComponent implements OnInit {
     }
 
     this.facade.apply();
+  }
+
+  /* -- confirmation générale ---------------------------------------------------------------- */
+
+  protected readonly bulk = toSignal(this.facade.bulk$, { initialValue: initialBulkState });
+  protected readonly bulkTotals = toSignal(this.facade.bulkTotals$, {
+    initialValue: {
+      quartiers: 0, closes: 0, adresses: 0, blocsUnassigned: 0, numeroCollisions: 0,
+      overCap: 0, closesCreated: 0, adressesRenumbered: 0, echecs: 0, recenses: 0,
+    },
+  });
+
+  /** Les quartiers qu'un recensement traiterait — ceux qui ont encore des blocs à rattacher. */
+  protected readonly quartiersRestants = computed(
+    () => this.progress().filter((q) => q.blocsRemaining > 0).length,
+  );
+
+  /** Pendant un enchaînement, on ne laisse pas déclencher autre chose sur le même état. */
+  protected readonly bulkBusy = computed(
+    () => this.bulk().phase === 'surveying' || this.bulk().phase === 'applying',
+  );
+
+  protected bulkSurvey(): void { this.facade.bulkSurvey(); }
+  protected bulkReset(): void { this.facade.bulkReset(); }
+
+  /**
+   * La confirmation générale — la seule action de l'écran qui écrit sur PLUSIEURS quartiers.
+   *
+   * Deux choses sont dites avant d'écrire, parce qu'aucune ne se rattrape après :
+   *
+   * 1. **il n'y a pas de transaction globale.** Le back n'expose qu'une route par quartier ; un
+   *    échec en cours de route laisse les précédents écrits, et les closes ne se défont pas
+   *    depuis cet écran ;
+   * 2. **les plans de numérotation seront acceptés sans relecture.** Ces numéros finissent figés
+   *    dans un code d'adresse. C'est le prix de la confirmation générale, et il se dit ici.
+   */
+  protected bulkConfirm(): void {
+    const t = this.bulkTotals();
+    const message = this.transloco.translate('closes.generation.bulk.confirmPrompt', {
+      closes: t.closes,
+      quartiers: t.quartiers,
+      adresses: t.adresses,
+      numbering: t.numeroCollisions,
+    });
+    if (!window.confirm(message)) return;
+
+    this.facade.bulkApply();
   }
 
   protected applyParameters(): void {

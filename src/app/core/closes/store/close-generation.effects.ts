@@ -2,12 +2,12 @@ import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { concatLatestFrom } from '@ngrx/operators';
 import { Store } from '@ngrx/store';
-import { catchError, filter, map, of, switchMap } from 'rxjs';
+import { catchError, concatMap, endWith, filter, from, map, of, switchMap, toArray } from 'rxjs';
 import { CloseGenerationActions } from './close-generation.actions';
 import { closeGenerationFeature } from './close-generation.reducer';
 import { selectProposals } from './close-generation.selectors';
 import { ClosesApiPort } from '../services/closes-api.port';
-import { ReviewedClose } from '../models/closes.models';
+import { AdresseNumbering, ReviewedClose } from '../models/closes.models';
 import { ErrorKeyMap, toErrorKey } from '../../http/error-code';
 
 /**
@@ -163,6 +163,171 @@ export class CloseGenerationEffects {
   /** Après écriture, on recharge : l'avancement des quartiers et le plan ont changé. */
   reloadAfterApply$ = createEffect(() => this.actions$.pipe(
     ofType(CloseGenerationActions.applySuccess),
+    map(() => CloseGenerationActions.loadProgress()),
+  ));
+
+  /* ==========================================================================================
+   * CONFIRMATION GÉNÉRALE
+   * ==========================================================================================
+   * Le back n'expose qu'une route par quartier : il n'y a donc pas de transaction globale, et
+   * ces deux effets enchaînent des appels plutôt que d'en faire un seul. `concatMap` et non
+   * `mergeMap` — sérialiser n'est pas un détail de politesse : la génération lit et écrit les
+   * mêmes tables pour tous les quartiers, et le parallélisme y produirait des verrous.
+   */
+
+  /**
+   * Phase 1 — RECENSEMENT. Enchaîne un aperçu par quartier restant. **N'écrit rien.**
+   * Un quartier qui échoue n'interrompt pas le recensement : il ressort à zéro proposition, ce
+   * qui est déjà l'information utile.
+   */
+  bulkSurvey$ = createEffect(() => this.actions$.pipe(
+    ofType(CloseGenerationActions.bulkSurvey),
+    concatLatestFrom(() => [
+      this.store.select(closeGenerationFeature.selectProgress),
+      this.store.select(closeGenerationFeature.selectParameters),
+    ]),
+    switchMap(([, progress, parameters]) => {
+      const cibles = progress.filter((q) => q.blocsRemaining > 0);
+      if (cibles.length === 0) return of(CloseGenerationActions.bulkSurveyDone());
+
+      return from(cibles.map((q, index) => ({ q, index }))).pipe(
+        concatMap(({ q, index }) => this.api.previewQuartierCloses(q.quartierId, parameters).pipe(
+          map((plan) => CloseGenerationActions.bulkSurveyQuartier({
+            index,
+            outcome: {
+              quartierId: q.quartierId,
+              quartierNom: q.quartierNom,
+              quartierCode: q.quartierCode,
+              closesProposed: plan.proposed.length,
+              adressesImpacted: plan.summary.adressesImpacted,
+              blocsUnassigned: plan.summary.blocsUnassigned,
+              withNumeroCollision: plan.proposed.filter((p) => p.hasNumeroCollision).length,
+              overCap: plan.proposed.filter((p) => p.warnings.includes('ExceedsAddressCap')).length,
+              status: 'pending',
+              closesCreated: 0,
+              adressesRenumbered: 0,
+              errorMessageKey: null,
+            },
+          })),
+          catchError((err) => of(CloseGenerationActions.bulkSurveyQuartier({
+            index,
+            outcome: {
+              quartierId: q.quartierId, quartierNom: q.quartierNom, quartierCode: q.quartierCode,
+              closesProposed: 0, adressesImpacted: 0, blocsUnassigned: 0,
+              withNumeroCollision: 0, overCap: 0,
+              status: 'skipped', closesCreated: 0, adressesRenumbered: 0,
+              errorMessageKey: toKey(err),
+            },
+          }))),
+        )),
+        endWith(CloseGenerationActions.bulkSurveyDone()),
+      );
+    }),
+  ));
+
+  /**
+   * Phase 2 — ÉCRITURE, quartier par quartier.
+   *
+   * Chaque quartier est RE-APERÇU juste avant d'être écrit, au lieu de rejouer le plan du
+   * recensement. Deux raisons : ne pas garder en mémoire des dizaines de plans avec leurs
+   * géométries, et surtout écrire ce qui est vrai maintenant — un plan vieux de plusieurs
+   * minutes se fait refuser par `Closes.PlanStale`.
+   *
+   * ⚠️ **Les plans de numérotation sont acceptés TELS QUE LE SERVEUR LES PROPOSE.** Sans eux
+   * l'écriture est refusée dès que deux parcelles partagent un numéro — le cas courant. C'est le
+   * compromis de la confirmation générale, et le compte remonte à l'écran : ces numéros finissent
+   * figés dans un code d'adresse sans que personne les ait relus.
+   */
+  bulkApply$ = createEffect(() => this.actions$.pipe(
+    ofType(CloseGenerationActions.bulkApply),
+    concatLatestFrom(() => [
+      this.store.select(closeGenerationFeature.selectBulk),
+      this.store.select(closeGenerationFeature.selectParameters),
+    ]),
+    switchMap(([, bulk, parameters]) => {
+      const cibles = bulk.outcomes.filter((o) => o.closesProposed > 0);
+      if (cibles.length === 0) return of(CloseGenerationActions.bulkApplyDone());
+
+      return from(cibles).pipe(
+        concatMap((cible) => this.api.previewQuartierCloses(cible.quartierId, parameters).pipe(
+          // Pour chaque close en collision, on demande son plan de numérotation. Les autres
+          // partent sans : le back sait numéroter seul quand rien ne se chevauche.
+          switchMap((plan) => {
+            if (plan.proposed.length === 0) {
+              return of(CloseGenerationActions.bulkApplyQuartier({
+                quartierId: cible.quartierId, closesCreated: 0, adressesRenumbered: 0,
+                numberingAutoAccepted: 0, errorMessageKey: null,
+              }));
+            }
+
+            const base: ReviewedClose[] = plan.proposed.map((p) => ({
+              streetId: p.streetId,
+              number: p.number,
+              code: p.code,
+              blocIds: p.blocs.map((b) => b.id),
+              numbering: null,
+            }));
+
+            const aNumeroter = plan.proposed
+              .map((p, i) => ({ p, i }))
+              .filter(({ p }) => p.hasNumeroCollision);
+
+            const plans$ = aNumeroter.length === 0
+              ? of([] as { i: number; numbering: AdresseNumbering[] }[])
+              : from(aNumeroter).pipe(
+                concatMap(({ p, i }) => this.api
+                  .previewProposedCloseNumbering(cible.quartierId, base[i], false).pipe(
+                    map((n) => ({
+                      i,
+                      numbering: n.adresses.map((a) => ({
+                        adresseId: a.adresseId, numero: a.proposedNumero,
+                      })),
+                    })),
+                    // Un plan de numérotation indisponible ne doit pas faire tomber le quartier
+                    // entier : la close part sans, et le back la refusera si elle en avait besoin.
+                    catchError(() => of({ i, numbering: [] as AdresseNumbering[] })),
+                  )),
+                toArray(),
+              );
+
+            return plans$.pipe(
+              switchMap((plans) => {
+                let acceptes = 0;
+                for (const { i, numbering } of plans) {
+                  if (numbering.length === 0) continue;
+                  base[i] = { ...base[i], numbering };
+                  acceptes += 1;
+                }
+
+                return this.api.applyQuartierCloses(cible.quartierId, { closes: base }).pipe(
+                  map((applied) => CloseGenerationActions.bulkApplyQuartier({
+                    quartierId: cible.quartierId,
+                    closesCreated: applied.closesCreated,
+                    adressesRenumbered: applied.adressesRenumbered,
+                    numberingAutoAccepted: acceptes,
+                    errorMessageKey: null,
+                  })),
+                  catchError((err) => of(CloseGenerationActions.bulkApplyQuartier({
+                    quartierId: cible.quartierId, closesCreated: 0, adressesRenumbered: 0,
+                    numberingAutoAccepted: 0, errorMessageKey: toKey(err),
+                  }))),
+                );
+              }),
+            );
+          }),
+          catchError((err) => of(CloseGenerationActions.bulkApplyQuartier({
+            quartierId: cible.quartierId, closesCreated: 0, adressesRenumbered: 0,
+            numberingAutoAccepted: 0, errorMessageKey: toKey(err),
+          }))),
+        )),
+        endWith(CloseGenerationActions.bulkApplyDone()),
+      );
+    }),
+  ));
+
+  /** L'avancement de TOUS les quartiers a changé : on le recharge une fois, à la fin. */
+  reloadAfterBulk$ = createEffect(() => this.actions$.pipe(
+    ofType(CloseGenerationActions.bulkApplyDone),
     map(() => CloseGenerationActions.loadProgress()),
   ));
 }

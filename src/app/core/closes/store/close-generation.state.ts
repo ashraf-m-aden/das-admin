@@ -18,10 +18,73 @@ export interface ProposedCloseEdit {
   blocIds?: UUID[];
 }
 
+/**
+ * Où en est la confirmation générale.
+ *
+ * Deux phases séparées, et c'est le cœur du dispositif : on RECENSE d'abord sans rien écrire,
+ * puis on écrit. Confirmer sans avoir vu les totaux reviendrait à signer un chèque en blanc — la
+ * confirmation par quartier, elle, montre le plan à l'écran avant qu'on la déclenche.
+ */
+export type BulkPhase = 'idle' | 'surveying' | 'surveyed' | 'applying' | 'done';
+
+/** Ce qu'on sait d'un quartier : d'abord ce qu'il propose, ensuite ce qui a été écrit. */
+export interface BulkQuartierOutcome {
+  quartierId: UUID;
+  quartierNom: string;
+  quartierCode: string;
+
+  /* -- recensement (aucune écriture) ------------------------------------------------------- */
+  closesProposed: number;
+  adressesImpacted: number;
+  blocsUnassigned: number;
+  /**
+   * Closes dont les parcelles portent des numéros en double. Elles ne peuvent PAS être écrites
+   * sans plan de numérotation : le back refuse (`Closes.DuplicateAdresseNumero`). C'est le cas
+   * courant — 345 closes sur 531 au relevé.
+   */
+  withNumeroCollision: number;
+  /** Closes dépassant le plafond de 99 adresses. Signalé, non bloquant depuis le 2026-09-06. */
+  overCap: number;
+
+  /* -- écriture ---------------------------------------------------------------------------- */
+  status: 'pending' | 'applied' | 'failed' | 'skipped';
+  closesCreated: number;
+  adressesRenumbered: number;
+  errorMessageKey: string | null;
+}
+
+export interface BulkState {
+  phase: BulkPhase;
+  /** Un par quartier retenu, dans l'ordre de traitement. */
+  outcomes: BulkQuartierOutcome[];
+  /** Rang du quartier en cours — c'est ce qui fait avancer la barre, pas une estimation. */
+  currentIndex: number;
+  /**
+   * Nombre de plans de numérotation acceptés SANS relecture humaine pendant l'écriture.
+   *
+   * ⚠️ Le chiffre existe pour être montré. Ces numéros finissent figés dans un code d'adresse :
+   * les écrire sans que personne ne les ait vus est le prix de la confirmation générale, et
+   * l'écran doit le dire plutôt que de le taire.
+   */
+  numberingAutoAccepted: number;
+  errorMessageKey: string | null;
+}
+
+export const initialBulkState: BulkState = {
+  phase: 'idle',
+  outcomes: [],
+  currentIndex: 0,
+  numberingAutoAccepted: 0,
+  errorMessageKey: null,
+};
+
 export interface CloseGenerationState {
   /** Liste d'entrée : où en est chaque quartier. Chargée une fois. */
   progress: QuartierCloseProgress[];
   progressStatus: LoadStatus;
+
+  /** Confirmation générale — tous les quartiers d'un coup. Voir `BulkState`. */
+  bulk: BulkState;
 
   quartierId: UUID | null;
 
@@ -148,6 +211,7 @@ export const PARAMETRES_PAR_DEFAUT: Partial<QuartierClosePlanParameters> = {
 export const initialCloseGenerationState: CloseGenerationState = {
   progress: [],
   progressStatus: 'idle',
+  bulk: initialBulkState,
   quartierId: null,
   parameters: PARAMETRES_PAR_DEFAUT,
   plan: null,

@@ -108,3 +108,32 @@ export const selectIsProgressLoading = createSelector(
   closeGenerationFeature.selectProgressStatus,
   (status) => status === 'loading',
 );
+
+/**
+ * Les totaux de la confirmation générale. Calculés ici plutôt que dans le gabarit : c'est sur ces
+ * chiffres qu'on décide d'écrire, et une somme cachée dans une interpolation ne se relit pas.
+ *
+ * `numeroCollisions` mérite l'attention : ce sont les closes dont les numéros devront être
+ * acceptés tels que le serveur les propose, faute de relecture individuelle.
+ */
+export const selectBulkTotals = createSelector(
+  closeGenerationFeature.selectBulk,
+  (bulk) => {
+    const t = bulk.outcomes.reduce((acc, o) => ({
+      quartiers: acc.quartiers + (o.closesProposed > 0 ? 1 : 0),
+      closes: acc.closes + o.closesProposed,
+      adresses: acc.adresses + o.adressesImpacted,
+      blocsUnassigned: acc.blocsUnassigned + o.blocsUnassigned,
+      numeroCollisions: acc.numeroCollisions + o.withNumeroCollision,
+      overCap: acc.overCap + o.overCap,
+      closesCreated: acc.closesCreated + o.closesCreated,
+      adressesRenumbered: acc.adressesRenumbered + o.adressesRenumbered,
+      echecs: acc.echecs + (o.status === 'failed' ? 1 : 0),
+    }), {
+      quartiers: 0, closes: 0, adresses: 0, blocsUnassigned: 0,
+      numeroCollisions: 0, overCap: 0, closesCreated: 0, adressesRenumbered: 0, echecs: 0,
+    });
+
+    return { ...t, recenses: bulk.outcomes.length };
+  },
+);

@@ -216,7 +216,6 @@
     "generation": {
       "title": "Close generation",
       "subtitle": "Propose a neighbourhood's closes, review them on the map, adjust",
-      "readOnlyNotice": "Review screen: nothing is saved. Confirmation waits on the decision about the 99-address cap per close.",
       "searchQuartier": "Search a neighbourhood",
       "pickQuartier": "Pick a neighbourhood to see the proposed closes.",
       "computing": "Computing the proposal…",
@@ -300,7 +299,35 @@
       "applyHint": "{{count}} close(s) will be created, with bloc attachment and parcel renumbering.",
       "applyConfirm": "Create {{count}} close(s)? Blocs will be attached and parcels renumbered. This cannot be undone from this screen.",
       "appliedSummary": "{{closes}} close(s) created, {{blocs}} bloc(s) attached, {{adresses}} parcel(s) renumbered.",
-      "errorNothingToApply": "Nothing to confirm."
+      "errorNothingToApply": "Nothing to confirm.",
+      "bulk": {
+        "title": "Bulk confirmation",
+        "lead": "Surveys what every remaining quartier would propose, then writes it all at once. The survey writes nothing: only the confirmation does.",
+        "survey": "Survey the {{n}} quartiers",
+        "surveying": "Surveying… {{done}} / {{total}}",
+        "reset": "Clear",
+        "confirm": "Confirm the {{n}} closes",
+        "applying": "Writing… {{done}} / {{total}} quartiers",
+        "tQuartiers": "Quartiers",
+        "tCloses": "Proposed closes",
+        "tAdresses": "Addresses affected",
+        "tUnassigned": "Unassigned blocs",
+        "warnNumbering": "{{n}} closes group parcels with duplicate numbers. Their numbering plan will be accepted exactly as the server proposes it, unreviewed — and those numbers become part of an address code. To review them one by one, use the per-quartier confirmation.",
+        "warnOverCap": "{{n}} closes exceed 99 addresses. They will be created anyway: the cap is a warning, not a lock.",
+        "perQuartier": "Per-quartier detail ({{n}})",
+        "colQuartier": "Quartier",
+        "colCloses": "Closes",
+        "colAdresses": "Addresses",
+        "colNumbering": "To number",
+        "colStatus": "Status",
+        "stApplied": "{{n}} created",
+        "stSkipped": "Not surveyed",
+        "confirmPrompt": "Create {{closes}} closes across {{quartiers}} quartiers, and number {{adresses}} addresses?\n\n⚠️ Writing happens quartier by quartier, with NO global transaction: if it fails part-way, the quartiers already processed stay written. Created closes cannot be undone from this screen.\n\n⚠️ {{numbering}} closes will have their numbering accepted unreviewed.\n\nConfirm?",
+        "result": "{{closes}} closes created across {{quartiers}} quartiers.",
+        "resultNumbering": "{{n}} numbering plans were accepted unreviewed.",
+        "resultFailed": "{{n}} quartiers failed — see the detail."
+      },
+      "writeNotice": "This screen WRITES. Created closes, attached blocs and address numbers cannot be undone from here — review the plan before confirming."
     }
   },
   "discoveries": {

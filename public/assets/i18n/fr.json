@@ -216,7 +216,6 @@
     "generation": {
       "title": "Génération des closes",
       "subtitle": "Proposer les closes d'un quartier, les relire sur la carte, corriger",
-      "readOnlyNotice": "Écran de relecture : rien n'est enregistré. La confirmation attend l'arbitrage sur le plafond de 99 adresses par close.",
       "searchQuartier": "Chercher un quartier",
       "pickQuartier": "Choisissez un quartier pour voir les closes proposées.",
       "computing": "Calcul de la proposition…",
@@ -300,7 +299,35 @@
       "applyHint": "{{count}} close(s) seront créées, avec le rattachement des blocs et la renumérotation des parcelles.",
       "applyConfirm": "Créer {{count}} close(s) ? Les blocs seront rattachés et les parcelles renumérotées. Cette action ne s'annule pas depuis cet écran.",
       "appliedSummary": "{{closes}} close(s) créée(s), {{blocs}} bloc(s) rattaché(s), {{adresses}} parcelle(s) renumérotée(s).",
-      "errorNothingToApply": "Aucune proposition à confirmer."
+      "errorNothingToApply": "Aucune proposition à confirmer.",
+      "bulk": {
+        "title": "Confirmation générale",
+        "lead": "Recense ce que proposeraient tous les quartiers restants, puis écrit d'un seul geste. Le recensement n'écrit rien : c'est la confirmation qui écrit.",
+        "survey": "Recenser les {{n}} quartiers",
+        "surveying": "Recensement… {{done}} / {{total}}",
+        "reset": "Effacer",
+        "confirm": "Confirmer les {{n}} closes",
+        "applying": "Écriture… {{done}} / {{total}} quartiers",
+        "tQuartiers": "Quartiers",
+        "tCloses": "Closes proposées",
+        "tAdresses": "Adresses concernées",
+        "tUnassigned": "Blocs non rattachés",
+        "warnNumbering": "{{n}} closes réunissent des parcelles aux numéros en double. Leur plan de numérotation sera accepté tel que le serveur le propose, sans relecture — ces numéros se figeront dans un code d'adresse. Pour les relire une par une, passez par la confirmation du quartier.",
+        "warnOverCap": "{{n}} closes dépassent 99 adresses. Elles seront créées quand même : le plafond est un avertissement, pas un verrou.",
+        "perQuartier": "Détail par quartier ({{n}})",
+        "colQuartier": "Quartier",
+        "colCloses": "Closes",
+        "colAdresses": "Adresses",
+        "colNumbering": "À numéroter",
+        "colStatus": "État",
+        "stApplied": "{{n}} créées",
+        "stSkipped": "Non recensé",
+        "confirmPrompt": "Créer {{closes}} closes dans {{quartiers}} quartiers, et numéroter {{adresses}} adresses ?\n\n⚠️ L'écriture se fait quartier par quartier, SANS transaction globale : si elle échoue en cours de route, les quartiers déjà traités restent écrits. Les closes créées ne se défont pas depuis cet écran.\n\n⚠️ {{numbering}} closes verront leur numérotation acceptée sans relecture.\n\nConfirmer ?",
+        "result": "{{closes}} closes créées dans {{quartiers}} quartiers.",
+        "resultNumbering": "{{n}} plans de numérotation ont été acceptés sans relecture.",
+        "resultFailed": "{{n}} quartiers ont échoué — voir le détail."
+      },
+      "writeNotice": "Cet écran ÉCRIT. Les closes créées, les blocs rattachés et les numéros d'adresse ne se défont pas depuis ici — relisez le plan avant de confirmer."
     }
   },
   "discoveries": {

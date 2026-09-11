@@ -3,8 +3,8 @@ import { Store } from '@ngrx/store';
 import { CloseGenerationActions } from './close-generation.actions';
 import { closeGenerationFeature } from './close-generation.reducer';
 import {
-  selectBlockers, selectDiscardedProposals, selectEffectiveNumbering, selectIsProgressLoading,
-  selectNumberingIssues, selectProposals, selectReviewSummary,
+  selectBlockers, selectBulkTotals, selectDiscardedProposals, selectEffectiveNumbering,
+  selectIsProgressLoading, selectNumberingIssues, selectProposals, selectReviewSummary,
 } from './close-generation.selectors';
 import { UUID } from '../../models/das.models';
 import { CloseStreetOption, QuartierClosePlanParameters } from '../models/closes.models';
@@ -110,4 +110,20 @@ export class CloseGenerationFacade {
   apply(): void {
     this.store.dispatch(CloseGenerationActions.apply());
   }
+
+  /* -- confirmation générale --------------------------------------------------------------- */
+
+  bulk$ = this.store.select(closeGenerationFeature.selectBulk);
+  bulkTotals$ = this.store.select(selectBulkTotals);
+
+  /** Recense tous les quartiers restants. **N'écrit rien** — c'est ce qui permet de confirmer après. */
+  bulkSurvey(): void { this.store.dispatch(CloseGenerationActions.bulkSurvey()); }
+
+  /**
+   * ⚠️ Écrit, quartier par quartier, **sans transaction globale** : le back n'expose qu'une route
+   * par quartier. Un échec en cours de route laisse les quartiers déjà traités écrits.
+   */
+  bulkApply(): void { this.store.dispatch(CloseGenerationActions.bulkApply()); }
+
+  bulkReset(): void { this.store.dispatch(CloseGenerationActions.bulkReset()); }
 }

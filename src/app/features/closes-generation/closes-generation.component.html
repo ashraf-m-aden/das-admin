@@ -3,12 +3,12 @@
   [title]="'closes.generation.title' | transloco" />
 
 <!--
-  Bandeau permanent, pas un encart qu'on peut manquer : l'écran ne sait pas encore écrire, et
-  quelqu'un qui relit un plan pendant vingt minutes doit le savoir avant de commencer.
+  Bandeau permanent, pas un encart qu'on peut manquer : cet écran ÉCRIT, et les closes créées ne
+  se défont pas depuis ici. Quelqu'un qui arrive doit le savoir avant de cliquer, pas après.
 -->
 <div class="banner banner--info">
   <i class="ti ti-info-circle"></i>
-  <span>{{ 'closes.generation.readOnlyNotice' | transloco }}</span>
+  <span>{{ 'closes.generation.writeNotice' | transloco }}</span>
 </div>
 
 @if (errorMessageKey(); as errorKey) {
@@ -17,6 +17,159 @@
     <span>{{ errorKey | transloco }}</span>
   </div>
 }
+
+<!--
+  ================================================================================================
+  CONFIRMATION GÉNÉRALE — tous les quartiers d'un coup.
+  ================================================================================================
+  En deux temps délibérément séparés : on RECENSE (aucune écriture), puis on confirme. Un bouton
+  unique « tout générer » écrirait des milliers de closes sans que personne ait vu un chiffre.
+-->
+<section class="bulk" [class.bulk--running]="bulkBusy()">
+  <header class="bulk__head">
+    <div>
+      <h2 class="bulk__title">
+        <i class="ti ti-stack-2"></i>
+        {{ 'closes.generation.bulk.title' | transloco }}
+      </h2>
+      <p class="bulk__lead">{{ 'closes.generation.bulk.lead' | transloco }}</p>
+    </div>
+
+    <div class="bulk__actions">
+      @switch (bulk().phase) {
+        @case ('idle') {
+          <button type="button" class="btn btn--primary"
+                  [disabled]="isProgressLoading() || quartiersRestants() === 0"
+                  (click)="bulkSurvey()">
+            <i class="ti ti-list-search"></i>
+            {{ 'closes.generation.bulk.survey' | transloco: { n: quartiersRestants() } }}
+          </button>
+        }
+        @case ('surveying') {
+          <span class="bulk__progress">
+            {{ 'closes.generation.bulk.surveying' | transloco:
+               { done: bulk().currentIndex, total: quartiersRestants() } }}
+          </span>
+        }
+        @case ('surveyed') {
+          <button type="button" class="btn btn--ghost" (click)="bulkReset()">
+            {{ 'closes.generation.bulk.reset' | transloco }}
+          </button>
+          <button type="button" class="btn btn--danger"
+                  [disabled]="bulkTotals().closes === 0"
+                  (click)="bulkConfirm()">
+            <i class="ti ti-check"></i>
+            {{ 'closes.generation.bulk.confirm' | transloco: { n: bulkTotals().closes } }}
+          </button>
+        }
+        @case ('applying') {
+          <span class="bulk__progress">
+            {{ 'closes.generation.bulk.applying' | transloco:
+               { done: bulk().currentIndex, total: bulkTotals().quartiers } }}
+          </span>
+        }
+        @case ('done') {
+          <button type="button" class="btn btn--ghost" (click)="bulkReset()">
+            {{ 'closes.generation.bulk.reset' | transloco }}
+          </button>
+        }
+      }
+    </div>
+  </header>
+
+  <!-- Le recensement : ce qui SERAIT écrit. Rien ne l'a encore été. -->
+  @if (bulk().outcomes.length > 0) {
+    <dl class="bulk__totals">
+      <div><dt>{{ 'closes.generation.bulk.tQuartiers' | transloco }}</dt>
+           <dd>{{ bulkTotals().quartiers | number }}</dd></div>
+      <div><dt>{{ 'closes.generation.bulk.tCloses' | transloco }}</dt>
+           <dd>{{ bulkTotals().closes | number }}</dd></div>
+      <div><dt>{{ 'closes.generation.bulk.tAdresses' | transloco }}</dt>
+           <dd>{{ bulkTotals().adresses | number }}</dd></div>
+      <div><dt>{{ 'closes.generation.bulk.tUnassigned' | transloco }}</dt>
+           <dd>{{ bulkTotals().blocsUnassigned | number }}</dd></div>
+    </dl>
+
+    <!-- ⚠️ Les deux avertissements qui décident de confirmer ou non. Ils ne sont pas repliés. -->
+    @if (bulkTotals().numeroCollisions > 0) {
+      <div class="banner banner--warn">
+        <i class="ti ti-number-123"></i>
+        <span>{{ 'closes.generation.bulk.warnNumbering' | transloco:
+                 { n: bulkTotals().numeroCollisions } }}</span>
+      </div>
+    }
+    @if (bulkTotals().overCap > 0) {
+      <div class="banner banner--warn">
+        <i class="ti ti-alert-triangle"></i>
+        <span>{{ 'closes.generation.bulk.warnOverCap' | transloco: { n: bulkTotals().overCap } }}</span>
+      </div>
+    }
+
+    <details class="bulk__detail">
+      <summary>{{ 'closes.generation.bulk.perQuartier' | transloco:
+                  { n: bulk().outcomes.length } }}</summary>
+      <table class="bulk__table">
+        <thead>
+          <tr>
+            <th>{{ 'closes.generation.bulk.colQuartier' | transloco }}</th>
+            <th class="num">{{ 'closes.generation.bulk.colCloses' | transloco }}</th>
+            <th class="num">{{ 'closes.generation.bulk.colAdresses' | transloco }}</th>
+            <th class="num">{{ 'closes.generation.bulk.colNumbering' | transloco }}</th>
+            <th>{{ 'closes.generation.bulk.colStatus' | transloco }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (o of bulk().outcomes; track o.quartierId) {
+            <tr [class.row--failed]="o.status === 'failed'">
+              <td>{{ o.quartierNom }} <span class="muted">{{ o.quartierCode }}</span></td>
+              <td class="num">{{ o.closesProposed | number }}</td>
+              <td class="num">{{ o.adressesImpacted | number }}</td>
+              <td class="num">{{ o.withNumeroCollision | number }}</td>
+              <td>
+                @switch (o.status) {
+                  @case ('applied') {
+                    <span class="tag tag--ok">
+                      {{ 'closes.generation.bulk.stApplied' | transloco: { n: o.closesCreated } }}
+                    </span>
+                  }
+                  @case ('failed') {
+                    <span class="tag tag--ko">{{ (o.errorMessageKey ?? '') | transloco }}</span>
+                  }
+                  @case ('skipped') {
+                    <span class="tag">{{ 'closes.generation.bulk.stSkipped' | transloco }}</span>
+                  }
+                  @default {
+                    <span class="muted">—</span>
+                  }
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </details>
+  }
+
+  <!-- Le bilan, une fois écrit. Les échecs sont annoncés, pas noyés dans le tableau. -->
+  @if (bulk().phase === 'done') {
+    <div class="banner" [class.banner--ok]="bulkTotals().echecs === 0"
+                        [class.banner--error]="bulkTotals().echecs > 0">
+      <i class="ti" [class.ti-circle-check]="bulkTotals().echecs === 0"
+                    [class.ti-alert-triangle]="bulkTotals().echecs > 0"></i>
+      <span>
+        {{ 'closes.generation.bulk.result' | transloco:
+           { closes: bulkTotals().closesCreated, quartiers: bulkTotals().quartiers - bulkTotals().echecs } }}
+        @if (bulk().numberingAutoAccepted > 0) {
+          {{ 'closes.generation.bulk.resultNumbering' | transloco:
+             { n: bulk().numberingAutoAccepted } }}
+        }
+        @if (bulkTotals().echecs > 0) {
+          {{ 'closes.generation.bulk.resultFailed' | transloco: { n: bulkTotals().echecs } }}
+        }
+      </span>
+    </div>
+  }
+</section>
 
 <div class="layout">
 

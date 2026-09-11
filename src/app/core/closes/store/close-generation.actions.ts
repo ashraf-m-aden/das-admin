@@ -4,6 +4,7 @@ import {
   CloseNumberingPlan, CloseStreetOption, QuartierClosePlan, QuartierClosePlanParameters,
   QuartierCloseProgress,
 } from '../models/closes.models';
+import { BulkQuartierOutcome } from './close-generation.state';
 
 export const CloseGenerationActions = createActionGroup({
   source: 'Close Generation',
@@ -67,6 +68,34 @@ export const CloseGenerationActions = createActionGroup({
     'Apply': emptyProps(),
     'Apply Success': props<{ closesCreated: number; blocsAttached: number; adressesRenumbered: number }>(),
     'Apply Failure': props<{ errorMessageKey: string }>(),
+
+    /* -- confirmation GÉNÉRALE, tous quartiers ---------------------------------------------- */
+
+    /**
+     * Recense ce que TOUS les quartiers restants proposeraient. **N'écrit rien** : ce sont des
+     * appels d'aperçu, un par quartier, enchaînés. Sert à confirmer en connaissance de cause.
+     */
+    'Bulk Survey': emptyProps(),
+    'Bulk Survey Quartier': props<{ outcome: BulkQuartierOutcome; index: number }>(),
+    'Bulk Survey Done': emptyProps(),
+
+    /**
+     * Écrit, quartier par quartier.
+     *
+     * ⚠️ **Il n'y a pas de transaction globale** — le back n'expose qu'une route par quartier.
+     * Un échec au 12ᵉ laisse les 11 premiers écrits. On continue malgré tout et on rend compte :
+     * s'arrêter laisserait le même état partiel, avec moins d'information.
+     */
+    'Bulk Apply': emptyProps(),
+    'Bulk Apply Quartier': props<{
+      quartierId: UUID;
+      closesCreated: number;
+      adressesRenumbered: number;
+      numberingAutoAccepted: number;
+      errorMessageKey: string | null;
+    }>(),
+    'Bulk Apply Done': emptyProps(),
+    'Bulk Reset': emptyProps(),
 
     'Clear Error': emptyProps(),
   },
