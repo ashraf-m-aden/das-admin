@@ -13,19 +13,19 @@ HACHURE = "das-hachure-code-a-venir"
 
 
 def sources() -> dict:
-    """Les CINQ sources que le relais public sert, et pas une de plus.
+    """Les DIX sources que le relais public sert, et pas une de plus.
 
-    ⚠️ `/api/public/tiles/` applique une LISTE BLANCHE côté back : cinq sources y
-    sont déclarées, et toute autre rend 404 — la même réponse qu'une source
-    inexistante, pour ne pas apprendre au partenaire ce qui existe derrière.
-    Une source ajoutée ici sans l'être là-bas ne se signale donc PAS : la couche
-    reste simplement vide, et le fond a l'air incomplet sans qu'aucune erreur ne
-    le dise.
+    ⚠️ `/api/public/tiles/` applique une LISTE BLANCHE côté back
+    (`TuilesEndpoints.SourcesPubliques` dans `dasApi`). Toute source absente rend
+    404 — la même réponse qu'une source inexistante, pour ne pas apprendre au
+    partenaire ce qui existe derrière. **Une source ajoutée ici sans l'être
+    là-bas ne se signale donc PAS** : la couche reste vide, et le fond a l'air
+    incomplet sans qu'aucune erreur ne le dise nulle part. Les deux listes se
+    modifient ensemble.
 
-    Ce qui a été retiré pour tenir dans la liste, et qui demande une ouverture
-    back avant de revenir : `contour_national` (terre et trait de côte),
-    `cities_tiles`, `route_principaux` et `voierie_secondaire` (réseau structurant
-    au dézoom), `blocs_tiles` (îlots). Voir `docs/carte-vitrine.md`.
+    Ce qui reste EN DEHORS, et qui doit le rester : `closes_tiles` (découpage de
+    travail), `poi_tiles` (le détail bâtiment par bâtiment), les livraisons SIG
+    brutes, et les tables du recensement.
 
     `poi_sites_tiles` et non `poi_tiles` : la vue de sites REGROUPE les bâtiments
     d'un même lieu — 961 bâtiments deviennent 560 sites, l'Université de Djibouti
@@ -42,9 +42,14 @@ def sources() -> dict:
         }
 
     return {
+        "contourNational": vec("contour_national", 0, 12),
+        "cities": vec("cities_tiles", 4, 14),
         "citiesLabels": vec("cities_labels_tiles", 4, 14),
         "quartiers": vec("quartiers_tiles", 9, 20) | {"promoteId": "Id"},
+        "trunkRoads": vec("route_principaux", 7, 13),
+        "secondaryRoads": vec("voierie_secondaire", 10, 14),
         "streets": vec("streets_tiles", 12, 20) | {"promoteId": "Id"},
+        "blocs": vec("blocs_tiles", 13, 20) | {"promoteId": "Id"},
         "adresses": vec("adresses_tiles", 15, 20) | {"promoteId": "Id"},
         "poi": vec("poi_sites_tiles", 12, 20),
     }
@@ -55,17 +60,30 @@ def _line(width_stops):
 
 
 def ground() -> list:
-    """Terre, tache urbaine, parcelles : le sol sur lequel tout le reste se pose.
+    """Mer, terre, tache urbaine : ce qui donne au premier coup d'œil l'air d'un Google Maps.
 
-    ⚠️ **Pas de mer ici, et c'est une amputation assumée.** Le trait de côte vient
-    de `contour_national`, qui n'est pas dans la liste blanche publique : sans lui,
-    peindre le fond en bleu couvrirait tout le pays d'eau. Le fond est donc la
-    terre, et le golfe de Tadjoura ne se distingue pas du désert. Rendre la mer au
-    style vitrine demande d'ouvrir `contour_national` sur `/api/public/tiles/` —
-    le style admin, lui, l'a déjà (`patch_admin_style.py`).
+    ⚠️ L'ordre compte, et il est contre-intuitif : le fond est la MER, et la terre
+    est peinte PAR-DESSUS à partir du contour national. L'inverse — un fond terre
+    et la mer découpée dedans — demanderait un polygone de mer que personne ne
+    livre. Conséquence à connaître : sans la couche `land`, tout le pays vire au
+    bleu. Ce n'est pas un bug de couleur, c'est le fond qui n'est plus couvert.
     """
     return [
-        {"id": "bg-land", "type": "background", "paint": {"background-color": C["land"]}},
+        {"id": "bg-water", "type": "background", "paint": {"background-color": C["water"]}},
+        {
+            "id": "land",
+            "type": "fill",
+            "source": "contourNational",
+            "source-layer": "contour_national",
+            "paint": {"fill-color": C["land"]},
+        },
+        {
+            "id": "coastline",
+            "type": "line",
+            "source": "contourNational",
+            "source-layer": "contour_national",
+            "paint": {"line-color": C["coast"], "line-width": 0.8, "line-opacity": 0.7},
+        },
         {
             "id": "quartiers-fill",
             "type": "fill",
@@ -135,9 +153,20 @@ def ground() -> list:
                 ],
             },
         },
-        # `blocs-ground` (les îlots, z13 → z20) a été retiré : `blocs_tiles` n'est
-        # pas servi par le relais public. Entre z13 et z16 le sol reste donc nu
-        # jusqu'à ce que les parcelles apparaissent.
+        # Les îlots portent le sol entre z13 et z16, avant que les parcelles
+        # n'apparaissent. Sans eux le fond reste nu sur trois niveaux de zoom.
+        {
+            "id": "blocs-ground",
+            "type": "fill",
+            "source": "blocs",
+            "source-layer": "blocs_tiles",
+            "minzoom": 13,
+            "paint": {
+                "fill-color": C["block"],
+                "fill-outline-color": C["block_line"],
+                "fill-opacity": ["interpolate", ["linear"], ["zoom"], 13, 0.5, 15, 1],
+            },
+        },
         {
             "id": "parcels-ground",
             "type": "fill",
@@ -257,11 +286,49 @@ def roads() -> list:
                 "line-width": _line([12, 1.6, 14, 3.8, 16, 9, 18, 17, 20, 34]),
             },
         },
-        # ⚠️ Le réseau structurant du dézoom a été RETIRÉ : `route_principaux`
-        # (nationales ambrées, z7 → z13) et `voierie_secondaire` (z10 → z14) ne
-        # sont pas dans la liste blanche publique. Conséquence visible : sous z12,
-        # `streets_tiles` ne rend rien et le pays apparaît sans aucune route. Les
-        # rendre demande d'ouvrir ces deux sources sur `/api/public/tiles/`.
+        # Réseau principal SIG : porte le DÉZOOM (z7 → z13), en ambre comme les
+        # axes structurants de Google. C'est lui qui empêche le pays d'apparaître
+        # sans aucune route : `streets_tiles` ne descend pas sous z12, parce
+        # qu'une tuile z12 y pèse 330 Ko (4 283 rues) contre quelques kilo-octets
+        # ici pour 23 tronçons.
+        {
+            "id": "trunk-case",
+            "type": "line",
+            "source": "trunkRoads",
+            "source-layer": "route_principaux",
+            "maxzoom": 13,
+            "layout": {"line-cap": "round", "line-join": "round"},
+            "paint": {
+                "line-color": C["trunk_case"],
+                "line-width": _line([7, 1.6, 9, 2.6, 11, 5, 13, 9]),
+            },
+        },
+        {
+            "id": "trunk",
+            "type": "line",
+            "source": "trunkRoads",
+            "source-layer": "route_principaux",
+            "maxzoom": 13,
+            "layout": {"line-cap": "round", "line-join": "round"},
+            "paint": {
+                "line-color": C["trunk_fill"],
+                "line-width": _line([7, 0.8, 9, 1.4, 11, 3, 13, 6]),
+            },
+        },
+        {
+            "id": "secondary-roads",
+            "type": "line",
+            "source": "secondaryRoads",
+            "source-layer": "voierie_secondaire",
+            "minzoom": 10,
+            "maxzoom": 14,
+            "layout": {"line-cap": "round", "line-join": "round"},
+            "paint": {
+                "line-color": C["road_fill"],
+                "line-width": _line([10, 0.8, 12, 1.8, 14, 4]),
+                "line-opacity": 0.95,
+            },
+        },
         # Limites de quartier : discrètes, comme les limites administratives Google.
         {
             "id": "quartiers-boundary",

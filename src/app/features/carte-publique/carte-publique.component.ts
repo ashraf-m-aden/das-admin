@@ -31,10 +31,11 @@ export interface Resultat {
   lngLat: [number, number];
 }
 
-/** Ce que le clic a désigné. Le plus précis l'emporte : POI > adresse > rue. */
+/** Ce que le clic a désigné. Le plus précis l'emporte : POI > adresse > bloc > rue. */
 export type DetailCarte =
   | { kind: 'poi'; nom: string | null; categorie: string | null; sousCategorie: string | null; batiments: number }
   | { kind: 'adresse'; numero: string | null; stage: string | null; poiNom: string | null; poiCategorie: string | null }
+  | { kind: 'bloc'; code: string | null; nom: string | null }
   | { kind: 'rue'; nom: string | null; code: string | null; type: string | null };
 
 /** Le quartier sous le clic : il porte le code postal, donc l'adresse postale. */
@@ -53,6 +54,7 @@ const SOURCE_LAYER_QUARTIERS = 'quartiers_tiles';
 const COUCHE_QUARTIERS = 'quartiers-fill';
 const COUCHE_POI = 'poi-dot';
 const COUCHE_PARCELLES = 'parcels-ground';
+const COUCHE_BLOCS = 'blocs-ground';
 const COUCHES_RUES = ['road-major', 'road-mid', 'road-minor', 'road-track'];
 
 /** Greffon de mise en forme arabe, servi en local — pas depuis un CDN tiers. */
@@ -398,6 +400,7 @@ export class CartePubliqueComponent implements OnInit, OnDestroy {
 
     const poi = premier(boite(9), [COUCHE_POI]);
     const adresse = premier([p.x, p.y], [COUCHE_PARCELLES]);
+    const bloc = premier([p.x, p.y], [COUCHE_BLOCS]);
     const rue = premier(boite(6), COUCHES_RUES);
     const quartier = premier([p.x, p.y], [COUCHE_QUARTIERS]);
 
@@ -422,6 +425,9 @@ export class CartePubliqueComponent implements OnInit, OnDestroy {
         poiNom: this.texte(t['PoiNom']),
         poiCategorie: this.texte(t['PoiCategorie']),
       };
+    } else if (bloc) {
+      const t = bloc.properties ?? {};
+      detail = { kind: 'bloc', code: this.texte(t['Code']), nom: this.texte(t['Name']) };
     } else if (rue) {
       const t = rue.properties ?? {};
       detail = {
@@ -484,6 +490,8 @@ export class CartePubliqueComponent implements OnInit, OnDestroy {
         return d.nom ?? this.libelleSousCategorie(d.sousCategorie);
       case 'adresse':
         return d.numero ? `N° ${d.numero}` : this.transloco.translate('carte.genre.adresse');
+      case 'bloc':
+        return d.nom ?? d.code ?? this.transloco.translate('carte.genre.bloc');
       case 'rue':
         return d.nom ?? this.transloco.translate('carte.genre.rue');
     }

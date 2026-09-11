@@ -1,8 +1,9 @@
 # Brancher la Plateforme 1 sur le référentiel public D.A.S
 
 > Note d'intégration destinée à l'équipe technique de La Poste de Djibouti.
-> Version du 2026-09-10, révisée le 2026-09-11 : remise de la clé par lien à usage unique
-> (« La clé »), et styles multilingues (« Le style »). Clé `das_SEjertCf`.
+> Version du 2026-09-10, révisée le 2026-09-11 : remise de la clé par **lien à usage unique**
+> (« La clé »), **cinq sources de fond de carte ouvertes** (« Les tuiles »), et styles
+> **multilingues** (« Le style »). Clé `das_SEjertCf`.
 >
 > Côté D.A.S, la source de vérité reste [`plans/referentiel-public.md`](plans/referentiel-public.md).
 
@@ -78,7 +79,7 @@ dernier relevé, dont les tables du recensement. Il était accessible sans authe
 ne sera pas rouvert : le relais est le seul endroit où l'appelant peut être vérifié avant que
 l'octet ne parte.
 
-À la place, un relais qui n'expose qu'une **liste blanche** de cinq sources.
+À la place, un relais qui n'expose qu'une **liste blanche** — dix sources, détaillées plus bas.
 
 ---
 
@@ -110,7 +111,9 @@ X-DAS-Key: das_SEjertCf.…
 
 C'est cette base qui remplace `__TILES_BASE_URL__` dans le style.
 
-### Les cinq sources autorisées
+### Les dix sources autorisées
+
+Le référentiel :
 
 | Source | Contenu |
 |---|---|
@@ -119,6 +122,20 @@ C'est cette base qui remplace `__TILES_BASE_URL__` dans le style.
 | `adresses_tiles` | Parcelles adressées |
 | `poi_sites_tiles` | Lieux remarquables, regroupés par site |
 | `cities_labels_tiles` | Étiquettes des villes |
+
+Le fond de carte, **ouvert le 2026-09-11** :
+
+| Source | Contenu |
+|---|---|
+| `contour_national` | Contour du pays — c'est lui qui sépare la terre de la mer |
+| `cities_tiles` | Emprises des villes |
+| `route_principaux` | Réseau national — il porte le dézoom, sous le zoom 12 |
+| `voierie_secondaire` | Voirie secondaire |
+| `blocs_tiles` | Îlots — la texture bâtie entre les zooms 13 et 16 |
+
+> Si votre carte n'affichait ni mer, ni route au dézoom, ni texture de bâti, c'est
+> qu'elle datait d'avant cette ouverture. Reprenez le style et ces couches
+> arriveront sans autre changement de votre côté.
 
 Toute autre valeur rend `404`, **y compris avec une clé valide**. La liste est blanche et non
 noire : une source ajoutée chez nous ne devient pas accessible du seul fait qu'on aurait oublié de
@@ -179,18 +196,6 @@ fichier correspondant et passez-le à MapLibre, exactement comme le premier.
 > premier rendu sort en carrés et n'est jamais recalculé. Servez le fichier **depuis chez vous**
 > plutôt que depuis un CDN tiers ; nous en publions une copie sous
 > `/assets/mapbox-gl-rtl-text.js`.
-
-### Ce que le fond ne montre pas encore
-
-Le style se limite aux cinq sources autorisées. Trois choses vous manqueront donc, et ce n'est
-pas un défaut de votre intégration :
-
-* **pas de mer** — le fond est uniformément la terre ;
-* **aucune route sous le zoom 12** ;
-* **pas de texture d'îlots** entre les zooms 13 et 16.
-
-Nous prévoyons d'ouvrir les sources correspondantes. Le style les reprendra sans que vous ayez
-quoi que ce soit à changer.
 
 ---
 

@@ -1052,6 +1052,7 @@
     "genre": {
       "poi": "Point of interest",
       "adresse": "Address",
+      "bloc": "Block",
       "rue": "Street",
       "quartier": "Neighbourhood"
     },

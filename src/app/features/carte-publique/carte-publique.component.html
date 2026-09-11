@@ -92,6 +92,11 @@
                 <dd>{{ d.poiNom ?? libelleCategorie(d.poiCategorie) }}</dd>
               }
             }
+            @case ('bloc') {
+              @if (d.code) {
+                <dt>{{ 'carte.champ.code' | transloco }}</dt><dd>{{ d.code }}</dd>
+              }
+            }
             @case ('rue') {
               @if (d.type) {
                 <dt>{{ 'carte.champ.type' | transloco }}</dt><dd>{{ d.type }}</dd>

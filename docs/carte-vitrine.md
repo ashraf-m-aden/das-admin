@@ -49,8 +49,8 @@ passent par l'API, qui valide l'appelant :
 
 | Route | Contrôle | Sources |
 | --- | --- | --- |
-| `/api/tiles/…` | jeton de session (`?jeton=`) | 14 |
-| `/api/public/tiles/…` | clé révocable (`?cle=`) | **5** |
+| `/api/tiles/…` | jeton de session (`?jeton=`) | 16 |
+| `/api/public/tiles/…` | clé révocable (`?cle=`) | **10** |
 
 **Liste blanche des deux côtés.** Ce fichier de configuration dit ce que Martin
 publie ; il ne dit pas qui peut le demander. Ajouter une source ici ne la rend
@@ -85,29 +85,42 @@ python scripts/map/patch_admin_style.py # aligne le FOND de map-style.json (admi
   (`basemap-groups.ts` les référence un par un ; un id renommé transforme une
   case à cocher en bouton inerte, sans erreur).
 
-### Ce que le style vitrine NE contient pas
+### Les dix sources, et ce qui reste dehors
 
-Le style vitrine se limite aux **cinq sources du relais public** :
-`cities_labels_tiles`, `quartiers_tiles`, `streets_tiles`, `adresses_tiles`,
-`poi_sites_tiles`. Ce qui en a été retiré, et ce que ça coûte à l'écran :
+Le style vitrine consomme les **dix sources du relais public** : `contour_national`,
+`cities_tiles`, `cities_labels_tiles`, `quartiers_tiles`, `route_principaux`,
+`voierie_secondaire`, `streets_tiles`, `blocs_tiles`, `adresses_tiles`,
+`poi_sites_tiles`.
 
-| Retiré | Conséquence visible |
-| --- | --- |
-| `contour_national` | **pas de mer** : le fond est la terre, le golfe de Tadjoura ne se distingue pas du désert |
-| `route_principaux`, `voierie_secondaire` | **aucune route sous z12**, où `streets_tiles` ne rend rien |
-| `blocs_tiles` | le sol reste nu entre z13 et z16, jusqu'aux parcelles |
+Les cinq dernières arrivées — le décor — ont été ouvertes le 2026-09-11. Sans
+elles, la carte servie aux partenaires était amputée de trois choses très
+visibles : pas de mer, aucune route sous z12, et un sol nu entre z13 et z16.
 
-Les rendre demande de les ajouter à la liste blanche de `/api/public/tiles/`,
-côté back. Les couches existent déjà dans `basemap_layers.py` — elles ont été
-retirées de `sources()` et des fonctions de couches, pas perdues ; l'historique
-de `feat/carte-vitrine` les porte telles qu'elles étaient.
+> ⚠️ **Le style et la liste blanche se modifient ENSEMBLE.** Une source ajoutée
+> ici sans l'être dans `TuilesEndpoints.SourcesPubliques` côté `dasApi` ne se
+> signale pas : le relais rend 404 — la même réponse qu'une source inconnue — la
+> couche reste vide, et le fond a l'air incomplet sans qu'aucune erreur ne le
+> dise nulle part.
+
+Ce qui reste **en dehors** de la liste publique, et doit le rester :
+`closes_tiles` (découpage de travail interne), `poi_tiles` (le détail bâtiment
+par bâtiment, dont `poi_sites_tiles` est la lecture publique), les livraisons SIG
+brutes, et surtout les tables du recensement — `Surveys`, `Units`,
+`DiscoveryReports`, dont l'exposition avait motivé la fermeture du 2026-09-10.
+Élargir le décor n'a pas rouvert cette porte.
 
 ### Le rendu
 
-Ce qui donne l'air d'un Google Maps : la voirie en deux passes
-contour/remplissage avec une largeur qui suit le zoom, les libellés gris à halo
-blanc, les lieux en pastille colorée par catégorie, la texture de parcelles à
-partir de z16.
+Ce qui donne l'air d'un Google Maps : la mer en fond et la terre peinte
+par-dessus (`contour_national`), la voirie en deux passes contour/remplissage
+avec une largeur qui suit le zoom, les axes structurants en ambre, les libellés
+gris à halo blanc, les lieux en pastille colorée par catégorie, et la texture
+d'îlots puis de parcelles à partir de z13.
+
+> ⚠️ L'ordre du sol est contre-intuitif : le fond est la MER, la terre est
+> peinte par-dessus. L'inverse demanderait un polygone de mer que personne ne
+> livre. Conséquence : sans la couche `land`, tout le pays vire au bleu — ce
+> n'est pas un bug de couleur, c'est le fond qui n'est plus couvert.
 
 Deux détails appris en route :
 

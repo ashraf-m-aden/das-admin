@@ -266,11 +266,25 @@ couplage silencieux qui casserait à la première refonte du style.
 > ce nom que `nginx.conf` publie sous `/carto/` et que La Poste récupère. Ne jamais le renommer ;
 > les autres langues s'ajoutent à côté en `commercial-style.<lang>.json`.
 
-> ⚠️ **Le style ne peut contenir que les cinq sources de la liste blanche.** Une source ajoutée au
-> style sans l'être au relais public ne se signale PAS : le relais rend 404 — la même réponse
-> qu'une source inconnue — la couche reste vide, et le fond a simplement l'air incomplet. Le
-> générateur documente ce qui a été retiré pour tenir dans la liste (terre et trait de côte, réseau
-> structurant du dézoom, îlots) et ce que ça coûte à l'écran, dans `docs/carte-vitrine.md`.
+> ⚠️ **Le style ne peut contenir que les sources de la liste blanche**, et les deux se modifient
+> ENSEMBLE. Une source ajoutée au style sans l'être au relais public ne se signale PAS : le relais
+> rend 404 — la même réponse qu'une source inconnue — la couche reste vide, et le fond a
+> simplement l'air incomplet, sans qu'aucune erreur ne le dise nulle part.
+
+**Le 2026-09-11, la liste publique passe de cinq à dix sources.** Les cinq ajoutées sont du
+DÉCOR — `contour_national`, `cities_tiles`, `route_principaux`, `voierie_secondaire`,
+`blocs_tiles` : elles dessinent le pays, elles ne disent rien de plus sur une adresse que ce que
+les cinq premières donnaient déjà. Sans elles, la carte servie aux partenaires n'avait ni mer, ni
+route sous z12, ni texture de bâti.
+
+> Ce qui reste dehors le reste : `closes_tiles` (découpage de travail interne), `poi_tiles` (le
+> détail bâtiment par bâtiment, dont `poi_sites_tiles` est la lecture publique), les livraisons
+> SIG brutes, et les tables du recensement. Élargir le décor n'a pas rouvert la porte fermée le
+> 2026-09-10.
+
+> La liste d'administration est désormais construite comme l'UNION de la liste publique et de ce
+> qui lui est propre, plutôt que recopiée à côté : une source ouverte au partenaire mais oubliée
+> côté admin donnerait une carte publique plus complète que la nôtre.
 
 ### Le code postal est le sujet de la carte
 
@@ -475,10 +489,14 @@ code postal en vedette (filigrane, hachure, adresse postale), style généré en
 regroupement des lieux, et les deux raccords avec La Poste (chemin du style, paramètres
 d'ouverture).
 
-**Suites** — ouvrir cinq sources de plus sur le relais public (`contour_national`, `cities_tiles`,
-`route_principaux`, `voierie_secondaire`, `blocs_tiles`) pour rendre à la carte vitrine sa mer, son
-réseau structurant au dézoom et sa texture d'îlots. Les couches existent déjà dans le générateur ;
-seule la liste blanche manque. Voir `docs/carte-vitrine.md`.
+**Suites** — plus rien sur le fond de carte : les cinq sources de décor ont été ouvertes le
+2026-09-11 et le style les reprend. Restent deux choses, toutes deux hors code :
+
+1. **configurer `ClesApi:CleChiffrement`** — sans elle la remise à usage unique reste désactivée
+   et le secret continue de circuler à la main ;
+2. **délivrer une clé de recette à La Poste**, qui n'en a pas. Leur développement tapait
+   `Martin:3000`, qui ne répond plus ; sans clé de recette, ils utiliseront celle de production
+   en local — bien plus coûteux qu'un courriel mal rangé.
 
 ### ⚠️ Le piège qui a rendu la carte publique blanche
 
