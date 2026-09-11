@@ -118,7 +118,27 @@
       "id": "bg",
       "type": "background",
       "paint": {
-        "background-color": "#f8f9fa"
+        "background-color": "#a8d3f0"
+      }
+    },
+    {
+      "id": "land",
+      "type": "fill",
+      "source": "contourNational",
+      "source-layer": "contour_national",
+      "paint": {
+        "fill-color": "#f7f6f3"
+      }
+    },
+    {
+      "id": "coastline",
+      "type": "line",
+      "source": "contourNational",
+      "source-layer": "contour_national",
+      "paint": {
+        "line-color": "#8fb8d8",
+        "line-width": 0.8,
+        "line-opacity": 0.7
       }
     },
     {
@@ -241,24 +261,9 @@
         "line-join": "round"
       },
       "paint": {
-        "line-color": [
-          "case",
-          [
-            "!=",
-            [
-              "feature-state",
-              "colorOverride"
-            ],
-            null
-          ],
-          [
-            "feature-state",
-            "colorOverride"
-          ],
-          "#cbd5e1"
-        ],
+        "line-color": "#ded5c8",
         "line-dasharray": [
-          2,
+          2.5,
           2
         ],
         "line-width": [
@@ -306,7 +311,7 @@
         "line-join": "round"
       },
       "paint": {
-        "line-color": "#d7dbe0",
+        "line-color": "#e3e6ea",
         "line-width": [
           "interpolate",
           [
@@ -317,13 +322,15 @@
             "zoom"
           ],
           13,
-          1.2,
+          1.4,
           15,
-          3,
+          4,
           17,
-          8,
+          10,
           19,
-          18
+          22,
+          20,
+          30
         ]
       }
     },
@@ -378,13 +385,15 @@
             "zoom"
           ],
           13,
-          0.4,
+          0.5,
           15,
-          1.8,
+          2.4,
           17,
-          6,
+          7,
           19,
-          15
+          17,
+          20,
+          24
         ]
       }
     },
@@ -411,19 +420,7 @@
         "line-join": "round"
       },
       "paint": {
-        "line-color": [
-          "interpolate",
-          [
-            "linear"
-          ],
-          [
-            "zoom"
-          ],
-          8,
-          "#8592a3",
-          11,
-          "#c8ced6"
-        ],
+        "line-color": "#cfd4da",
         "line-width": [
           "interpolate",
           [
@@ -433,20 +430,16 @@
           [
             "zoom"
           ],
-          4,
-          0.9,
-          8,
-          1.2,
-          9,
-          1.4,
           12,
           3,
-          15,
-          7,
-          17,
-          13,
-          19,
-          24
+          14,
+          6,
+          16,
+          12,
+          18,
+          22,
+          20,
+          42
         ]
       }
     },
@@ -498,18 +491,16 @@
           [
             "zoom"
           ],
-          8,
-          0,
-          9,
-          0.6,
           12,
-          1.8,
-          15,
-          5,
+          1.6,
+          14,
+          3.8,
+          16,
+          9,
+          18,
           17,
-          10,
-          19,
-          20
+          20,
+          34
         ]
       }
     },

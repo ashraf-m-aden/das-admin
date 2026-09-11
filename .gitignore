@@ -41,6 +41,10 @@ testem.log
 /typings
 __screenshots__/
 
+# Outillage Python (scripts/map, scripts/sig)
+__pycache__/
+*.py[cod]
+
 # System files
 .DS_Store
 Thumbs.db

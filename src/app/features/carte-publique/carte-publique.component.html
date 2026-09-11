@@ -1,6 +1,20 @@
-<div class="carte" [class.carte--panneau]="panneauOuvert()">
+<div class="carte" [class.carte--embed]="embed()" [attr.dir]="rtl() ? 'rtl' : 'ltr'">
+  @if (!embed()) {
+    <header class="carte__entete">
+      <div class="carte__marque">
+        <span class="carte__logo" aria-hidden="true">D.A.S</span>
+        <div>
+          <p class="carte__titre">{{ 'carte.titre' | transloco }}</p>
+          <p class="carte__soustitre">{{ titre() }} · {{ 'carte.sousTitre' | transloco }}</p>
+        </div>
+      </div>
+      <p class="carte__zoom">{{ 'carte.zoom' | transloco }} {{ zoom() }}</p>
+    </header>
+  }
+
   <!-- La barre de recherche flotte SUR la carte, comme chez Google : elle ne pousse rien et
-       laisse la carte occuper tout l'écran. -->
+       laisse la carte occuper tout l'écran. Elle reste visible en mode intégré — un partenaire
+       qui encadre la carte veut quand même que son visiteur puisse chercher. -->
   <div class="chercher">
     <div class="chercher__champ">
       <i class="ti ti-search" aria-hidden="true"></i>
@@ -21,7 +35,7 @@
 
     @if (resultats().length > 0) {
       <ul class="chercher__resultats">
-        @for (r of resultats(); track r.titre) {
+        @for (r of resultats(); track r.titre + r.lngLat[0]) {
           <li>
             <button type="button" (click)="allerVers(r)">
               <i class="ti" [class.ti-map-pin]="r.genre !== 'quartier'"
@@ -35,61 +49,102 @@
     }
   </div>
 
-  <!-- Médaillon du code postal, au survol d'un quartier. Il ne suit pas le curseur : posé en haut
-       à droite, il reste lisible sans masquer ce qu'on survole. -->
-  @if (quartierSurvole(); as q) {
-    <div class="postcode" role="status">
-      <span class="postcode__nom">{{ q.nom }}</span>
-      @if (q.postcode) {
-        <span class="postcode__code">{{ q.postcode }}</span>
-      } @else {
-        <span class="postcode__absent">{{ 'carte.postcodeAbsent' | transloco }}</span>
-      }
-    </div>
-  }
+  <div class="carte__hote" #mapHost></div>
 
-  <div #conteneur class="carte__toile"></div>
-
-  @if (enErreur()) {
-    <div class="carte__erreur">
-      <i class="ti ti-map-off" aria-hidden="true"></i>
-      <p>{{ 'carte.erreur' | transloco }}</p>
-    </div>
-  }
-
-  <!-- Le panneau de détail. Glisse depuis la gauche, comme le volet de Google Maps. -->
-  @if (selection(); as lieu) {
-    <aside class="panneau" [attr.aria-label]="'carte.detail' | transloco">
-      <button type="button" class="panneau__fermer"
-              [attr.aria-label]="'carte.fermer' | transloco" (click)="fermer()">
+  <!--
+    Panneau de détail, à la Google Maps. Le sujet du clic en haut (lieu, adresse ou rue), puis
+    l'adresse postale du quartier qui le contient — celui-ci est un CONTEXTE, jamais le sujet,
+    parce que c'est lui qui porte le code.
+  -->
+  @if (detail() || quartier()) {
+    <aside class="fiche" aria-live="polite" [attr.aria-label]="'carte.detail' | transloco">
+      <button type="button" class="fiche__fermer" (click)="fermerPanneau()"
+              [attr.aria-label]="'carte.fermer' | transloco">
         <i class="ti ti-x" aria-hidden="true"></i>
       </button>
 
-      <p class="panneau__genre">{{ 'carte.genre.' + lieu.genre | transloco }}</p>
-      <h1 class="panneau__titre">
-        @if (lieu.titre === 'carte.lieuSansNom') {
-          {{ 'carte.lieuSansNom' | transloco }}
-        } @else {
-          {{ lieu.titre }}
-        }
-      </h1>
-      @if (lieu.sousTitre) { <p class="panneau__soustitre">{{ lieu.sousTitre }}</p> }
+      @if (detail(); as d) {
+        <p class="fiche__kicker">{{ 'carte.genre.' + d.kind | transloco }}</p>
+        <p class="fiche__titre">{{ titrePanneau(d) }}</p>
 
-      @if (lieu.lignes.length > 0) {
-        <dl class="panneau__faits">
-          @for (ligne of lieu.lignes; track ligne.libelle) {
-            <div>
-              <dt>{{ ligne.libelle | transloco }}</dt>
-              <dd>{{ ligne.valeur }}</dd>
-            </div>
+        <dl class="fiche__champs">
+          @switch (d.kind) {
+            @case ('poi') {
+              @if (libelleCategorie(d.categorie); as c) {
+                <dt>{{ 'carte.champ.categorie' | transloco }}</dt><dd>{{ c }}</dd>
+              }
+              @if (d.nom && d.sousCategorie) {
+                <dt>{{ 'carte.champ.type' | transloco }}</dt>
+                <dd>{{ libelleSousCategorie(d.sousCategorie) }}</dd>
+              }
+              <!-- La pastille regroupe plusieurs bâtiments : le dire évite de croire que le
+                   référentiel n'en connaît qu'un. -->
+              @if (d.batiments > 1) {
+                <dt>{{ 'carte.champ.batiments' | transloco }}</dt><dd>{{ d.batiments }}</dd>
+              }
+            }
+            @case ('adresse') {
+              @if (libelleEtape(d.stage); as e) {
+                <dt>{{ 'carte.champ.etape' | transloco }}</dt><dd>{{ e }}</dd>
+              }
+              @if (d.poiNom || d.poiCategorie) {
+                <dt>{{ 'carte.champ.occupant' | transloco }}</dt>
+                <dd>{{ d.poiNom ?? libelleCategorie(d.poiCategorie) }}</dd>
+              }
+            }
+            @case ('rue') {
+              @if (d.type) {
+                <dt>{{ 'carte.champ.type' | transloco }}</dt><dd>{{ d.type }}</dd>
+              }
+              @if (d.code) {
+                <dt>{{ 'carte.champ.code' | transloco }}</dt><dd>{{ d.code }}</dd>
+              }
+            }
           }
         </dl>
       }
 
-      <p class="panneau__coord">
-        <i class="ti ti-current-location" aria-hidden="true"></i>
-        {{ lieu.lngLat[1] | number: '1.5-5' }}, {{ lieu.lngLat[0] | number: '1.5-5' }}
-      </p>
+      @if (quartier(); as q) {
+        <div class="fiche__postal">
+          <p class="fiche__kicker">{{ 'carte.adressePostale' | transloco }}</p>
+
+          <p class="fiche__ligne">
+            <span class="fiche__quartier">{{ q.nom }}</span>
+          </p>
+          <p class="fiche__ligne">
+            <span class="fiche__ville">{{ q.ville }}</span>
+            @if (q.postcode) {
+              <span class="fiche__code">{{ q.postcode }}</span>
+            }
+          </p>
+
+          @if (q.postcode) {
+            <p class="fiche__pays">{{ 'carte.pays' | transloco }}</p>
+            <button type="button" class="fiche__copier" (click)="copier(q)">
+              {{ (copie() ? 'carte.copie' : 'carte.copier') | transloco }}
+            </button>
+          } @else {
+            <p class="fiche__attente">{{ 'carte.codeAVenir' | transloco }}</p>
+            <p class="fiche__pays">{{ 'carte.pays' | transloco }}</p>
+          }
+        </div>
+      }
+
+      @if (position(); as p) {
+        <p class="fiche__coord">
+          <i class="ti ti-current-location" aria-hidden="true"></i>
+          {{ p[1] | number: '1.5-5' }}, {{ p[0] | number: '1.5-5' }}
+        </p>
+      }
     </aside>
+  } @else {
+    <p class="carte__aide">{{ 'carte.aide' | transloco }}</p>
+  }
+
+  @if (erreur(); as message) {
+    <p class="carte__erreur" role="alert">
+      <i class="ti ti-map-off" aria-hidden="true"></i>
+      {{ message }}
+    </p>
   }
 </div>
