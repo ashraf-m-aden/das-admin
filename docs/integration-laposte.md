@@ -4,9 +4,15 @@
 > Version du 2026-09-10, révisée le 2026-09-11 : remise de la clé par **lien à usage unique**
 > (« La clé ») et styles **multilingues** (« Le style »). Clé `das_SEjertCf`.
 >
-> ⚠️ **Révision du 2026-09-13 — correction.** L'ouverture des cinq sources de fond de carte
-> annoncée le 2026-09-11 **n'a pas eu lieu** : elles rendent toujours `404`. Voir « Les tuiles ».
-> Rien à faire de votre côté.
+> ⚠️ **Révision du 2026-09-13 — deux corrections.**
+> 1. L'ouverture des cinq sources de fond de carte annoncée le 2026-09-11 **n'a pas eu lieu** :
+>    elles rendent toujours `404`. Voir « Les tuiles ». Rien à faire de votre côté.
+> 2. **`carte.das.dj` n'existe pas.** Le domaine `das.dj` n'a aucun enregistrement DNS — nous
+>    l'avons vérifié depuis l'extérieur, et le TLD `.dj`, lui, répond bien. Toutes les URL de
+>    cette note portaient cet hôte ; elles portent désormais `<hôte D.A.S>`, à remplacer par
+>    l'adresse que nous vous communiquerons. Si vos essais ont échoué en résolution de nom,
+>    c'est pour cette raison et pour aucune autre — **votre configuration n'était pas en
+>    cause**.
 >
 > Côté D.A.S, la source de vérité reste [`plans/referentiel-public.md`](plans/referentiel-public.md).
 
@@ -31,7 +37,7 @@ Le préfixe identifie la clé **sans la révéler** : c'est lui qui figure dans 
 Nous vous envoyons désormais un **lien à usage unique**, et non la clé elle-même.
 
 ```
-https://carte.das.dj/api/cles-api/remise/<jeton>
+https://<hôte D.A.S>/api/cles-api/remise/<jeton>
 ```
 
 Il s'ouvre **une seule fois** et expire au bout de 72 heures, ouvert ou non. La réponse est un
@@ -109,7 +115,7 @@ cela indiquerait à un tiers lesquels de ses essais tombent sur une clé ayant e
 ## Les tuiles
 
 ```http
-GET https://carte.das.dj/api/public/tiles/{source}/{z}/{x}/{y}
+GET https://<hôte D.A.S>/api/public/tiles/{source}/{z}/{x}/{y}
 X-DAS-Key: das_SEjertCf.…
 ```
 
@@ -180,8 +186,8 @@ Inchangé, et toujours récupéré chez nous plutôt que recopié — c'est ce q
 exactement ce que nous voyons.
 
 ```http
-GET https://carte.das.dj/carto/commercial-style.json     ← le chemin que vous utilisez
-GET https://carte.das.dj/assets/commercial-style.json    ← le même fichier
+GET https://<hôte D.A.S>/carto/commercial-style.json     ← le chemin que vous utilisez
+GET https://<hôte D.A.S>/assets/commercial-style.json    ← le même fichier
 ```
 
 Les deux chemins servent le même octet. **Pas de clé requise** : le style ne contient aucune
@@ -223,7 +229,7 @@ Si vous branchez un jour notre recherche plutôt que la vôtre, elle exige **la 
 même en-tête.
 
 ```http
-GET https://carte.das.dj/api/public/search?q=ambouli&limite=8
+GET https://<hôte D.A.S>/api/public/search?q=ambouli&limite=8
 X-DAS-Key: das_SEjertCf.…
 ```
 
@@ -239,7 +245,7 @@ Votre bouton « Ouvrir dans la carte D.A.S » fonctionne déjà. Page publique, 
 présenter** — elle porte la sienne.
 
 ```
-https://carte.das.dj/carte?lat=11.5939&lng=43.1509&z=17&marker=43.1509,11.5939&label=Agence%20centrale
+https://<hôte D.A.S>/carte?lat=11.5939&lng=43.1509&z=17&marker=43.1509,11.5939&label=Agence%20centrale
 ```
 
 > ⚠️ **`marker` vaut « longitude,latitude ».** C'est l'ordre de MapLibre — l'inverse de `lat` et

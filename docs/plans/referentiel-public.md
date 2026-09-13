@@ -515,7 +515,7 @@ Le dépôt `laposteDas` attend trois URL, déclarées dans `src/environments/` :
 map: {
   styleUrl: '/carto/commercial-style.json',  // style publie par D.A.S
   tilesUrl: '/tiles',                        // relaye par le back-end postal
-  viewerUrl: 'https://carte.das.dj/carte',   // carte vitrine D.A.S
+  viewerUrl: 'https://<hôte D.A.S>/carte',   // carte vitrine D.A.S
 }
 ```
 
