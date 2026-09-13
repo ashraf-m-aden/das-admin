@@ -197,7 +197,10 @@ if [ "$APPLIQUER" -eq 1 ]; then
   v() { printf '  %-46s %s\n' "$1" "$(curl -s -o /dev/null -w '%{http_code} %{size_download}o' "$2" || echo ECHEC)"; }
   v "/tiles/ (doit etre 410)"                 "http://localhost/tiles/"
   v "/carto/...json (doit etre du JSON)"      "http://localhost/carto/commercial-style.json"
-  v "carte publique, tuile sous cle"          "http://localhost/api/public/tiles/quartiers_tiles/13/5077/3830?cle=$MAP_PUBLIC_KEY_VAL"
+  # ⚠️ La clé est relue dans `.env`, jamais reprise de la variable : quand elle y était déjà,
+  # la variable est vide et la vérification rendait un 401 alarmant sur une carte qui marche.
+  CLE_VERIF="$(sed -n 's/^MAP_PUBLIC_KEY=//p' .env | head -1)"
+  v "carte publique, tuile sous cle"          "http://localhost/api/public/tiles/quartiers_tiles/13/5077/3830?cle=$CLE_VERIF"
   v "La Poste (port 81)"                      "http://localhost:81/"
   printf '\n  type de /carto : %s\n' "$(curl -s -o /dev/null -w '%{content_type}' http://localhost/carto/commercial-style.json)"
   printf '  etat des conteneurs :\n'
