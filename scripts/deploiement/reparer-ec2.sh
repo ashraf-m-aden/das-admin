@@ -56,15 +56,24 @@ APPLIQUER=0
 
 # On refuse d'écrire une clé vide plutôt que de « réussir » en laissant les cartes blanches :
 # c'est précisément la panne qu'on vient réparer, et elle ne se signale nulle part.
+#
+# ⚠️ Une clé DÉJÀ dans `.env` suffit — c'est même la bonne façon de faire. Passée en variable sur
+# la ligne de commande, elle se retrouve dans `~/.bash_history` et dans la liste des processus :
+# préférer
+#
+#   printf 'MAP_PUBLIC_KEY=%s\n' 'das_…' >> .env      (ou l'écrire à l'éditeur)
+#
+# puis lancer ce script sans variable du tout.
 if [ "$APPLIQUER" -eq 1 ]; then
   manquantes=""
-  [ -z "$MAP_PUBLIC_KEY_VAL" ] && manquantes="$manquantes MAP_PUBLIC_KEY_VAL"
-  [ -z "$LAPOSTE_DAS_KEY_VAL" ] && manquantes="$manquantes LAPOSTE_DAS_KEY_VAL"
+  grep -q '^MAP_PUBLIC_KEY=.\+' "$DOSSIER/.env" 2>/dev/null || [ -n "$MAP_PUBLIC_KEY_VAL" ] \
+    || manquantes="$manquantes MAP_PUBLIC_KEY"
+  grep -q '^LAPOSTE_DAS_KEY=.\+' "$DOSSIER/.env" 2>/dev/null || [ -n "$LAPOSTE_DAS_KEY_VAL" ] \
+    || manquantes="$manquantes LAPOSTE_DAS_KEY"
   if [ -n "$manquantes" ]; then
-    printf '\n✗ Clé(s) absente(s) :%s\n' "$manquantes" >&2
-    printf '  Les clés se délivrent depuis l écran /cles-api, et se passent ainsi :\n\n' >&2
-    printf "    MAP_PUBLIC_KEY_VAL='das_…' LAPOSTE_DAS_KEY_VAL='das_…' bash %s --appliquer\n\n" \
-      "$(basename "$0")" >&2
+    printf '\n✗ Clé(s) introuvable(s), ni dans .env ni en variable :%s\n' "$manquantes" >&2
+    printf '  Les clés se délivrent depuis l ecran /cles-api. Les poser dans .env :\n\n' >&2
+    printf "    cd %s && printf 'MAP_PUBLIC_KEY=%%s\\\\n' 'das_…' >> .env\n\n" "$DOSSIER" >&2
     exit 1
   fi
 fi
@@ -108,8 +117,10 @@ done
 dire "2. Clés dans .env"
 ajouter_env() {
   local nom="$1" val="$2"
-  if grep -q "^$nom=" .env 2>/dev/null; then
+  if grep -q "^$nom=.\+" .env 2>/dev/null; then
     note "$nom déjà présent — laissé tel quel"
+  elif [ -z "$val" ]; then
+    note "$nom : aucune valeur fournie — rien fait"
   elif [ "$APPLIQUER" -eq 1 ]; then
     printf '%s=%s\n' "$nom" "$val" >> .env
     fait "$nom ajouté"
