@@ -5,9 +5,13 @@
 /tmp
 /out-tsc
 /bazel-out
-* text=auto eol=lf
-*.sh text eol=lf
-docker/env-config.sh text eol=lf
+
+# Secrets d'execution. Ce depot est PUBLIC : rien de ce qui est ici ne doit
+# revenir sous git. `.env.example` documente ce qu'il faut poser.
+.env
+.env.local
+.env.*.local
+
 # Node
 /node_modules
 npm-debug.log

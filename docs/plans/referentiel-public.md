@@ -271,11 +271,42 @@ couplage silencieux qui casserait à la première refonte du style.
 > rend 404 — la même réponse qu'une source inconnue — la couche reste vide, et le fond a
 > simplement l'air incomplet, sans qu'aucune erreur ne le dise nulle part.
 
-**Le 2026-09-11, la liste publique passe de cinq à dix sources.** Les cinq ajoutées sont du
-DÉCOR — `contour_national`, `cities_tiles`, `route_principaux`, `voierie_secondaire`,
+**Le 2026-09-11, la liste publique DEVAIT passer de cinq à dix sources.** Les cinq ajoutées sont
+du DÉCOR — `contour_national`, `cities_tiles`, `route_principaux`, `voierie_secondaire`,
 `blocs_tiles` : elles dessinent le pays, elles ne disent rien de plus sur une adresse que ce que
-les cinq premières donnaient déjà. Sans elles, la carte servie aux partenaires n'avait ni mer, ni
+les cinq premières donnaient déjà. Sans elles, la carte servie aux partenaires n'a ni mer, ni
 route sous z12, ni texture de bâti.
+
+> ### ❗ Cette ouverture n'a jamais atteint le code — mesuré le 2026-09-13
+>
+> `SourcesPubliques`, dans `DASApi.WebApi/Features/Public/TuilesEndpoints.cs`, contient
+> **toujours cinq entrées** : `quartiers_tiles`, `streets_tiles`, `adresses_tiles`,
+> `poi_sites_tiles`, `cities_labels_tiles`. Le dernier commit qui touche ce fichier est la
+> portée par ville ; rien n'y a élargi le décor.
+>
+> Relevé sur l'image du back du 2026-09-13 — donc pas un déploiement en retard, un correctif
+> qui n'existe pas :
+>
+> | Source | `/api/public/tiles` | `/api/tiles` (jeton admin) |
+> |---|---|---|
+> | `contour_national` z8 | `404` | `200`, 8 Ko |
+> | `cities_tiles` z8 | `404` | `200`, 7 Ko |
+> | `blocs_tiles` z13 | `404` | `200`, 323 Ko |
+> | `route_principaux` z8 | `404` | **`404`** |
+> | `voierie_secondaire` z13 | `404` | **`404`** |
+>
+> ⚠️ **`route_principaux` et `voierie_secondaire` ne sont dans AUCUNE des deux listes.** Martin
+> les publie, `commercial-style.json` les déclare (`trunkRoads`, `secondaryRoads`), et les deux
+> relais les refusent. Le réseau national — celui dont la config Martin dit qu'il « porte le
+> dézoom » — n'est joignable par personne à travers l'API.
+>
+> ⚠️ **Ce n'est pas un problème de partenaire : notre propre carte vitrine est touchée.** Elle
+> consomme `commercial-style.json` par `/api/public/tiles` sous `das_FWlY3N1d`, et ses dix
+> sources déclarées se réduisent aux mêmes cinq. Vérifié source par source le 2026-09-13.
+>
+> Le correctif tient en cinq lignes dans `SourcesPubliques`, **côté back** : hors de ce dépôt.
+> Tant qu'il n'est pas fait, l'avertissement de l'encadré ci-dessus se réalise à la lettre — la
+> couche reste vide, le fond a l'air incomplet, et rien ne le dit.
 
 > Ce qui reste dehors le reste : `closes_tiles` (découpage de travail interne), `poi_tiles` (le
 > détail bâtiment par bâtiment, dont `poi_sites_tiles` est la lecture publique), les livraisons
@@ -484,7 +515,7 @@ Le dépôt `laposteDas` attend trois URL, déclarées dans `src/environments/` :
 map: {
   styleUrl: '/carto/commercial-style.json',  // style publie par D.A.S
   tilesUrl: '/tiles',                        // relaye par le back-end postal
-  viewerUrl: 'https://carte.das.dj/carte',   // carte vitrine D.A.S
+  viewerUrl: 'https://<hôte D.A.S>/carte',   // carte vitrine D.A.S
 }
 ```
 
@@ -533,14 +564,22 @@ code postal en vedette (filigrane, hachure, adresse postale), style généré en
 regroupement des lieux, et les deux raccords avec La Poste (chemin du style, paramètres
 d'ouverture).
 
-**Suites** — plus rien sur le fond de carte : les cinq sources de décor ont été ouvertes le
-2026-09-11 et le style les reprend. Restent deux choses, toutes deux hors code :
+**Suites** — trois choses, dont une qu'on croyait faite :
 
-1. **configurer `ClesApi:CleChiffrement`** — sans elle la remise à usage unique reste désactivée
-   et le secret continue de circuler à la main ;
-2. **délivrer une clé de recette à La Poste**, qui n'en a pas. Leur développement tapait
-   `Martin:3000`, qui ne répond plus ; sans clé de recette, ils utiliseront celle de production
-   en local — bien plus coûteux qu'un courriel mal rangé.
+1. ❗ **ouvrir réellement les cinq sources de décor.** Le style les reprend depuis le 2026-09-11,
+   la liste blanche du relais public non : `SourcesPubliques` compte toujours cinq entrées, et
+   `route_principaux` / `voierie_secondaire` ne sont dans AUCUNE des deux listes. C'est la seule
+   des trois qui demande du code, **côté back**. Détail et mesures dans « La liste blanche ».
+2. **configurer `ClesApi:CleChiffrement`** — sans elle la remise à usage unique reste désactivée
+   et le secret continue de circuler à la main. Vérifié le 2026-09-13 : la création d'une clé ne
+   renvoie toujours pas de `remiseJeton`, donc la remise n'est pas configurée sur cette pile.
+3. ✅ **clé de recette délivrée** le 2026-09-13 — `das_paQjiHPR`, portée nationale, consommateur
+   « La Poste — Plateforme 1 (recette, même EC2) ».
+
+   ⚠️ Elle est posée dans **notre** déploiement, pas remise à leurs développeurs : c'est nous qui
+   hébergeons leur Plateforme 1 pour l'instant. Leur équipe n'a donc toujours **pas** de clé de
+   recette à elle, et le risque d'origine — utiliser la clé de production en local — tient tant
+   qu'ils développent de leur côté.
 
 ### ⚠️ Le piège qui a rendu la carte publique blanche
 

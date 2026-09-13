@@ -2,8 +2,17 @@
 
 > Note d'intégration destinée à l'équipe technique de La Poste de Djibouti.
 > Version du 2026-09-10, révisée le 2026-09-11 : remise de la clé par **lien à usage unique**
-> (« La clé »), **cinq sources de fond de carte ouvertes** (« Les tuiles »), et styles
-> **multilingues** (« Le style »). Clé `das_SEjertCf`.
+> (« La clé ») et styles **multilingues** (« Le style »). Clé `das_SEjertCf`.
+>
+> ⚠️ **Révision du 2026-09-13 — deux corrections.**
+> 1. L'ouverture des cinq sources de fond de carte annoncée le 2026-09-11 **n'a pas eu lieu** :
+>    elles rendent toujours `404`. Voir « Les tuiles ». Rien à faire de votre côté.
+> 2. **`carte.das.dj` n'existe pas.** Le domaine `das.dj` n'a aucun enregistrement DNS — nous
+>    l'avons vérifié depuis l'extérieur, et le TLD `.dj`, lui, répond bien. Toutes les URL de
+>    cette note portaient cet hôte ; elles portent désormais `<hôte D.A.S>`, à remplacer par
+>    l'adresse que nous vous communiquerons. Si vos essais ont échoué en résolution de nom,
+>    c'est pour cette raison et pour aucune autre — **votre configuration n'était pas en
+>    cause**.
 >
 > Côté D.A.S, la source de vérité reste [`plans/referentiel-public.md`](plans/referentiel-public.md).
 
@@ -28,7 +37,7 @@ Le préfixe identifie la clé **sans la révéler** : c'est lui qui figure dans 
 Nous vous envoyons désormais un **lien à usage unique**, et non la clé elle-même.
 
 ```
-https://carte.das.dj/api/cles-api/remise/<jeton>
+https://<hôte D.A.S>/api/cles-api/remise/<jeton>
 ```
 
 Il s'ouvre **une seule fois** et expire au bout de 72 heures, ouvert ou non. La réponse est un
@@ -79,7 +88,8 @@ dernier relevé, dont les tables du recensement. Il était accessible sans authe
 ne sera pas rouvert : le relais est le seul endroit où l'appelant peut être vérifié avant que
 l'octet ne parte.
 
-À la place, un relais qui n'expose qu'une **liste blanche** — dix sources, détaillées plus bas.
+À la place, un relais qui n'expose qu'une **liste blanche** — dix sources prévues, dont **cinq
+servies à ce jour** : voir la correction du 2026-09-13, plus bas.
 
 ---
 
@@ -105,15 +115,15 @@ cela indiquerait à un tiers lesquels de ses essais tombent sur une clé ayant e
 ## Les tuiles
 
 ```http
-GET https://carte.das.dj/api/public/tiles/{source}/{z}/{x}/{y}
+GET https://<hôte D.A.S>/api/public/tiles/{source}/{z}/{x}/{y}
 X-DAS-Key: das_SEjertCf.…
 ```
 
 C'est cette base qui remplace `__TILES_BASE_URL__` dans le style.
 
-### Les dix sources autorisées
+### Les sources autorisées — cinq servies, cinq annoncées
 
-Le référentiel :
+Le référentiel, **servi** :
 
 | Source | Contenu |
 |---|---|
@@ -123,19 +133,33 @@ Le référentiel :
 | `poi_sites_tiles` | Lieux remarquables, regroupés par site |
 | `cities_labels_tiles` | Étiquettes des villes |
 
-Le fond de carte, **ouvert le 2026-09-11** :
+Le fond de carte — **annoncé ouvert le 2026-09-11, et il ne l'est pas encore** :
 
-| Source | Contenu |
-|---|---|
-| `contour_national` | Contour du pays — c'est lui qui sépare la terre de la mer |
-| `cities_tiles` | Emprises des villes |
-| `route_principaux` | Réseau national — il porte le dézoom, sous le zoom 12 |
-| `voierie_secondaire` | Voirie secondaire |
-| `blocs_tiles` | Îlots — la texture bâtie entre les zooms 13 et 16 |
+| Source | Contenu | État au 2026-09-13 |
+|---|---|---|
+| `contour_national` | Contour du pays — c'est lui qui sépare la terre de la mer | ⛔ `404` |
+| `cities_tiles` | Emprises des villes | ⛔ `404` |
+| `route_principaux` | Réseau national — il porte le dézoom, sous le zoom 12 | ⛔ `404` |
+| `voierie_secondaire` | Voirie secondaire | ⛔ `404` |
+| `blocs_tiles` | Îlots — la texture bâtie entre les zooms 13 et 16 | ⛔ `404` |
 
-> Si votre carte n'affichait ni mer, ni route au dézoom, ni texture de bâti, c'est
-> qu'elle datait d'avant cette ouverture. Reprenez le style et ces couches
-> arriveront sans autre changement de votre côté.
+> ### ❗ Correction — ceci annule ce que nous vous avons écrit le 2026-09-11
+>
+> Nous vous avons annoncé ces cinq sources comme ouvertes. **Elles ne le sont pas.** La décision
+> a été prise et écrite chez nous, elle n'a pas atteint le code du relais : sa liste blanche
+> compte toujours les cinq sources du référentiel, et ces cinq-là seulement.
+>
+> **Ne cherchez rien de votre côté.** Notre message précédent disait qu'une carte sans mer, sans
+> route au dézoom et sans texture de bâti trahissait un style périmé chez vous. C'était faux, et
+> c'est exactement le symptôme que vous observerez tant que ce n'est pas corrigé. Votre style
+> n'est pas en cause, votre relais non plus : reprendre l'un ou l'autre ne changera rien.
+>
+> Vérifiable de chez vous : `contour_national` au zoom 8 rend `404` avec une clé parfaitement
+> valide, pendant que `quartiers_tiles` au zoom 13 rend `200`.
+>
+> Notre propre carte vitrine est touchée à l'identique — c'est notre défaut, pas le vôtre. Nous
+> revenons vers vous quand le relais sert les dix sources ; **aucune action n'est attendue de
+> votre part**, ces couches arriveront sans que vous ne changiez quoi que ce soit.
 
 Toute autre valeur rend `404`, **y compris avec une clé valide**. La liste est blanche et non
 noire : une source ajoutée chez nous ne devient pas accessible du seul fait qu'on aurait oublié de
@@ -148,7 +172,7 @@ l'interdire.
 | `200` | La tuile, en protobuf | Relayer telle quelle |
 | `204` | Tuile vide — **légitime** | Relayer le 204 |
 | `401` | Clé absente, inconnue ou révoquée | Vérifier la configuration, nous contacter |
-| `404` | Source hors liste blanche | Corriger le nom de la source |
+| `404` | Source hors liste blanche, **ou hors de sa plage de zoom** | Vérifier le nom, puis la plage — voir la correction du 2026-09-13 |
 
 > ⚠️ **Ne transformez pas un `204` en erreur.** Une tuile vide est la réponse normale pour la très
 > grande majorité des tuiles d'un niveau de zoom. La traiter comme un échec ferait clignoter des
@@ -162,8 +186,8 @@ Inchangé, et toujours récupéré chez nous plutôt que recopié — c'est ce q
 exactement ce que nous voyons.
 
 ```http
-GET https://carte.das.dj/carto/commercial-style.json     ← le chemin que vous utilisez
-GET https://carte.das.dj/assets/commercial-style.json    ← le même fichier
+GET https://<hôte D.A.S>/carto/commercial-style.json     ← le chemin que vous utilisez
+GET https://<hôte D.A.S>/assets/commercial-style.json    ← le même fichier
 ```
 
 Les deux chemins servent le même octet. **Pas de clé requise** : le style ne contient aucune
@@ -205,7 +229,7 @@ Si vous branchez un jour notre recherche plutôt que la vôtre, elle exige **la 
 même en-tête.
 
 ```http
-GET https://carte.das.dj/api/public/search?q=ambouli&limite=8
+GET https://<hôte D.A.S>/api/public/search?q=ambouli&limite=8
 X-DAS-Key: das_SEjertCf.…
 ```
 
@@ -221,7 +245,7 @@ Votre bouton « Ouvrir dans la carte D.A.S » fonctionne déjà. Page publique, 
 présenter** — elle porte la sienne.
 
 ```
-https://carte.das.dj/carte?lat=11.5939&lng=43.1509&z=17&marker=43.1509,11.5939&label=Agence%20centrale
+https://<hôte D.A.S>/carte?lat=11.5939&lng=43.1509&z=17&marker=43.1509,11.5939&label=Agence%20centrale
 ```
 
 > ⚠️ **`marker` vaut « longitude,latitude ».** C'est l'ordre de MapLibre — l'inverse de `lat` et
