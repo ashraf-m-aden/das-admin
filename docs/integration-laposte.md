@@ -2,8 +2,11 @@
 
 > Note d'intégration destinée à l'équipe technique de La Poste de Djibouti.
 > Version du 2026-09-10, révisée le 2026-09-11 : remise de la clé par **lien à usage unique**
-> (« La clé »), **cinq sources de fond de carte ouvertes** (« Les tuiles »), et styles
-> **multilingues** (« Le style »). Clé `das_SEjertCf`.
+> (« La clé ») et styles **multilingues** (« Le style »). Clé `das_SEjertCf`.
+>
+> ⚠️ **Révision du 2026-09-13 — correction.** L'ouverture des cinq sources de fond de carte
+> annoncée le 2026-09-11 **n'a pas eu lieu** : elles rendent toujours `404`. Voir « Les tuiles ».
+> Rien à faire de votre côté.
 >
 > Côté D.A.S, la source de vérité reste [`plans/referentiel-public.md`](plans/referentiel-public.md).
 
@@ -79,7 +82,8 @@ dernier relevé, dont les tables du recensement. Il était accessible sans authe
 ne sera pas rouvert : le relais est le seul endroit où l'appelant peut être vérifié avant que
 l'octet ne parte.
 
-À la place, un relais qui n'expose qu'une **liste blanche** — dix sources, détaillées plus bas.
+À la place, un relais qui n'expose qu'une **liste blanche** — dix sources prévues, dont **cinq
+servies à ce jour** : voir la correction du 2026-09-13, plus bas.
 
 ---
 
@@ -111,9 +115,9 @@ X-DAS-Key: das_SEjertCf.…
 
 C'est cette base qui remplace `__TILES_BASE_URL__` dans le style.
 
-### Les dix sources autorisées
+### Les sources autorisées — cinq servies, cinq annoncées
 
-Le référentiel :
+Le référentiel, **servi** :
 
 | Source | Contenu |
 |---|---|
@@ -123,19 +127,33 @@ Le référentiel :
 | `poi_sites_tiles` | Lieux remarquables, regroupés par site |
 | `cities_labels_tiles` | Étiquettes des villes |
 
-Le fond de carte, **ouvert le 2026-09-11** :
+Le fond de carte — **annoncé ouvert le 2026-09-11, et il ne l'est pas encore** :
 
-| Source | Contenu |
-|---|---|
-| `contour_national` | Contour du pays — c'est lui qui sépare la terre de la mer |
-| `cities_tiles` | Emprises des villes |
-| `route_principaux` | Réseau national — il porte le dézoom, sous le zoom 12 |
-| `voierie_secondaire` | Voirie secondaire |
-| `blocs_tiles` | Îlots — la texture bâtie entre les zooms 13 et 16 |
+| Source | Contenu | État au 2026-09-13 |
+|---|---|---|
+| `contour_national` | Contour du pays — c'est lui qui sépare la terre de la mer | ⛔ `404` |
+| `cities_tiles` | Emprises des villes | ⛔ `404` |
+| `route_principaux` | Réseau national — il porte le dézoom, sous le zoom 12 | ⛔ `404` |
+| `voierie_secondaire` | Voirie secondaire | ⛔ `404` |
+| `blocs_tiles` | Îlots — la texture bâtie entre les zooms 13 et 16 | ⛔ `404` |
 
-> Si votre carte n'affichait ni mer, ni route au dézoom, ni texture de bâti, c'est
-> qu'elle datait d'avant cette ouverture. Reprenez le style et ces couches
-> arriveront sans autre changement de votre côté.
+> ### ❗ Correction — ceci annule ce que nous vous avons écrit le 2026-09-11
+>
+> Nous vous avons annoncé ces cinq sources comme ouvertes. **Elles ne le sont pas.** La décision
+> a été prise et écrite chez nous, elle n'a pas atteint le code du relais : sa liste blanche
+> compte toujours les cinq sources du référentiel, et ces cinq-là seulement.
+>
+> **Ne cherchez rien de votre côté.** Notre message précédent disait qu'une carte sans mer, sans
+> route au dézoom et sans texture de bâti trahissait un style périmé chez vous. C'était faux, et
+> c'est exactement le symptôme que vous observerez tant que ce n'est pas corrigé. Votre style
+> n'est pas en cause, votre relais non plus : reprendre l'un ou l'autre ne changera rien.
+>
+> Vérifiable de chez vous : `contour_national` au zoom 8 rend `404` avec une clé parfaitement
+> valide, pendant que `quartiers_tiles` au zoom 13 rend `200`.
+>
+> Notre propre carte vitrine est touchée à l'identique — c'est notre défaut, pas le vôtre. Nous
+> revenons vers vous quand le relais sert les dix sources ; **aucune action n'est attendue de
+> votre part**, ces couches arriveront sans que vous ne changiez quoi que ce soit.
 
 Toute autre valeur rend `404`, **y compris avec une clé valide**. La liste est blanche et non
 noire : une source ajoutée chez nous ne devient pas accessible du seul fait qu'on aurait oublié de
@@ -148,7 +166,7 @@ l'interdire.
 | `200` | La tuile, en protobuf | Relayer telle quelle |
 | `204` | Tuile vide — **légitime** | Relayer le 204 |
 | `401` | Clé absente, inconnue ou révoquée | Vérifier la configuration, nous contacter |
-| `404` | Source hors liste blanche | Corriger le nom de la source |
+| `404` | Source hors liste blanche, **ou hors de sa plage de zoom** | Vérifier le nom, puis la plage — voir la correction du 2026-09-13 |
 
 > ⚠️ **Ne transformez pas un `204` en erreur.** Une tuile vide est la réponse normale pour la très
 > grande majorité des tuiles d'un niveau de zoom. La traiter comme un échec ferait clignoter des
