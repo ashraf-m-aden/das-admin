@@ -5,8 +5,9 @@
 > (« La clé ») et styles **multilingues** (« Le style »). Clé `das_SEjertCf`.
 >
 > ⚠️ **Révision du 2026-09-13 — deux corrections.**
-> 1. L'ouverture des cinq sources de fond de carte annoncée le 2026-09-11 **n'a pas eu lieu** :
->    elles rendent toujours `404`. Voir « Les tuiles ». Rien à faire de votre côté.
+> 1. **Les dix sources de tuiles sont bien servies**, contrairement à ce que nous vous avons écrit
+>    le matin même. Mesuré en production l'après-midi. Voir « Les tuiles ». Rien à faire de votre
+>    côté, et rien ne l'a jamais été.
 > 2. **`carte.das.dj` n'existe pas.** Le domaine `das.dj` n'a aucun enregistrement DNS — nous
 >    l'avons vérifié depuis l'extérieur, et le TLD `.dj`, lui, répond bien. Toutes les URL de
 >    cette note portaient cet hôte ; elles portent désormais `<hôte D.A.S>`, à remplacer par
@@ -121,9 +122,9 @@ X-DAS-Key: das_SEjertCf.…
 
 C'est cette base qui remplace `__TILES_BASE_URL__` dans le style.
 
-### Les sources autorisées — cinq servies, cinq annoncées
+### Les dix sources autorisées
 
-Le référentiel, **servi** :
+Le référentiel :
 
 | Source | Contenu |
 |---|---|
@@ -133,33 +134,31 @@ Le référentiel, **servi** :
 | `poi_sites_tiles` | Lieux remarquables, regroupés par site |
 | `cities_labels_tiles` | Étiquettes des villes |
 
-Le fond de carte — **annoncé ouvert le 2026-09-11, et il ne l'est pas encore** :
+Le fond de carte :
 
-| Source | Contenu | État au 2026-09-13 |
-|---|---|---|
-| `contour_national` | Contour du pays — c'est lui qui sépare la terre de la mer | ⛔ `404` |
-| `cities_tiles` | Emprises des villes | ⛔ `404` |
-| `route_principaux` | Réseau national — il porte le dézoom, sous le zoom 12 | ⛔ `404` |
-| `voierie_secondaire` | Voirie secondaire | ⛔ `404` |
-| `blocs_tiles` | Îlots — la texture bâtie entre les zooms 13 et 16 | ⛔ `404` |
+| Source | Contenu |
+|---|---|
+| `contour_national` | Contour du pays — c'est lui qui sépare la terre de la mer |
+| `cities_tiles` | Emprises des villes |
+| `route_principaux` | Réseau national — il porte le dézoom, sous le zoom 12 |
+| `voierie_secondaire` | Voirie secondaire |
+| `blocs_tiles` | Îlots — la texture bâtie entre les zooms 13 et 16 |
 
-> ### ❗ Correction — ceci annule ce que nous vous avons écrit le 2026-09-11
+> ### ❗ Rectificatif du 2026-09-13, seconde version — les dix sources SONT servies
 >
-> Nous vous avons annoncé ces cinq sources comme ouvertes. **Elles ne le sont pas.** La décision
-> a été prise et écrite chez nous, elle n'a pas atteint le code du relais : sa liste blanche
-> compte toujours les cinq sources du référentiel, et ces cinq-là seulement.
+> Nous vous avons écrit le matin du 2026-09-13 que l'ouverture des cinq sources de fond de carte
+> n'avait pas eu lieu. **C'était faux**, et nous le retirons.
 >
-> **Ne cherchez rien de votre côté.** Notre message précédent disait qu'une carte sans mer, sans
-> route au dézoom et sans texture de bâti trahissait un style périmé chez vous. C'était faux, et
-> c'est exactement le symptôme que vous observerez tant que ce n'est pas corrigé. Votre style
-> n'est pas en cause, votre relais non plus : reprendre l'un ou l'autre ne changera rien.
+> Mesuré l'après-midi même, en production, avec une clé valide : `contour_national` au zoom 8 rend
+> `200` et 8 406 octets. Les dix sources répondent. Le correctif était déployé depuis le
+> 2026-09-11, comme annoncé à l'origine.
 >
-> Vérifiable de chez vous : `contour_national` au zoom 8 rend `404` avec une clé parfaitement
-> valide, pendant que `quartiers_tiles` au zoom 13 rend `200`.
+> D'où venait l'erreur : la mesure qui a conclu au `404` portait sur un environnement de
+> développement dont l'image du relais était antérieure au correctif. Nous avons conclu au bug
+> d'un côté ce qui était un décalage de déploiement de l'autre — et nous vous l'avons écrit sans
+> l'avoir vérifié là où ça comptait.
 >
-> Notre propre carte vitrine est touchée à l'identique — c'est notre défaut, pas le vôtre. Nous
-> revenons vers vous quand le relais sert les dix sources ; **aucune action n'est attendue de
-> votre part**, ces couches arriveront sans que vous ne changiez quoi que ce soit.
+> **Rien n'est attendu de votre part**, et rien ne l'a jamais été sur ce point.
 
 Toute autre valeur rend `404`, **y compris avec une clé valide**. La liste est blanche et non
 noire : une source ajoutée chez nous ne devient pas accessible du seul fait qu'on aurait oublié de

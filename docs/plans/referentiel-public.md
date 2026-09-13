@@ -277,36 +277,41 @@ du DÉCOR — `contour_national`, `cities_tiles`, `route_principaux`, `voierie_s
 les cinq premières donnaient déjà. Sans elles, la carte servie aux partenaires n'a ni mer, ni
 route sous z12, ni texture de bâti.
 
-> ### ❗ Cette ouverture n'a jamais atteint le code — mesuré le 2026-09-13
+> ### ✅ L'ouverture EST en place — re-mesuré le 2026-09-13, en production
 >
-> `SourcesPubliques`, dans `DASApi.WebApi/Features/Public/TuilesEndpoints.cs`, contient
-> **toujours cinq entrées** : `quartiers_tiles`, `streets_tiles`, `adresses_tiles`,
-> `poi_sites_tiles`, `cities_labels_tiles`. Le dernier commit qui touche ce fichier est la
-> portée par ville ; rien n'y a élargi le décor.
+> Un premier relevé, le matin du 2026-09-13, avait conclu que `SourcesPubliques` comptait
+> toujours cinq entrées et que les cinq sources de décor rendaient `404`. **C'était faux, et
+> cette section le retire.**
 >
-> Relevé sur l'image du back du 2026-09-13 — donc pas un déploiement en retard, un correctif
-> qui n'existe pas :
+Mesuré l'après-midi contre la production, **source par source**, avec `das_FWlY3N1d` :
 >
-> | Source | `/api/public/tiles` | `/api/tiles` (jeton admin) |
-> |---|---|---|
-> | `contour_national` z8 | `404` | `200`, 8 Ko |
-> | `cities_tiles` z8 | `404` | `200`, 7 Ko |
-> | `blocs_tiles` z13 | `404` | `200`, 323 Ko |
-> | `route_principaux` z8 | `404` | **`404`** |
-> | `voierie_secondaire` z13 | `404` | **`404`** |
+> | Source | Réponse | | Source | Réponse |
+> |---|---|---|---|---|
+> | `quartiers_tiles` z13 | `200`, 14 512 o | | `contour_national` z8 | `200`, 8 406 o |
+> | `streets_tiles` z13 | `200`, 112 794 o | | `cities_tiles` z8 | `200`, 7 578 o |
+> | `poi_sites_tiles` z13 | `200`, 8 061 o | | `route_principaux` z8 | `200`, 2 284 o |
+> | `cities_labels_tiles` z8 | `200`, 451 o | | `voierie_secondaire` z13 | `200`, 5 482 o |
+> | `adresses_tiles` z16 | `204` — tuile vide, légitime | | `blocs_tiles` z14 | `200`, 26 777 o |
 >
-> ⚠️ **`route_principaux` et `voierie_secondaire` ne sont dans AUCUNE des deux listes.** Martin
-> les publie, `commercial-style.json` les déclare (`trunkRoads`, `secondaryRoads`), et les deux
-> relais les refusent. Le réseau national — celui dont la config Martin dit qu'il « porte le
-> dézoom » — n'est joignable par personne à travers l'API.
+> Et le code : `SourcesPubliques` porte bien dix entrées sur `origin/main` de `dasApi`, commit
+> `601bffb` du 2026-09-11. L'image déployée les sert.
 >
-> ⚠️ **Ce n'est pas un problème de partenaire : notre propre carte vitrine est touchée.** Elle
-> consomme `commercial-style.json` par `/api/public/tiles` sous `das_FWlY3N1d`, et ses dix
-> sources déclarées se réduisent aux mêmes cinq. Vérifié source par source le 2026-09-13.
+> ### ⚠️ Pourquoi la première mesure s'est trompée — la leçon est la vraie valeur
 >
-> Le correctif tient en cinq lignes dans `SourcesPubliques`, **côté back** : hors de ce dépôt.
-> Tant qu'il n'est pas fait, l'avertissement de l'encadré ci-dessus se réalise à la lettre — la
-> couche reste vide, le fond a l'air incomplet, et rien ne le dit.
+> Elle portait sur un **environnement de développement** dont l'image du relais était antérieure
+> au correctif. Le `404` était réel, sa cause ne l'était pas : décalage de déploiement d'un côté,
+> conclusion « le code n'a jamais été écrit » de l'autre.
+>
+> La date de création d'une image Docker dit **quand elle a été construite**, pas de quelle
+> source. Une image « du jour » bâtie depuis un clone périmé est neuve et fausse. Le seul contrôle
+> qui tranche est de lire le code déployé, ou de mesurer contre la machine qui sert réellement.
+>
+> Cette erreur a été écrite à un partenaire avant d'être vérifiée là où ça comptait. C'est le même
+> défaut que celui décrit au §8 du relevé de déploiement — mesurer une brique n'est pas mesurer le
+> chemin — commis en croyant le corriger.
+>
+> Le relevé matinal signalait aussi `route_principaux` et `voierie_secondaire` comme absentes des
+> deux listes. Elles répondent `200` toutes les deux : ce point tombe avec le reste.
 
 > Ce qui reste dehors le reste : `closes_tiles` (découpage de travail interne), `poi_tiles` (le
 > détail bâtiment par bâtiment, dont `poi_sites_tiles` est la lecture publique), les livraisons
