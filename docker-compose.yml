@@ -24,6 +24,50 @@ services:
     networks: [das-net]
 
 
+  # ---------------------------------------------------------------------------
+  # Plateforme 1 — Services Clients de La Poste de Djibouti.
+  #
+  # ⚠️ Elle n'a rien a faire ici sur le fond : c'est un AUTRE depot, un autre
+  # produit, une autre equipe. Elle y est parce qu'elle tourne POUR L'INSTANT
+  # sur le meme EC2, faute d'une machine a elle — et parce que la poser sur ce
+  # reseau est justement ce qui lui permet de joindre D.A.S sans sortir de
+  # l'hote. Le jour ou elle demenage, ce bloc s'en va d'un seul tenant.
+  #
+  # Pas de `build:` — le Dockerfile vit dans le depot `laposte`. Ici on ne fait
+  # que TIRER l'image, comme pour `das-admin`.
+  # ---------------------------------------------------------------------------
+  das-laposte:
+    image: nejishow/das-laposte:latest
+    container_name: das-laposte
+    ports:
+      # Pas 80 : `das-admin` le tient. Tant que la Plateforme 1 n'a pas son
+      # propre nom d'hote, elle se joint sur :8080. Surchargeable, parce que
+      # 8080 est un port dispute et qu'un conflit se lit « address already in
+      # use » au demarrage, sans dire qui le tient.
+      - "${LAPOSTE_PORT:-8080}:80"
+    environment:
+      # Le nginx de cette image tient le role du back-end postal pour le fond de
+      # carte : c'est LUI qui presente `X-DAS-Key` sur `/tiles`, parce que le
+      # navigateur ne le peut pas — MapLibre construit ses URL de tuiles et
+      # n'accepte aucun en-tete.
+      #
+      # `das-admin` et non `carte.das.dj` : meme hote, meme reseau Docker, le
+      # trafic des tuiles ne sort pas de la machine. Au demenagement, cette
+      # ligne ET DAS_RESOLVER changent ensemble — 127.0.0.11 ne resout que des
+      # noms de conteneurs, pas un nom public.
+      DAS_ORIGIN: "${DAS_ORIGIN:-http://das-admin}"
+      DAS_RESOLVER: "${DAS_RESOLVER:-127.0.0.11}"
+
+      # Cle de RECETTE `das_paQjiHPR`, distincte de `das_SEjertCf` qui est celle
+      # de leur PRODUCTION : une revocation de test ne coupe pas La Poste.
+      # Absente, le style se charge et les tuiles rendent 401 — le conteneur le
+      # dit au demarrage plutot que de laisser chercher pourquoi c'est blanc.
+      DAS_KEY: "${LAPOSTE_DAS_KEY:-}"
+    depends_on:
+      - das-admin
+    restart: unless-stopped
+    networks: [das-net]
+
   martin:
     image: ghcr.io/maplibre/martin:latest
     container_name: martin
