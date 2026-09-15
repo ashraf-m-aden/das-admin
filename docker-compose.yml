@@ -4,8 +4,15 @@ services:
     container_name: das-admin
     ports:
       - "80:80"
+    # L'EC2 tourne en amd64. Le declarer evite qu'une image construite sur un
+    # poste ARM soit choisie ici et diverge de ce qui tourne en production.
+    platform: linux/amd64
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      # `:ro` — ce montage ECRASE la configuration de l'image. C'est par lui que
+      # l'EC2 a servi un nginx.conf du 17 aout pendant un mois, pendant que les
+      # images se succedaient : reconstruire ne changeait rien. En lecture seule
+      # au moins, personne ne le modifie depuis le conteneur.
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
     environment:
       API_BASE_URL: "/api"
       # ⚠️ Les tuiles ne passent PLUS par Martin en direct. Les deux relais de l'API valident
@@ -36,6 +43,39 @@ services:
   # Pas de `build:` — le Dockerfile vit dans le depot `laposte`. Ici on ne fait
   # que TIRER l'image, comme pour `das-admin`.
   # ---------------------------------------------------------------------------
+  # ---------------------------------------------------------------------------
+  # L'API .NET. Elle manquait a ce fichier alors qu'elle tourne en production :
+  # qui lancait cette composition obtenait une pile SANS API, et une carte sans
+  # tuiles — le relais `/api/` de nginx pointant dans le vide.
+  #
+  # ⚠️ Aucun secret ici. L'EC2 les porte en clair dans son propre compose ; ce
+  # depot est PUBLIC et ne peut pas se le permettre. Tout passe par `.env`, que
+  # `.env.example` documente.
+  # ---------------------------------------------------------------------------
+  das-backend:
+    image: nejishow/das-backend:latest
+    container_name: das-backend
+    # Les identifiants AWS que le back utilise pour lire Secrets Manager au
+    # demarrage — sans eux, il s'arrete avant d'ecouter.
+    env_file: .env
+    platform: linux/amd64
+    environment:
+      ASPNETCORE_HTTP_PORTS: "5000"
+      ASPNETCORE_ENVIRONMENT: "Production"
+      DB_HOST: "${RDS_HOST}"
+      DB_PORT: "5432"
+      # ⚠️ `Jwt__Secret` signe les jetons de session. Une valeur devinable rend
+      # les jetons FORGEABLES — un jeton admin fabrique hors de chez nous passe
+      # toutes les verifications. Ne jamais laisser le gabarit livre avec le
+      # projet : il est public par construction.
+      Jwt__Secret: "${JWT_SECRET}"
+      Jwt__Issuer: "DASApi"
+      Jwt__Audience: "DASApiClients"
+      Jwt__ExpiryMinutes: "60"
+      Jwt__RefreshTokenExpiryDays: "7"
+    restart: unless-stopped
+    networks: [das-net]
+
   das-laposte:
     image: nejishow/das-laposte:latest
     container_name: das-laposte
@@ -44,7 +84,7 @@ services:
       # propre nom d'hote, elle se joint sur :8080. Surchargeable, parce que
       # 8080 est un port dispute et qu'un conflit se lit « address already in
       # use » au demarrage, sans dire qui le tient.
-      - "${LAPOSTE_PORT:-8080}:80"
+      - "${LAPOSTE_PORT:-81}:80"
     environment:
       # Le nginx de cette image tient le role du back-end postal pour le fond de
       # carte : c'est LUI qui presente `X-DAS-Key` sur `/tiles`, parce que le
@@ -72,7 +112,11 @@ services:
     image: ghcr.io/maplibre/martin:latest
     container_name: martin
     environment:
-      DATABASE_URL: "postgresql://martin_ro:HuVFVEfNfUpOQI1Puc7hfBgszcxO0zCT@host.docker.internal:5433/das?sslmode=require"
+      # ⚠️ Compose depuis `.env`, JAMAIS en dur. Ce fichier a porte le mot de
+      # passe du role Martin en clair du 2026-08-30 au 2026-09-15, sur un depot
+      # PUBLIC. Le retirer ne desexpose rien — l'historique le garde ; c'est la
+      # ROTATION qui compte. Ceci empeche la suite.
+      DATABASE_URL: "postgresql://${RDS_USER}:${RDS_PASSWORD}@${RDS_HOST}:5432/${RDS_DB}?sslmode=require"
     # NOTE tunnel : `host.docker.internal:5433` suppose que le tunnel SSH vers la base écoute sur
     #   TOUTES les interfaces de l'hôte. Un tunnel ouvert en `-L 5433:...` ne se lie qu'à
     #   127.0.0.1 : le conteneur reçoit alors « Connection refused » et Martin redémarre en boucle
@@ -98,8 +142,6 @@ services:
     # fermeture de `/tiles/` a fermé le 2026-09-10 — et la liste du fichier de config ne suffit
     # pas : elle restreint ce que Martin publie, pas qui peut le lui demander.
     # Pour du `ng serve` local, publier 3000 dans un override de développement.
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     restart: unless-stopped
     networks: [das-net]
 

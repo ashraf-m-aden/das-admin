@@ -129,27 +129,25 @@ back-office. Un relevé **rejeté retombe sur `registered`**, pas `surveyed`.
 
 ---
 
-## 7. Le module « adresses » (dossiers `registry.*`)
+## 7. Le module « adresses »
 
-L'écran adresses vit historiquement sous le nom de code **`registry`** (`registry.models.ts`,
-`RegistryFacade`, `das-registry-list`, clés i18n `registry.*`).
+L'écran adresses a vécu sous le nom de code **`registry`** jusqu'au renommage. Il est aujourd'hui
+en `adresse.*` partout (`core/adresse/`, `AdresseFacade`, clés i18n `adresse.*`, route `/adresse`).
 
-> ### ❗ Dette à résorber : renommer `registry → adresse`
-> Le nom de code `registry` **ne correspond plus au domaine** (« registry » était le vocabulaire
-> de l'écran, pas la ressource — l'entité réelle est `Adresse`, la route `/api/adresses`). Ce
-> décalage est une **dette à résorber** : à terme, tout le module doit passer en `adresse.*`.
-> - **Décision** : renommage du **module entier** (fichiers, dossiers, `Registry*` → `Adresse*`,
->   clés i18n `registry.*` → `adresse.*`, sélecteur `das-registry-list` → `das-adresse-list`),
->   en **`adresse` au singulier**.
-> - **Statut** : décidé, **en pause** — planifié comme un lot séparé, à ne pas mélanger avec du
->   travail de logique (un renommage noyé dans une refonte fonctionnelle rend la revue infaisable).
-> - **Contrainte d'exécution** : refactor mécanique **scopé à `src/` uniquement**, via un script
->   bash avec **dry-run** d'abord. **Jamais à la racine du repo** : on y réécrirait les références
->   Docker/DockerHub/Jenkins/CI qui portent aussi le mot `registry`.
-> - **Ricochets à surveiller** : `nav.registry` → `nav.adresse`, un éventuel `path: 'registry'` de
->   route (**l'URL passe de `/registry` à `/adresse`**), et les types `Address*` qui ne bougent
->   PAS d'eux-mêmes (ne contiennent pas « registry ») — un second passage `Address* → Adresse*`
->   est optionnel et plus délicat.
+> ### ✅ Renommage `registry → adresse` — fait
+> Le nom de code `registry` était le vocabulaire de l'écran, pas la ressource : l'entité réelle
+> est `Adresse` et la route `/api/adresses`. Le module entier est passé en **`adresse` au
+> singulier** — fichiers, dossiers, `Registry*` → `Adresse*`, clés i18n, sélecteur, et l'URL de
+> route devenue `/adresse`.
+>
+> Vérifié le 2026-09-15 : plus aucune occurrence de `registry` dans `src/`.
+>
+> **Reste optionnel** : un second passage `Address* → Adresse*` sur les types, qui n'ont pas
+> bougé d'eux-mêmes puisqu'ils ne contiennent pas « registry ». Plus délicat, sans urgence.
+>
+> ⚠️ Si un refactor mécanique de ce genre se représente : **scopé à `src/` uniquement**, avec un
+> dry-run d'abord. **Jamais à la racine** — on y réécrirait les références Docker, DockerHub,
+> Jenkins et CI, qui portent aussi le mot `registry`.
 
 Faits durables du contrat de cet écran (`/api/adresses`, guide §5) :
 

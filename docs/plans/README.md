@@ -19,7 +19,18 @@ Mettre à jour le fichier du module concerné à chaque changement de conception
 
 ## Index
 
+> La référence du front, elle, n'est pas ici : c'est [`../reference-frontend.md`](../reference-frontend.md).
+> Ce dossier garde le *pourquoi* des décisions de conception, module par module.
+
 - `referentiel-public.md` — carte publique, tuiles, recherche et clés d'accès. Contient la
   décision du 2026-09-10 sur le socle du contrôle d'accès (`cles-api` contre `clients`), et le
   compte rendu du trou de sécurité fermé le même jour.
 - `generation-closes.md` — l'écran de génération et les quatre règles de découpage.
+- `adressage.md` — le plan de numérotation et la dérivation des codes.
+- `auth.md` — session, refresh tournant, rôles.
+- `contrat-api-frontend.md` et `contrat-api-registry.md` — le recoupement, champ par champ, du
+  contrat annoncé par le front avec le domaine réel. Les deux se citent mutuellement et sont
+  cités par le guide d'intégration : ils vont ensemble.
+- `module-recensement.md`, `recensement-geographie.md`, `schema-recensement.md` — le module de
+  recensement et sa géographie.
+- `plan-de-tests.md` — les scénarios que couvrent les e2e Playwright.

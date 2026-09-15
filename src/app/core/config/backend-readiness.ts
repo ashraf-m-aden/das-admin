@@ -20,7 +20,7 @@ export interface FeatureReadiness {
 /**
  * État de câblage relevé le 2026-08-23 dans la source `dasApi`
  * (`src/DASApi.WebApi/Features/**\/*Endpoints.cs`), pas dans `docs/openapi-v1.json` qui dérive
- * du réel. Voir docs/plans/lot-cablage-mock-adresse-postcodes.md §0 pour le détail du relevé.
+ * du réel. Voir docs/reference-frontend.md §12 pour ce qui n'existe pas côté back.
  *
  * `status: 'wired'` engage : posé seulement si TOUTES les méthodes du port concerné tapent une
  * route qui existe. Un module à moitié câblé reste `'mock'`. `routes` se relit à la main contre
